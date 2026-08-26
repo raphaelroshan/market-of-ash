@@ -11,6 +11,7 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | Layer | What it validates | Default gate |
 | --- | --- | --- |
 | Repository policy | Required files, test presence, secret patterns, large/generated artifacts | Blocks on policy errors. |
+| Content manifest | Stable IDs, chapter/location references, event choices, progression nodes, pack contents, and endings | Blocks on malformed content. |
 | Godot headless tests | Deterministic game-state behavior and regression cases | Blocks on test failure. |
 | AI architecture review | Ownership, determinism, save boundaries, coupling, maintainability | Reports; blocks on critical findings. |
 | AI gameplay review | Player-facing behavior, fairness, onboarding, failure states, design fit | Reports; blocks on critical findings. |
@@ -50,6 +51,7 @@ Run the deterministic project-specific test and policy checks locally:
 
 ```bash
 python tools/policy_check.py --repo local
+python tools/validate_content.py --manifest content/content_manifest.json
 bash scripts/verify.sh
 ```
 

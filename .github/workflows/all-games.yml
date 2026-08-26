@@ -65,6 +65,7 @@ jobs:
         run: |
           for repo in repos/market_of_ash repos/the_cartographers_siege repos/pack_the_keep; do
             python tools/policy_check.py --repo "$repo"
+            python "$repo/tools/validate_content.py" --manifest "$repo/content/content_manifest.json"
             bash "$repo/scripts/verify.sh"
           done
       - name: Run four independent AI reviewers per repository

@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "game_id": "market-of-ash",
+  "content_version": "0.1.0",
+  "campaign": {
+    "title": "The Wells Remember",
+    "premise": "A caravan crosses a recovering ashland as a spreading water shortage turns ordinary trade into a contest over trust, access, and the future of the region.",
+    "player_role": "A newly independent caravan master with enough capital to survive one bad season, but not enough to ignore the people who control the roads.",
+    "regional_objective": "Keep the five-settlement water network alive long enough to decide who will control its future.",
+    "chapters": [
+      {
+        "id": "chapter_1_first_ledger",
+        "title": "The First Ledger",
+        "summary": "Learn the region’s price differences, hire a first companion, and complete one profitable or politically useful delivery.",
+        "entry_condition": "day <= 3",
+        "exit_condition": "complete_delivery and visited_count >= 3",
+        "player_question": "Can I make money without treating every settlement as a mark?",
+        "beats": ["arrival_at_ashgate", "first_route_choice", "first_companion_offer", "ledger_without_debt"]
+      },
+      {
+        "id": "chapter_2_thin_wells",
+        "title": "Thin Wells",
+        "summary": "The water shortage becomes visible. Prices move, rumors conflict, and both factions ask the caravan to prove its loyalty.",
+        "entry_condition": "crisis_stage >= 1",
+        "exit_condition": "crisis_stage >= 2 and reputation_total >= 2",
+        "player_question": "Who deserves scarce water, and what does helping them cost elsewhere?",
+        "beats": ["shortage_report", "toll_dispute_escalation", "brine_cross_request", "faction_choice"]
+      },
+      {
+        "id": "chapter_3_the_empty_reservoir",
+        "title": "The Empty Reservoir",
+        "summary": "The region reaches a dangerous shortage. The caravan must choose between exploiting the price, building trust, or spending its capital on shared infrastructure.",
+        "entry_condition": "crisis_stage >= 2",
+        "exit_condition": "crisis_stage >= 3 or infrastructure_investment >= 1",
+        "player_question": "Is survival enough if the network that made survival possible collapses?",
+        "beats": ["reservoir_revelation", "suspicious_escort", "dry_cut_last_run", "infrastructure_offer"]
+      },
+      {
+        "id": "chapter_4_what_remains",
+        "title": "What Remains",
+        "summary": "Resolve the shortage through an alliance, regulated control, private profiteering, or an expensive act of shared repair.",
+        "entry_condition": "day >= 8 and crisis_stage >= 2",
+        "exit_condition": "ending_selected",
+        "player_question": "What kind of region did my choices make possible?",
+        "beats": ["final_water_contract", "crew_confrontation", "regional_verdict", "ending_report"]
+      }
+    ]
+  },
+  "factions": [
+    {
+      "id": "ash_wardens",
+      "name": "The Ash Wardens",
+      "public_position": "Stability requires rules, escorts, and controlled access to vital roads and wells.",
+      "private_pressure": "Their officials fear losing authority more than they fear being wrong.",
+      "mechanical_hooks": ["toll_road_access", "safer_travel_forecasts", "regulated_market_prices"],
+      "content_rule": "A Warden choice should trade volatility for control, never read as simply good."
+    },
+    {
+      "id": "free_caravans",
+      "name": "The Free Caravans",
+      "public_position": "Goods move when people are allowed to move, bargain, and take risks without a permit.",
+      "private_pressure": "Their leaders can mistake freedom for the right to leave weaker settlements behind.",
+      "mechanical_hooks": ["lower_route_costs", "new_contracts", "volatile_prices"],
+      "content_rule": "A Caravan choice should trade access for instability, never read as simply good."
+    }
+  ],
+  "locations": [
+    {
+      "id": "ashgate",
+      "name": "Ashgate",
+      "role": "regulated hub",
+      "story_function": "The place where the player learns that every transaction has a witness.",
+      "visual_motif": "Black gate timbers, white chalk ration marks, and Warden lanterns in straight rows.",
+      "problems": ["ration inspections", "crowded contracts", "officials hiding how low the reserve really is"],
+      "trade_hooks": ["cheap_water", "moderate_grain", "expensive_cloth"],
+      "available_events": ["arrival_ledger", "toll_dispute", "warden_request"]
+    },
+    {
+      "id": "brine_cross",
+      "name": "Brine Cross",
+      "role": "water market",
+      "story_function": "The first settlement to reveal that water can be both a commodity and a public promise.",
+      "visual_motif": "Salt-white basins, blue rope bridges, and empty jars hung as warning bells.",
+      "problems": ["brackish wells", "medicine shortage", "merchants hoarding clean water"],
+      "trade_hooks": ["very_cheap_water", "high_medicine_demand", "grain_import_need"],
+      "available_events": ["desperate_settlement", "water_measure", "suspicious_escort"]
+    },
+    {
+      "id": "cinderford",
+      "name": "Cinderford",
+      "role": "foundry town",
+      "story_function": "A place where scrap and charcoal can become infrastructure, if someone can keep the furnaces fed.",
+      "visual_motif": "Red furnace mouths, chain lifts, and soot-dark workers under yellow awnings.",
+      "problems": ["fuel rationing", "broken pumps", "workers owed wages"],
+      "trade_hooks": ["cheap_scrap", "cheap_charcoal", "expensive_grain"],
+      "available_events": ["foundry_contract", "broken_bridge", "worker_payroll"]
+    },
+    {
+      "id": "hollow_market",
+      "name": "Hollow Market",
+      "role": "free-trade bazaar",
+      "story_function": "The most profitable and least trustworthy market, where every rumor has a price.",
+      "visual_motif": "Canopy tunnels, colored cloth flags, and goods displayed in old shell craters.",
+      "problems": ["counterfeit measures", "rival caravans", "rumors engineered to move prices"],
+      "trade_hooks": ["cheap_cloth", "cheap_medicine", "volatile_water"],
+      "available_events": ["suspicious_escort", "rumor_sale", "caravan_compromise"]
+    },
+    {
+      "id": "reedwatch",
+      "name": "Reedwatch",
+      "role": "frontier settlement",
+      "story_function": "The settlement that makes distant consequences impossible to ignore.",
+      "visual_motif": "Reed roofs, watchfires reflected in shallow water, and hand-painted missing-person boards.",
+      "problems": ["water rationing", "raids on supply carts", "medicine for exhausted families"],
+      "trade_hooks": ["cheap_grain", "very_expensive_water", "high_medicine_demand"],
+      "available_events": ["desperate_settlement", "raider_sighting", "last_barrel"]
+    }
+  ],
+  "characters": [
+    {
+      "id": "nara_vey",
+      "name": "Nara Vey",
+      "type": "crew",
+      "role": "scout",
+      "motivation": "Prove that the roads can be read by people rather than owned by officials.",
+      "strength": "Turns uncertain route information into a clearer forecast and spots alternate approaches.",
+      "fear": "Being trapped in a place where every exit has been bought by someone else.",
+      "relationship_hook": "Nara respects a player who shares useful route information, but distrusts secret toll deals.",
+      "arc": ["offers_a_free_route_note", "asks_whether_to_sell_or_share_a_rumor", "chooses_whether_to_stay_after_a_secret_deal"],
+      "mechanical_hooks": ["route_intelligence", "old_road_event_option", "reduced_uncertainty"],
+      "recruit_location": "hollow_market"
+    },
+    {
+      "id": "jorun_pale",
+      "name": "Jorun Pale",
+      "type": "crew",
+      "role": "quartermaster",
+      "motivation": "Keep the caravan alive through disciplined provisions and honest weights.",
+      "strength": "Reduces provision waste and identifies cargo choices that will create a fragile run.",
+      "fear": "Watching people gamble with supplies because the ledger makes the risk look abstract.",
+      "relationship_hook": "Jorun approves of recovery plans and loses trust when the player knowingly abandons dependents.",
+      "arc": ["offers_to_audit_the_ledger", "objects_to_a_profitable_shortage_run", "sets_a_minimum_reserve_for_the_final_trip"],
+      "mechanical_hooks": ["provision_efficiency", "capacity_warning", "recovery_contract"],
+      "recruit_location": "cinderford"
+    },
+    {
+      "id": "tess_oryn",
+      "name": "Tess Oryn",
+      "type": "crew",
+      "role": "fixer",
+      "motivation": "Turn personal connections into a network no faction can close completely.",
+      "strength": "Creates additional negotiation choices and softens the reputation cost of compromise.",
+      "fear": "Being remembered only as the person who made bad bargains sound reasonable.",
+      "relationship_hook": "Tess likes decisive compromises but challenges the player when charm replaces a material solution.",
+      "arc": ["offers_a_contact_at_ashgate", "reveals_a_warden_caravan_connection", "demands_a_real_investment_in_reedwatch"],
+      "mechanical_hooks": ["negotiation_option", "reputation_buffer", "faction_contract_access"],
+      "recruit_location": "ashgate"
+    }
+  ],
+  "events": [
+    {
+      "id": "toll_dispute",
+      "title": "The Gatekeeper's Chalk",
+      "type": "travel",
+      "chapter": "chapter_1_first_ledger",
+      "locations": ["ashgate", "cinderford", "reedwatch"],
+      "trigger": "depart_route == toll_road and reputation.wardens < 1",
+      "setup": "A fresh chalk mark on the wagon says the toll doubled overnight. The gatekeeper insists the old price was a clerical error.",
+      "choices": [
+        {"id": "pay_full", "label": "Pay the new toll and keep moving.", "requirements": ["money >= 12"], "effects": ["money:-12", "reputation.wardens:+1", "route_access:toll_road"], "visible_result": "The road is safe today, but the Wardens learn that your caravan can be pressured."},
+        {"id": "challenge_ledger", "label": "Ask Nara or Tess to challenge the ledger.", "requirements": ["crew:nara_vey or crew:tess_oryn"], "effects": ["days:+1", "reputation.wardens:-1", "log:toll_recorded"], "visible_result": "You lose time but expose a pattern of invented tolls."},
+        {"id": "take_old_road", "label": "Turn back and take the exposed road.", "requirements": ["route:old_road_available"], "effects": ["money:-4", "route:old_road", "risk:+0.20"], "visible_result": "The caravan keeps its margin and accepts a danger it can see."}
+      ],
+      "follow_up": "warden_request"
+    },
+    {
+      "id": "broken_bridge",
+      "title": "The Span at Cinderford",
+      "type": "travel",
+      "chapter": "chapter_1_first_ledger",
+      "locations": ["cinderford", "brine_cross"],
+      "trigger": "route == old_road and cargo.weight > 6",
+      "setup": "A bridge has dropped one side into the ash. A foundry crew can make it passable, but only if someone supplies the missing scrap and charcoal.",
+      "choices": [
+        {"id": "supply_repairs", "label": "Give the crew the materials from your hold.", "requirements": ["cargo:scrap >= 2", "cargo:charcoal >= 1"], "effects": ["cargo.scrap:-2", "cargo.charcoal:-1", "reputation.cinderford:+1", "route_condition:repaired"], "visible_result": "The road opens for everyone, not just your caravan."},
+        {"id": "pay_for_ferry", "label": "Pay a ferry crew and protect the cargo.", "requirements": ["money >= 8"], "effects": ["money:-8", "days:+1", "cargo_safe:true"], "visible_result": "You preserve the delivery but leave the bridge problem behind."},
+        {"id": "abandon_heavy_goods", "label": "Sell or leave the heaviest cargo and cross light.", "requirements": ["cargo.weight >= 4"], "effects": ["cargo.weight:-4", "money:+3", "contract_risk:+1"], "visible_result": "The caravan moves, but a buyer at the destination may receive less than promised."}
+      ],
+      "follow_up": "foundry_contract"
+    },
+    {
+      "id": "desperate_settlement",
+      "title": "The Last Clean Barrel",
+      "type": "settlement",
+      "chapter": "chapter_2_thin_wells",
+      "locations": ["brine_cross", "reedwatch"],
+      "trigger": "crisis_stage >= 1 and cargo.water >= 1",
+      "setup": "A settlement committee offers nearly any price for one clean barrel. Behind them, families wait with smaller containers and no bargaining power.",
+      "choices": [
+        {"id": "sell_at_peak", "label": "Sell to the committee at the peak price.", "requirements": ["cargo:water >= 1"], "effects": ["cargo.water:-1", "money:+20", "reputation.wardens:-1", "reputation.caravans:+1"], "visible_result": "The ledger looks excellent. The settlement report does not."},
+        {"id": "sell_fairly", "label": "Break the barrel into a fair ration sale.", "requirements": ["cargo:water >= 1"], "effects": ["cargo.water:-1", "money:+9", "reputation.wardens:+1", "reputation.caravans:+1", "settlement_resilience:+1"], "visible_result": "You earn less, but the market stays open and the settlement remembers the fairness."},
+        {"id": "keep_the_barrel", "label": "Keep it for the caravan’s next route.", "requirements": ["provisions <= 4"], "effects": ["reputation.wardens:-1", "reputation.caravans:-1", "self_reserve:true"], "visible_result": "You preserve your recovery margin and accept that someone else pays the shortage."}
+      ],
+      "follow_up": "last_barrel"
+    },
+    {
+      "id": "suspicious_escort",
+      "title": "Three Riders, No Banner",
+      "type": "travel",
+      "chapter": "chapter_3_the_empty_reservoir",
+      "locations": ["hollow_market", "brine_cross", "reedwatch"],
+      "trigger": "crisis_stage >= 2 and route.risk >= 0.35",
+      "setup": "Three riders offer to escort the caravan through the ash. They know the road too well and refuse to say who paid them.",
+      "choices": [
+        {"id": "hire_escort", "label": "Hire them and keep the cargo moving.", "requirements": ["money >= 10"], "effects": ["money:-10", "risk:-0.20", "reputation.caravans:+1", "log:unmarked_escort"], "visible_result": "The road is safer, but the riders now know what your caravan carries."},
+        {"id": "ask_for_names", "label": "Demand names and a destination before agreeing.", "requirements": ["crew:tess_oryn or reputation.wardens >= 1"], "effects": ["days:+1", "information:escort_sponsor", "reputation.caravans:-1"], "visible_result": "You lose time and learn which faction is trying to move water without a ledger."},
+        {"id": "refuse_and_signal", "label": "Refuse, then warn the next settlement.", "requirements": ["crew:nara_vey"], "effects": ["risk:+0.10", "reputation.wardens:+1", "event:escort_intercepted"], "visible_result": "The caravan remains exposed, but the network gains a warning."}
+      ],
+      "follow_up": "final_water_contract"
+    }
+  ],
+  "progression": {
+    "tracks": [
+      {
+        "id": "caravan_capability",
+        "name": "Caravan Capability",
+        "purpose": "Improves the caravan without removing the need to choose a route.",
+        "nodes": [
+          {"id": "larger_hold", "cost": 1, "effect": "cargo_capacity:+4", "choice_created": "carry a second contract or a recovery reserve"},
+          {"id": "covered_casks", "cost": 1, "effect": "water_spoilage:-1", "choice_created": "buy water earlier without wasting the margin"},
+          {"id": "route_marks", "cost": 1, "effect": "route_forecast:+1", "choice_created": "accept uncertainty with a stated source"}
+        ]
+      },
+      {
+        "id": "network_trust",
+        "name": "Network Trust",
+        "purpose": "Unlocks relationship-driven solutions and changes which settlements will ask for help.",
+        "nodes": [
+          {"id": "shared_ledger", "cost": 2, "effect": "settlement_reports:visible", "choice_created": "see who benefits from a price movement"},
+          {"id": "open_contracts", "cost": 2, "effect": "faction_contracts:available", "choice_created": "choose between factions instead of taking the only offer"},
+          {"id": "well_committee", "cost": 3, "effect": "infrastructure_investment:available", "choice_created": "spend capital to alter the crisis rather than merely trade around it"}
+        ]
+      }
+    ],
+    "milestones": [
+      {"id": "first_profitable_run", "condition": "complete_trade and money >= 120", "reward": "caravan_capability:larger_hold"},
+      {"id": "three_settlements_connected", "condition": "visited_count >= 3", "reward": "network_trust:shared_ledger"},
+      {"id": "shortage_made_visible", "condition": "crisis_stage >= 1 and log contains shortage report", "reward": "crew conversation:jorun_pale"},
+      {"id": "recovery_proven", "condition": "complete a route after a failed or sacrificed event", "reward": "network_trust:open_contracts"},
+      {"id": "final_water_decision", "condition": "crisis_stage >= 2 and chapter_4 entered", "reward": "ending selection"}
+    ]
+  },
+  "endings": [
+    {
+      "id": "ending_shared_wells",
+      "title": "The Wells Remember Everyone",
+      "requirements": ["infrastructure_investment >= 1", "settlement_resilience >= 2"],
+      "summary": "The caravan spends its advantage on a shared water network. Trade becomes slower and more accountable, but no single faction can close every well.",
+      "regional_changes": ["water_prices_stabilize", "reedwatch_grows", "caravan_margin_reduced"],
+      "crew_note": "Jorun stays to audit the new stores; Nara maps the public routes."
+    },
+    {
+      "id": "ending_warden_reserve",
+      "title": "Order at the Cistern",
+      "requirements": ["reputation.wardens >= 3", "reputation.caravans < 2"],
+      "summary": "The Wardens secure the reservoirs and the roads become safer, but permits and ration rules decide who may trade.",
+      "regional_changes": ["toll_road_safer", "free_market_shrinks", "regulated_access"],
+      "crew_note": "Tess calls it a victory with a locked door."
+    },
+    {
+      "id": "ending_free_caravan_routes",
+      "title": "No Road Owns the Sky",
+      "requirements": ["reputation.caravans >= 3", "reputation.wardens < 2"],
+      "summary": "Independent caravans keep the region supplied through a web of informal routes. Prices stay volatile, but access remains open to those willing to take the risk.",
+      "regional_changes": ["old_road_busy", "route_risk_volatile", "new_contracts_available"],
+      "crew_note": "Nara leaves a route book in every settlement, with the dangerous pages marked honestly."
+    },
+    {
+      "id": "ending_ash_merchant",
+      "title": "The Best Margin",
+      "requirements": ["money >= 220", "settlement_resilience < 2"],
+      "summary": "The caravan becomes the region’s indispensable broker. The crisis ends for the markets that can pay first, while the player inherits a profitable network built on uneven recovery.",
+      "regional_changes": ["wealth_concentrates", "reedwatch_declines", "premium_contracts_unlock"],
+      "crew_note": "Jorun asks whether a full ledger can still be called honest when half the region is missing from it."
+    }
+  ]
+}

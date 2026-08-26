@@ -29,6 +29,8 @@ jobs:
           python-version: '3.12'
       - name: Policy checks
         run: python tools/policy_check.py --repo "${GITHUB_REPOSITORY}"
+      - name: Validate content manifest
+        run: python tools/validate_content.py --manifest content/content_manifest.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})
