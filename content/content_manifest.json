@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "market-of-ash",
-  "content_version": "0.1.0",
+  "content_version": "0.2.0",
   "campaign": {
     "title": "The Wells Remember",
     "premise": "A caravan crosses a recovering ashland as a spreading water shortage turns ordinary trade into a contest over trust, access, and the future of the region.",

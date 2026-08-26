@@ -1,0 +1,375 @@
+{
+  "schema_version": 1,
+  "game_id": "market-of-ash",
+  "content_version": "0.2.0",
+  "design_principle": "The region should feel interdependent: every settlement has something another needs, and every political solution creates a new access or trust problem.",
+  "reputation_axes": [
+    {
+      "id": "warden_control",
+      "name": "Warden Control",
+      "range": [-5, 5],
+      "meaning": "How much the player accepts permits, regulated distribution, escorts, and centralized authority.",
+      "benefits": ["safer_toll_road", "clearer_official_forecasts", "priority_access_to_regulated_contracts"],
+      "costs": ["free_market_access_reduced", "exclusive_permits", "local_suspicion_of_control"]
+    },
+    {
+      "id": "caravan_openness",
+      "name": "Caravan Openness",
+      "range": [-5, 5],
+      "meaning": "How much the player protects open routes, independent bargaining, shared information, and informal trade.",
+      "benefits": ["lower_informal_route_costs", "more_contract_variety", "shared_route_rumors"],
+      "costs": ["volatile_prices", "less_official_protection", "greater_escort_and_counterfeit_risk"]
+    },
+    {
+      "id": "settlement_resilience",
+      "name": "Settlement Resilience",
+      "range": [0, 5],
+      "meaning": "How well the five settlements can absorb a shortage without relying on one faction or one caravan.",
+      "benefits": ["more_recoverable_crisis", "fair_distribution_options", "stronger_final_endings"],
+      "costs": ["requires_materials_or_margin", "slower_short_term_profit"]
+    }
+  ],
+  "political_groups": [
+    {
+      "id": "ash_wardens",
+      "name": "The Ash Wardens",
+      "tier": "major",
+      "base": "ashgate",
+      "public_goal": "Keep roads, wells, and ration records under one accountable authority.",
+      "real_need": "Prevent panic and preserve institutional legitimacy as reserves fall.",
+      "power_base": ["permits", "toll_road", "official_forecasts", "escorts", "ration_stores"],
+      "internal_blocs": ["warden_officers", "reservoir_auditors", "road_escorts"],
+      "preferred_player_behavior": ["pay_tolls", "share_cargo_records", "accept_controlled_distribution"],
+      "fear": "A public failure that proves local councils can govern without them.",
+      "mechanical_expression": "warden_control reputation and regulated route access",
+      "not_villainous": "Their roads are genuinely safer and their ration systems can prevent hoarding, but their secrecy and permits concentrate power."
+    },
+    {
+      "id": "free_caravans",
+      "name": "The Free Caravans",
+      "tier": "major",
+      "base": "hollow_market",
+      "public_goal": "Keep people and goods moving without permits or a single authority setting every price.",
+      "real_need": "Protect informal routes and prevent the Wardens from making independent traders irrelevant.",
+      "power_base": ["mobile_fleets", "private_contracts", "rumors", "credit", "route_guides"],
+      "internal_blocs": ["mutual_aid_caravans", "speculators", "independent_escorts"],
+      "preferred_player_behavior": ["take_old_road", "share_route_information", "serve_open_contracts"],
+      "fear": "A crisis so severe that settlements accept permanent centralized control.",
+      "mechanical_expression": "caravan_openness reputation and informal contract access",
+      "not_villainous": "Open movement genuinely supplies isolated places and breaks monopolies, but the strongest merchants can profit from scarcity and leave weak settlements behind."
+    },
+    {
+      "id": "wellkeepers_compact",
+      "name": "The Wellkeepers’ Compact",
+      "tier": "local_coalition",
+      "base": "brine_cross",
+      "public_goal": "Treat clean water as a shared reserve before it becomes a private commodity.",
+      "real_need": "Keep local wells maintained and stop outside factions from taking the last usable water.",
+      "power_base": ["well_access", "local_ration_lists", "water_workers", "public_trust"],
+      "internal_blocs": ["public_rationers", "merchant_well_owners", "brine_workers"],
+      "preferred_player_behavior": ["sell_fairly", "fund_pumps", "publish_water_measures"],
+      "fear": "A precedent where the highest bidder permanently owns the wells.",
+      "mechanical_expression": "settlement_resilience, water contracts, and crisis-stage event options",
+      "not_villainous": "They can be rigid about outsiders and may reject a profitable deal that would fund repairs quickly."
+    },
+    {
+      "id": "cinder_guild",
+      "name": "The Cinder Guild",
+      "tier": "local_coalition",
+      "base": "cinderford",
+      "public_goal": "Keep the furnaces, pumps, bridges, and repair shops working.",
+      "real_need": "Secure charcoal, feed workers, and prevent the foundry from becoming another abandoned ruin.",
+      "power_base": ["scrap_processing", "charcoal", "repair_crews", "industrial_tools"],
+      "internal_blocs": ["foundry_owners", "repair_crews", "unpaid_workers"],
+      "preferred_player_behavior": ["deliver_scrap", "protect_worker_payroll", "repair_shared_infrastructure"],
+      "fear": "A shortage that turns skilled workers into refugees and leaves the region unable to repair itself.",
+      "mechanical_expression": "bridge repairs, caravan upgrades, charcoal scarcity, and route condition",
+      "not_villainous": "They can restore public infrastructure, but may demand exclusive contracts and prioritize industry over household water."
+    },
+    {
+      "id": "reedwatch_frontier_league",
+      "name": "The Reedwatch Frontier League",
+      "tier": "local_coalition",
+      "base": "reedwatch",
+      "public_goal": "Keep the frontier inhabited, defended, and supplied rather than written off from a distant office.",
+      "real_need": "Prevent evacuation from becoming abandonment and secure medicine, grain, and water.",
+      "power_base": ["local_guides", "watchfires", "militia", "frontier_labor"],
+      "internal_blocs": ["settlement_militia", "farmers", "evacuation_advocates"],
+      "preferred_player_behavior": ["deliver_grain", "carry_medicine", "keep_a_route_open"],
+      "fear": "Becoming a line on a Warden map after the last supply cart stops arriving.",
+      "mechanical_expression": "frontier contracts, route-risk warnings, settlement resilience, and final outcome conditions",
+      "not_villainous": "They may demand help the caravan cannot safely provide and can resent trade that passes through without stopping."
+    },
+    {
+      "id": "hollow_measure_brokers",
+      "name": "The Hollow Measure Brokers",
+      "tier": "local_coalition",
+      "base": "hollow_market",
+      "public_goal": "Keep exchange flexible when official prices no longer describe reality.",
+      "real_need": "Control the information and weighing practices that let the bazaar remain profitable.",
+      "power_base": ["rumors", "counterfeit_measures", "credit", "private_storage"],
+      "internal_blocs": ["honest_measurers", "price_speculators", "information_sellers"],
+      "preferred_player_behavior": ["buy_information", "negotiate_openly", "expose_counterfeit_weights"],
+      "fear": "A crackdown that makes the bazaar legal only in name.",
+      "mechanical_expression": "rumor quality, price volatility, contract options, and escort events",
+      "not_villainous": "The bazaar keeps trade alive, but its speculative wing benefits when water fear spreads."
+    }
+  ],
+  "tensions": [
+    {
+      "id": "water_as_commodity_or_reserve",
+      "name": "Water: Commodity or Reserve",
+      "sides": ["ash_wardens", "free_caravans", "wellkeepers_compact", "reedwatch_frontier_league"],
+      "visible_question": "Who gets the next clean barrel, and who is allowed to decide?",
+      "player_choices": ["sell_at_peak", "sell_fairly", "keep_reserve", "fund_pumps"],
+      "escalation": ["water_prices_rise", "ration_marks_appear", "private_wells_are_guarded", "frontier_routes_become_political"],
+      "resolution_states": ["regulated_reserve", "open_distribution", "shared_wells", "private_brokerage"]
+    },
+    {
+      "id": "road_control_and_tolls",
+      "name": "Road Control and Tolls",
+      "sides": ["ash_wardens", "free_caravans", "reedwatch_frontier_league"],
+      "visible_question": "Is a safe road worth accepting the authority that maintains it?",
+      "player_choices": ["pay_toll", "challenge_ledger", "take_old_road", "fund_local_repair"],
+      "escalation": ["toll_doubles", "permits_required", "old_road_escort_risk_rises", "settlements_build_unofficial_detours"],
+      "resolution_states": ["controlled_access", "open_routes", "shared_maintenance", "route_fragmentation"]
+    },
+    {
+      "id": "information_monopoly",
+      "name": "Who Owns the Rumor",
+      "sides": ["ash_wardens", "free_caravans", "hollow_measure_brokers"],
+      "visible_question": "Should a route warning be sold, published, or kept until it is verified?",
+      "player_choices": ["sell_information", "share_warning", "verify_first", "publish_source"],
+      "escalation": ["prices_move_early", "rival_caravans_change_routes", "official_reports_lose_trust", "false_escort_offer_appears"],
+      "resolution_states": ["official_information", "open_route_book", "competitive_rumor_market", "information_pact"]
+    },
+    {
+      "id": "repair_labor_and_priority",
+      "name": "Who Gets Repaired First",
+      "sides": ["cinder_guild", "reedwatch_frontier_league", "ash_wardens", "wellkeepers_compact"],
+      "visible_question": "Should scarce scrap and charcoal repair commerce, water, or defense?",
+      "player_choices": ["repair_bridge", "repair_pump", "reinforce_escort", "pay_workers"],
+      "escalation": ["bridge_closes", "foundry_slows", "water_delivery_delays", "workers_leave_cinderford"],
+      "resolution_states": ["industrial_recovery", "public_water_priority", "warden_infrastructure", "labor_exodus"]
+    },
+    {
+      "id": "frontier_abandonment",
+      "name": "The Frontier Is Not a Ledger Entry",
+      "sides": ["reedwatch_frontier_league", "ash_wardens", "free_caravans"],
+      "visible_question": "Is keeping Reedwatch supplied a duty, an investment, or a bad margin?",
+      "player_choices": ["deliver_grain", "deliver_medicine", "escort_evacuation", "leave_for_profit"],
+      "escalation": ["watchfires_thin", "families_move", "raiders_gain_confidence", "frontier_contracts_disappear"],
+      "resolution_states": ["frontier_renewal", "managed_evacuation", "private_outpost", "abandoned_edge"]
+    }
+  ],
+  "resource_distribution": {
+    "goods": [
+      {
+        "id": "water",
+        "abundance": {"ashgate": "moderate", "brine_cross": "high_but_brackish", "cinderford": "low", "hollow_market": "volatile", "reedwatch": "very_low"},
+        "production_or_source": ["brine_cross_wells", "ashgate_reserve_cisterns", "unmarked_frontier_springs"],
+        "main_demand": ["reedwatch", "brine_cross", "ashgate"],
+        "political_control": ["ash_wardens", "wellkeepers_compact"],
+        "crisis_behavior": "Becomes more expensive and more politically sensitive at each crisis stage."
+      },
+      {
+        "id": "grain",
+        "abundance": {"ashgate": "moderate", "brine_cross": "low", "cinderford": "low", "hollow_market": "moderate", "reedwatch": "high_but_fragile"},
+        "production_or_source": ["reedwatch_fields", "small_ashgate_granaries"],
+        "main_demand": ["cinderford", "brine_cross", "ashgate"],
+        "political_control": ["reedwatch_frontier_league", "ash_wardens"],
+        "crisis_behavior": "Supply falls when frontier labor leaves or roads close."
+      },
+      {
+        "id": "scrap",
+        "abundance": {"ashgate": "moderate", "brine_cross": "moderate", "cinderford": "very_high", "hollow_market": "moderate", "reedwatch": "low"},
+        "production_or_source": ["cinderford_salvage_yards", "old_road_ruins"],
+        "main_demand": ["cinderford", "ashgate", "reedwatch"],
+        "political_control": ["cinder_guild", "free_caravans"],
+        "crisis_behavior": "Becomes more valuable when bridge, pump, or route repairs are active."
+      },
+      {
+        "id": "medicine",
+        "abundance": {"ashgate": "moderate", "brine_cross": "low", "cinderford": "moderate", "hollow_market": "high_but_unreliable", "reedwatch": "very_low"},
+        "production_or_source": ["ashgate_licensed_stores", "hollow_market_private_stores"],
+        "main_demand": ["reedwatch", "brine_cross", "cinderford"],
+        "political_control": ["ash_wardens", "hollow_measure_brokers"],
+        "crisis_behavior": "Demand rises with water shortage, exhaustion, and unsafe travel."
+      },
+      {
+        "id": "charcoal",
+        "abundance": {"ashgate": "moderate", "brine_cross": "low", "cinderford": "high", "hollow_market": "moderate", "reedwatch": "low"},
+        "production_or_source": ["cinderford_furnaces", "woodland_burn_sites"],
+        "main_demand": ["cinderford", "ashgate", "brine_cross"],
+        "political_control": ["cinder_guild", "ash_wardens"],
+        "crisis_behavior": "Shortage reduces repair capacity and makes industrial contracts politically important."
+      },
+      {
+        "id": "cloth",
+        "abundance": {"ashgate": "moderate", "brine_cross": "moderate", "cinderford": "low", "hollow_market": "very_high", "reedwatch": "low"},
+        "production_or_source": ["hollow_market_weavers", "reedwatch_reed_fiber"],
+        "main_demand": ["ashgate", "cinderford", "reedwatch"],
+        "political_control": ["free_caravans", "hollow_measure_brokers"],
+        "crisis_behavior": "Becomes useful as a flexible margin good when water contracts are ethically or politically costly."
+      }
+    ],
+    "dependency_rules": [
+      "Reedwatch supplies grain and some fiber but depends on imported water and medicine.",
+      "Cinderford supplies scrap and charcoal but depends on grain, water, and labor stability.",
+      "Brine Cross has the strongest water source but depends on medicine, grain, and pump repairs.",
+      "Ashgate controls records, permits, and reserve stores but depends on every other settlement’s production.",
+      "Hollow Market connects information and flexible exchange but depends on traffic and trust in its measures."
+    ]
+  },
+  "map_overview": {
+    "region_name": "The Five-Well Basin",
+    "orientation": "Ashgate sits northwest, Cinderford north, Hollow Market at the central basin, Brine Cross east, and Reedwatch southeast at the frontier edge.",
+    "map_shape": "A rough crescent around a dry central basin, with a safer northern ridge route and exposed southern lowland tracks.",
+    "nodes": [
+      {"id": "ashgate", "position": [180, 160], "terrain": "black_ash_ridge", "strategic_role": "administrative and contract hub", "visual_anchor": "lantern gate and ration board"},
+      {"id": "cinderford", "position": [420, 90], "terrain": "slag_slope", "strategic_role": "repair and industrial source", "visual_anchor": "red furnace row"},
+      {"id": "hollow_market", "position": [430, 300], "terrain": "dry_basin", "strategic_role": "flexible exchange and rumor hub", "visual_anchor": "colored canopy crater"},
+      {"id": "brine_cross", "position": [700, 210], "terrain": "salt_flat", "strategic_role": "water source and shortage flashpoint", "visual_anchor": "white cisterns and blue rope bridges"},
+      {"id": "reedwatch", "position": [760, 470], "terrain": "reed_frontier", "strategic_role": "grain source and vulnerable settlement", "visual_anchor": "watchfires over shallow water"}
+    ],
+    "corridors": [
+      {
+        "id": "old_road_corridor",
+        "name": "Old Road",
+        "connects": ["ashgate", "hollow_market", "reedwatch"],
+        "profile": "cheap_exposed",
+        "benefit": "Preserves margin and keeps informal trade moving.",
+        "risk": "Raids, broken bridges, false route marks, and exposed cargo.",
+        "political_owner": "contested_between_free_caravans_and_local_leagues"
+      },
+      {
+        "id": "toll_road_corridor",
+        "name": "Toll Road",
+        "connects": ["ashgate", "cinderford", "brine_cross"],
+        "profile": "expensive_safer",
+        "benefit": "Maintained surface, clearer official forecasts, and stronger escort coverage.",
+        "risk": "Permits, sudden tolls, ration inspections, and centralized control.",
+        "political_owner": "ash_wardens"
+      },
+      {
+        "id": "dry_cut_corridor",
+        "name": "Dry Cut",
+        "connects": ["hollow_market", "brine_cross", "reedwatch"],
+        "profile": "fast_provision_heavy",
+        "benefit": "Bypasses congested checkpoints and can reach the frontier before a market shifts.",
+        "risk": "Two-day provisioning burden, hidden dry wells, ash wind, and limited recovery points.",
+        "political_owner": "unofficial_guides_and_free_caravans"
+      },
+      {
+        "id": "foundry_service_link",
+        "name": "Foundry Service Link",
+        "connects": ["cinderford", "hollow_market"],
+        "profile": "repair_dependent",
+        "benefit": "Moves scrap, charcoal, and repair crews into the basin.",
+        "risk": "Becomes impassable when bridge maintenance or worker wages fail.",
+        "political_owner": "cinder_guild"
+      }
+    ],
+    "map_layers": [
+      "settlement_identity",
+      "resource_flow",
+      "route_profile",
+      "faction_influence",
+      "crisis_stage",
+      "active_obstacles",
+      "caravan_position"
+    ]
+  },
+  "obstacles": [
+    {
+      "id": "ash_wind",
+      "category": "environmental",
+      "affects": ["route_information", "travel_risk", "event_reliability"],
+      "telegraph": "The horizon disappears and route markers become pale scratches.",
+      "player_responses": ["scout", "take_toll_road", "delay_departure", "follow_local_guide"],
+      "failure_cost": "Stale information or an avoidable risk increase; never an unexplained campaign-ending loss."
+    },
+    {
+      "id": "dry_well",
+      "category": "resource",
+      "affects": ["water_supply", "provisions", "crisis_stage"],
+      "telegraph": "A well marker is crossed out and empty jars appear at the nearest settlement.",
+      "player_responses": ["carry_reserve", "buy_early", "fund_pump_repair", "reroute"],
+      "failure_cost": "Higher local prices, delayed contracts, or reduced settlement resilience."
+    },
+    {
+      "id": "broken_bridge",
+      "category": "infrastructure",
+      "affects": ["old_road_corridor", "cargo_weight", "travel_time"],
+      "telegraph": "A dropped bridge span is visible before the caravan commits to the crossing.",
+      "player_responses": ["supply_scrap", "pay_ferry", "abandon_heavy_cargo", "take_dry_cut"],
+      "failure_cost": "Lost time or cargo; the player retains a route or recovery option."
+    },
+    {
+      "id": "warden_checkpoint",
+      "category": "political",
+      "affects": ["toll_road_corridor", "permits", "reputation"],
+      "telegraph": "Lanterns, chalk marks, and a queue of wagons appear on the map.",
+      "player_responses": ["pay_toll", "show_shared_ledger", "negotiate", "take_old_road"],
+      "failure_cost": "Money, time, or faction reputation—not arbitrary confiscation."
+    },
+    {
+      "id": "raider_shadow",
+      "category": "security",
+      "affects": ["old_road_corridor", "cargo_safety", "escort_demand"],
+      "telegraph": "Missing route markers, distant watchfires, and a reduced forecast confidence.",
+      "player_responses": ["hire_escort", "travel_light", "share_warning", "choose_safer_route"],
+      "failure_cost": "Cargo loss, route delay, or a new debt; never a silent total loss."
+    },
+    {
+      "id": "counterfeit_measures",
+      "category": "market",
+      "affects": ["hollow_market", "trade_value", "rumor_quality"],
+      "telegraph": "Price cards disagree with physical weights and local seller testimony.",
+      "player_responses": ["hire_tess", "verify_measure", "accept_margin_risk", "report_broker"],
+      "failure_cost": "A smaller profit or a relationship penalty."
+    },
+    {
+      "id": "refugee_flow",
+      "category": "social",
+      "affects": ["reedwatch", "provisions", "settlement_resilience", "available_labor"],
+      "telegraph": "Crowded settlement icons, new camp markers, and changed demand reports.",
+      "player_responses": ["carry_grain", "carry_medicine", "escort_evacuation", "prioritize_contract"],
+      "failure_cost": "Lower resilience and changed local demand, not a hidden moral score."
+    }
+  ],
+  "map_state_progression": [
+    {
+      "stage": 0,
+      "name": "Routine Traffic",
+      "visible_changes": ["normal_market_icons", "open_route_labels", "ordinary_checkpoint_activity"],
+      "political_pressure": "Factions compete for the player’s future loyalty but do not yet control survival."
+    },
+    {
+      "stage": 1,
+      "name": "Thin Wells",
+      "visible_changes": ["water_icons_shrink", "medicine_demand_rises", "ration_marks_at_ashgate", "empty_jars_at_brine_cross"],
+      "political_pressure": "The Wardens request records; Wellkeepers request fair distribution; Free Caravans request open movement."
+    },
+    {
+      "stage": 2,
+      "name": "Managed Shortage",
+      "visible_changes": ["checkpoint_queues", "dry_cut_guides_charge_more", "reedwatch_watchfires_thin", "cinderford_pump_repairs_delayed"],
+      "political_pressure": "The player can no longer satisfy every settlement through ordinary arbitrage."
+    },
+    {
+      "stage": 3,
+      "name": "The Basin Decides",
+      "visible_changes": ["one_or_more_routes_restricted", "water_contracts_dominate", "final_infrastructure_offer", "settlement_outcome_markers"],
+      "political_pressure": "The player’s ending posture becomes visible before the final choice."
+    }
+  ],
+  "design_guardrails": [
+    "Keep Ash Wardens and Free Caravans as the primary reputation axes; local coalitions should create pressure and event options without adding five more permanent reputation bars.",
+    "Every resource should have at least one source, one destination, one political owner, and one recovery route.",
+    "The player should see a resource shortage on the map before being asked to solve it through an event.",
+    "Route obstacles should be forecastable and should impose money, time, cargo, trust, or access costs rather than silent campaign deletion.",
+    "A profitable choice and a resilient choice should both be viable, but they must produce visibly different regional outcomes.",
+    "Do not let production or a single faction make trade irrelevant; Cinderford’s repairs and Ashgate’s permits should create dependencies rather than replace the caravan loop."
+  ]
+}

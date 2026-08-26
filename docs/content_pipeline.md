@@ -12,7 +12,9 @@ The content layer is deliberately separate from simulation code. Events describe
 | --- | --- |
 | `design/content_bible.md` | Narrative premise, tone, locations or rooms, characters or commanders, event rules, progression, endings, and implementation guidance. |
 | `content/content_manifest.json` | Stable IDs and structured authored content for campaign chapters, locations, events, progression tracks, and endings. |
+| `content/political_geography.json` | Structured data for political groups, resource distribution, tensions, map nodes, corridors, obstacles, and crisis-stage map changes. |
 | `tools/validate_content.py` | Deterministic JSON/reference validator used by CI. |
+| `tools/validate_political_geography.py` | Market-specific validator for faction, resource, map, tension, and obstacle coverage. |
 | `ci/quality_contract.md` | Game-specific review criteria used by the multi-agent reviewer. |
 
 ## Authoring contract
