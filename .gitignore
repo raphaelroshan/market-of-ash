@@ -1,0 +1,11 @@
+.godot/
+*.import
+export.cfg
+export_presets.cfg
+user://
+*.save
+*.log
+build/
+market_of_ash_agent_package.zip
+.DS_Store
+Thumbs.db
