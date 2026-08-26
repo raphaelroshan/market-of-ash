@@ -1,0 +1,14 @@
+{
+  "slug": "market-of-ash",
+  "display_name": "Market of Ash",
+  "godot_test": "res://tests/test_economy.gd",
+  "primary_repo": "raphaelroshan/market-of-ash",
+  "release_platforms": ["steam", "epic-games-store"],
+  "release_ready": false,
+  "ai_review_roles": ["architecture", "gameplay", "qa", "security"],
+  "review_policy": {
+    "fail_on": "critical",
+    "llm_required": false,
+    "default_model": "gpt-5-mini"
+  }
+}

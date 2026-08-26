@@ -1,0 +1,91 @@
+name: All games validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to validate in each repository'
+        required: false
+        default: 'main'
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-all-games:
+    name: Validate all three repositories
+    runs-on: ubuntu-latest
+    env:
+      REF_TO_TEST: ${{ inputs.ref || 'main' }}
+      CROSS_REPO_READ_TOKEN: ${{ secrets.CROSS_REPO_READ_TOKEN }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_API_BASE: ${{ secrets.OPENAI_API_BASE }}
+      AI_REVIEW_MODELS: ${{ vars.AI_REVIEW_MODELS || 'gpt-5-mini' }}
+      AI_REVIEW_REQUIRED: ${{ vars.AI_REVIEW_REQUIRED || 'false' }}
+    steps:
+      - name: Checkout Market of Ash
+        uses: actions/checkout@v4
+        with:
+          repository: raphaelroshan/market-of-ash
+          ref: ${{ env.REF_TO_TEST }}
+          path: repos/market_of_ash
+          token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
+          fetch-depth: 2
+      - name: Checkout The Cartographer’s Siege
+        uses: actions/checkout@v4
+        with:
+          repository: raphaelroshan/the-cartographers-siege
+          ref: ${{ env.REF_TO_TEST }}
+          path: repos/the_cartographers_siege
+          token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
+          fetch-depth: 2
+      - name: Checkout Pack the Keep
+        uses: actions/checkout@v4
+        with:
+          repository: raphaelroshan/pack-the-keep
+          ref: ${{ env.REF_TO_TEST }}
+          path: repos/pack_the_keep
+          token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
+          fetch-depth: 2
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+      - name: Install AI client when enabled
+        if: env.OPENAI_API_KEY != ''
+        run: python -m pip install --disable-pip-version-check "openai>=1,<2"
+      - name: Run shared validation contract
+        run: |
+          for repo in repos/market_of_ash repos/the_cartographers_siege repos/pack_the_keep; do
+            python tools/policy_check.py --repo "$repo"
+            bash "$repo/scripts/verify.sh"
+          done
+      - name: Run four independent AI reviewers per repository
+        if: always()
+        run: |
+          mkdir -p artifacts
+          for repo in repos/market_of_ash repos/the_cartographers_siege repos/pack_the_keep; do
+            slug=$(python -c "import json; print(json.load(open('$repo/tools/ci_manifest.json'))['slug'])")
+            git -C "$repo" diff HEAD~1 HEAD > "artifacts/${slug}.diff" || true
+            python "$repo/tools/ai_review_runner.py" \
+              --diff "artifacts/${slug}.diff" \
+              --repo "$slug" \
+              --contract "$repo/ci/quality_contract.md" \
+              --output "artifacts/${slug}-ai-review.json" \
+              --fail-on critical
+          done
+      - name: Upload consolidated artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-games-validation-${{ github.run_number }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 30

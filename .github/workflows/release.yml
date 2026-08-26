@@ -1,0 +1,54 @@
+name: Release candidate
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  release-candidate:
+    name: Windows release candidate
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          filter: tree:0
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: true
+      - name: Run deterministic tests
+        run: bash scripts/verify.sh
+      - name: Require export presets for release builds
+        run: test -f export_presets.cfg
+      - name: Export Windows Desktop
+        run: |
+          mkdir -p build artifacts
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          godot --headless --path . --editor --quit
+          godot --headless --path . --export-release "Windows Desktop" "build/${slug}.exe"
+      - name: Create release manifest
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          python -c "import json, os; m=json.load(open('tools/ci_manifest.json')); m.update({'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2)"
+          tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
+      - name: Upload Windows release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-candidate-${{ github.ref_name }}
+          path: |
+            build/
+            artifacts/
+          if-no-files-found: error
+          retention-days: 90

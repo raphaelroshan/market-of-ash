@@ -1,0 +1,5 @@
+# Human ownership remains required for CI, release, and simulation changes.
+* @raphaelroshan
+.github/ @raphaelroshan
+src/core/ @raphaelroshan
+tests/ @raphaelroshan
