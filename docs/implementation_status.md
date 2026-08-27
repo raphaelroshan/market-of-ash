@@ -25,6 +25,7 @@
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
 - High-value Old Road or Dry Cut loads can meet `Three Riders, No Banner`; money, medicine, disclosed one-unit risk, and a time-for-information recovery create distinct responses without combat.
+- Disabled route-event responses render their prerequisite as persistent text below the control, so keyboard/controller players do not need hover access to understand unavailable choices.
 - Nara Vey can be recruited and assigned through the visit budget; departure forecasts distinguish unavailable, stale, and same-day scout-informed route notes without changing the authored risk.
 - Jorun Pale shares the same recruit/assign lifecycle; a current logistics plan reduces provision use by one, never below one, while leaving route time and risk intact.
 - Tess Oryn shares the crew lifecycle and visibly unlocks a Gatekeeper ledger challenge with a one-day cost, a named information lead, and a disclosed Warden-standing penalty.

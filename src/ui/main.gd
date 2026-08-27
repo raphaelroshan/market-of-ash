@@ -54,6 +54,7 @@ var event_setup_label: Label
 var event_stakes_label: Label
 var event_choice_list: VBoxContainer
 var event_choice_buttons: Array[Button] = []
+var event_choice_reason_labels: Array[Label] = []
 var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
@@ -1456,6 +1457,7 @@ func _refresh_event_card() -> void:
 		event_choice_list.remove_child(child)
 		child.queue_free()
 	event_choice_buttons.clear()
+	event_choice_reason_labels.clear()
 	var pending := world.pending_event
 	event_card.visible = not pending.is_empty()
 	if pending.is_empty():
@@ -1534,6 +1536,14 @@ func _refresh_event_card() -> void:
 		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
 		event_choice_list.add_child(button)
 		event_choice_buttons.append(button)
+		if button.disabled:
+			var reason_label := Label.new()
+			reason_label.text = "Unavailable: %s" % blocked_reason
+			reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			reason_label.add_theme_font_size_override("font_size", 11)
+			reason_label.add_theme_color_override("font_color", Color("#b5a18b"))
+			event_choice_list.add_child(reason_label)
+			event_choice_reason_labels.append(reason_label)
 	_grab_first_enabled(event_choice_buttons)
 
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:

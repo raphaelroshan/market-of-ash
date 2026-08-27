@@ -270,7 +270,7 @@
 
 **Reason:** Mouse, keyboard, and controller players need the same primary path without guessing which control owns input after a layer change or dynamically rebuilt event card. Explicit transition focus is small, deterministic, and regression-testable.
 
-**Trade-off:** Godot's default directional traversal still determines movement between controls, and disabled-choice explanations remain visible text rather than focusable controls. A manual controller and assistive-readability audit is still required before external alpha distribution.
+**Trade-off:** Godot's default directional traversal still determines movement between controls. Disabled event choices cannot receive focus, so their prerequisites are repeated as persistent text directly below the control; a manual controller and assistive-readability audit is still required before external alpha distribution.
 
 ## ADR-035: Save files are validated before replacing the active campaign
 
