@@ -3,7 +3,6 @@ extends SceneTree
 var failures: Array[String] = []
 
 func _initialize() -> void:
-	root.size = Vector2i(960, 540)
 	var scene: PackedScene = load("res://scenes/Main.tscn")
 	var ui: Control = scene.instantiate()
 	root.add_child(ui)
@@ -322,7 +321,8 @@ func _initialize() -> void:
 	_expect(int(report.get("report_version", 0)) == 3 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
-	_expect(int(report.get("viewport", {}).get("width", 0)) > 0, "playtest report should capture the current viewport")
+	var expected_report_viewport: Vector2i = ui._report_viewport_size()
+	_expect(int(report.get("viewport", {}).get("width", 0)) == expected_report_viewport.x and int(report.get("viewport", {}).get("height", 0)) == expected_report_viewport.y and expected_report_viewport.x > 0 and expected_report_viewport.y > 0, "playtest report should capture the runtime window rather than an empty viewport")
 	_expect(float(report.get("session_elapsed_seconds", -1.0)) >= 0.0, "playtest report should capture elapsed session time")
 	_expect(report.has("time_to_first_trade_seconds"), "playtest report should declare time-to-first-trade context even when the current run has not observed one")
 	_expect(typeof(report.get("presentation", {})) == TYPE_DICTIONARY and report.get("presentation", {}).has("large_text") and report.get("presentation", {}).has("reduced_motion") and report.get("presentation", {}).has("interface_sounds"), "playtest report should include the presentation settings needed to reproduce usability feedback")

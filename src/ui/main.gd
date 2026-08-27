@@ -1142,7 +1142,7 @@ func _on_pause_main_menu_pressed() -> void:
 	_show_main_menu()
 
 func _on_export_report_pressed() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
+	var viewport_size := _report_viewport_size()
 	var report := {
 		"report_version": 3,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
@@ -1195,6 +1195,18 @@ func _on_export_report_pressed() -> void:
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
+
+func _report_viewport_size() -> Vector2i:
+	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+		var browser_width := int(bridge.call("eval", "window.innerWidth"))
+		var browser_height := int(bridge.call("eval", "window.innerHeight"))
+		if browser_width > 0 and browser_height > 0:
+			return Vector2i(browser_width, browser_height)
+	var window_size := DisplayServer.window_get_size()
+	if window_size.x > 0 and window_size.y > 0:
+		return window_size
+	return Vector2i(get_viewport().get_visible_rect().size)
 
 func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))
