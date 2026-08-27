@@ -1341,7 +1341,16 @@ func _refresh_forecasts() -> void:
 		shop_market_preview_label.text = market_text
 	if shop_buy_button:
 		var unit_price := MarketEconomy.price_for(good_id, origin, world_context)
-		shop_buy_button.text = "Buy %d %s — %d ashmarks" % [quantity, good_id.capitalize(), unit_price * quantity]
+		var buy_total := unit_price * quantity
+		var buy_validation := MarketEconomy.validate_trade(world.cargo, good_id, quantity, world.cargo_capacity)
+		shop_buy_button.text = "Buy %d %s — %d ashmarks" % [quantity, good_id.capitalize(), buy_total]
+		shop_buy_button.disabled = not bool(buy_validation.get("ok", false)) or world.money < buy_total
+		if not bool(buy_validation.get("ok", false)):
+			shop_buy_button.tooltip_text = "Cannot buy this load: %s." % String(buy_validation.get("reason", "invalid cargo load"))
+		elif world.money < buy_total:
+			shop_buy_button.tooltip_text = "This load costs %d ashmarks; the caravan has %d." % [buy_total, world.money]
+		else:
+			shop_buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	if shop_sell_button:
 		var held_quantity := int(world.cargo.get(good_id, 0))
 		shop_sell_button.text = "Sell %d %s" % [quantity, good_id.capitalize()]

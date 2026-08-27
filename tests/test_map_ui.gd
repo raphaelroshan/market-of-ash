@@ -117,8 +117,13 @@ func _initialize() -> void:
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
 	_expect(buy_cargo_button.custom_minimum_size.y >= 44 and sell_cargo_button.custom_minimum_size.y >= 44 and ui.guided_test_button.custom_minimum_size.y >= 44, "first-trade actions should expose comfortable pointer and controller targets")
-	_expect(buy_cargo_button.text.contains("Buy 2 Water") and buy_cargo_button.text.contains("30 ashmarks"), "Buy should state the selected quantity, cargo, and total cost")
+	_expect(buy_cargo_button.text.contains("Buy 2 Water") and buy_cargo_button.text.contains("30 ashmarks") and not buy_cargo_button.disabled, "Buy should state the affordable selected quantity, cargo, and total cost")
 	_expect(sell_cargo_button.text == "Sell 2 Water" and sell_cargo_button.disabled and sell_cargo_button.tooltip_text.contains("Hold contains 0"), "Sell should be visibly unavailable when the selected quantity is not held")
+	ui.shop_quantity.value = 12
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	_expect(buy_cargo_button.disabled and buy_cargo_button.tooltip_text.contains("costs 180 ashmarks") and buy_cargo_button.tooltip_text.contains("has 120"), "Buy should explain when the selected load is unaffordable")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(_has_scroll_ancestor(ui.shop_good_option), "the primary Shop trade workflow should remain reachable through a scroll container")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
