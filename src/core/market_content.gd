@@ -553,6 +553,16 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 			var information_id := String(choice.get("information_id", ""))
 			if not information_id.is_empty() and (not information_id.is_valid_identifier() or information_id != information_id.to_lower()):
 				errors.append("event %s choice %s information_id must use lower_snake_case" % [event_id, choice_id])
+			var required_crew_id := String(choice.get("requires_assigned_crew_id", ""))
+			if not required_crew_id.is_empty() and (not required_crew_id.is_valid_identifier() or required_crew_id != required_crew_id.to_lower()):
+				errors.append("event %s choice %s requires_assigned_crew_id must use lower_snake_case" % [event_id, choice_id])
+			var reputation_delta_value: Variant = choice.get("reputation_delta", {})
+			if typeof(reputation_delta_value) != TYPE_DICTIONARY:
+				errors.append("event %s choice %s reputation_delta must be an object" % [event_id, choice_id])
+			else:
+				for faction_id in reputation_delta_value.keys():
+					if not ["wardens", "caravans"].has(String(faction_id)) or absi(int(reputation_delta_value.get(faction_id, 0))) > 10:
+						errors.append("event %s choice %s reputation_delta is invalid" % [event_id, choice_id])
 			var condition_value: Variant = choice.get("route_condition", {})
 			if typeof(condition_value) != TYPE_DICTIONARY:
 				errors.append("event %s choice %s route_condition must be an object" % [event_id, choice_id])

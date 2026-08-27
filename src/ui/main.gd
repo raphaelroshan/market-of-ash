@@ -1008,6 +1008,9 @@ func _refresh_event_card() -> void:
 		elif bool(choice.get("requires_active_contract", false)) and not _has_relevant_event_contract(String(pending.get("destination_id", "")), String(trade_basis.get("good_id", "water"))):
 			button.disabled = true
 			blocked_reason = "Needs an active water relief commitment for this destination."
+		elif not String(choice.get("requires_assigned_crew_id", "")).is_empty() and world.assigned_crew != String(choice.get("requires_assigned_crew_id", "")):
+			button.disabled = true
+			blocked_reason = "Requires %s to be assigned." % String(MarketContent.crew_member(String(choice.get("requires_assigned_crew_id", ""))).get("name", "the required crew member"))
 		button.tooltip_text = blocked_reason if button.disabled else String(choice.get("outcome", ""))
 		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
 		event_choice_list.add_child(button)
@@ -1031,6 +1034,7 @@ func _refresh_ui() -> void:
 		shop_status_label.text += "\nSettlement resilience: %d/10" % world.resilience_for(world.current_settlement)
 		if not world.known_information.is_empty():
 			shop_status_label.text += " · Known leads: %d" % world.known_information.size()
+		shop_status_label.text += " · Wardens %+d · Caravans %+d" % [int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0))]
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

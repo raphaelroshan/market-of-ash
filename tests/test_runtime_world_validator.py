@@ -125,6 +125,8 @@ def main() -> int:
         "resilience_delta must be an integer from 0 through 10",
         "cargo_cost must be an object",
         "information_id must use lower_snake_case",
+        "requires_assigned_crew_id must use lower_snake_case",
+        "reputation_delta must be an object",
         "route_condition must be an object",
     )
     missing_events = [

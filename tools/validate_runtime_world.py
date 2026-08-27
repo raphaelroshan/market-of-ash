@@ -286,6 +286,16 @@ def validate_events(value: Any, errors: list[str]) -> None:
             information_id = choice.get("information_id", "")
             if not isinstance(information_id, str) or (information_id and not re.fullmatch(r"[a-z][a-z0-9_]*", information_id)):
                 fail(errors, f"event {event_id} choice {choice_id}.information_id must use lower_snake_case")
+            required_crew_id = choice.get("requires_assigned_crew_id", "")
+            if not isinstance(required_crew_id, str) or (required_crew_id and not re.fullmatch(r"[a-z][a-z0-9_]*", required_crew_id)):
+                fail(errors, f"event {event_id} choice {choice_id}.requires_assigned_crew_id must use lower_snake_case")
+            reputation_delta = choice.get("reputation_delta", {})
+            if not isinstance(reputation_delta, dict):
+                fail(errors, f"event {event_id} choice {choice_id}.reputation_delta must be an object")
+            else:
+                for faction_id, delta in reputation_delta.items():
+                    if faction_id not in ("wardens", "caravans") or not isinstance(delta, int) or abs(delta) > 10:
+                        fail(errors, f"event {event_id} choice {choice_id}.reputation_delta is invalid")
             condition = choice.get("route_condition", {})
             if not isinstance(condition, dict):
                 fail(errors, f"event {event_id} choice {choice_id}.route_condition must be an object")

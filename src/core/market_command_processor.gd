@@ -323,6 +323,9 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		return _failure("this choice needs %d %s, but you have %d; choose another available route response" % [cargo_cost_quantity, cargo_cost_good_id, int(world.cargo.get(cargo_cost_good_id, 0))])
 	if bool(choice.get("requires_active_contract", false)) and not _has_relevant_active_contract(world, destination_id, String(trade_basis.get("good_id", "water"))):
 		return _failure("this response needs an active water relief commitment for this destination; choose a sale, share, or sealed-cargo response")
+	var required_crew_id := String(choice.get("requires_assigned_crew_id", ""))
+	if not required_crew_id.is_empty() and world.assigned_crew != required_crew_id:
+		return _failure("this response requires %s to be assigned" % String(MarketContent.crew_member(required_crew_id).get("name", required_crew_id)))
 	var arrival_target := String(choice.get("arrival_target", "destination"))
 	var resulting_settlement_id := String(journey.get("origin_id", "")) if arrival_target == "origin" else destination_id
 	if not world.has_settlement(resulting_settlement_id):
@@ -383,6 +386,13 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		resilience_result = world.adjust_settlement_resilience(destination_id, resilience_delta)
 	var information_id := String(choice.get("information_id", ""))
 	var information_added := world.record_information(information_id) if not information_id.is_empty() else false
+	var reputation_results: Dictionary = {}
+	var reputation_delta: Dictionary = choice.get("reputation_delta", {})
+	for faction_id_value in reputation_delta.keys():
+		var faction_id := String(faction_id_value)
+		var reputation_result := world.adjust_reputation(faction_id, int(reputation_delta.get(faction_id_value, 0)))
+		if reputation_result.ok:
+			reputation_results[faction_id] = reputation_result
 
 	world.current_settlement = resulting_settlement_id
 	world.reset_visit_slots()
@@ -409,14 +419,16 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		"market_memory": market_memory,
 		"settlement_resilience": resilience_result,
 		"information_id": information_id if information_added else "",
+		"reputation": reputation_results,
 	}
 	var archived := world.archive_pending_event(choice_id, outcome)
 	var material_message := " The crew took %s." % material_summary if not material_summary.is_empty() else ""
 	var trade_message := " The ration line received %d %s; the local market now remembers that supply." % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else ""
 	var resilience_message := " %s resilience is now %d/10." % [String(world.settlement(destination_id).name), int(resilience_result.get("after", 0))] if not resilience_result.is_empty() else ""
 	var information_message := " New information recorded: %s." % information_id.replace("_", " ") if information_added else ""
+	var reputation_message := " Warden standing is now %d." % int(world.reputation.get("wardens", 0)) if reputation_results.has("wardens") else ""
 	var movement_message := "You returned to %s." % String(world.settlement(resulting_settlement_id).name) if arrival_target == "origin" else "You arrived at %s." % String(world.settlement(resulting_settlement_id).name)
-	var message := "%s %s%s%s%s%s%s %s" % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), material_message, trade_message, resilience_message, information_message, cargo_loss_message, movement_message]
+	var message := "%s %s%s%s%s%s%s%s %s" % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), material_message, trade_message, resilience_message, information_message, reputation_message, cargo_loss_message, movement_message]
 	world.log.append(message)
 	var contract_resolutions: Array[Dictionary] = []
 	if arrival_target == "destination":

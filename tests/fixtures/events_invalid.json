@@ -34,6 +34,8 @@
           "resilience_delta": 11,
           "cargo_cost": "bad",
           "information_id": "Bad Lead",
+          "requires_assigned_crew_id": "Bad Crew",
+          "reputation_delta": "bad",
           "route_condition": "bad",
           "outcome": ""
         },

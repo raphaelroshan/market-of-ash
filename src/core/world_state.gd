@@ -102,6 +102,14 @@ func record_information(information_id: String) -> bool:
 	known_information.append(information_id)
 	return true
 
+func adjust_reputation(faction_id: String, delta: int) -> Dictionary:
+	if not reputation.has(faction_id):
+		return {"ok": false, "reason": "unknown faction"}
+	var before := int(reputation.get(faction_id, 0))
+	var after := clampi(before + delta, -10, 10)
+	reputation[faction_id] = after
+	return {"ok": true, "before": before, "after": after, "delta": after - before}
+
 func is_crew_recruited(crew_id: String) -> bool:
 	return recruited_crew.has(crew_id)
 

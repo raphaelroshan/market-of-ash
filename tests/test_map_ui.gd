@@ -25,7 +25,7 @@ func _initialize() -> void:
 	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled, "Ashgate should expose one usable local opportunity")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
-	_expect(ui.crew_buttons.size() == 2 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale"), "Ashgate should expose both authored crew recruit actions")
+	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	var action_money_before: int = ui.world.money
 	var action_provisions_before: int = ui.world.provisions
@@ -117,7 +117,8 @@ func _initialize() -> void:
 	_expect(ui.event_card.visible and not ui.enter_settlement_button.visible, "pending route event should block arrival and show the event card")
 	_expect(ui.event_title_label.text == "The Gatekeeper's Chalk", "event card did not render the authored title")
 	_expect(ui.event_stakes_label.text.contains("Toll Road") and ui.event_stakes_label.text.contains("1 Medicine unit valued at 44"), "event card did not expose route and cargo context")
-	_expect(ui.event_choice_buttons.size() == 3, "Gatekeeper's Chalk should expose all three authored choices")
+	_expect(ui.event_choice_buttons.size() == 4, "Gatekeeper's Chalk should expose its three base choices and Tess's visible negotiation option")
+	_expect(ui.event_choice_buttons[3].disabled and ui.event_choice_buttons[3].tooltip_text.contains("Tess Oryn"), "Tess's Gatekeeper option should remain visible with its assignment prerequisite")
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
 	_expect(ui.departure_status_label.text.contains("ROUTE DECISION"), "departure screen did not identify the paused route decision")
 	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
@@ -188,12 +189,28 @@ func _initialize() -> void:
 	ui._on_start_game_pressed()
 	ui._on_recruit_crew_pressed("nara_vey")
 	_expect(ui.world.is_crew_recruited("nara_vey") and ui.world.money == 100 and ui.world.visit_slots_remaining == 1, "Nara recruitment UI did not apply its visible cost and slot")
-	_expect(ui.crew_buttons.size() == 2 and ui.crew_buttons[0].text.contains("Refresh Nara Vey's route plan"), "recruited Nara should expose the assignment action alongside Jorun")
+	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Refresh Nara Vey's route plan"), "recruited Nara should expose the assignment action alongside the other crew")
 	ui._on_assign_crew_pressed("nara_vey")
 	_expect(ui.world.assigned_crew == "nara_vey" and ui.world.visit_slots_remaining == 0, "Nara assignment UI did not consume its visit slot")
 	ui._on_plan_departure_pressed()
 	_expect(ui.route_preview_label.text.contains("Nara-informed") and ui.route_preview_label.text.contains("unmarked riders"), "departure forecast did not show Nara's same-day route note")
 	_expect(ui.route_preview_label.text.contains("35% risk"), "Nara's route note should not erase the authored uncertainty")
+
+	ui._on_start_game_pressed()
+	ui._on_recruit_crew_pressed("tess_oryn")
+	ui._on_assign_crew_pressed("tess_oryn")
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "brine_cross")
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._on_depart_pressed()
+	_expect(ui.world.pending_event.get("id", "") == "gatekeepers_chalk" and not ui.event_choice_buttons[3].disabled, "assigned Tess should enable the visible Gatekeeper negotiation")
+	ui._on_event_choice_pressed("gatekeepers_chalk", "challenge_chalk_ledger")
+	_expect(ui.world.reputation.wardens == -1 and ui.world.known_information.has("gatekeeper_invented_tolls"), "Tess's UI choice did not apply its named political and information consequences")
+	_expect(ui.event_label.text.contains("Warden standing is now -1"), "Tess's arrival report did not disclose the relationship cost")
 
 	ui.queue_free()
 	await process_frame

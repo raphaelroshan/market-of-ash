@@ -207,3 +207,11 @@
 **Reason:** The quartermaster needs an observed logistics effect that changes route viability and competes with Nara's information role. Separating provisions from elapsed days makes the benefit legible without silently accelerating the crisis clock or weakening route danger.
 
 **Trade-off:** The current Ashgate routes already cost one provision, so Jorun's saving becomes material after reaching Reedwatch and planning the two-day Dry Cut. Reports remain same-day and only one crew member can be assigned at a time.
+
+## ADR-027: Tess unlocks an explicit event response with a named political cost
+
+**Decision:** Tess Oryn uses the shared recruit/assign lifecycle and adds one crew-gated choice to Gatekeeper's Chalk. `challenge_chalk_ledger` is always visible, requires Tess to be assigned, costs one day, preserves route resources and cargo, records an invented-tolls information lead, and changes Warden standing by minus one through a bounded reputation helper.
+
+**Reason:** A fixer should change an actual negotiation rather than add an invisible percentage bonus. Keeping the unavailable choice visible teaches Tess's role before recruitment, while the named relationship cost makes the option a tradeoff rather than a universally superior replacement for paying or waiting.
+
+**Trade-off:** Reputation is displayed and serialized but has no threshold effect until the B7 faction proof. Tess currently changes one event only; broader contract and market negotiation hooks remain later slices.

@@ -25,6 +25,7 @@ func _init() -> void:
 	_test_three_riders_no_banner_event()
 	_test_nara_vey_crew()
 	_test_jorun_pale_crew()
+	_test_tess_oryn_crew()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -46,7 +47,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.3.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.4.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -59,6 +60,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.event("three_riders_no_banner").get("route_ids", []).has("old_road"), "runtime content should expose the suspicious escort event")
 	_expect(MarketContent.crew_member("nara_vey").get("role", "") == "Scout", "runtime content should expose Nara Vey's stable crew record")
 	_expect(MarketContent.crew_member("jorun_pale").get("role", "") == "Quartermaster", "runtime content should expose Jorun Pale's stable crew record")
+	_expect(MarketContent.crew_member("tess_oryn").get("role", "") == "Fixer", "runtime content should expose Tess Oryn's stable crew record")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -1054,6 +1056,42 @@ func _test_jorun_pale_crew() -> void:
 	_expect(dry_cut.ok and int(dry_cut.state_delta.provisions) == -1 and world.provisions == provisions_before - 1, "Jorun's forecasted provision saving should match travel resolution")
 	_expect(world.day == 4 and world.route_intelligence("dry_cut").status == "stale", "Jorun should save provisions without shortening travel time, and the report should then become stale")
 
+func _test_tess_oryn_crew() -> void:
+	var unavailable_world := AshWorldState.new(1)
+	unavailable_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(unavailable_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	var blocked_challenge := MarketCommandProcessor.execute(unavailable_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "challenge_chalk_ledger"},
+	})
+	_expect(not blocked_challenge.ok and unavailable_world.reputation.wardens == 0 and unavailable_world.known_information.is_empty(), "Tess's negotiation option should block without assignment and preserve state")
+
+	var world := AshWorldState.new(1)
+	var recruit := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RECRUIT_CREW,
+		"inputs": {"crew_id": "tess_oryn"},
+	})
+	var assign := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ASSIGN_CREW,
+		"inputs": {"crew_id": "tess_oryn"},
+	})
+	_expect(recruit.ok and assign.ok and world.money == 98 and world.visit_slots_remaining == 0, "Tess recruitment and assignment should consume their stated money and slots")
+	world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	var challenge := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "challenge_chalk_ledger"},
+	})
+	_expect(challenge.ok and world.current_settlement == "brine_cross" and world.day == 3, "Tess should turn the ledger challenge into a safe one-day arrival")
+	_expect(world.reputation.wardens == -1 and world.known_information.has("gatekeeper_invented_tolls"), "Tess's named negotiation should record both its Warden cost and information result")
+	_expect(world.assigned_crew == "tess_oryn" and world.route_intelligence("toll_road").status == "stale", "travel should retain Tess's assignment while aging her route note")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -1122,7 +1160,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.3.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.4.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
