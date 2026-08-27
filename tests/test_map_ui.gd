@@ -118,7 +118,7 @@ func _initialize() -> void:
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
 	_expect(buy_cargo_button.custom_minimum_size.y >= 44 and sell_cargo_button.custom_minimum_size.y >= 44 and ui.guided_test_button.custom_minimum_size.y >= 44, "first-trade actions should expose comfortable pointer and controller targets")
 	_expect(buy_cargo_button.text.contains("Buy 2 Water") and buy_cargo_button.text.contains("30 ashmarks") and not buy_cargo_button.disabled, "Buy should state the affordable selected quantity, cargo, and total cost")
-	_expect(sell_cargo_button.text == "Sell 2 Water" and sell_cargo_button.disabled and sell_cargo_button.tooltip_text.contains("Hold contains 0"), "Sell should be visibly unavailable when the selected quantity is not held")
+	_expect(sell_cargo_button.text.contains("Sell 2 Water") and sell_cargo_button.text.contains("30 ashmarks") and sell_cargo_button.disabled and sell_cargo_button.tooltip_text.contains("Hold contains 0"), "Sell should state its proceeds and remain visibly unavailable when the selected quantity is not held")
 	_expect(ui.shop_transaction_status_label.text.contains("Sell unavailable") and ui.shop_transaction_status_label.text.contains("0/2 Water"), "a blocked sale should expose its hold shortfall as persistent text")
 	ui.shop_quantity.value = 12
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
@@ -649,6 +649,7 @@ func _initialize() -> void:
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the pinned departure action visible")
 	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the primary Buy action visible before scrolling")
+	_expect(ui.guided_test_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the optional first-trade helper visible while it is relevant")
 	ui._show_main_menu()
 	await process_frame
 	_expect(ui.start_game_button.get_global_rect().end.y <= ui.menu_layer.get_global_rect().end.y, "large text should keep Start new game visible before optional settings")

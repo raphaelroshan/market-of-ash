@@ -1376,7 +1376,8 @@ func _refresh_forecasts() -> void:
 			shop_buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	if shop_sell_button:
 		var held_quantity := int(world.cargo.get(good_id, 0))
-		shop_sell_button.text = "Sell %d %s" % [quantity, good_id.capitalize()]
+		var sale_total := MarketEconomy.price_for(good_id, origin, world_context) * quantity
+		shop_sell_button.text = "Sell %d %s — %d ashmarks" % [quantity, good_id.capitalize(), sale_total]
 		shop_sell_button.disabled = held_quantity < quantity
 		shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan." if not shop_sell_button.disabled else "Hold contains %d of the selected %d %s." % [held_quantity, quantity, good_id.capitalize()]
 		if shop_sell_button.disabled:
