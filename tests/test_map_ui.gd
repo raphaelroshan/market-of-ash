@@ -446,7 +446,9 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.shop_good_option, "medicine")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	buy_cargo_button.grab_focus()
 	ui._on_buy_pressed()
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "a successful ordinary purchase should move focus to its stated Plan departure next action")
 	ui._on_plan_departure_pressed()
 	ui._select_option_by_id(ui.destination_option, "brine_cross")
 	ui._on_destination_changed(ui.destination_option.selected)

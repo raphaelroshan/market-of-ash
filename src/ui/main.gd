@@ -1460,7 +1460,7 @@ func _on_buy_pressed() -> void:
 	})
 	_record_first_trade(result)
 	_show_command_result(result, "Purchase")
-	if result.ok and shop_buy_button != null and shop_buy_button.disabled:
+	if result.ok:
 		_grab_focus_if_available(plan_departure_button)
 
 func _on_sell_pressed() -> void:
