@@ -173,6 +173,9 @@ func _initialize() -> void:
 	_expect(not ui.continue_game_button.disabled and ui.menu_save_status_label.text.contains("backup save"), "a valid backup should keep Continue available when the primary is corrupt")
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_corrupt_load and ui.save_status_label.text.contains("RECOVERED BACKUP"), "a corrupt primary save should recover the previous validated generation")
+	ui._on_save_pressed()
+	var preserved_backup_attempt: Dictionary = ui._load_candidate(test_backup_path)
+	_expect(bool(preserved_backup_attempt.get("ok", false)), "saving after backup recovery should preserve the known-good backup instead of rotating the corrupt primary over it")
 	if FileAccess.file_exists(test_backup_path):
 		DirAccess.remove_absolute(absolute_test_backup_path)
 	var future_save: Dictionary = ui.world.serialize()

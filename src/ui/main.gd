@@ -1430,13 +1430,19 @@ func _write_save(status_prefix: String) -> bool:
 	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
 	var backup_absolute := ProjectSettings.globalize_path(backup_path)
 	if FileAccess.file_exists(save_path):
-		if FileAccess.file_exists(backup_path):
-			DirAccess.remove_absolute(backup_absolute)
-		var backup_error := DirAccess.copy_absolute(target_absolute, backup_absolute)
-		if backup_error != OK:
-			DirAccess.remove_absolute(temporary_absolute)
-			save_status_text = "SAVE ERROR — Could not preserve the previous save. Current run unchanged."
-			return false
+		var primary_is_valid := bool(_load_candidate(save_path).get("ok", false))
+		if primary_is_valid:
+			if FileAccess.file_exists(backup_path):
+				var remove_backup_error := DirAccess.remove_absolute(backup_absolute)
+				if remove_backup_error != OK:
+					DirAccess.remove_absolute(temporary_absolute)
+					save_status_text = "SAVE ERROR — Could not rotate the previous backup. Current run unchanged."
+					return false
+			var backup_error := DirAccess.copy_absolute(target_absolute, backup_absolute)
+			if backup_error != OK:
+				DirAccess.remove_absolute(temporary_absolute)
+				save_status_text = "SAVE ERROR — Could not preserve the previous save. Current run unchanged."
+				return false
 		var remove_error := DirAccess.remove_absolute(target_absolute)
 		if remove_error != OK:
 			DirAccess.remove_absolute(temporary_absolute)
