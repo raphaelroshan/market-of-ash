@@ -261,6 +261,16 @@ func _initialize() -> void:
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")
 	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v11"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3"), "water purchase did not advance the playtest objective")
+	ui._on_save_pressed()
+	ui._on_start_game_pressed()
+	ui._on_load_pressed()
+	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3") and ui.guided_test_button.disabled, "loading a purchased teaching load should preserve objective progress and keep the one-use action disabled")
+	ui.world.current_settlement = "reedwatch"
+	ui.world.cargo["water"] = 1
+	ui.world.cargo["weight"] = 1
+	ui._refresh_ui()
+	_expect(ui.playtest_status_label.text.contains("RECOVERY") and ui.playtest_status_label.text.contains("Only 1 of the planned 2 water reached Reedwatch"), "a partial teaching load should explain the recoverable outcome instead of resetting the objective")
+	ui._on_load_pressed()
 	var state_before_report := JSON.stringify(ui.world.serialize())
 	ui._on_export_report_pressed()
 	_expect(FileAccess.file_exists(test_report_path) and JSON.stringify(ui.world.serialize()) == state_before_report, "playtest report export should write diagnostics without mutating campaign state")
@@ -354,6 +364,10 @@ func _initialize() -> void:
 	_expect(ui.playtest_status_label.text.contains("RUN COMPLETE"), "selling delivered water from the destination shop did not complete the playtest objective")
 	_expect(ui.shop_market_preview_label.text.contains("Market memory: your last 2 water delivered here softened this price by 8%"), "completed sale did not expose the local delivery-memory explanation")
 	_expect(ui.shop_market_preview_label.text.contains("memory 0.92"), "market preview did not show the post-delivery price multiplier")
+	ui._on_save_pressed()
+	ui._on_start_game_pressed()
+	ui._on_load_pressed()
+	_expect(ui.playtest_status_label.text.contains("RUN COMPLETE") and ui.guided_test_button.disabled, "loading a completed teaching delivery should preserve completion and keep the one-use action disabled")
 
 	ui._on_start_game_pressed()
 	ui._select_option_by_id(ui.shop_good_option, "medicine")

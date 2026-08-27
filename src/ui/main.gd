@@ -69,7 +69,6 @@ var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
 var playtest_status_label: Label
-var playtest_cargo_sold := 0
 var status_label: Label
 var event_label: Label
 var destination_option: OptionButton
@@ -911,7 +910,6 @@ func _on_start_game_pressed() -> void:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = AshWorldState.new(PLAYTEST_SEED)
-	playtest_cargo_sold = 0
 	if map_panel:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
@@ -1255,8 +1253,6 @@ func _on_sell_pressed() -> void:
 			"quantity": quantity,
 		},
 	})
-	if result.ok and world.current_settlement == PLAYTEST_DESTINATION and good_id == PLAYTEST_GOOD:
-		playtest_cargo_sold += quantity
 	_show_command_result(result, "Sale")
 
 func _on_depart_pressed() -> void:
@@ -1426,7 +1422,6 @@ func _confirm_reset() -> void:
 	if reset_confirmation_dialog:
 		reset_confirmation_dialog.hide()
 	world = AshWorldState.new(PLAYTEST_SEED)
-	playtest_cargo_sold = 0
 	_populate_destination_options()
 	_populate_route_options()
 	map_panel.world = world
@@ -1459,14 +1454,38 @@ func _refresh_playtest_status() -> void:
 	if playtest_status_label == null:
 		return
 	var guided_cargo_held := int(world.cargo.get(PLAYTEST_GOOD, 0))
-	if playtest_cargo_sold >= PLAYTEST_QUANTITY:
+	var guided_cargo_bought := _guided_trade_quantity(MarketCommandProcessor.BUY_GOODS)
+	var guided_cargo_sold := _guided_trade_quantity(MarketCommandProcessor.SELL_GOODS, PLAYTEST_DESTINATION)
+	if guided_test_button:
+		guided_test_button.disabled = guided_cargo_bought >= PLAYTEST_QUANTITY or guided_cargo_held >= PLAYTEST_QUANTITY or guided_cargo_sold >= PLAYTEST_QUANTITY
+	if guided_cargo_sold >= PLAYTEST_QUANTITY:
 		playtest_status_label.text = "RUN COMPLETE — You moved water to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
 	elif world.current_settlement == PLAYTEST_DESTINATION and guided_cargo_held >= PLAYTEST_QUANTITY:
 		playtest_status_label.text = "STEP 3 OF 3 — You reached Reedwatch with water. Sell 2 water to see the delivery result."
+	elif world.current_settlement == PLAYTEST_DESTINATION and guided_cargo_held > 0 and guided_cargo_bought >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "RECOVERY — Only %d of the planned 2 water reached Reedwatch. Sell what remains, trade onward, or reset; the run is still playable." % guided_cargo_held
 	elif guided_cargo_held >= PLAYTEST_QUANTITY:
 		playtest_status_label.text = "STEP 2 OF 3 — Water is loaded. Read the Old Road forecast, compare it with the Toll Road, then choose whether to depart for Reedwatch."
+	elif guided_cargo_bought >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "RECOVERY — The planned water is no longer in the hold. Review the latest result, then trade onward or reset; no restart is required."
 	else:
 		playtest_status_label.text = "STEP 1 OF 3 — Read the Water market price and route forecast. Buy 2 water when you are ready; the marked test button simply executes that normal trade."
+
+func _guided_trade_quantity(command_id: String, settlement_id: String = "") -> int:
+	var total := 0
+	for entry in world.command_history:
+		if not bool(entry.get("ok", false)) or String(entry.get("id", "")) != command_id:
+			continue
+		var inputs: Dictionary = entry.get("inputs", {})
+		if String(inputs.get("good_id", "")) != PLAYTEST_GOOD:
+			continue
+		if not settlement_id.is_empty():
+			var state_delta: Dictionary = entry.get("state_delta", {})
+			var market_memory: Dictionary = state_delta.get("market_memory", {})
+			if String(market_memory.get("settlement_id", "")) != settlement_id:
+				continue
+		total += maxi(0, int(inputs.get("quantity", 0)))
+	return total
 
 func _refresh_opportunities() -> void:
 	if opportunity_list == null or opportunity_status_label == null:

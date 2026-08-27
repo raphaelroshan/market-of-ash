@@ -94,6 +94,8 @@
 
 **Reason:** The earlier menu established a working entry point but did not make its test purpose, completion condition, or next action sufficiently visible. A compact objective ladder lets a new player recognize the core loop and identify whether the market explanation, forecast, and realized transaction are coherent.
 
+The objective is presentation state derived from serialized successful buy/sell commands, not a second campaign progression field. This keeps save/load deterministic, prevents the one-use helper from reappearing after load, and lets lost or spent teaching cargo produce a recoverable explanation without changing simulation rules.
+
 **Trade-off:** The refined status text creates a recommended delivery objective but does not assess player skill, promise profit, force route choice, or impose a tutorial contract. It is playtest scaffolding, not an authored quest or a substitute for later event, contract, and campaign systems.
 
 ## ADR-013: Authoritative route endpoints
