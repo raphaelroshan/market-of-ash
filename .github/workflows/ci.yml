@@ -36,9 +36,10 @@ jobs:
       - name: Validate tribal conflict
         run: python tools/validate_tribal_conflict.py --data content/tribal_conflict.json
       - name: Validate economy and settlement actions
-        run: python tools/validate_economy_and_settlements.py \
-          --economy content/economy_framework.json \
-          --settlements content/settlement_actions.json
+        run: |
+          python tools/validate_economy_and_settlements.py \
+            --economy content/economy_framework.json \
+            --settlements content/settlement_actions.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})

@@ -35,7 +35,7 @@ func _test_regional_price_spread() -> void:
 	var destination := world.settlement("reedwatch")
 	var origin_price := MarketEconomy.price_for("scrap", origin, {"crisis_modifiers": world.crisis_modifiers})
 	var destination_price := MarketEconomy.price_for("scrap", destination, {"crisis_modifiers": world.crisis_modifiers})
-	var projected := MarketEconomy.projected_profit("scrap", 2, origin, destination, world)
+	var projected := MarketEconomy.projected_profit("scrap", 2, origin, destination, {"crisis_modifiers": world.crisis_modifiers})
 	_expect(destination_price > origin_price, "regional price spread should reward moving scrap from Cinderford to Reedwatch")
 	_expect(projected > 0, "a useful distant-market cargo should have positive projected gross profit")
 	var explanation := MarketEconomy.explain_price("water", destination, {"crisis_modifiers": {"water": 1.5}})
