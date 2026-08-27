@@ -50,16 +50,9 @@ Publishing to Steam or Epic Games Store remains a deliberate human-controlled st
 
 ## Local execution
 
-Run the deterministic project-specific test and policy checks locally:
+Run the complete local policy, content-validation, and deterministic Godot suite:
 
 ```bash
-python tools/policy_check.py --repo local
-python tools/validate_content.py --manifest content/content_manifest.json
-python tools/validate_political_geography.py --data content/political_geography.json
-python tools/validate_tribal_conflict.py --data content/tribal_conflict.json
-python tools/validate_economy_and_settlements.py \
-  --economy content/economy_framework.json \
-  --settlements content/settlement_actions.json
 bash scripts/verify.sh
 ```
 

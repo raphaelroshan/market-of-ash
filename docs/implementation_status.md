@@ -126,14 +126,10 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 ```bash
 bash scripts/verify.sh
-python3 tools/policy_check.py --repo raphaelroshan/market-of-ash
-python3 tools/validate_content.py --manifest content/content_manifest.json
-python3 tools/validate_political_geography.py --data content/political_geography.json
-python3 tools/validate_tribal_conflict.py --data content/tribal_conflict.json
-python3 tools/validate_economy_and_settlements.py --economy content/economy_framework.json --settlements content/settlement_actions.json
-python3 tools/validate_runtime_world.py --data content/runtime_world.json
 godot --headless --path . --editor --quit
 ```
+
+`scripts/verify.sh` runs repository policy, every content validator, validator fixtures, and all deterministic Godot suites. The separate editor import remains useful for import/cache validation.
 
 The most recent GitHub run at this baseline passed repository policy, Ubuntu and Windows Godot tests, AI review, and source packaging. Local results must still be recorded for every subsequent slice.
 
