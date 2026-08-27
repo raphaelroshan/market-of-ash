@@ -45,6 +45,15 @@ def validate(data: Any) -> list[str]:
     if not isinstance(root.get("content_version"), str) or not root["content_version"]:
         fail(errors, "content_version must be a non-empty string")
 
+    planning = as_object(root.get("planning_assumptions"), "planning_assumptions", errors)
+    if not isinstance(planning.get("provision_value"), int) or planning["provision_value"] <= 0:
+        fail(errors, "planning_assumptions.provision_value must be a positive integer")
+    if (
+        not isinstance(planning.get("time_opportunity_cost_per_day"), int)
+        or planning["time_opportunity_cost_per_day"] < 0
+    ):
+        fail(errors, "planning_assumptions.time_opportunity_cost_per_day must be a non-negative integer")
+
     goods = root.get("goods")
     if not isinstance(goods, list):
         fail(errors, "goods must be a list")

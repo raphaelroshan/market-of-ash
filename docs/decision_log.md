@@ -71,3 +71,11 @@
 **Reason:** The vertical slice needs one canonical content source, reproducible state changes, UI-independent validation, and actionable test/debug evidence before economy presentation, market memory, events, or faction work expand the system.
 
 **Trade-off:** The first command processor supports only the already playable buy, sell, and depart actions. Future contracts, services, events, faction effects, and upgrades must be added as explicit commands rather than interpreting authored effect text.
+
+## ADR-010: Explainable planning forecast before confirmation
+
+**Decision:** Present the active cargo and route plan through a display-only settlement market and route forecast. The forecast exposes unit price, load total, price drivers, regional comparison, purchase total, expected sale total, gross margin, route fee, provision value, risk-adjusted expected loss, time opportunity cost, and expected net profit. Its assumptions live in validated runtime content.
+
+**Reason:** The core Frontier-inspired decision requires a player to understand why a price spread exists and whether margin justifies risk before buying cargo or departing. The explanation and forecast make the existing deterministic economy legible without changing actual transaction or route-resolution behavior.
+
+**Trade-off:** Expected loss and time opportunity cost are estimates rather than guarantees. The displayed planning model must remain simple and transparent until later work adds information quality, guards, events, contracts, market memory, and other factors as explicit forecast inputs.

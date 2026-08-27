@@ -1,6 +1,7 @@
 extends Control
 
 const MarketContent = preload("res://src/core/market_content.gd")
+const MarketEconomy = preload("res://src/core/economy.gd")
 const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
@@ -11,6 +12,8 @@ var destination_option: OptionButton
 var route_option: OptionButton
 var cargo_good_option: OptionButton
 var cargo_quantity: SpinBox
+var market_preview_label: Label
+var route_preview_label: Label
 var log_label: Label
 var map_panel
 var selected_map_cell: Vector2i = Vector2i(-1, -1)
@@ -100,10 +103,7 @@ func _build_ui() -> void:
 	controls.add_child(control_title)
 
 	destination_option = OptionButton.new()
-	for id in world.settlements.keys():
-		if id != world.current_settlement:
-			destination_option.add_item(world.settlements[id].name)
-			destination_option.set_item_metadata(destination_option.item_count - 1, id)
+	_populate_destination_options()
 	controls.add_child(_labeled_control("Destination", destination_option))
 
 	route_option = OptionButton.new()
@@ -123,6 +123,16 @@ func _build_ui() -> void:
 	cargo_quantity.max_value = 12
 	cargo_quantity.value = 2
 	controls.add_child(_labeled_control("Quantity", cargo_quantity))
+
+	market_preview_label = _forecast_label()
+	controls.add_child(market_preview_label)
+	route_preview_label = _forecast_label()
+	controls.add_child(route_preview_label)
+
+	destination_option.item_selected.connect(_on_forecast_input_changed)
+	route_option.item_selected.connect(_on_forecast_input_changed)
+	cargo_good_option.item_selected.connect(_on_forecast_input_changed)
+	cargo_quantity.value_changed.connect(_on_forecast_value_changed)
 
 	var buy_button := Button.new()
 	buy_button.text = "Buy cargo"
@@ -151,6 +161,14 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_on_reset_pressed)
 	controls.add_child(reset_button)
 
+func _forecast_label() -> Label:
+	var label := Label.new()
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.custom_minimum_size = Vector2(332, 120)
+	label.add_theme_font_size_override("font_size", 13)
+	label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	return label
+
 func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	var group := VBoxContainer.new()
 	var label := Label.new()
@@ -160,10 +178,65 @@ func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	group.add_child(control)
 	return group
 
+func _populate_destination_options() -> void:
+	if destination_option == null:
+		return
+	var previous_destination := _selected_id(destination_option)
+	destination_option.clear()
+	for settlement_id in MarketContent.settlement_ids():
+		if settlement_id == world.current_settlement:
+			continue
+		var settlement := world.settlement(settlement_id)
+		destination_option.add_item(String(settlement.get("name", settlement_id)))
+		destination_option.set_item_metadata(destination_option.item_count - 1, settlement_id)
+		if settlement_id == previous_destination:
+			destination_option.select(destination_option.item_count - 1)
+
 func _selected_id(option: OptionButton) -> String:
 	if option.selected < 0:
 		return ""
 	return String(option.get_item_metadata(option.selected))
+
+func _on_forecast_input_changed(_index: int) -> void:
+	_refresh_forecasts()
+
+func _on_forecast_value_changed(_value: float) -> void:
+	_refresh_forecasts()
+
+func _refresh_forecasts() -> void:
+	if market_preview_label == null or route_preview_label == null:
+		return
+	var good_id := _selected_id(cargo_good_option)
+	var destination_id := _selected_id(destination_option)
+	var route_id := _selected_id(route_option)
+	var quantity := int(cargo_quantity.value)
+	var origin := world.settlement(world.current_settlement)
+	var destination := world.settlement(destination_id)
+	var world_context := {"crisis_modifiers": world.crisis_modifiers}
+	market_preview_label.text = _market_preview_text(good_id, quantity, origin, world_context)
+	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, world.route(route_id), world_context)
+
+func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:
+	var details := MarketEconomy.price_details(good_id, settlement, world_context)
+	if not details.ok:
+		return "MARKET\nNo valid good selected."
+	var reason_text := "; ".join(details.reasons)
+	var unit_price := int(details.unit_price)
+	var comparison: Array[String] = []
+	for settlement_id in MarketContent.settlement_ids():
+		var candidate := world.settlement(settlement_id)
+		if candidate == settlement:
+			continue
+		comparison.append("%s %d" % [String(candidate.get("name", settlement_id)), MarketEconomy.price_for(good_id, candidate, world_context)])
+	return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s\nOther markets: %s\nBase %d × local %.2f × demand %.2f × crisis %.2f × faction %.2f" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, "; ".join(comparison), int(details.base_price), float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier)]
+
+func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
+	var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, world_context)
+	if not preview.ok:
+		return "ROUTE FORECAST\nChoose a valid cargo, destination, and route."
+	var net_profit := int(preview.expected_net_profit)
+	var net_text := ("+%d" % net_profit) if net_profit > 0 else str(net_profit)
+	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · expected loss %d at %d%% risk · time cost %d\nEXPECTED NET PROFIT %s ashmarks\n%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.expected_loss), int(round(float(preview.risk) * 100.0)), int(preview.time_cost), net_text, String(route.get("description", ""))]
 
 func _on_buy_pressed() -> void:
 	var result := MarketCommandProcessor.execute(world, {
@@ -196,8 +269,10 @@ func _on_depart_pressed() -> void:
 			"destination_id": destination_id,
 		},
 	})
-	if result.ok and map_panel:
-		map_panel.begin_travel(route_id, previous_settlement, destination_id)
+	if result.ok:
+		if map_panel:
+			map_panel.begin_travel(route_id, previous_settlement, destination_id)
+		_populate_destination_options()
 	_show_command_result(result, "Departure")
 
 func _show_command_result(result: Dictionary, label: String) -> void:
@@ -214,6 +289,7 @@ func _on_save_pressed() -> void:
 
 func _on_reset_pressed() -> void:
 	world = AshWorldState.new(1107)
+	_populate_destination_options()
 	selected_map_cell = Vector2i(-1, -1)
 	map_panel.world = world
 	map_panel.reset_travel(world.current_settlement)
@@ -238,6 +314,7 @@ func _refresh_ui() -> void:
 	log_label.text = "Cargo: " + (", ".join(cargo_lines) if not cargo_lines.is_empty() else "empty")
 	if event_label.text.is_empty():
 		event_label.text = "Choose a destination, buy a small load, and compare the Old Road with the Toll Road."
+	_refresh_forecasts()
 	if map_panel:
 		map_panel.world = world
 		map_panel.selected_cell = selected_map_cell

@@ -9,6 +9,10 @@
     {"id": "charcoal", "name": "Charcoal", "base_price": 14, "weight": 1},
     {"id": "cloth", "name": "Dyed Cloth", "base_price": 24, "weight": 1}
   ],
+  "planning_assumptions": {
+    "provision_value": 3,
+    "time_opportunity_cost_per_day": 2
+  },
   "settlements": {
     "ashgate": {
       "name": "Ashgate",

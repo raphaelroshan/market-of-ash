@@ -11,6 +11,21 @@ func _initialize() -> void:
 	if ui.map_panel == null:
 		failures.append("main UI did not create the map panel")
 	else:
+		if ui.market_preview_label == null or not ui.market_preview_label.text.contains("Why this price:"):
+			failures.append("main UI did not render an explainable market preview")
+		elif not ui.market_preview_label.text.contains("Other markets:"):
+			failures.append("market preview did not render regional price comparison")
+		if ui.route_preview_label == null or not ui.route_preview_label.text.contains("EXPECTED NET PROFIT"):
+			failures.append("main UI did not render a route-profit preview")
+		elif not ui.route_preview_label.text.contains("expected loss"):
+			failures.append("route preview did not render risk-adjusted loss")
+		var forecast_before: String = JSON.stringify(ui.world.serialize())
+		ui.cargo_quantity.value = 3
+		ui._refresh_forecasts()
+		if JSON.stringify(ui.world.serialize()) != forecast_before:
+			failures.append("forecast refresh mutated authoritative world state")
+		if ui.market_preview_label.text.find("load total") < 0:
+			failures.append("market preview did not refresh selected load total")
 		if ui.map_panel.GRID_SIZE != Vector2i(17, 11):
 			failures.append("map grid size is not the stable 17x11 contract")
 		if ui.map_panel._route_points("old_road").size() != 3:

@@ -51,6 +51,12 @@ static func runtime_world() -> Dictionary:
 static func content_version() -> String:
 	return String(runtime_world().get("content_version", "unknown"))
 
+static func planning_assumptions() -> Dictionary:
+	var assumptions: Variant = runtime_world().get("planning_assumptions", {})
+	if typeof(assumptions) != TYPE_DICTIONARY:
+		return {}
+	return assumptions.duplicate(true)
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -75,6 +81,14 @@ static func good(good_id: String) -> Dictionary:
 static func settlements() -> Dictionary:
 	return runtime_world().get("settlements", {}).duplicate(true)
 
+static func settlement_ids() -> Array[String]:
+	var ids: Array[String] = []
+	var available := settlements()
+	for settlement_id in REQUIRED_SETTLEMENT_IDS:
+		if available.has(settlement_id):
+			ids.append(settlement_id)
+	return ids
+
 static func routes() -> Dictionary:
 	return runtime_world().get("routes", {}).duplicate(true)
 
@@ -84,6 +98,16 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 		errors.append("runtime world content must declare schema_version 1")
 	if String(data.get("content_version", "")).is_empty():
 		errors.append("runtime world content must declare content_version")
+
+	var planning_value: Variant = data.get("planning_assumptions", {})
+	if typeof(planning_value) != TYPE_DICTIONARY:
+		errors.append("planning_assumptions must be an object")
+	else:
+		var planning: Dictionary = planning_value
+		if int(planning.get("provision_value", 0)) <= 0:
+			errors.append("planning_assumptions must declare a positive provision_value")
+		if int(planning.get("time_opportunity_cost_per_day", 0)) < 0:
+			errors.append("planning_assumptions must declare a non-negative time_opportunity_cost_per_day")
 
 	var goods: Array = data.get("goods", [])
 	var seen_goods: Dictionary = {}

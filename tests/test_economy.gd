@@ -13,6 +13,7 @@ func _init() -> void:
 	_test_regional_price_spread()
 	_test_crisis_changes_water_price()
 	_test_capacity_validation()
+	_test_explainable_route_preview()
 	_test_command_buy_and_sell()
 	_test_command_validation_and_history()
 	_test_depart_command()
@@ -72,6 +73,30 @@ func _test_capacity_validation() -> void:
 	var valid := MarketEconomy.validate_trade({"weight": 10}, "grain", 2, 12)
 	_expect(valid.ok, "trade should pass when cargo fits")
 	_expect(int(valid.added_weight) == 2, "trade validation should report added cargo weight")
+
+func _test_explainable_route_preview() -> void:
+	var world := AshWorldState.new(1107)
+	var origin := world.settlement("ashgate")
+	var destination := world.settlement("reedwatch")
+	var details := MarketEconomy.price_details("water", destination, {"crisis_modifiers": world.crisis_modifiers})
+	_expect(details.ok, "price details should be available for a valid good and settlement")
+	_expect(details.reasons.has("local production is limited"), "price details should expose local production pressure")
+	_expect(details.reasons.has("local demand is high"), "price details should expose high local demand")
+	world.crisis_stage = 2
+	world._update_crisis_modifiers()
+	var crisis_details := MarketEconomy.price_details("water", destination, {"crisis_modifiers": world.crisis_modifiers})
+	_expect(crisis_details.reasons.has("the regional crisis is increasing demand"), "price details should expose crisis pressure")
+
+	var route := world.route("old_road")
+	var preview := MarketEconomy.route_profit_preview("water", 2, origin, destination, route, {"crisis_modifiers": world.crisis_modifiers})
+	_expect(preview.ok, "route profit preview should return a valid forecast")
+	_expect(int(preview.purchase_total) == int(preview.origin_price) * 2, "preview should expose the complete purchase total")
+	_expect(int(preview.sale_total) == int(preview.destination_price) * 2, "preview should expose the complete expected sale total")
+	_expect(int(preview.provision_cost) == int(preview.provisions) * int(preview.provision_value), "preview should expose provisions and their value")
+	_expect(int(preview.expected_loss) > 0, "risky route preview should include expected loss")
+	_expect(int(preview.expected_net_profit) == int(preview.gross_trade_margin) - int(preview.route_cost) - int(preview.provision_cost) - int(preview.expected_loss) - int(preview.time_cost), "preview net profit should equal the displayed cost breakdown")
+	var invalid := MarketEconomy.route_profit_preview("missing", 2, origin, destination, route, {"crisis_modifiers": world.crisis_modifiers})
+	_expect(not invalid.ok, "route preview should reject an unknown good")
 
 func _test_command_buy_and_sell() -> void:
 	var world := AshWorldState.new(1107)
