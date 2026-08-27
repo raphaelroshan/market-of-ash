@@ -97,6 +97,7 @@ var audio_player: AudioStreamPlayer
 var audio_cues: Dictionary = {}
 var run_started_msec := 0
 var first_trade_elapsed_msec := -1
+var last_input_device := "unknown"
 var map_panel
 
 func _ready() -> void:
@@ -1057,6 +1058,14 @@ func _on_return_to_shop_pressed() -> void:
 	_set_event("Back at the settlement shop. Your planning selection was preserved; no resources changed.")
 	_show_shop()
 
+func _input(event: InputEvent) -> void:
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		last_input_device = "controller"
+	elif event is InputEventKey:
+		last_input_device = "keyboard"
+	elif event is InputEventMouseButton or event is InputEventMouseMotion:
+		last_input_device = "mouse"
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not remapping_action.is_empty():
 		if event is InputEventKey and event.pressed and not event.echo:
@@ -1126,13 +1135,14 @@ func _on_pause_main_menu_pressed() -> void:
 func _on_export_report_pressed() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	var report := {
-		"report_version": 2,
+		"report_version": 3,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
 		"build_commit": String(ProjectSettings.get_setting("market_of_ash/build_commit", "development")),
 		"build_run": String(ProjectSettings.get_setting("market_of_ash/build_run", "local")),
 		"platform": OS.get_name(),
+		"input_device": last_input_device,
 		"viewport": {"width": int(viewport_size.x), "height": int(viewport_size.y)},
 		"presentation": {"large_text": large_text_enabled, "reduced_motion": reduce_motion_enabled, "interface_sounds": interface_sounds_enabled},
 		"session_elapsed_seconds": maxf(0.0, float(Time.get_ticks_msec() - run_started_msec) / 1000.0),

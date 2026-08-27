@@ -303,6 +303,10 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	_expect(ui.playtest_status_label.text.contains("RECOVERY") and ui.playtest_status_label.text.contains("Only 1 of the planned 2 water reached Reedwatch"), "a partial teaching load should explain the recoverable outcome instead of resetting the objective")
 	ui._on_load_pressed()
+	var report_input := InputEventKey.new()
+	report_input.physical_keycode = KEY_ENTER
+	report_input.pressed = true
+	ui._input(report_input)
 	var state_before_report := JSON.stringify(ui.world.serialize())
 	ui._on_export_report_pressed()
 	_expect(FileAccess.file_exists(test_report_path) and JSON.stringify(ui.world.serialize()) == state_before_report, "playtest report export should write diagnostics without mutating campaign state")
@@ -311,8 +315,9 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 2 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 3 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
+	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
 	_expect(int(report.get("viewport", {}).get("width", 0)) > 0, "playtest report should capture the current viewport")
 	_expect(float(report.get("session_elapsed_seconds", -1.0)) >= 0.0, "playtest report should capture elapsed session time")
 	_expect(report.has("time_to_first_trade_seconds"), "playtest report should declare time-to-first-trade context even when the current run has not observed one")
