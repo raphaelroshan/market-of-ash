@@ -364,9 +364,15 @@ func _build_shop() -> void:
 	var market_card := PanelContainer.new()
 	market_card.custom_minimum_size = Vector2(690, 0)
 	columns.add_child(market_card)
+	var market_scroll := ScrollContainer.new()
+	market_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	market_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	market_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	market_card.add_child(market_scroll)
 	var market := VBoxContainer.new()
+	market.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	market.add_theme_constant_override("separation", 14)
-	market_card.add_child(market)
+	market_scroll.add_child(market)
 	var title := Label.new()
 	title.text = "SETTLEMENT SHOP"
 	title.add_theme_font_size_override("font_size", 30)
