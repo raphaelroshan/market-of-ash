@@ -187,6 +187,16 @@ func _initialize() -> void:
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_oversized_load and ui.save_status_label.text.contains("larger than the supported 5 MB limit"), "loading an oversized save should fail without reading or replacing the active run")
 	ui._on_save_pressed()
+	ui._on_settlement_action_pressed("ashgate_provision_bundle")
+	var state_before_reset_prompt := JSON.stringify(ui.world.serialize())
+	ui._on_reset_pressed()
+	_expect(ui.reset_confirmation_dialog != null and ui.reset_confirmation_dialog.visible and JSON.stringify(ui.world.serialize()) == state_before_reset_prompt, "Reset run should open a confirmation without immediately replacing the current campaign")
+	ui.reset_confirmation_dialog.canceled.emit()
+	ui.reset_confirmation_dialog.hide()
+	_expect(ui.world.day == 1 and ui.world.money < 120, "cancelling reset should preserve the current campaign")
+	ui._on_reset_pressed()
+	ui._confirm_reset()
+	_expect(ui.world.day == 1 and ui.world.money == 120 and ui.world.current_settlement == "ashgate" and ui.event_label.text.contains("previous disk save remains available"), "confirming reset should restore the fresh campaign and explain the recoverable save boundary")
 	ui.autosave_enabled = true
 	var action_money_before: int = ui.world.money
 	var action_provisions_before: int = ui.world.provisions

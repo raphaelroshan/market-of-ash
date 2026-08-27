@@ -33,6 +33,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 | Commit/event | Click | Focus Commit, Enter/Space | Focus Commit, A | First enabled event response receives focus; disabled reason remains visible as adjacent text. |
 | Arrival | Click Enter settlement | Enter/Space | A | Entry action receives focus and returns to the destination Shop. |
 | Save/load | Click | Tab, Enter/Space | D-pad/stick, A | Summary identifies day/location/version; bad save leaves current run intact. |
+| Reset | Click, confirm/cancel | Focus Reset, Enter/Space, then confirm/cancel | D-pad/stick, A/B | Opening the dialog does not mutate state; cancel preserves the run; confirmation explains when the previous disk save will be replaced. |
 
 ## Manual visual/accessibility matrix
 

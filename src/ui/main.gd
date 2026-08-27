@@ -34,6 +34,7 @@ var controls_hint_label: Label
 var binding_status_label: Label
 var binding_buttons: Dictionary = {}
 var remapping_action: String = ""
+var reset_confirmation_dialog: ConfirmationDialog
 var reduce_motion_checkbox: CheckBox
 var large_text_checkbox: CheckBox
 var shop_good_option: OptionButton
@@ -1409,14 +1410,27 @@ func _load_candidate(candidate_path: String) -> Dictionary:
 	return {"ok": true, "world": candidate, "result": load_result}
 
 func _on_reset_pressed() -> void:
+	if reset_confirmation_dialog == null:
+		reset_confirmation_dialog = ConfirmationDialog.new()
+		reset_confirmation_dialog.title = "Reset current run?"
+		reset_confirmation_dialog.dialog_text = "Return to Ashgate on Day 1 with the default caravan? Your existing disk save remains available until the next successful command autosaves."
+		reset_confirmation_dialog.ok_button_text = "Reset to Day 1"
+		reset_confirmation_dialog.cancel_button_text = "Keep current run"
+		reset_confirmation_dialog.confirmed.connect(_confirm_reset)
+		add_child(reset_confirmation_dialog)
+	reset_confirmation_dialog.popup_centered(Vector2i(520, 180))
+
+func _confirm_reset() -> void:
+	if reset_confirmation_dialog:
+		reset_confirmation_dialog.hide()
 	world = AshWorldState.new(PLAYTEST_SEED)
 	playtest_grain_sold = 0
 	_populate_destination_options()
 	_populate_route_options()
 	map_panel.world = world
 	map_panel.reset_travel(world.current_settlement)
-	_set_event("The caravan has been reset to its first morning.")
-	_refresh_ui()
+	_set_event("The caravan has been reset to its first morning. The previous disk save remains available until another command autosaves.")
+	_show_shop()
 
 func _on_map_settlement_selected(settlement_id: String) -> void:
 	if not world.pending_event.is_empty() or arrival_pending:
