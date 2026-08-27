@@ -273,6 +273,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 - Source-controlled export presets now define `Windows Desktop` and `Web` artifacts.
 - Pull-request packaging and tagged releases export both targets with Godot 4.4.1 templates, verify the Web payload, and launch the packaged Windows executable headlessly before upload; each candidate carries a manifest with game/content versions and exact commit/ref/run provenance.
+- Runtime packages exclude repository-only tests, tools, research, documentation, and workflow files; the adjacent source snapshot preserves them for auditability.
 - The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
 - The settlement shop exposes the packaged build commit, seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
 - Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
