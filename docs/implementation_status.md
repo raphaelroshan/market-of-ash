@@ -20,7 +20,7 @@
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
-- Settlement visits expose a two-slot auxiliary-action budget. Ashgate's live provision service competes with cargo spending; future settlement actions remain visible with dependency reasons.
+- Settlement visits expose a two-slot auxiliary-action budget. Ashgate's provisions and escalation recovery, Brine Cross's cistern queue, Cinderford's repair bench, Hollow Market's route rumor, and Reedwatch's supply shelter create local tradeoffs with visible dependency reasons.
 - Ashgate offers one fixed-term Reedwatch water-relief contract; accepted terms are pinned during departure and resolve deterministically on arrival.
 - Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
