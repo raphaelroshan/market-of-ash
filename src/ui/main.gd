@@ -638,7 +638,8 @@ func _build_shop() -> void:
 	shop_buy_button = Button.new()
 	shop_buy_button.name = "BuyCargoButton"
 	shop_buy_button.text = "Buy cargo"
-	shop_buy_button.custom_minimum_size = Vector2(0, 44)
+	shop_buy_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_buy_button.custom_minimum_size = Vector2(0, 56)
 	shop_buy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	shop_buy_button.pressed.connect(_on_buy_pressed)
@@ -646,7 +647,8 @@ func _build_shop() -> void:
 	shop_sell_button = Button.new()
 	shop_sell_button.name = "SellCargoButton"
 	shop_sell_button.text = "Sell selected cargo"
-	shop_sell_button.custom_minimum_size = Vector2(0, 44)
+	shop_sell_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_sell_button.custom_minimum_size = Vector2(0, 56)
 	shop_sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
 	shop_sell_button.pressed.connect(_on_sell_pressed)
@@ -658,7 +660,8 @@ func _build_shop() -> void:
 	market_shell.add_child(shop_transaction_status_label)
 	guided_test_button = Button.new()
 	guided_test_button.text = "Optional: Buy 2 water"
-	guided_test_button.custom_minimum_size = Vector2(0, 44)
+	guided_test_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	guided_test_button.custom_minimum_size = Vector2(0, 48)
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	guided_test_button.pressed.connect(_on_guided_test_action)
 	market_shell.add_child(guided_test_button)
