@@ -222,4 +222,12 @@
 
 **Reason:** Faction alignment needs a practical commerce consequence with named causes and counterweight. A single official-route discount is easy to understand and test, composes with route forecasting and resolution, and does not make Warden standing a universal price bonus.
 
-**Trade-off:** Official visibility is currently a disclosed narrative cost rather than a second mechanical penalty. Only the Toll Road changes, reputation has one threshold, and Free Caravan effects remain a later slice.
+**Trade-off:** Official visibility is currently a disclosed narrative cost rather than a second mechanical penalty. Only the Toll Road changes, and the Free Caravan counter-path is modeled separately rather than as a shared generic discount.
+
+## ADR-029: Free Caravan standing discounts the exposed road without reducing risk
+
+**Decision:** Add a parallel bounded Free Caravan threshold at +2. `Known road-sharers` pay two fewer ashmarks in Old Road guide and camp fees, while its cargo-risk percentage remains unchanged. Fair distribution at The Last Clean Barrel and preserving the Three Riders' sponsor mark each grant one named standing point.
+
+**Reason:** The first political choice needs a viable counter-path to Warden recognition. The Caravan benefit rewards public supply and shared intelligence on an informal corridor, whereas Wardens reward paid official participation on the Toll Road.
+
+**Trade-off:** The current benefits are route-specific fee discounts and can coexist if the player earns both; they are not exclusive ideology locks. The Old Road remains exposed, and faction conflict, access restrictions, and stronger consequences remain later work.

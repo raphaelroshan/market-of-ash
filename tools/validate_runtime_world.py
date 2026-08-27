@@ -349,19 +349,20 @@ def validate_crew(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
 
 def validate_factions(value: Any, errors: list[str]) -> None:
     factions = as_object(value, "factions", errors)
-    wardens = as_object(factions.get("wardens"), "factions.wardens", errors)
-    for field in ("name", "below_label", "trusted_label", "effect", "tradeoff"):
-        if not isinstance(wardens.get(field), str) or not wardens[field]:
-            fail(errors, f"factions.wardens must declare {field}")
-    minimum = wardens.get("minimum")
-    maximum = wardens.get("maximum")
-    threshold = wardens.get("trusted_threshold")
-    if not all(isinstance(value, int) for value in (minimum, maximum, threshold)) or not minimum < threshold <= maximum:
-        fail(errors, "factions.wardens bounds and trusted_threshold are invalid")
-    if wardens.get("toll_route_id") not in REQUIRED_ROUTES:
-        fail(errors, "factions.wardens.toll_route_id must reference a known route")
-    if not isinstance(wardens.get("toll_discount"), int) or wardens["toll_discount"] <= 0:
-        fail(errors, "factions.wardens.toll_discount must be a positive integer")
+    for faction_id in ("wardens", "caravans"):
+        faction = as_object(factions.get(faction_id), f"factions.{faction_id}", errors)
+        for field in ("name", "below_label", "trusted_label", "effect", "tradeoff"):
+            if not isinstance(faction.get(field), str) or not faction[field]:
+                fail(errors, f"factions.{faction_id} must declare {field}")
+        minimum = faction.get("minimum")
+        maximum = faction.get("maximum")
+        threshold = faction.get("trusted_threshold")
+        if not all(isinstance(item, int) for item in (minimum, maximum, threshold)) or not minimum < threshold <= maximum:
+            fail(errors, f"factions.{faction_id} bounds and trusted_threshold are invalid")
+        if faction.get("toll_route_id") not in REQUIRED_ROUTES:
+            fail(errors, f"factions.{faction_id}.toll_route_id must reference a known route")
+        if not isinstance(faction.get("toll_discount"), int) or faction["toll_discount"] <= 0:
+            fail(errors, f"factions.{faction_id}.toll_discount must be a positive integer")
 
 
 def validate(data: Any) -> list[str]:

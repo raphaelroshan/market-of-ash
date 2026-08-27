@@ -48,7 +48,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.5.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.6.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -63,6 +63,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.crew_member("jorun_pale").get("role", "") == "Quartermaster", "runtime content should expose Jorun Pale's stable crew record")
 	_expect(MarketContent.crew_member("tess_oryn").get("role", "") == "Fixer", "runtime content should expose Tess Oryn's stable crew record")
 	_expect(int(MarketContent.faction("wardens").get("trusted_threshold", 0)) == 2, "runtime content should expose the first Warden threshold")
+	_expect(int(MarketContent.faction("caravans").get("trusted_threshold", 0)) == 2, "runtime content should expose the Free Caravan threshold")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -761,6 +762,7 @@ func _test_last_clean_barrel_event() -> void:
 	})
 	_expect(share.ok and share_world.money == 116 and int(share_world.cargo.get("water", 0)) == 0, "fair distribution should consume water without granting hidden cash")
 	_expect(share_world.resilience_for("reedwatch") == 2 and is_equal_approx(share_world.market_pressure_for("reedwatch", "water"), 0.068), "fair distribution should strengthen bounded resilience and soften local scarcity")
+	_expect(share_world.reputation.caravans == 1, "fair distribution should apply its named Free Caravan standing gain")
 	share_world.adjust_settlement_resilience("reedwatch", 20)
 	_expect(share_world.resilience_for("reedwatch") == 10, "settlement resilience should clamp at ten")
 	var restored_share := AshWorldState.new(0)
@@ -936,6 +938,7 @@ func _test_three_riders_no_banner_event() -> void:
 		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "wait_and_read_the_tracks"},
 	})
 	_expect(wait.ok and missing_medicine_world.day == 3 and missing_medicine_world.known_information.has("three_riders_sponsor_mark"), "wait recovery should cost one day and record the sponsor lead")
+	_expect(missing_medicine_world.reputation.caravans == 1, "sharing the rider warning should grant one named Free Caravan standing point")
 	_expect(not missing_medicine_world.record_information("three_riders_sponsor_mark") and missing_medicine_world.known_information.size() == 1, "known information should not duplicate")
 	var restored_information := AshWorldState.new(0)
 	var restored_information_result := restored_information.load_serialized(missing_medicine_world.serialize())
@@ -1112,6 +1115,11 @@ func _test_warden_relationship_threshold() -> void:
 	_expect(world.reputation.wardens == 10 and int(world.route("toll_road").cost) == 9, "above-threshold standing should clamp and retain the bounded discount")
 	world.adjust_reputation("wardens", -100)
 	_expect(world.reputation.wardens == -10 and int(world.route("toll_road").cost) == 12, "low standing should clamp and remove the permit discount")
+	var caravan_world := AshWorldState.new(1)
+	_expect(caravan_world.faction_status("caravans").tier == "Unknown trader" and int(caravan_world.route("old_road").cost) == 4, "below-threshold Caravan standing should retain the full Old Road fee")
+	caravan_world.adjust_reputation("caravans", 2)
+	_expect(caravan_world.faction_status("caravans").tier == "Known road-sharer" and int(caravan_world.route("old_road").cost) == 2, "Free Caravan threshold should discount only the Old Road by two ashmarks")
+	_expect(int(caravan_world.route("toll_road").cost) == 12 and is_equal_approx(float(caravan_world.route("old_road").risk), 0.35), "Free Caravan standing should not alter Warden fees or exposed-route risk")
 
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
@@ -1181,7 +1189,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.5.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.6.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

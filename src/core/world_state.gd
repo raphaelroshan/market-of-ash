@@ -68,11 +68,14 @@ func route(id: String) -> Dictionary:
 			result["cost"] = maxi(0, int(result.get("cost", 0)) + int(condition.get("cost_delta", 0)))
 			result["condition"] = condition.duplicate(true)
 			result["description"] = "%s Route condition: %s" % [String(result.get("description", "")), String(condition.get("description", ""))]
-	var wardens := MarketContent.faction("wardens")
-	if id == String(wardens.get("toll_route_id", "")) and int(reputation.get("wardens", 0)) >= int(wardens.get("trusted_threshold", 999)):
-		result["cost"] = maxi(0, int(result.get("cost", 0)) - int(wardens.get("toll_discount", 0)))
-		result["faction_effect"] = String(wardens.get("effect", ""))
-		result["faction_tradeoff"] = String(wardens.get("tradeoff", ""))
+	for faction_id_value in MarketContent.factions().keys():
+		var faction_id := String(faction_id_value)
+		var faction := MarketContent.faction(faction_id)
+		if id == String(faction.get("toll_route_id", "")) and int(reputation.get(faction_id, 0)) >= int(faction.get("trusted_threshold", 999)):
+			result["cost"] = maxi(0, int(result.get("cost", 0)) - int(faction.get("toll_discount", 0)))
+			result["faction_name"] = String(faction.get("name", faction_id))
+			result["faction_effect"] = String(faction.get("effect", ""))
+			result["faction_tradeoff"] = String(faction.get("tradeoff", ""))
 	return result
 
 func set_route_condition(route_id: String, condition: Dictionary) -> Dictionary:

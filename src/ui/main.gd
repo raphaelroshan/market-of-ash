@@ -694,7 +694,7 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 	var intelligence_text := "%s — %s" % [String(intelligence.get("label", "Scout unavailable")), String(intelligence.get("detail", "No current field report."))]
 	var faction_text := ""
 	if route.has("faction_effect"):
-		faction_text = "\nWarden permit: %s Trade-off: %s" % [String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
+		faction_text = "\n%s standing: %s Trade-off: %s" % [String(route.get("faction_name", "Faction")), String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
 	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
 
 func _on_buy_pressed() -> void:
@@ -1038,7 +1038,8 @@ func _refresh_ui() -> void:
 		if not world.known_information.is_empty():
 			shop_status_label.text += " · Known leads: %d" % world.known_information.size()
 		var warden_status := world.faction_status("wardens")
-		shop_status_label.text += " · Wardens %+d (%s; threshold %+d) · Caravans %+d" % [int(world.reputation.get("wardens", 0)), String(warden_status.get("tier", "Unknown")), int(warden_status.get("next_threshold", 0)), int(world.reputation.get("caravans", 0))]
+		var caravan_status := world.faction_status("caravans")
+		shop_status_label.text += " · Wardens %+d (%s; threshold %+d) · Caravans %+d (%s; threshold %+d)" % [int(world.reputation.get("wardens", 0)), String(warden_status.get("tier", "Unknown")), int(warden_status.get("next_threshold", 0)), int(world.reputation.get("caravans", 0)), String(caravan_status.get("tier", "Unknown")), int(caravan_status.get("next_threshold", 0))]
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

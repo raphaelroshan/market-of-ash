@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.5.0",
+  "content_version": "1.6.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -190,6 +190,18 @@
       "trusted_label": "Recognized carrier",
       "effect": "Recognized carriers pay 3 fewer ashmarks on the Toll Road.",
       "tradeoff": "The discount comes with a named manifest and greater official visibility."
+    },
+    "caravans": {
+      "name": "Free Caravans",
+      "minimum": -10,
+      "maximum": 10,
+      "trusted_threshold": 2,
+      "toll_route_id": "old_road",
+      "toll_discount": 2,
+      "below_label": "Unknown trader",
+      "trusted_label": "Known road-sharer",
+      "effect": "Known road-sharers pay 2 fewer ashmarks in Old Road guide and camp fees.",
+      "tradeoff": "The informal discount does not reduce the route's exposed cargo risk."
     }
   },
   "events": {
@@ -381,6 +393,7 @@
             "trade_mode": "fair_share",
             "requires_active_contract": false,
             "resilience_delta": 2,
+            "reputation_delta": {"caravans": 1},
             "outcome": "The queue stewards ration both barrels and add the caravan's name to the public reserve ledger."
           },
           {
@@ -487,6 +500,7 @@
             "requires_active_contract": false,
             "resilience_delta": 0,
             "information_id": "three_riders_sponsor_mark",
+            "reputation_delta": {"caravans": 1},
             "outcome": "At dusk the riders leave; their tack has pressed a repeated sponsor mark into the ash."
           }
         ]

@@ -165,7 +165,7 @@ func _initialize() -> void:
 	_expect(ui.world.current_settlement == "reedwatch" and ui.world.resilience_for("reedwatch") == 2, "fair barrel distribution did not strengthen destination resilience")
 	_expect(ui.event_label.text.contains("resilience is now 2/10"), "barrel arrival report did not explain the persistent settlement result")
 	ui._on_enter_settlement_pressed()
-	_expect(ui.shop_status_label.text.contains("Settlement resilience: 2/10"), "settlement shop did not expose the event's persistent resilience result")
+	_expect(ui.shop_status_label.text.contains("Settlement resilience: 2/10") and ui.shop_status_label.text.contains("Caravans +1"), "settlement shop did not expose the event's resilience and Caravan-standing results")
 
 	ui._on_start_game_pressed()
 	ui._select_option_by_id(ui.shop_good_option, "medicine")
@@ -221,6 +221,13 @@ func _initialize() -> void:
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_preview_label.text.contains("Route fee 9") and ui.route_preview_label.text.contains("Recognized carriers pay 3 fewer"), "recognized Warden forecast did not show the discounted Toll Road fee")
 	_expect(ui.route_preview_label.text.contains("greater official visibility"), "Warden threshold forecast did not disclose its control tradeoff")
+
+	ui.world.adjust_reputation("wardens", -2)
+	ui.world.adjust_reputation("caravans", 2)
+	ui._select_option_by_id(ui.destination_option, "reedwatch")
+	ui._on_destination_changed(ui.destination_option.selected)
+	_expect(ui.route_preview_label.text.contains("Route fee 2") and ui.route_preview_label.text.contains("Known road-sharers pay 2 fewer"), "Free Caravan threshold did not show the discounted Old Road fee")
+	_expect(ui.route_preview_label.text.contains("does not reduce the route's exposed cargo risk"), "Free Caravan threshold did not disclose its risk tradeoff")
 
 	ui.queue_free()
 	await process_frame
