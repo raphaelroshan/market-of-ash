@@ -7,6 +7,7 @@ import argparse
 import json
 import struct
 import time
+import traceback
 from pathlib import Path
 
 from selenium import webdriver
@@ -91,8 +92,9 @@ def main() -> int:
         options.add_argument(option)
 
     captures: list[dict[str, object]] = []
-    driver = webdriver.Chrome(options=options)
+    driver: webdriver.Chrome | None = None
     try:
+        driver = webdriver.Chrome(options=options)
         for width, height in VIEWPORTS:
             set_viewport_size(driver, width, height)
             driver.get(args.url)
@@ -138,8 +140,30 @@ def main() -> int:
             json.dumps({"url": args.url, "loading_overlay_cleared": True, "captures": captures}, indent=2),
             encoding="utf-8",
         )
+    except Exception as error:
+        (args.output_dir / "capture_failure.json").write_text(
+            json.dumps(
+                {
+                    "url": args.url,
+                    "error_type": type(error).__name__,
+                    "message": str(error),
+                    "traceback": traceback.format_exc(),
+                    "completed_captures": captures,
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        if driver is not None:
+            try:
+                driver.save_screenshot(str(args.output_dir / "failure-state.png"))
+                (args.output_dir / "failure-dom.html").write_text(driver.page_source, encoding="utf-8")
+            except Exception:
+                pass
+        raise
     finally:
-        driver.quit()
+        if driver is not None:
+            driver.quit()
     print("Web render captures: PASS")
     return 0
 
