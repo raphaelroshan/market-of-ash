@@ -97,6 +97,14 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 			return _failure("unknown route")
 		var endpoints: Array = route.get("endpoints", [])
 		return _failure("%s does not connect %s to %s" % [String(route.get("name", route_id)), world.settlement(world.current_settlement).get("name", world.current_settlement), world.settlement(destination_id).get("name", destination_id)])
+	var selected_route := world.route(route_id)
+	var destination := world.settlement(destination_id)
+	var loss_basis := MarketEconomy.incident_loss_basis(
+		world.cargo,
+		destination,
+		{"crisis_modifiers": world.crisis_modifiers},
+	)
+	var expected_loss := MarketEconomy.expected_incident_loss(selected_route, loss_basis)
 	var travel_result := world.travel(route_id)
 	if not travel_result.ok:
 		return _failure(String(travel_result.reason))
@@ -112,30 +120,37 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		"route_id": route_id,
 		"risk": risk,
 		"risk_roll": roll,
+		"risk_source": String(selected_route.get("description", "Route conditions are uncertain.")),
+		"loss_model": String(loss_basis.loss_model),
+		"loss_good_id": String(loss_basis.loss_good_id),
+		"loss_quantity": int(loss_basis.loss_quantity),
+		"loss_unit_value": int(loss_basis.loss_unit_value),
+		"loss_value_basis": String(loss_basis.loss_value_basis),
+		"expected_loss": expected_loss,
 	}
 	var message: String
 	if roll < risk:
-		var lost := _remove_first_cargo_unit(world)
+		var lost := _remove_cargo_unit(world, String(loss_basis.loss_good_id))
 		state_delta["cargo"] = lost.delta
 		if lost.good_id.is_empty():
 			message = "The %s was hit by a route incident, but you had no cargo to lose. You arrived at %s." % [world.route(route_id).name, world.settlement(destination_id).name]
 		else:
-			message = "The %s was hit by a route incident. You lost 1 %s, but arrived at %s." % [world.route(route_id).name, lost.good_id, world.settlement(destination_id).name]
+			message = "The %s was hit by a route incident. You lost 1 %s worth %d ashmarks at %s prices, but arrived safely." % [world.route(route_id).name, lost.good_id, int(loss_basis.loss_unit_value), world.settlement(destination_id).name]
 	else:
-		message = "You arrived at %s by the %s. The route held." % [world.settlement(destination_id).name, world.route(route_id).name]
+		if String(loss_basis.loss_good_id).is_empty():
+			message = "You arrived at %s by the %s. The route held, and no cargo was exposed." % [world.settlement(destination_id).name, world.route(route_id).name]
+		else:
+			message = "You arrived at %s by the %s. The route held; the exposed %s arrived intact." % [world.settlement(destination_id).name, world.route(route_id).name, String(loss_basis.loss_good_id)]
 	world.log.append(message)
 	return _success(message, state_delta)
 
-static func _remove_first_cargo_unit(world: AshWorldState) -> Dictionary:
-	for good_id in MarketContent.good_ids():
-		var held_quantity := int(world.cargo.get(good_id, 0))
-		if held_quantity <= 0:
-			continue
-		var weight := int(MarketContent.good(good_id).get("weight", 0))
-		world.cargo[good_id] = held_quantity - 1
-		world.cargo["weight"] = maxi(0, int(world.cargo.get("weight", 0)) - weight)
-		return {"good_id": good_id, "delta": {good_id: -1, "weight": -weight}}
-	return {"good_id": "", "delta": {"weight": 0}}
+static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Dictionary:
+	if good_id.is_empty() or int(world.cargo.get(good_id, 0)) <= 0:
+		return {"good_id": "", "delta": {"weight": 0}}
+	var weight := int(MarketContent.good(good_id).get("weight", 0))
+	world.cargo[good_id] = int(world.cargo.get(good_id, 0)) - 1
+	world.cargo["weight"] = maxi(0, int(world.cargo.get("weight", 0)) - weight)
+	return {"good_id": good_id, "delta": {good_id: -1, "weight": -weight}}
 
 static func _record(world: AshWorldState, command: Dictionary, result: Dictionary) -> Dictionary:
 	world.record_command(command, result)

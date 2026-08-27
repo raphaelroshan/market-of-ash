@@ -5,6 +5,7 @@ extends RefCounted
 ## The simulation contains no rendering or UI dependencies so it can run headlessly.
 
 const MarketContent = preload("res://src/core/market_content.gd")
+const LOSS_MODEL_ONE_EXPOSED_UNIT := "one_exposed_unit"
 
 static func base_price(good: String) -> int:
 	return int(MarketContent.good(good).get("base_price", 0))
@@ -60,6 +61,29 @@ static func explain_price(good: String, settlement: Dictionary, world: Dictionar
 	var reasons: Array = details.get("reasons", [])
 	return ", ".join(reasons)
 
+static func incident_loss_basis(cargo: Dictionary, destination: Dictionary, world: Dictionary) -> Dictionary:
+	var selected_good_id := ""
+	var selected_unit_value := 0
+	for good_id in MarketContent.good_ids():
+		if int(cargo.get(good_id, 0)) <= 0:
+			continue
+		var unit_value := price_for(good_id, destination, world)
+		if unit_value > selected_unit_value:
+			selected_good_id = good_id
+			selected_unit_value = unit_value
+	return {
+		"loss_model": LOSS_MODEL_ONE_EXPOSED_UNIT,
+		"loss_good_id": selected_good_id,
+		"loss_quantity": 0 if selected_good_id.is_empty() else 1,
+		"loss_unit_value": selected_unit_value,
+		"loss_value_basis": "destination_unit_price",
+	}
+
+static func expected_incident_loss(route: Dictionary, loss_basis: Dictionary) -> int:
+	var risk := clampf(float(route.get("risk", 0.0)), 0.0, 1.0)
+	var exposed_value := int(loss_basis.get("loss_unit_value", 0)) * int(loss_basis.get("loss_quantity", 0))
+	return int(round(exposed_value * risk))
+
 static func route_profit_preview(good: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world: Dictionary) -> Dictionary:
 	if base_price(good) <= 0:
 		return {"ok": false, "reason": "unknown good"}
@@ -79,7 +103,10 @@ static func route_profit_preview(good: String, quantity: int, origin: Dictionary
 	var provision_value := int(assumptions.get("provision_value", 0))
 	var provision_cost := provisions * provision_value
 	var risk := float(route.get("risk", 0.0))
-	var expected_loss := int(round(sale_total * risk))
+	var cargo_value: Variant = world.get("cargo", {})
+	var cargo: Dictionary = cargo_value if typeof(cargo_value) == TYPE_DICTIONARY else {}
+	var loss_basis := incident_loss_basis(cargo, destination, world)
+	var expected_loss := expected_incident_loss(route, loss_basis)
 	var time_cost := provisions * int(assumptions.get("time_opportunity_cost_per_day", 0))
 	var gross_trade_margin := sale_total - purchase_total
 	var expected_net_profit := gross_trade_margin - route_cost - provision_cost - expected_loss - time_cost
@@ -96,6 +123,12 @@ static func route_profit_preview(good: String, quantity: int, origin: Dictionary
 		"provision_cost": provision_cost,
 		"risk": risk,
 		"expected_loss": expected_loss,
+		"loss_model": String(loss_basis.loss_model),
+		"loss_good_id": String(loss_basis.loss_good_id),
+		"loss_quantity": int(loss_basis.loss_quantity),
+		"loss_unit_value": int(loss_basis.loss_unit_value),
+		"loss_value_basis": String(loss_basis.loss_value_basis),
+		"risk_source": String(route.get("description", "Route conditions are uncertain.")),
 		"time_cost": time_cost,
 		"expected_net_profit": expected_net_profit,
 		"origin_price": buy_price,

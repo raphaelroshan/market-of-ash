@@ -14,6 +14,7 @@ func _init() -> void:
 	_test_crisis_changes_water_price()
 	_test_capacity_validation()
 	_test_explainable_route_preview()
+	_test_incident_loss_model()
 	_test_command_buy_and_sell()
 	_test_command_validation_and_history()
 	_test_depart_command()
@@ -91,15 +92,82 @@ func _test_explainable_route_preview() -> void:
 	_expect(crisis_details.reasons.has("the regional crisis is increasing demand"), "price details should expose crisis pressure")
 
 	var route := world.route("old_road")
-	var preview := MarketEconomy.route_profit_preview("water", 2, origin, destination, route, {"crisis_modifiers": world.crisis_modifiers})
+	var preview := MarketEconomy.route_profit_preview("water", 2, origin, destination, route, {
+		"crisis_modifiers": world.crisis_modifiers,
+		"cargo": {"water": 2, "weight": 2},
+	})
 	_expect(preview.ok, "route profit preview should return a valid forecast")
 	_expect(int(preview.purchase_total) == int(preview.origin_price) * 2, "preview should expose the complete purchase total")
 	_expect(int(preview.sale_total) == int(preview.destination_price) * 2, "preview should expose the complete expected sale total")
 	_expect(int(preview.provision_cost) == int(preview.provisions) * int(preview.provision_value), "preview should expose provisions and their value")
-	_expect(int(preview.expected_loss) > 0, "risky route preview should include expected loss")
+	_expect(preview.loss_model == MarketEconomy.LOSS_MODEL_ONE_EXPOSED_UNIT, "route preview should expose the stable one-unit loss model")
+	_expect(preview.loss_good_id == "water" and int(preview.loss_quantity) == 1, "route preview should identify the exposed carried unit")
+	_expect(int(preview.loss_unit_value) == int(preview.destination_price), "route preview should value the exposed unit at the destination price")
+	_expect(int(preview.expected_loss) == int(round(float(preview.loss_unit_value) * float(preview.risk))), "route preview should calculate expected loss from one exposed unit")
+	_expect(not String(preview.risk_source).is_empty(), "route preview should expose the authored risk source")
 	_expect(int(preview.expected_net_profit) == int(preview.gross_trade_margin) - int(preview.route_cost) - int(preview.provision_cost) - int(preview.expected_loss) - int(preview.time_cost), "preview net profit should equal the displayed cost breakdown")
 	var invalid := MarketEconomy.route_profit_preview("missing", 2, origin, destination, route, {"crisis_modifiers": world.crisis_modifiers})
 	_expect(not invalid.ok, "route preview should reject an unknown good")
+
+func _test_incident_loss_model() -> void:
+	var world := AshWorldState.new(3)
+	var destination := world.settlement("reedwatch")
+	var context := {"crisis_modifiers": world.crisis_modifiers}
+	var water_basis := MarketEconomy.incident_loss_basis({"water": 2, "weight": 2}, destination, context)
+	_expect(water_basis.loss_model == MarketEconomy.LOSS_MODEL_ONE_EXPOSED_UNIT, "incident basis should expose the stable model id")
+	_expect(water_basis.loss_good_id == "water" and int(water_basis.loss_quantity) == 1, "single-good cargo should expose exactly one unit")
+	_expect(int(water_basis.loss_unit_value) == 32, "water incident basis should use the current Reedwatch unit price")
+	_expect(MarketEconomy.expected_incident_loss(world.route("old_road"), water_basis) == 11, "Old Road water expected loss should be risk times one unit value")
+	var toll_basis := MarketEconomy.incident_loss_basis({"medicine": 3, "weight": 3}, world.settlement("brine_cross"), context)
+	_expect(int(toll_basis.loss_unit_value) == 44, "medicine incident basis should use the current Brine Cross unit price")
+	_expect(MarketEconomy.expected_incident_loss(world.route("toll_road"), toll_basis) == 4, "Toll Road medicine expected loss should use one unit")
+	var mixed_basis := MarketEconomy.incident_loss_basis({"water": 2, "medicine": 1, "weight": 3}, destination, context)
+	_expect(mixed_basis.loss_good_id == "medicine" and int(mixed_basis.loss_unit_value) == 52, "mixed cargo should expose the highest destination-value unit")
+	var empty_basis := MarketEconomy.incident_loss_basis({"weight": 0}, destination, context)
+	_expect(empty_basis.loss_good_id.is_empty() and int(empty_basis.loss_quantity) == 0, "empty cargo should expose no unit")
+	_expect(MarketEconomy.expected_incident_loss(world.route("old_road"), empty_basis) == 0, "empty cargo should have zero expected loss")
+
+	world.cargo = {"water": 2, "medicine": 1, "weight": 3}
+	var incident := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(incident.ok and float(incident.state_delta.risk_roll) < float(incident.state_delta.risk), "seeded incident fixture should resolve an Old Road incident")
+	_expect(incident.state_delta.loss_good_id == "medicine" and int(incident.state_delta.loss_unit_value) == 52, "incident result should preserve the disclosed loss basis")
+	_expect(int(incident.state_delta.expected_loss) == 18, "incident result should preserve the disclosed expected loss")
+	_expect(int(world.cargo.get("medicine", 0)) == 0 and int(world.cargo.get("water", 0)) == 2, "incident should remove the same exposed unit chosen by the forecast helper")
+	_expect(incident.message.contains("lost 1 medicine worth 52 ashmarks"), "incident result should explain the unit and destination value lost")
+
+	var replay_world := AshWorldState.new(3)
+	replay_world.cargo = {"water": 2, "medicine": 1, "weight": 3}
+	var replay := MarketCommandProcessor.execute(replay_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(JSON.stringify(replay) == JSON.stringify(incident), "equivalent seed, state, and departure should reproduce the same incident result")
+	var restored_incident_world := AshWorldState.new(0)
+	var restored_incident_result := restored_incident_world.load_serialized(world.serialize())
+	_expect(restored_incident_result.ok, "incident state should survive save/load")
+	_expect(restored_incident_world.command_history.back().state_delta.loss_good_id == "medicine", "save/load should preserve the resolved loss basis in command history")
+	_expect(int(restored_incident_world.command_history.back().state_delta.loss_unit_value) == 52, "save/load should preserve the exposed unit value")
+
+	var safe_world := AshWorldState.new(1)
+	safe_world.cargo = {"water": 2, "weight": 2}
+	var safe_departure := MarketCommandProcessor.execute(safe_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(safe_departure.ok and float(safe_departure.state_delta.risk_roll) >= float(safe_departure.state_delta.risk), "seeded safe fixture should resolve without an incident")
+	_expect(safe_departure.state_delta.loss_good_id == "water" and int(safe_departure.state_delta.expected_loss) == 11, "non-incident result should retain the disclosed forecast basis")
+	_expect(int(safe_world.cargo.get("water", 0)) == 2, "non-incident departure should preserve exposed cargo")
+
+	var empty_world := AshWorldState.new(3)
+	var empty_departure := MarketCommandProcessor.execute(empty_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(empty_departure.ok and int(empty_departure.state_delta.expected_loss) == 0, "zero-cargo departure should remain legal with zero expected loss")
+	_expect(String(empty_departure.state_delta.loss_good_id).is_empty(), "zero-cargo departure should record no exposed good")
 
 func _test_command_buy_and_sell() -> void:
 	var world := AshWorldState.new(1107)

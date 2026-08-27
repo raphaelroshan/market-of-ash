@@ -539,7 +539,10 @@ func _refresh_forecasts() -> void:
 	var quantity := int(cargo_quantity.value)
 	var origin := world.settlement(world.current_settlement)
 	var destination := world.settlement(destination_id)
-	var world_context := {"crisis_modifiers": world.crisis_modifiers}
+	var world_context := {
+		"crisis_modifiers": world.crisis_modifiers,
+		"cargo": world.cargo,
+	}
 	var market_text := _market_preview_text(good_id, quantity, origin, world_context)
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
@@ -571,7 +574,12 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 		return "ROUTE FORECAST\nChoose a valid cargo, destination, and route."
 	var net_profit := int(preview.expected_net_profit)
 	var net_text := ("+%d" % net_profit) if net_profit > 0 else str(net_profit)
-	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · expected loss %d at %d%% risk · time cost %d\nEXPECTED NET PROFIT %s ashmarks\n%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.expected_loss), int(round(float(preview.risk) * 100.0)), int(preview.time_cost), net_text, String(route.get("description", ""))]
+	var cargo_risk_text: String
+	if int(preview.loss_quantity) <= 0:
+		cargo_risk_text = "Cargo risk: no carried cargo is currently at risk; expected loss 0 at %d%% risk." % int(round(float(preview.risk) * 100.0))
+	else:
+		cargo_risk_text = "Cargo risk: 1 %s unit at risk, valued at %d at %s; expected loss %d at %d%% risk." % [String(preview.loss_good_id).capitalize(), int(preview.loss_unit_value), destination.get("name", "the destination"), int(preview.expected_loss), int(round(float(preview.risk) * 100.0))]
+	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source)]
 
 func _on_buy_pressed() -> void:
 	_sync_shop_plan_to_departure()

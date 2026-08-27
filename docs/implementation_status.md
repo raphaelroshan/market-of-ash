@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations are implemented. Begin B0 only after this audit.
+**Roadmap status:** A0–A1 foundations and B0 forecast/resolution calibration are implemented. B1 market-memory design is next.
 
 ## Implemented player-facing spine
 
@@ -15,6 +15,7 @@
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
 - Saves declare save version 1 and content version `0.4.1`; unversioned saves migrate to version 1 and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
+- Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 
 ## Current command IDs
 
@@ -70,14 +71,12 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 | Departure Desk | Commit Departure | Arrival Report on map layer | Yes, through `depart_route`. |
 | Arrival Report | Enter Settlement | Destination Settlement Shop | None beyond the completed departure command. |
 
-## Roadmap-to-code mismatches
+## Remaining roadmap-to-code mismatches
 
-1. **Forecast/resolution units differ.** `MarketEconomy.route_profit_preview` calculates expected loss as route risk multiplied by the entire destination sale total. `MarketCommandProcessor._depart_route` removes at most one cargo unit. Large loads therefore receive a structurally pessimistic forecast.
-2. **The loss basis is not exposed.** The forecast result has `risk` and `expected_loss`, but no stable loss-model label, cargo unit/value basis, or risk-source field for UI and tests.
-3. **Incident cargo selection is order-based.** `_remove_first_cargo_unit` removes the first held good in canonical content order, not a disclosed cargo/value basis. Mixed-cargo forecast and resolution behavior is therefore underspecified.
-4. **One charter reference is stale.** `docs/gpt_agent_handoff_roadmap.md` references `docs/alpha_release_roadmap.md`, which is not present. The active roadmap is `docs/gpt_agent_handoff_roadmap.md`.
-5. **Roadmap fixtures are not present.** `tests/fixtures/` and its campaign-state fixtures are planned but not yet implemented.
-6. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. The baseline was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
+1. **One charter reference is stale.** `docs/gpt_agent_handoff_roadmap.md` references `docs/alpha_release_roadmap.md`, which is not present. The active roadmap is `docs/gpt_agent_handoff_roadmap.md`.
+2. **Roadmap fixtures are not present.** `tests/fixtures/` and its campaign-state fixtures are planned but not yet implemented.
+3. **Market memory is absent.** Repeated deliveries do not yet soften or recover local premiums, so the opening Water → Reedwatch loop remains dominant.
+4. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. The baseline and B0 were verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
 
 ## Baseline verification commands
 
@@ -105,6 +104,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Content manifest, political geography, tribal conflict, economy/settlement, and runtime-world validators: pass.
 - `git diff --check`: pass.
 
+## B0 calibration result
+
+- Forecast and resolver now use the highest destination-value carried unit as the single exposed unit.
+- The UI names that unit, destination value, expected loss, percentage risk, and authored risk source.
+- Forecast-maximizer mean error improved from `+66.8` to `-0.2` ashmarks-equivalent across 100 seeds.
+- Forecast-maximizer mean absolute error improved from `66.8` to `14.5`; the residual is binary incident variance rather than structural load-size error.
+
 ## Next permitted task
 
-Card B0a: decide and document one shared forecast/resolution loss model before changing gameplay or balance.
+Card B1a: define the bounded market-memory schema, validation rules, price-composition order, and save/replay contract without changing gameplay prices yet.

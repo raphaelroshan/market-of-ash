@@ -1,5 +1,5 @@
 policy,policy_label,forecast_net,realized_economic,mean_error,mean_absolute_error
-guided_grain_delivery,Guided grain delivery,-23.0,-19.8,3.2,4.6
-forecast_maximizer,Forecast maximizer,32.0,98.8,66.8,66.8
-gross_margin_chaser,Gross-margin chaser,32.0,98.8,66.8,66.8
-toll_road_only,Toll-road-only,0.0,8.6,8.6,14.8
+guided_grain_delivery,Guided grain delivery,-20.0,-19.8,0.2,3.7
+forecast_maximizer,Forecast maximizer,99.0,98.8,-0.2,14.5
+gross_margin_chaser,Gross-margin chaser,99.0,98.8,-0.2,14.5
+toll_road_only,Toll-road-only,9.0,8.6,-0.4,7.6

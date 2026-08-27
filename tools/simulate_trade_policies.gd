@@ -18,14 +18,31 @@ func _init() -> void:
 	for seed in range(1, SEED_COUNT + 1):
 		for policy in POLICIES:
 			rows.append(_run_policy(seed, policy))
-	print("SIMULATION_JSON=" + JSON.stringify({
+	var payload := {
 		"simulation": "Market of Ash first-run single-trade policy simulation",
 		"seed_count": SEED_COUNT,
 		"starting_state": {"money": STARTING_MONEY, "provisions": STARTING_PROVISIONS, "cargo_weight": 0, "settlement": "ashgate", "day": 1},
 		"policies": POLICIES,
 		"rows": rows,
-	}))
+	}
+	var output_path := _output_path()
+	if not output_path.is_empty():
+		var file := FileAccess.open(output_path, FileAccess.WRITE)
+		if file == null:
+			push_error("Could not write simulation output: %s" % output_path)
+			quit(1)
+			return
+		file.store_string(JSON.stringify(payload))
+		print("Wrote simulation output to %s" % output_path)
+	else:
+		print("SIMULATION_JSON=" + JSON.stringify(payload))
 	quit(0)
+
+func _output_path() -> String:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--output="):
+			return argument.trim_prefix("--output=")
+	return ""
 
 func _run_policy(seed: int, policy: String) -> Dictionary:
 	var world := AshWorldState.new(seed)
@@ -94,13 +111,16 @@ func _choose_candidate(world: AshWorldState, policy: String) -> Dictionary:
 func _candidate_for(world: AshWorldState, good_id: String, quantity: int, destination_id: String, route_id: String) -> Dictionary:
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		return {}
+	var simulated_cargo := world.cargo.duplicate(true)
+	simulated_cargo[good_id] = int(simulated_cargo.get(good_id, 0)) + quantity
+	simulated_cargo["weight"] = int(simulated_cargo.get("weight", 0)) + int(MarketContent.good(good_id).get("weight", 0)) * quantity
 	var preview := MarketEconomy.route_profit_preview(
 		good_id,
 		quantity,
 		world.settlement(world.current_settlement),
 		world.settlement(destination_id),
 		world.route(route_id),
-		{"crisis_modifiers": world.crisis_modifiers},
+		{"crisis_modifiers": world.crisis_modifiers, "cargo": simulated_cargo},
 	)
 	if not preview.ok:
 		return {}
@@ -157,6 +177,8 @@ func _row(world: AshWorldState, policy: String, candidate: Dictionary, preview: 
 		"forecast_gross_trade_margin": int(preview.get("gross_trade_margin", 0)),
 		"forecast_risk": float(preview.get("risk", 0.0)),
 		"forecast_expected_loss": int(preview.get("expected_loss", 0)),
+		"forecast_loss_good_id": String(preview.get("loss_good_id", "")),
+		"forecast_loss_unit_value": int(preview.get("loss_unit_value", 0)),
 		"realized_cash_profit": cash_profit,
 		"realized_economic_profit": realized_economic_profit,
 		"ending_money": world.money,

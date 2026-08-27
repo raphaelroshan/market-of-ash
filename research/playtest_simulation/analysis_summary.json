@@ -8,14 +8,14 @@
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.35,
-      "mean_forecast_net_profit": -23.0,
+      "mean_forecast_net_profit": -20.0,
       "mean_realized_cash_profit": -14.8,
       "mean_realized_economic_profit": -19.8,
       "median_realized_economic_profit": -17.0,
       "p10_realized_economic_profit": -25.0,
       "p90_realized_economic_profit": -17.0,
       "loss_rate": 1.0,
-      "mean_forecast_error": 3.2,
+      "mean_forecast_error": 0.2,
       "mean_quantity": 2.0,
       "mean_provisions_remaining": 11.0
     },
@@ -25,14 +25,14 @@
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.35,
-      "mean_forecast_net_profit": 32.0,
+      "mean_forecast_net_profit": 99.0,
       "mean_realized_cash_profit": 103.8,
       "mean_realized_economic_profit": 98.8,
       "median_realized_economic_profit": 110.0,
       "p10_realized_economic_profit": 78.0,
       "p90_realized_economic_profit": 110.0,
       "loss_rate": 0.0,
-      "mean_forecast_error": 66.8,
+      "mean_forecast_error": -0.2,
       "mean_quantity": 7.0,
       "mean_provisions_remaining": 11.0
     },
@@ -42,14 +42,14 @@
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.35,
-      "mean_forecast_net_profit": 32.0,
+      "mean_forecast_net_profit": 99.0,
       "mean_realized_cash_profit": 103.8,
       "mean_realized_economic_profit": 98.8,
       "median_realized_economic_profit": 110.0,
       "p10_realized_economic_profit": 78.0,
       "p90_realized_economic_profit": 110.0,
       "loss_rate": 0.0,
-      "mean_forecast_error": 66.8,
+      "mean_forecast_error": -0.2,
       "mean_quantity": 7.0,
       "mean_provisions_remaining": 11.0
     },
@@ -59,14 +59,14 @@
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.1,
-      "mean_forecast_net_profit": 0.0,
+      "mean_forecast_net_profit": 9.0,
       "mean_realized_cash_profit": 13.6,
       "mean_realized_economic_profit": 8.6,
       "median_realized_economic_profit": 13.0,
       "p10_realized_economic_profit": 8.600000000000016,
       "p90_realized_economic_profit": 13.0,
       "loss_rate": 0.1,
-      "mean_forecast_error": 8.6,
+      "mean_forecast_error": -0.4,
       "mean_quantity": 3.0,
       "mean_provisions_remaining": 11.0
     },
@@ -129,34 +129,34 @@
     {
       "policy": "guided_grain_delivery",
       "policy_label": "Guided grain delivery",
-      "forecast_net": -23.0,
+      "forecast_net": -20.0,
       "realized_economic": -19.8,
-      "mean_error": 3.2,
-      "mean_absolute_error": 4.6
+      "mean_error": 0.2,
+      "mean_absolute_error": 3.7
     },
     {
       "policy": "forecast_maximizer",
       "policy_label": "Forecast maximizer",
-      "forecast_net": 32.0,
+      "forecast_net": 99.0,
       "realized_economic": 98.8,
-      "mean_error": 66.8,
-      "mean_absolute_error": 66.8
+      "mean_error": -0.2,
+      "mean_absolute_error": 14.5
     },
     {
       "policy": "gross_margin_chaser",
       "policy_label": "Gross-margin chaser",
-      "forecast_net": 32.0,
+      "forecast_net": 99.0,
       "realized_economic": 98.8,
-      "mean_error": 66.8,
-      "mean_absolute_error": 66.8
+      "mean_error": -0.2,
+      "mean_absolute_error": 14.5
     },
     {
       "policy": "toll_road_only",
       "policy_label": "Toll-road-only",
-      "forecast_net": 0.0,
+      "forecast_net": 9.0,
       "realized_economic": 8.6,
-      "mean_error": 8.6,
-      "mean_absolute_error": 14.8
+      "mean_error": -0.4,
+      "mean_absolute_error": 7.6
     }
   ]
 }

@@ -1,6 +1,6 @@
 policy,policy_label,runs,completion_rate,incident_rate,mean_forecast_net_profit,mean_realized_cash_profit,mean_realized_economic_profit,median_realized_economic_profit,p10_realized_economic_profit,p90_realized_economic_profit,loss_rate,mean_forecast_error,mean_quantity,mean_provisions_remaining,policy_order
-guided_grain_delivery,Guided grain delivery,100,1.0,0.35,-23.0,-14.8,-19.8,-17.0,-25.0,-17.0,1.0,3.2,2.0,11.0,0
-forecast_maximizer,Forecast maximizer,100,1.0,0.35,32.0,103.8,98.8,110.0,78.0,110.0,0.0,66.8,7.0,11.0,1
-gross_margin_chaser,Gross-margin chaser,100,1.0,0.35,32.0,103.8,98.8,110.0,78.0,110.0,0.0,66.8,7.0,11.0,2
-toll_road_only,Toll-road-only,100,1.0,0.1,0.0,13.6,8.6,13.0,8.600000000000016,13.0,0.1,8.6,3.0,11.0,3
+guided_grain_delivery,Guided grain delivery,100,1.0,0.35,-20.0,-14.8,-19.8,-17.0,-25.0,-17.0,1.0,0.2,2.0,11.0,0
+forecast_maximizer,Forecast maximizer,100,1.0,0.35,99.0,103.8,98.8,110.0,78.0,110.0,0.0,-0.2,7.0,11.0,1
+gross_margin_chaser,Gross-margin chaser,100,1.0,0.35,99.0,103.8,98.8,110.0,78.0,110.0,0.0,-0.2,7.0,11.0,2
+toll_road_only,Toll-road-only,100,1.0,0.1,9.0,13.6,8.6,13.0,8.600000000000016,13.0,0.1,-0.4,3.0,11.0,3
 no_trade,No trade baseline,100,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,12.0,4

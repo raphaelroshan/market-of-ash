@@ -27,6 +27,13 @@ POLICY_RULES = {
     "no_trade": "Takes no action; baseline for resource preservation.",
 }
 
+PRE_B0_CALIBRATION = {
+    "guided_grain_delivery": {"mean_error": 3.2, "mean_absolute_error": 4.6},
+    "forecast_maximizer": {"mean_error": 66.8, "mean_absolute_error": 66.8},
+    "gross_margin_chaser": {"mean_error": 66.8, "mean_absolute_error": 66.8},
+    "toll_road_only": {"mean_error": 8.6, "mean_absolute_error": 14.8},
+}
+
 
 def signed(value: float) -> str:
     return f"{value:+.1f}"
@@ -212,6 +219,20 @@ def main() -> int:
         calibration_display[column] = calibration_display[column].map(signed)
     calibration_display = calibration_display[["Policy", "Forecast net", "Realized economic", "Mean error", "Mean absolute error"]]
 
+    comparison_rows = []
+    for policy, baseline in PRE_B0_CALIBRATION.items():
+        current = calibration.loc[calibration["policy"] == policy].iloc[0]
+        comparison_rows.append(
+            {
+                "Policy": POLICY_LABELS[policy],
+                "Mean error before": signed(baseline["mean_error"]),
+                "Mean error after": signed(float(current["mean_error"])),
+                "MAE before": signed(baseline["mean_absolute_error"]),
+                "MAE after": signed(float(current["mean_absolute_error"])),
+            }
+        )
+    calibration_comparison = pd.DataFrame(comparison_rows)
+
     report = f"""# Market of Ash — Corrected Automated First-Run Playtest Simulation
 
 > **Scope note:** This is a deterministic, rule-based simulation of the current prototype, not a substitute for human playtests. It reveals what the implemented economy rewards under explicit policies; it does not measure player enjoyment, comprehension, or preference.
@@ -250,7 +271,13 @@ Every deterministic policy still concentrates on one legal initial trade in this
 
 {markdown_table(calibration_display)}
 
-The displayed forecast remains conservative compared with mean realized economic profit because it deducts a percentage of the **entire expected sale value** as expected loss, while an actual route incident removes **one cargo unit**. This is a calibration issue, not a route-topology issue. The discrepancy increases on large loads and is most visible for the gross-margin policy.
+The displayed forecast and resolver now share the **one exposed cargo unit** model. The forecast values the highest destination-value unit currently carried, multiplies that value by route risk, and the resolver removes that same unit when an incident occurs. Remaining error is bounded stochastic and integer-rounding variance rather than a structural whole-load-versus-one-unit mismatch.
+
+### B0 before/after
+
+{markdown_table(calibration_comparison)}
+
+The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashmarks-equivalent. Its mean absolute error fell from **66.8** to **14.5**; the remaining absolute error is the expected spread between a rounded expected value and binary one-unit outcomes across individual runs.
 
 ## Economic Bottlenecks and Design Risks
 
@@ -258,7 +285,7 @@ The displayed forecast remains conservative compared with mean realized economic
 | --- | --- | --- | --- |
 | **Route topology is now authoritative** | All completed runs use content-declared endpoints, and invalid Old Road → Brine Cross departures are rejected in regression coverage. | Route fees, risk, map presentation, and forecast now describe the same corridor. | Keep endpoint validation in future route-content review; no balance action is indicated by this implementation fix alone. |
 | **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Implement bounded market memory (A2) and rerun the harness to measure whether recent deliveries create readable trade rotation. |
-| **Forecast/resolution mismatch** | Mean forecast error ranges from {signed(float(calibration['mean_error'].min()))} to {signed(float(calibration['mean_error'].max()))} ashmarks-equivalent across active policies. | A risk-adjusted forecast that is reliably more pessimistic than resolution can weaken trust in the explanation layer. | State the one-unit loss assumption explicitly or align forecast expected-loss calculation with the resolver before external balance changes. |
+| **Forecast/resolution calibration** | Mean forecast error ranges from {signed(float(calibration['mean_error'].min()))} to {signed(float(calibration['mean_error'].max()))} ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
 | **Capacity dominates the first decision** | The forecast policy loads an average of {forecast_policy['mean_quantity']:.1f} units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
 | **Guided delivery is not an economic optimum** | The Grain teaching run averages {signed(float(guided_policy['mean_realized_economic_profit']))} realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |
 

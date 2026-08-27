@@ -24,10 +24,10 @@ The simulator tests only the initial one-trade loop. It does not model crew, con
 
 | Policy                | Runs   | Completed   | Incident rate   | Forecast net   | Realized economic   | Median realized   | Loss rate   | Forecast error   | Mean units   |
 |:----------------------|:-------|:------------|:----------------|:---------------|:--------------------|:------------------|:------------|:-----------------|:-------------|
-| Guided grain delivery | 100    | 100.0%      | 35.0%           | -23.0          | -19.8               | -17.0             | 100.0%      | +3.2             | 2.0          |
-| Forecast maximizer    | 100    | 100.0%      | 35.0%           | +32.0          | +98.8               | +110.0            | 0.0%        | +66.8            | 7.0          |
-| Gross-margin chaser   | 100    | 100.0%      | 35.0%           | +32.0          | +98.8               | +110.0            | 0.0%        | +66.8            | 7.0          |
-| Toll-road-only        | 100    | 100.0%      | 10.0%           | +0.0           | +8.6                | +13.0             | 10.0%       | +8.6             | 3.0          |
+| Guided grain delivery | 100    | 100.0%      | 35.0%           | -20.0          | -19.8               | -17.0             | 100.0%      | +0.2             | 2.0          |
+| Forecast maximizer    | 100    | 100.0%      | 35.0%           | +99.0          | +98.8               | +110.0            | 0.0%        | -0.2             | 7.0          |
+| Gross-margin chaser   | 100    | 100.0%      | 35.0%           | +99.0          | +98.8               | +110.0            | 0.0%        | -0.2             | 7.0          |
+| Toll-road-only        | 100    | 100.0%      | 10.0%           | +9.0           | +8.6                | +13.0             | 10.0%       | -0.4             | 3.0          |
 | No trade baseline     | 100    | 0.0%        | 0.0%            | +0.0           | +0.0                | +0.0              | 0.0%        | +0.0             | 0.0          |
 
 Under legal paths, the **forecast maximizer** selects **water → reedwatch / old_road** in every seed and averages **+98.8** realized economic profit. The **gross-margin chaser** selects **water → reedwatch / old_road** and averages **+98.8**. The **Toll-road-only** policy selects **medicine → brine_cross / toll_road** and averages **+8.6**. The guided Grain delivery remains a mechanically legible but deliberately lower-return teaching run at **-19.8**.
@@ -52,12 +52,23 @@ Every deterministic policy still concentrates on one legal initial trade in this
 
 | Policy                | Forecast net   | Realized economic   | Mean error   | Mean absolute error   |
 |:----------------------|:---------------|:--------------------|:-------------|:----------------------|
-| Guided grain delivery | -23.0          | -19.8               | +3.2         | +4.6                  |
-| Forecast maximizer    | +32.0          | +98.8               | +66.8        | +66.8                 |
-| Gross-margin chaser   | +32.0          | +98.8               | +66.8        | +66.8                 |
-| Toll-road-only        | +0.0           | +8.6                | +8.6         | +14.8                 |
+| Guided grain delivery | -20.0          | -19.8               | +0.2         | +3.7                  |
+| Forecast maximizer    | +99.0          | +98.8               | -0.2         | +14.5                 |
+| Gross-margin chaser   | +99.0          | +98.8               | -0.2         | +14.5                 |
+| Toll-road-only        | +9.0           | +8.6                | -0.4         | +7.6                  |
 
-The displayed forecast remains conservative compared with mean realized economic profit because it deducts a percentage of the **entire expected sale value** as expected loss, while an actual route incident removes **one cargo unit**. This is a calibration issue, not a route-topology issue. The discrepancy increases on large loads and is most visible for the gross-margin policy.
+The displayed forecast and resolver now share the **one exposed cargo unit** model. The forecast values the highest destination-value unit currently carried, multiplies that value by route risk, and the resolver removes that same unit when an incident occurs. Remaining error is bounded stochastic and integer-rounding variance rather than a structural whole-load-versus-one-unit mismatch.
+
+### B0 before/after
+
+| Policy                | Mean error before   | Mean error after   | MAE before   | MAE after   |
+|:----------------------|:--------------------|:-------------------|:-------------|:------------|
+| Guided grain delivery | +3.2                | +0.2               | +4.6         | +3.7        |
+| Forecast maximizer    | +66.8               | -0.2               | +66.8        | +14.5       |
+| Gross-margin chaser   | +66.8               | -0.2               | +66.8        | +14.5       |
+| Toll-road-only        | +8.6                | -0.4               | +14.8        | +7.6        |
+
+The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashmarks-equivalent. Its mean absolute error fell from **66.8** to **14.5**; the remaining absolute error is the expected spread between a rounded expected value and binary one-unit outcomes across individual runs.
 
 ## Economic Bottlenecks and Design Risks
 
@@ -65,7 +76,7 @@ The displayed forecast remains conservative compared with mean realized economic
 | --- | --- | --- | --- |
 | **Route topology is now authoritative** | All completed runs use content-declared endpoints, and invalid Old Road → Brine Cross departures are rejected in regression coverage. | Route fees, risk, map presentation, and forecast now describe the same corridor. | Keep endpoint validation in future route-content review; no balance action is indicated by this implementation fix alone. |
 | **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Implement bounded market memory (A2) and rerun the harness to measure whether recent deliveries create readable trade rotation. |
-| **Forecast/resolution mismatch** | Mean forecast error ranges from +3.2 to +66.8 ashmarks-equivalent across active policies. | A risk-adjusted forecast that is reliably more pessimistic than resolution can weaken trust in the explanation layer. | State the one-unit loss assumption explicitly or align forecast expected-loss calculation with the resolver before external balance changes. |
+| **Forecast/resolution calibration** | Mean forecast error ranges from -0.4 to +0.2 ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
 | **Capacity dominates the first decision** | The forecast policy loads an average of 7.0 units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
 | **Guided delivery is not an economic optimum** | The Grain teaching run averages -19.8 realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |
 
