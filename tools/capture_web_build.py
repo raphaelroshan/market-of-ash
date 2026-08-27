@@ -45,6 +45,18 @@ def set_viewport_size(driver: webdriver.Chrome, width: int, height: int) -> None
         )
 
 
+def capture_frame(driver: webdriver.Chrome, output: Path, expected_size: tuple[int, int]) -> int:
+    if not driver.save_screenshot(str(output)):
+        raise RuntimeError(f"Chrome did not save {output}")
+    image_size = png_dimensions(output)
+    if image_size != expected_size:
+        raise AssertionError(f"{output.name}: PNG is {image_size}, expected {expected_size}")
+    byte_count = output.stat().st_size
+    if byte_count < 10_000:
+        raise AssertionError(f"{output.name}: rendered frame is unexpectedly small")
+    return byte_count
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", required=True)
@@ -75,21 +87,30 @@ def main() -> int:
             actual_width = int(driver.execute_script("return window.innerWidth"))
             actual_height = int(driver.execute_script("return window.innerHeight"))
             output = args.output_dir / f"main-menu-{width}x{height}.png"
-            if not driver.save_screenshot(str(output)):
-                raise RuntimeError(f"Chrome did not save {output}")
-            image_width, image_height = png_dimensions(output)
-            if image_width != actual_width or image_height != actual_height:
-                raise AssertionError(
-                    f"{output.name}: PNG is {(image_width, image_height)}, viewport is {(actual_width, actual_height)}"
-                )
-            if output.stat().st_size < 10_000:
-                raise AssertionError(f"{output.name}: rendered frame is unexpectedly small")
+            main_bytes = capture_frame(driver, output, (actual_width, actual_height))
             captures.append(
                 {
+                    "screen": "main_menu",
                     "requested_window": {"width": width, "height": height},
                     "captured_viewport": {"width": actual_width, "height": actual_height},
                     "file": output.name,
-                    "bytes": output.stat().st_size,
+                    "bytes": main_bytes,
+                }
+            )
+            canvas = driver.find_element(By.ID, "canvas")
+            canvas.click()
+            time.sleep(1.0)
+            shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
+            shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
+            if shop_output.read_bytes() == output.read_bytes():
+                raise AssertionError(f"{shop_output.name}: Start did not change the rendered frame")
+            captures.append(
+                {
+                    "screen": "settlement_shop",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": shop_output.name,
+                    "bytes": shop_bytes,
                 }
             )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")

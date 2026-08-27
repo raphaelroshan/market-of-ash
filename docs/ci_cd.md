@@ -21,7 +21,7 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | AI QA review | Edge cases, test gaps, input paths, save/load, reproducibility | Reports; blocks on critical findings. |
 | AI security review | Credential exposure, unsafe process behavior, dependency and prompt-injection risks | Reports; blocks on critical findings. |
 | Packaging | Project import, source snapshot, Windows export, and Web export | Blocks after export presets are present. |
-| Web render | Launches the packaged Web build in Linux Chrome, verifies the loading overlay clears, and captures minimum/standard viewport screenshots. | Blocks on browser startup, persistent loading/error state, missing captures, invalid PNGs, or unexpected dimensions. |
+| Web render | Launches the packaged Web build in Linux Chrome, verifies the loading overlay clears, activates Start through the real canvas, and captures Main Menu plus Settlement Shop at minimum/standard viewports. | Blocks on browser startup, persistent loading/error state, unchanged navigation frames, missing captures, invalid PNGs, or unexpected dimensions. |
 
 ## Multi-agent model
 
