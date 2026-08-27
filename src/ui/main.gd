@@ -36,6 +36,7 @@ var binding_status_label: Label
 var binding_buttons: Dictionary = {}
 var remapping_action: String = ""
 var reset_confirmation_dialog: ConfirmationDialog
+var new_game_confirmation_dialog: ConfirmationDialog
 var reduce_motion_checkbox: CheckBox
 var large_text_checkbox: CheckBox
 var interface_sounds_checkbox: CheckBox
@@ -208,7 +209,7 @@ func _build_main_menu() -> void:
 	start_game_button = Button.new()
 	start_game_button.text = "Start Game"
 	start_game_button.custom_minimum_size = Vector2(0, 48)
-	start_game_button.pressed.connect(_on_start_game_pressed)
+	start_game_button.pressed.connect(_on_start_game_requested)
 	content.add_child(start_game_button)
 	continue_game_button = Button.new()
 	continue_game_button.text = "Continue saved game"
@@ -992,6 +993,21 @@ func _on_start_game_pressed() -> void:
 	playtest_banner.text = "QUICK PLAYTEST — A compact trade run through the Five-Well Basin. The recommendation is optional; every normal trade and route choice remains available."
 	_set_event("Ashgate market is open. Inspect local prices, load cargo, then plan a route when you are ready.")
 	_show_shop()
+
+func _on_start_game_requested() -> void:
+	if continue_game_button == null or continue_game_button.disabled:
+		_on_start_game_pressed()
+		return
+	if new_game_confirmation_dialog == null:
+		new_game_confirmation_dialog = ConfirmationDialog.new()
+		new_game_confirmation_dialog.title = "Start a new campaign?"
+		new_game_confirmation_dialog.dialog_text = "A validated saved campaign already exists. It remains loadable until the new run's first successful autosave, which will replace it."
+		new_game_confirmation_dialog.ok_button_text = "Start new campaign"
+		new_game_confirmation_dialog.cancel_button_text = "Keep saved campaign"
+		new_game_confirmation_dialog.confirmed.connect(_on_start_game_pressed)
+		add_child(new_game_confirmation_dialog)
+	new_game_confirmation_dialog.popup_centered(Vector2i(560, 190))
+	new_game_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
 
 func _select_option_by_id(option: OptionButton, target_id: String) -> void:
 	for index in range(option.item_count):
