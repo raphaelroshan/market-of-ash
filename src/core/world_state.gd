@@ -537,7 +537,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		log.append(String(log_entry))
 	command_history.clear()
 	var saved_history: Array = restored.get("command_history", [])
-	for raw_entry in saved_history:
+	for raw_entry in saved_history.slice(maxi(0, saved_history.size() - MAX_COMMAND_HISTORY)):
 		if typeof(raw_entry) == TYPE_DICTIONARY:
 			command_history.append(raw_entry.duplicate(true))
 	_update_crisis_modifiers()

@@ -1363,6 +1363,14 @@ func _test_save_round_trip() -> void:
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
 	_expect(restored.serialize().content_version == "1.15.0", "serialized state should declare the content version")
+	var oversized_history_save := AshWorldState.new(43).serialize()
+	for index in range(105):
+		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})
+	var bounded_history_world := AshWorldState.new(0)
+	var bounded_history_result := bounded_history_world.load_serialized(oversized_history_save)
+	_expect(bounded_history_result.ok, "a structurally valid save with excess command history should load")
+	_expect(bounded_history_world.command_history.size() == AshWorldState.MAX_COMMAND_HISTORY, "load should restore no more than the runtime command-history bound")
+	_expect(bounded_history_world.command_history.front().id == "test_5" and bounded_history_world.command_history.back().id == "test_104", "load should retain the newest bounded command-history records")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)
