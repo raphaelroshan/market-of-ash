@@ -1,0 +1,13 @@
+{
+  "stages": [
+    {"id": 2, "label": "", "starts_day": 0, "objective": ""}
+  ],
+  "ending": {
+    "id": "",
+    "title": "",
+    "required_contract_id": "",
+    "minimum_reedwatch_resilience": -1,
+    "maximum_arms_escalation": -1,
+    "summary": ""
+  }
+}

@@ -741,6 +741,8 @@ static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Diction
 	return {"good_id": good_id, "delta": {good_id: -1, "weight": -weight}}
 
 static func _record(world: AshWorldState, command: Dictionary, result: Dictionary) -> Dictionary:
+	if bool(result.get("ok", false)):
+		world.evaluate_ending()
 	world.record_command(command, result)
 	return result
 

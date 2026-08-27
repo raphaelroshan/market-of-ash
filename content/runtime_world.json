@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.8.0",
+  "content_version": "1.9.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -585,6 +585,22 @@
     "noticed_label": "Noticed traffic",
     "warning": "This sale raises arms escalation to a visible Warden inspection threshold.",
     "recovery": "Public route support and verified warning-sharing will provide later de-escalation paths."
+  },
+  "crisis": {
+    "stages": [
+      {"id": 0, "label": "Ordinary pressure", "starts_day": 1, "objective": "Compare markets and prepare a first route."},
+      {"id": 1, "label": "Thin wells", "starts_day": 4, "objective": "Move water or medicine before local reserves harden."},
+      {"id": 2, "label": "Empty reservoir", "starts_day": 7, "objective": "Build resilience while routes and factions compete for supply."},
+      {"id": 3, "label": "Settlement decision", "starts_day": 10, "objective": "Secure a durable relief outcome without letting arms pressure dominate the roads."}
+    ],
+    "ending": {
+      "id": "open_routes_relief",
+      "title": "Open Routes, Shared Wells",
+      "required_contract_id": "reedwatch_water_relief_01",
+      "minimum_reedwatch_resilience": 2,
+      "maximum_arms_escalation": 1,
+      "summary": "Reedwatch's public reserve holds, relief caravans retain access, and the basin enters the next season without armed traffic controlling the roads."
+    }
   },
   "routes": {
     "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},

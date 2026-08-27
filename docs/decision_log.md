@@ -255,3 +255,11 @@
 **Reason:** Arms pressure must be recoverable through a named non-combat action whose opportunity cost is clear. A public audit directly counters hidden manifests while preserving the profit already earned and the historical record of the sale.
 
 **Trade-off:** Recovery is deliberately slower than escalation: one sale adds two while one audit removes one. Additional material-based recovery and high-stage consequences remain future work.
+
+## ADR-033: The first ending requires relief, resilience, and restrained arms pressure
+
+**Decision:** Drive crisis stages from authored day thresholds at days 1, 4, 7, and 10. At stage 3, award the first ending, `open_routes_relief`, only when the Reedwatch relief contract is completed, Reedwatch resilience is at least two, and arms escalation is at most one. Save the ending ID and summary permanently and display the current stage objective and reached ending in the settlement UI.
+
+**Reason:** A campaign proof needs a reproducible regional outcome built from previously visible trade, event, and political decisions. The predicate rewards delivery, public supply, and escalation recovery without inventing a separate score or requiring combat.
+
+**Trade-off:** This implements one ending only. Players who reach day ten without the predicate remain in the decision stage and may continue trading; additional endings and richer world-state summaries remain later slices.

@@ -246,6 +246,12 @@ func _initialize() -> void:
 	ui._on_settlement_action_pressed("ashgate_public_manifest_audit")
 	_expect(ui.world.arms_escalation == 1 and ui.event_label.text.contains("fell to 1/6"), "manifest audit UI did not apply and explain de-escalation")
 
+	ui.world.contract_history.append({"id": "reedwatch_water_relief_01", "status": "completed"})
+	ui.world.settlement_resilience["reedwatch"] = 2
+	ui.world.advance_day(8)
+	ui._refresh_ui()
+	_expect(ui.world.ending_id == "open_routes_relief" and ui.shop_status_label.text.contains("ENDING — Open Routes, Shared Wells"), "qualified crisis state did not expose the deterministic ending summary")
+
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

@@ -1048,7 +1048,8 @@ func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
-		shop_status_label.text = "%s — %s\nDay %d · Crisis %d · %s" % [String(settlement.get("name", "Unknown settlement")), String(settlement.get("role", "market")), world.day, world.crisis_stage, String(event_label.text if event_label else "Inspect the local need, then load only what your plan can carry.")]
+		var crisis := MarketContent.crisis_stage(world.crisis_stage)
+		shop_status_label.text = "%s — %s\nDay %d · Crisis %d: %s\nObjective: %s\n%s" % [String(settlement.get("name", "Unknown settlement")), String(settlement.get("role", "market")), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), String(event_label.text if event_label else "Inspect the local need, then load only what your plan can carry.")]
 		shop_status_label.text += "\nSettlement resilience: %d/10" % world.resilience_for(world.current_settlement)
 		if not world.known_information.is_empty():
 			shop_status_label.text += " · Known leads: %d" % world.known_information.size()
@@ -1058,6 +1059,8 @@ func _refresh_ui() -> void:
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
 		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
+		if not world.ending_id.is_empty():
+			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.crisis_rules().get("ending", {}).get("title", world.ending_id)), world.ending_summary]
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

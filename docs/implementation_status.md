@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. The first crisis progression and ending proof is next.
+**Roadmap status:** A0–A1 foundations and B0–B9 are implemented. Alpha UX, accessibility, and build operations are next.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 10 and runtime content version `1.8.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 11 and runtime content version `1.9.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -30,6 +30,7 @@
 - Free Caravan standing is bounded and visible; known road-sharers at +2 pay two fewer ashmarks on the Old Road while its cargo risk remains unchanged.
 - One sealed arms crate and one named Cinder Rider broker offer create a visible 0–6 escalation track; the first threshold adds a disclosed Toll Road inspection surcharge only while arms cargo is carried.
 - Ashgate's public manifest audit spends twelve ashmarks, one day, and one visit slot to reduce arms escalation by one and preserve a named information lead.
+- Crisis stages now expose authored labels/objectives at days 1, 4, 7, and 10; one deterministic regional ending combines relief completion, Reedwatch resilience, and bounded arms pressure.
 
 ## Current command IDs
 
@@ -77,6 +78,8 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `crew_reports`
 - `arms_escalation`
 - `arms_trade_history`
+- `ending_id`
+- `ending_summary`
 - `log`
 - `command_history`
 
@@ -245,6 +248,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Escalation is recoverable: the public manifest audit is blocked at zero, otherwise lowers pressure by one and records its cost and result without deleting the original sale history.
 - The 100-seed viability probe gives the arms broker a median economic result of 37 with 100% transaction completion, while the risk-bearing non-arms relief path has median 71, mean 53, and 85% contract completion. Non-arms progress clears the contract's 80% median-resource gate and arms do not dominate campaign progress.
 
+## B9 crisis and ending proof
+
+- Crisis stages transition deterministically at days 4, 7, and 10 and expose a current label plus practical objective in the settlement header.
+- `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
+- Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
+- Save version 11 preserves the ending. Tests cover every stage boundary, unmet predicates, successful resolution, save/load, migration, and UI presentation.
+
 ## Next permitted task
 
-Card B8/B9: implement the first three-stage water-crisis progression and one deterministic regional ending summary.
+Begin B10 with export configuration and a browser smoke build, then continue input/scaling and diagnostics checks.

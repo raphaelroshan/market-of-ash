@@ -390,6 +390,25 @@ def validate_arms_trade(value: Any, errors: list[str]) -> None:
             fail(errors, f"arms_trade must declare {field}")
 
 
+def validate_crisis(value: Any, errors: list[str]) -> None:
+    rules = as_object(value, "crisis", errors)
+    stages = rules.get("stages")
+    if not isinstance(stages, list) or len(stages) != 4:
+        fail(errors, "crisis must declare exactly four stages")
+    else:
+        for index, raw_stage in enumerate(stages):
+            stage = as_object(raw_stage, f"crisis.stages[{index}]", errors)
+            if stage.get("id") != index or not isinstance(stage.get("starts_day"), int) or stage["starts_day"] <= 0 or not isinstance(stage.get("label"), str) or not stage["label"] or not isinstance(stage.get("objective"), str) or not stage["objective"]:
+                fail(errors, f"crisis stage {index} is invalid")
+    ending = as_object(rules.get("ending"), "crisis.ending", errors)
+    for field in ("id", "title", "required_contract_id", "summary"):
+        if not isinstance(ending.get(field), str) or not ending[field]:
+            fail(errors, f"crisis ending must declare {field}")
+    for field in ("minimum_reedwatch_resilience", "maximum_arms_escalation"):
+        if not isinstance(ending.get(field), int) or ending[field] < 0:
+            fail(errors, "crisis ending bounds must be non-negative")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -415,6 +434,7 @@ def validate(data: Any) -> list[str]:
     validate_crew(root.get("crew"), visit_slot_limit, errors)
     validate_factions(root.get("factions"), errors)
     validate_arms_trade(root.get("arms_trade"), errors)
+    validate_crisis(root.get("crisis"), errors)
     validate_events(root.get("events"), errors)
 
     goods = root.get("goods")

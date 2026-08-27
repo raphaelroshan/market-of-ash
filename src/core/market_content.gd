@@ -164,6 +164,16 @@ static func arms_trade_rules() -> Dictionary:
 	var rules: Variant = runtime_world().get("arms_trade", {})
 	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
 
+static func crisis_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("crisis", {})
+	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
+
+static func crisis_stage(stage_id: int) -> Dictionary:
+	for raw_stage in crisis_rules().get("stages", []):
+		if typeof(raw_stage) == TYPE_DICTIONARY and int(raw_stage.get("id", -1)) == stage_id:
+			return raw_stage.duplicate(true)
+	return {}
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -298,6 +308,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_factions(data.get("factions", {}), errors)
 	_validate_arms_trade(data.get("arms_trade", {}), errors)
+	_validate_crisis(data.get("crisis", {}), errors)
 	_validate_events(data.get("events", {}), errors)
 
 	var routes_data: Variant = data.get("routes", {})
@@ -685,6 +696,25 @@ static func _validate_arms_trade(value: Variant, errors: Array[String]) -> void:
 	for field in ["quiet_label", "noticed_label", "warning", "recovery"]:
 		if String(rules.get(field, "")).is_empty():
 			errors.append("arms_trade must declare %s" % field)
+
+static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("crisis must be an object")
+		return
+	var rules: Dictionary = value
+	var stages: Array = rules.get("stages", [])
+	if stages.size() != 4:
+		errors.append("crisis must declare exactly four stages")
+	for index in range(stages.size()):
+		var stage: Dictionary = stages[index]
+		if int(stage.get("id", -1)) != index or int(stage.get("starts_day", 0)) <= 0 or String(stage.get("label", "")).is_empty() or String(stage.get("objective", "")).is_empty():
+			errors.append("crisis stage %d is invalid" % index)
+	var ending: Dictionary = rules.get("ending", {})
+	for field in ["id", "title", "required_contract_id", "summary"]:
+		if String(ending.get(field, "")).is_empty():
+			errors.append("crisis ending must declare %s" % field)
+	if int(ending.get("minimum_reedwatch_resilience", -1)) < 0 or int(ending.get("maximum_arms_escalation", -1)) < 0:
+		errors.append("crisis ending bounds must be non-negative")
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

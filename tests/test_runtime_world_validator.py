@@ -200,6 +200,23 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_crisis = copy.deepcopy(runtime)
+    invalid_crisis["crisis"] = json.loads(
+        (ROOT / "tests/fixtures/crisis_invalid.json").read_text(encoding="utf-8")
+    )
+    crisis_errors = validate(invalid_crisis)
+    expected_crisis_fragments = (
+        "crisis must declare exactly four stages",
+        "crisis ending must declare id",
+        "crisis ending bounds must be non-negative",
+    )
+    missing_crisis = [fragment for fragment in expected_crisis_fragments if not any(fragment in error for error in crisis_errors)]
+    if missing_crisis:
+        print("FAIL: invalid crisis fixture did not produce expected errors")
+        for fragment in missing_crisis:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

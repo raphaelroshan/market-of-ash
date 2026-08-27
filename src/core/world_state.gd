@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 10
+const SAVE_VERSION := 11
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -35,6 +35,8 @@ var assigned_crew: String = ""
 var crew_reports: Dictionary = {}
 var arms_escalation: int = 0
 var arms_trade_history: Array[Dictionary] = []
+var ending_id: String = ""
+var ending_summary: String = ""
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -310,14 +312,32 @@ func advance_day(days: int) -> void:
 	var elapsed_days := maxi(0, days)
 	day += elapsed_days
 	_decay_market_pressure(elapsed_days)
-	if day >= 4 and crisis_stage == 0:
-		crisis_stage = 1
+	var next_stage := crisis_stage
+	for stage in MarketContent.crisis_rules().get("stages", []):
+		if day >= int(stage.get("starts_day", 1)):
+			next_stage = maxi(next_stage, int(stage.get("id", 0)))
+	if next_stage != crisis_stage:
+		crisis_stage = next_stage
 		_update_crisis_modifiers()
-		log.append("A water shortage is spreading through the region.")
-	elif day >= 7 and crisis_stage == 1:
-		crisis_stage = 2
-		_update_crisis_modifiers()
-		log.append("The water shortage is now changing trade routes and faction demands.")
+		log.append("Crisis stage %d: %s." % [crisis_stage, String(MarketContent.crisis_stage(crisis_stage).get("label", "Regional pressure"))])
+	evaluate_ending()
+
+func evaluate_ending() -> bool:
+	if not ending_id.is_empty() or crisis_stage < 3:
+		return not ending_id.is_empty()
+	var ending: Dictionary = MarketContent.crisis_rules().get("ending", {})
+	if not has_contract_outcome(String(ending.get("required_contract_id", ""))):
+		return false
+	var required_contract_completed := false
+	for contract in contract_history:
+		if String(contract.get("id", "")) == String(ending.get("required_contract_id", "")) and String(contract.get("status", "")) == "completed":
+			required_contract_completed = true
+	if not required_contract_completed or resilience_for("reedwatch") < int(ending.get("minimum_reedwatch_resilience", 0)) or arms_escalation > int(ending.get("maximum_arms_escalation", 0)):
+		return false
+	ending_id = String(ending.get("id", ""))
+	ending_summary = String(ending.get("summary", ""))
+	log.append("Ending reached: %s — %s" % [String(ending.get("title", ending_id)), ending_summary])
+	return true
 
 func _decay_market_pressure(days: int) -> void:
 	if days <= 0 or market_pressure.is_empty():
@@ -398,6 +418,8 @@ func serialize() -> Dictionary:
 		"crew_reports": crew_reports.duplicate(true),
 		"arms_escalation": arms_escalation,
 		"arms_trade_history": arms_trade_history.duplicate(true),
+		"ending_id": ending_id,
+		"ending_summary": ending_summary,
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -476,6 +498,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		for raw_arms_record in saved_arms_history:
 			if typeof(raw_arms_record) == TYPE_DICTIONARY:
 				arms_trade_history.append(raw_arms_record.duplicate(true))
+	ending_id = String(restored.get("ending_id", ""))
+	ending_summary = String(restored.get("ending_summary", ""))
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -532,6 +556,10 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 		migrated["save_version"] = 10
 		migrated["arms_escalation"] = migrated.get("arms_escalation", 0)
 		migrated["arms_trade_history"] = migrated.get("arms_trade_history", [])
+	if source_version < 11:
+		migrated["save_version"] = 11
+		migrated["ending_id"] = migrated.get("ending_id", "")
+		migrated["ending_summary"] = migrated.get("ending_summary", "")
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:

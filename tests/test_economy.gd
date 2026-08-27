@@ -28,6 +28,7 @@ func _init() -> void:
 	_test_tess_oryn_crew()
 	_test_warden_relationship_threshold()
 	_test_arms_trade_proof()
+	_test_crisis_progression_and_ending()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -49,7 +50,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.8.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.9.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -1149,6 +1150,26 @@ func _test_arms_trade_proof() -> void:
 	var restore_result := restored.load_serialized(world.serialize())
 	_expect(restore_result.ok and restored.arms_escalation == 1 and restored.arms_trade_history.size() == 2, "save/load should preserve arms escalation and its named sale/recovery history")
 
+func _test_crisis_progression_and_ending() -> void:
+	var progression := AshWorldState.new(1)
+	_expect(MarketContent.crisis_stage(0).get("label", "") == "Ordinary pressure", "crisis content should expose the opening stage")
+	progression.advance_day(3)
+	_expect(progression.day == 4 and progression.crisis_stage == 1, "day four should enter Thin wells")
+	progression.advance_day(3)
+	_expect(progression.day == 7 and progression.crisis_stage == 2, "day seven should enter Empty reservoir")
+	progression.advance_day(3)
+	_expect(progression.day == 10 and progression.crisis_stage == 3 and progression.ending_id.is_empty(), "day ten should enter Settlement decision without granting an unearned ending")
+	var ending_world := AshWorldState.new(1)
+	ending_world.contract_history.append({"id": "reedwatch_water_relief_01", "status": "completed"})
+	ending_world.settlement_resilience["reedwatch"] = 2
+	ending_world.arms_escalation = 1
+	ending_world.advance_day(9)
+	_expect(ending_world.crisis_stage == 3 and ending_world.ending_id == "open_routes_relief", "qualified day-ten state should reach the deterministic relief ending")
+	_expect(ending_world.ending_summary.contains("public reserve holds"), "ending should preserve its authored regional summary")
+	var restored := AshWorldState.new(0)
+	var restore_result := restored.load_serialized(ending_world.serialize())
+	_expect(restore_result.ok and restored.ending_id == ending_world.ending_id and restored.ending_summary == ending_world.ending_summary, "save/load should preserve the reached ending")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -1217,7 +1238,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.8.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.9.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -1305,6 +1326,14 @@ func _test_legacy_save_migration() -> void:
 	var migration_v9_result := migrated_v9.load_serialized(version_nine_save)
 	_expect(migration_v9_result.ok and int(migration_v9_result.migrated_from) == 9, "version-nine saves should migrate to the arms-escalation schema")
 	_expect(migrated_v9.arms_escalation == 0 and migrated_v9.arms_trade_history.is_empty(), "version-nine migration should initialize quiet arms state")
+	var version_ten_save := legacy_world.serialize()
+	version_ten_save["save_version"] = 10
+	version_ten_save.erase("ending_id")
+	version_ten_save.erase("ending_summary")
+	var migrated_v10 := AshWorldState.new(0)
+	var migration_v10_result := migrated_v10.load_serialized(version_ten_save)
+	_expect(migration_v10_result.ok and int(migration_v10_result.migrated_from) == 10, "version-ten saves should migrate to the ending schema")
+	_expect(migrated_v10.ending_id.is_empty() and migrated_v10.ending_summary.is_empty(), "version-ten migration should initialize an unresolved ending")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)
