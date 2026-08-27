@@ -47,3 +47,19 @@
 **Reason:** The product targets two storefronts while remaining a single-player game. Platform-specific calls in simulation code would complicate testing and cross-store behavior.
 
 **Trade-off:** The project must maintain a small amount of integration glue and test both offline and platform-enabled paths.
+
+## ADR-007: Procedural regional grid before final art
+
+**Decision:** Add a procedural 17x11 Five-Well Basin board with stable grid cells, settlement footprints, route corridors, a selectable future placement cell, and a caravan token that traverses a route after departure.
+
+**Reason:** Spatial readability is required before final art. The player needs to understand where future camp, service, obstacle, escort, and route objects can be placed, and the caravan should visibly move through the region instead of teleporting between settlement menus.
+
+**Trade-off:** The first pass is functional placeholder presentation rather than final illustration. Traversal is presentation-only after the authoritative travel command succeeds; it does not add a second movement simulation or alter prices, risk, provisions, time, or save state. A future art layer must preserve the grid, route, settlement, and token interfaces.
+
+## ADR-008: Generated map art remains optional
+
+**Decision:** Keep the procedural renderer as the source-controlled default and layer generated or authored art beneath it only when an asset is available and does not reduce grid or route readability.
+
+**Reason:** The requested map should be usable immediately, while image generation is not guaranteed and generated maps cannot be trusted to encode gameplay-accurate settlement or route geometry.
+
+**Trade-off:** The current build will not claim final pixel art. Generated assets may improve atmosphere later, but gameplay geometry remains deterministic and code-driven.

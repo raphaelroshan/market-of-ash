@@ -4,7 +4,7 @@ Market of Ash is an agent-first Godot 4.x prototype for a premium Windows game t
 
 ## Current state
 
-The repository contains a playable vertical-slice shell and a headless economy foundation. The main scene demonstrates buying cargo, selling cargo, selecting routes, traveling between settlements, saving prototype state, and watching the regional crisis modify prices. The visual layer currently uses intentional drawn placeholders so the simulation and UI contracts can be tested before final art production.
+The repository contains a playable vertical-slice shell and a headless economy foundation. The main scene demonstrates buying cargo, selling cargo, selecting routes, traveling between settlements, saving prototype state, and watching the regional crisis modify prices. The visual layer now includes an intentional procedural Five-Well Basin placeholder: a readable 17x11 grid, settlement footprints, differentiated route corridors, a selectable future placement cell, and a caravan token that visibly traverses a route after departure. These are replaceable presentation layers; the simulation remains authoritative and independent of rendering.
 
 Godot is not installed in the sandbox used to generate this package. Run the commands below on a development machine with Godot 4.x installed. The project is designed to be edited locally by an agent through a bound project folder and committed through Git.
 
@@ -65,12 +65,12 @@ The preferred unit of work is one vertical slice. For example: “Add the toll d
 
 ## Recommended first implementation sequence
 
-1. Stabilize the current project and test runner.
+1. Stabilize the current project, test runner, and map-grid presentation.
 2. Move settlement and route definitions from `world_state.gd` into data files or typed Resources without changing behavior.
 3. Implement a command/result layer for buying, selling, departing, and event resolution.
 4. Add the four vertical-slice events and deterministic seeded resolution.
 5. Add crew and faction state with tests for each interaction.
-6. Replace the drawn map shell with finalizable 2D art while preserving node and data interfaces.
+6. Replace the procedural map placeholder with finalizable 2D art while preserving grid, route, settlement, and token interfaces.
 7. Implement save versioning and migration.
 8. Add Steam and Epic adapters behind a platform interface.
 9. Build a Windows demo and run usability, controller, scaling, and long-session tests.

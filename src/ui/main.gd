@@ -11,7 +11,8 @@ var route_option: OptionButton
 var cargo_good_option: OptionButton
 var cargo_quantity: SpinBox
 var log_label: Label
-var map_panel: Control
+var map_panel
+var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
 	world = AshWorldState.new(1107)
@@ -26,7 +27,9 @@ func _build_ui() -> void:
 
 	map_panel = MapPanel.new()
 	map_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-	map_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	map_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	map_panel.world = world
+	map_panel.grid_cell_selected.connect(_on_map_cell_selected)
 	add_child(map_panel)
 
 	var margin := MarginContainer.new()
@@ -63,7 +66,7 @@ func _build_ui() -> void:
 	left.add_child(status_label)
 
 	var map_hint := Label.new()
-	map_hint.text = "Five settlements. Three routes. A water shortage is coming."
+	map_hint.text = "Click the regional grid to select a future placement cell; route lanes show where the caravan can travel."
 	map_hint.add_theme_color_override("font_color", Color("#c7b49a"))
 	left.add_child(map_hint)
 
@@ -197,11 +200,13 @@ func _on_sell_pressed() -> void:
 func _on_depart_pressed() -> void:
 	var route_id := _selected_id(route_option)
 	var destination_id := _selected_id(destination_option)
+	var previous_settlement: String = world.current_settlement
 	var result := world.travel(route_id)
 	if not result.ok:
 		_set_event("Departure blocked: %s." % result.reason)
 		return
 	world.current_settlement = destination_id
+	map_panel.begin_travel(route_id, previous_settlement, destination_id)
 	var risk: float = float(result.risk)
 	var roll := fmod(float(world.seed * 17 + world.day * 31), 100.0) / 100.0
 	if roll < risk:
@@ -219,7 +224,15 @@ func _on_save_pressed() -> void:
 
 func _on_reset_pressed() -> void:
 	world = AshWorldState.new(1107)
+	selected_map_cell = Vector2i(-1, -1)
+	map_panel.world = world
+	map_panel.reset_travel(world.current_settlement)
 	_set_event("The caravan has been reset to its first morning.")
+	_refresh_ui()
+
+func _on_map_cell_selected(cell: Vector2i) -> void:
+	selected_map_cell = cell
+	_set_event("Grid cell (%d, %d) selected. Future camp, service, obstacle, or route objects can occupy this stable placeholder cell." % [cell.x, cell.y])
 	_refresh_ui()
 
 func _set_event(text: String) -> void:
@@ -236,22 +249,178 @@ func _refresh_ui() -> void:
 	if event_label.text.is_empty():
 		event_label.text = "Choose a destination, buy a small load, and compare the Old Road with the Toll Road."
 	if map_panel:
+		map_panel.world = world
+		map_panel.selected_cell = selected_map_cell
 		map_panel.queue_redraw()
 
 class MapPanel extends Control:
+	signal grid_cell_selected(cell: Vector2i)
+
+	const GRID_SIZE := Vector2i(17, 11)
+	const BOARD_ORIGIN := Vector2(34, 200)
+	const CELL_SIZE := Vector2(44, 24)
+	const SETTLEMENT_CELLS := {
+		"ashgate": Vector2i(2, 7),
+		"brine_cross": Vector2i(13, 2),
+		"cinderford": Vector2i(5, 7),
+		"hollow_market": Vector2i(9, 3),
+		"reedwatch": Vector2i(13, 8)
+	}
+
+	var world
+	var selected_cell: Vector2i = Vector2i(-1, -1)
+	var travel_route_id: String = ""
+	var travel_points: Array[Vector2] = []
+	var travel_progress: float = 1.0
+	var traveling: bool = false
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_STOP
+
+	func _process(delta: float) -> void:
+		if not traveling:
+			return
+		travel_progress = minf(1.0, travel_progress + delta / 1.8)
+		if is_equal_approx(travel_progress, 1.0):
+			traveling = false
+		queue_redraw()
+
+	func _board_rect() -> Rect2:
+		return Rect2(BOARD_ORIGIN, Vector2(GRID_SIZE.x * CELL_SIZE.x, GRID_SIZE.y * CELL_SIZE.y))
+
+	func _cell_rect(cell: Vector2i) -> Rect2:
+		return Rect2(BOARD_ORIGIN + Vector2(cell.x * CELL_SIZE.x, cell.y * CELL_SIZE.y), CELL_SIZE)
+
+	func _cell_center(cell: Vector2i) -> Vector2:
+		return _cell_rect(cell).get_center()
+
+	func _settlement_point(settlement_id: String) -> Vector2:
+		return _cell_center(SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO))
+
+	func _route_points(route_id: String) -> Array[Vector2]:
+		match route_id:
+			"old_road":
+				return [_settlement_point("ashgate"), _settlement_point("hollow_market"), _settlement_point("reedwatch")]
+			"toll_road":
+				return [_settlement_point("ashgate"), _settlement_point("cinderford"), _settlement_point("brine_cross")]
+			"dry_cut":
+				return [_settlement_point("hollow_market"), _settlement_point("brine_cross"), _settlement_point("reedwatch")]
+		return []
+
+	func _route_color(route_id: String) -> Color:
+		match route_id:
+			"old_road":
+				return Color("#c47c52")
+			"toll_road":
+				return Color("#e6c58d")
+			"dry_cut":
+				return Color("#7d9ca4")
+		return Color("#705746")
+
+	func _route_label(route_id: String) -> String:
+		if world != null and world.routes.has(route_id):
+			return String(world.routes[route_id].get("name", route_id))
+		return route_id.replace("_", " ").capitalize()
+
+	func reset_travel(settlement_id: String) -> void:
+		travel_route_id = ""
+		travel_points.clear()
+		travel_progress = 1.0
+		traveling = false
+		queue_redraw()
+
+	func begin_travel(route_id: String, origin_id: String, destination_id: String) -> void:
+		travel_route_id = route_id
+		var origin: Vector2 = _settlement_point(origin_id)
+		var destination: Vector2 = _settlement_point(destination_id)
+		var route: Array[Vector2] = _route_points(route_id)
+		travel_points = [origin]
+		if route.size() >= 3:
+			var midpoint: Vector2 = route[1]
+			if midpoint.distance_to(origin) > 12.0 and midpoint.distance_to(destination) > 12.0:
+				travel_points.append(midpoint)
+		else:
+			travel_points.append(origin.lerp(destination, 0.5) + Vector2(0, -28))
+		travel_points.append(destination)
+		travel_progress = 0.0
+		traveling = true
+		queue_redraw()
+
+	func _polyline_position(points: Array[Vector2], progress: float) -> Vector2:
+		if points.is_empty():
+			return Vector2.ZERO
+		if points.size() == 1:
+			return points[0]
+		var total_length: float = 0.0
+		for index in range(points.size() - 1):
+			total_length += points[index].distance_to(points[index + 1])
+		if is_zero_approx(total_length):
+			return points[0]
+		var target_length: float = total_length * clampf(progress, 0.0, 1.0)
+		var walked: float = 0.0
+		for index in range(points.size() - 1):
+			var segment: float = points[index].distance_to(points[index + 1])
+			if walked + segment >= target_length:
+				return points[index].lerp(points[index + 1], (target_length - walked) / segment)
+			walked += segment
+		return points.back()
+
+	func _gui_input(event: InputEvent) -> void:
+		if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if not _board_rect().has_point(event.position):
+			return
+		var local: Vector2 = event.position - BOARD_ORIGIN
+		var cell := Vector2i(floori(local.x / CELL_SIZE.x), floori(local.y / CELL_SIZE.y))
+		if cell.x < 0 or cell.y < 0 or cell.x >= GRID_SIZE.x or cell.y >= GRID_SIZE.y:
+			return
+		selected_cell = cell
+		grid_cell_selected.emit(cell)
+		queue_redraw()
+
 	func _draw() -> void:
-		var points := {
-			"ashgate": Vector2(240, 210),
-			"brine_cross": Vector2(450, 120),
-			"cinderford": Vector2(600, 320),
-			"hollow_market": Vector2(830, 170),
-			"reedwatch": Vector2(900, 430),
-		}
-		var links := [["ashgate", "brine_cross"], ["ashgate", "cinderford"], ["brine_cross", "hollow_market"], ["cinderford", "reedwatch"], ["hollow_market", "reedwatch"]]
-		for link in links:
-			draw_line(points[link[0]], points[link[1]], Color("#705746"), 4.0, true)
-		for id in points.keys():
-			var p: Vector2 = points[id]
-			draw_circle(p, 26.0, Color("#3b2b24"))
-			draw_circle(p, 20.0, Color("#bd8553"))
-			draw_string(ThemeDB.fallback_font, p + Vector2(-42, 48), String(id).replace("_", " ").capitalize(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#e6c58d"))
+		var board := _board_rect()
+		draw_rect(board.grow(8), Color("#2a211b"), true)
+		draw_rect(board, Color("#574437"), true)
+		for y in range(GRID_SIZE.y):
+			for x in range(GRID_SIZE.x):
+				var cell := Vector2i(x, y)
+				var fill := Color("#332820") if (x + y) % 2 == 0 else Color("#382c23")
+				draw_rect(_cell_rect(cell), fill, true)
+				draw_rect(_cell_rect(cell), Color("#5c4838"), false, 1.0)
+		if selected_cell.x >= 0:
+			draw_rect(_cell_rect(selected_cell).grow(-2), Color("#f0d27d"), false, 3.0)
+		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), "FIVE-WELL BASIN — PLACEHOLDER TRAVERSAL GRID", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e6c58d"))
+		var route_ids := ["old_road", "toll_road", "dry_cut"]
+		for route_id in route_ids:
+			var route_points: Array[Vector2] = _route_points(route_id)
+			if route_points.size() < 2:
+				continue
+			draw_polyline(PackedVector2Array(route_points), _route_color(route_id), 6.0, true)
+			for point_index in range(route_points.size() - 1):
+				var midpoint: Vector2 = route_points[point_index].lerp(route_points[point_index + 1], 0.5)
+				if route_id == "old_road":
+					draw_line(midpoint - Vector2(5, 5), midpoint + Vector2(5, 5), Color("#e09a65"), 2.0)
+				elif route_id == "toll_road":
+					draw_rect(Rect2(midpoint - Vector2(5, 5), Vector2(10, 10)), Color("#f0dca8"), false, 2.0)
+				else:
+					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
+		var route_profiles := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
+		var route_footer_x := [8.0, 166.0, 344.0]
+		for route_index in range(route_ids.size()):
+			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(route_footer_x[route_index], board.size.y + 24), "%s: %s" % [_route_label(route_ids[route_index]), route_profiles[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _route_color(route_ids[route_index]))
+		for settlement_id in SETTLEMENT_CELLS.keys():
+			var cell: Vector2i = SETTLEMENT_CELLS[settlement_id]
+			var footprint := Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 20, CELL_SIZE.y + 16))
+			draw_rect(footprint, Color("#3b2b24"), true)
+			draw_rect(footprint, Color("#bd8553") if settlement_id != "brine_cross" else Color("#7d9ca4"), false, 3.0)
+			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#f4e6c7"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), String(world.settlement(settlement_id).get("role", "market")) if world != null else "settlement", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
+		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
+		if traveling:
+			caravan_position = _polyline_position(travel_points, travel_progress)
+		draw_circle(caravan_position, 10.0, Color("#17130f"))
+		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
+		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f0d27d"))
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "GRID CELL = FUTURE PLACE / WALK SPACE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c7b49a"))
