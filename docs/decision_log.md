@@ -346,7 +346,7 @@
 
 ## ADR-044: Pause never bypasses a committed route decision
 
-**Decision:** Add a modal pause layer available through P/controller Menu from gameplay. Escape/controller B remains Back only during uncommitted departure planning; in the Shop, a route event, or an arrival report it opens Pause. Resume restores the prior focused control, and the menu offers Save, validated Load, and Return to main menu. Returning to the Main Menu requires the protective autosave to succeed; failure keeps the live campaign paused with an actionable explanation.
+**Decision:** Add a modal pause layer available through P/controller Menu from gameplay. Escape/controller B remains Back only during uncommitted departure planning; in the Shop, a route event, or an arrival report it opens Pause. Resume restores the prior focused control, and the menu offers Save, validated Load, and Return to main menu. Failed load or protective-exit-save attempts keep the live campaign paused with an actionable explanation; successful load closes Pause and focuses the restored state.
 
 **Reason:** A consistent pause path is required for external testing, but Cancel must not silently escape a paid route event or mutate the campaign. Separating navigation Back from modal Pause preserves both expectations.
 

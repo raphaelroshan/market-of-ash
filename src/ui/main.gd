@@ -858,8 +858,15 @@ func _close_pause() -> void:
 		_grab_focus_if_available(destination_option)
 
 func _on_pause_load_pressed() -> void:
-	_close_pause()
-	_on_load_pressed()
+	if not _on_load_pressed():
+		_refresh_pause_summary(event_label.text)
+		return
+	get_tree().paused = false
+	pause_layer.visible = false
+	if not world.pending_event.is_empty():
+		_grab_first_enabled(event_choice_buttons)
+	else:
+		_grab_focus_if_available(shop_good_option)
 
 func _on_pause_main_menu_pressed() -> void:
 	if autosave_enabled and not _write_save("AUTOSAVED"):
@@ -1187,13 +1194,13 @@ func _write_save(status_prefix: String) -> bool:
 		continue_game_button.tooltip_text = "Validate and continue the saved campaign."
 	return true
 
-func _on_load_pressed() -> void:
+func _on_load_pressed() -> bool:
 	var backup_path := save_path + ".bak"
 	if not FileAccess.file_exists(save_path) and not FileAccess.file_exists(backup_path):
 		save_status_text = "LOAD BLOCKED — No saved campaign exists yet. Current run unchanged."
 		_set_event(save_status_text)
 		_refresh_ui()
-		return
+		return false
 	var load_attempt := _load_candidate(save_path)
 	var recovered_backup := false
 	if not bool(load_attempt.get("ok", false)) and FileAccess.file_exists(backup_path):
@@ -1203,7 +1210,7 @@ func _on_load_pressed() -> void:
 		save_status_text = "LOAD BLOCKED — %s. Current run unchanged." % String(load_attempt.get("reason", "Save validation failed"))
 		_set_event(save_status_text)
 		_refresh_ui()
-		return
+		return false
 	var candidate: AshWorldState = load_attempt.world
 	var load_result: Dictionary = load_attempt.result
 	world = candidate
@@ -1223,6 +1230,7 @@ func _on_load_pressed() -> void:
 		_show_shop()
 	else:
 		_show_departure()
+	return true
 
 func _load_candidate(candidate_path: String) -> Dictionary:
 	if not FileAccess.file_exists(candidate_path):
