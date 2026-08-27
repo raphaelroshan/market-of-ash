@@ -87,3 +87,11 @@
 **Reason:** The project needs a frictionless external-playtest entry point that demonstrates the game’s core trade decision without introducing a tutorial contract, scenario system, or parallel simulation path. The preset makes the intended first decision reproducible for observation and regression testing.
 
 **Trade-off:** This is an intentionally narrow test loop rather than a complete campaign start, save/load menu, or onboarding flow. The guided button is a temporary playtest affordance and must remain an ordinary command invocation rather than a special reward or hidden state mutation.
+
+## ADR-012: Optional objective ladder with a player-selected route
+
+**Decision:** Refine the quick playtest with a visible three-step objective: inspect the grain forecast and buy two units, choose a route and reach Reedwatch with grain, then sell the grain. The screen reports completion only after the normal sale command succeeds. The test action remains optional, and the player may choose another cargo, destination, route, or continued trading.
+
+**Reason:** The earlier menu established a working entry point but did not make its test purpose, completion condition, or next action sufficiently visible. A compact objective ladder lets a new player recognize the core loop and identify whether the market explanation, forecast, and realized transaction are coherent.
+
+**Trade-off:** The refined status text creates a recommended delivery objective but does not assess player skill, promise profit, force route choice, or impose a tutorial contract. It is playtest scaffolding, not an authored quest or a substitute for later event, contract, and campaign systems.

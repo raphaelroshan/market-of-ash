@@ -26,6 +26,8 @@ func _initialize() -> void:
 		failures.append("playtest preset did not select the authored first route forecast")
 	if ui.guided_test_button == null or ui.guided_test_button.disabled:
 		failures.append("playtest screen did not expose the guided test action")
+	if ui.playtest_status_label == null or not ui.playtest_status_label.text.contains("STEP 1 OF 3"):
+		failures.append("playtest screen did not explain the opening decision")
 
 	if ui.map_panel == null:
 		failures.append("main UI did not create the map panel")
@@ -53,6 +55,8 @@ func _initialize() -> void:
 			failures.append("guided test action did not use the explicit command boundary")
 		if not ui.guided_test_button.disabled:
 			failures.append("guided test action should be unavailable after its one preset execution")
+		if not ui.playtest_status_label.text.contains("STEP 2 OF 3"):
+			failures.append("grain purchase did not advance the playtest objective")
 
 		if ui.map_panel.GRID_SIZE != Vector2i(17, 11):
 			failures.append("map grid size is not the stable 17x11 contract")
@@ -69,6 +73,11 @@ func _initialize() -> void:
 			failures.append("successful departure did not start presentation traversal")
 		if ui.map_panel.travel_points.size() != 3:
 			failures.append("travel traversal did not create origin, waypoint, destination")
+		if not ui.playtest_status_label.text.contains("STEP 3 OF 3"):
+			failures.append("arrival with grain did not advance the playtest objective")
+		ui._on_sell_pressed()
+		if not ui.playtest_status_label.text.contains("RUN COMPLETE"):
+			failures.append("selling the delivered grain did not complete the playtest objective")
 		await process_frame
 		if ui.map_panel.travel_progress <= 0.0:
 			failures.append("presentation traversal did not advance")

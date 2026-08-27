@@ -17,6 +17,8 @@ var menu_layer: Control
 var start_game_button: Button
 var guided_test_button: Button
 var playtest_banner: Label
+var playtest_status_label: Label
+var playtest_grain_sold := 0
 var status_label: Label
 var event_label: Label
 var destination_option: OptionButton
@@ -130,6 +132,10 @@ func _build_ui() -> void:
 	playtest_banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	playtest_banner.add_theme_color_override("font_color", Color("#f0d2a0"))
 	left.add_child(playtest_banner)
+	playtest_status_label = Label.new()
+	playtest_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	playtest_status_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	left.add_child(playtest_status_label)
 
 	status_label = Label.new()
 	status_label.add_theme_font_size_override("font_size", 18)
@@ -272,6 +278,7 @@ func _selected_id(option: OptionButton) -> String:
 
 func _on_start_game_pressed() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
+	playtest_grain_sold = 0
 	selected_map_cell = Vector2i(-1, -1)
 	if map_panel:
 		map_panel.world = world
@@ -282,7 +289,7 @@ func _on_start_game_pressed() -> void:
 	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
 	cargo_quantity.value = PLAYTEST_QUANTITY
 	guided_test_button.disabled = false
-	playtest_banner.text = "PLAYTEST PRESET — Ashgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo\nRecommended test: buy 2 grain, then read the Old Road forecast to Reedwatch before choosing whether to depart."
+	playtest_banner.text = "QUICK PLAYTEST — A compact trade run through the Five-Well Basin. The recommendation is optional; every normal trade and route choice remains available."
 	menu_layer.visible = false
 	game_layer.visible = true
 	_set_event("Playtest started. The guided action performs one buy; departure remains your decision.")
@@ -359,13 +366,17 @@ func _on_buy_pressed() -> void:
 	_show_command_result(result, "Purchase")
 
 func _on_sell_pressed() -> void:
+	var good_id := _selected_id(cargo_good_option)
+	var quantity := int(cargo_quantity.value)
 	var result := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.SELL_GOODS,
 		"inputs": {
-			"good_id": _selected_id(cargo_good_option),
-			"quantity": int(cargo_quantity.value),
+			"good_id": good_id,
+			"quantity": quantity,
 		},
 	})
+	if result.ok and world.current_settlement == PLAYTEST_DESTINATION and good_id == PLAYTEST_GOOD:
+		playtest_grain_sold += quantity
 	_show_command_result(result, "Sale")
 
 func _on_depart_pressed() -> void:
@@ -398,7 +409,8 @@ func _on_save_pressed() -> void:
 	_set_event("Versioned prototype state saved. Command history is included for deterministic review.")
 
 func _on_reset_pressed() -> void:
-	world = AshWorldState.new(1107)
+	world = AshWorldState.new(PLAYTEST_SEED)
+	playtest_grain_sold = 0
 	_populate_destination_options()
 	selected_map_cell = Vector2i(-1, -1)
 	map_panel.world = world
@@ -411,13 +423,27 @@ func _on_map_cell_selected(cell: Vector2i) -> void:
 	_set_event("Grid cell (%d, %d) selected. Future camp, service, obstacle, or route objects can occupy this stable placeholder cell." % [cell.x, cell.y])
 	_refresh_ui()
 
+func _refresh_playtest_status() -> void:
+	if playtest_status_label == null:
+		return
+	var grain_held := int(world.cargo.get(PLAYTEST_GOOD, 0))
+	if playtest_grain_sold >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "RUN COMPLETE — You moved grain to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
+	elif world.current_settlement == PLAYTEST_DESTINATION and grain_held >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "STEP 3 OF 3 — You reached Reedwatch with grain. Sell 2 grain to see the delivery result."
+	elif grain_held >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "STEP 2 OF 3 — Grain is loaded. Read the Old Road forecast, compare it with the Toll Road, then choose whether to depart for Reedwatch."
+	else:
+		playtest_status_label.text = "STEP 1 OF 3 — Read the Grain market price and route forecast. Buy 2 grain when you are ready; the marked test button simply executes that normal trade."
+
 func _set_event(text: String) -> void:
 	event_label.text = text
 
 func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
 	if playtest_banner and playtest_banner.text.is_empty():
-		playtest_banner.text = "PLAYTEST PRESET — Ashgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo"
+		playtest_banner.text = "QUICK PLAYTEST — A compact trade run through the Five-Well Basin."
+	_refresh_playtest_status()
 	var cargo_lines: Array[String] = []
 	for good in MarketContent.good_ids():
 		var count := int(world.cargo.get(good, 0))
