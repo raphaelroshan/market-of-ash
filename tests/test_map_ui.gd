@@ -125,6 +125,7 @@ func _initialize() -> void:
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	_expect(ui.route_preview_label.text.contains("1 Water unit at risk") and ui.route_preview_label.text.contains("EXPECTED NET PROFIT +14"), "the opening forecast should price the proposed water load and present a profitable but exposed teaching trade")
 	_expect(ui.route_preview_label.text.contains("Held 0/2 selected Water") and ui.route_preview_label.text.contains("Buy 2 before departure") and ui.route_preview_label.text.contains("travel uses the actual hold"), "the pre-purchase forecast should distinguish its scenario from the empty caravan")
+	_expect(ui.guided_test_button.visible and not ui.guided_test_button.disabled, "the optional one-use purchase helper should be available only at the opening Ashgate state")
 	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.15.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
@@ -372,6 +373,7 @@ func _initialize() -> void:
 		_expect(ui.enter_settlement_button.visible and ui.commit_departure_button.disabled, "arrival state did not present an explicit settlement-entry action")
 		_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "an uninterrupted arrival should focus the settlement-entry action")
 		_expect(ui.playtest_status_label.text.contains("STEP 3 OF 3"), "arrival with water did not advance the playtest objective")
+		_expect(not ui.guided_test_button.visible, "the first-move purchase helper should not follow the caravan to later settlements")
 		await process_frame
 		_expect(ui.map_panel.travel_progress > 0.0, "presentation traversal did not advance")
 
@@ -392,6 +394,11 @@ func _initialize() -> void:
 	ui._on_load_pressed()
 	_expect(ui.playtest_status_label.text.contains("RUN COMPLETE") and ui.guided_test_button.disabled, "loading a completed teaching delivery should preserve completion and keep the one-use action disabled")
 
+	ui._on_start_game_pressed()
+	ui.world.current_settlement = "brine_cross"
+	ui.world.advance_day(1)
+	ui._refresh_ui()
+	_expect(ui.playtest_status_label.text.contains("FREE PLAY") and not ui.guided_test_button.visible, "skipping the opening example should transition to free play instead of offering the Ashgate helper elsewhere")
 	ui._on_start_game_pressed()
 	ui._select_option_by_id(ui.shop_good_option, "medicine")
 	ui.shop_quantity.value = 2

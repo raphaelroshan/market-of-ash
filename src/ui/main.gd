@@ -1553,6 +1553,7 @@ func _refresh_playtest_status() -> void:
 	var guided_cargo_bought := _guided_trade_quantity(MarketCommandProcessor.BUY_GOODS)
 	var guided_cargo_sold := _guided_trade_quantity(MarketCommandProcessor.SELL_GOODS, PLAYTEST_DESTINATION)
 	if guided_test_button:
+		guided_test_button.visible = world.current_settlement == "ashgate" and world.day == 1 and guided_cargo_sold < PLAYTEST_QUANTITY
 		guided_test_button.disabled = guided_cargo_bought >= PLAYTEST_QUANTITY or guided_cargo_held >= PLAYTEST_QUANTITY or guided_cargo_sold >= PLAYTEST_QUANTITY
 	if guided_cargo_sold >= PLAYTEST_QUANTITY:
 		playtest_status_label.text = "RUN COMPLETE — You moved water to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
@@ -1564,6 +1565,8 @@ func _refresh_playtest_status() -> void:
 		playtest_status_label.text = "STEP 2 OF 3 — Water is loaded. Read the Old Road forecast, compare it with the Toll Road, then choose whether to depart for Reedwatch."
 	elif guided_cargo_bought >= PLAYTEST_QUANTITY:
 		playtest_status_label.text = "RECOVERY — The planned water is no longer in the hold. Review the latest result, then trade onward or reset; no restart is required."
+	elif world.current_settlement != "ashgate" or world.day > 1:
+		playtest_status_label.text = "FREE PLAY — The optional opening example was skipped. Use the live market, route, contract, and campaign outlook to choose the next trade."
 	else:
 		playtest_status_label.text = "STEP 1 OF 3 — Read the Water market price and route forecast. Buy 2 water when you are ready; the marked test button simply executes that normal trade."
 
