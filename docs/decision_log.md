@@ -111,3 +111,11 @@
 **Reason:** The product’s central rhythm is inspect market, form a plan, commit to a route, experience a consequence, arrive, and reinvest. Keeping map and purchase controls in one screen weakens the difference between local browsing and an action that spends time, provisions, and risk. The separation makes the route forecast a deliberate commitment check while preserving the simulation command boundary.
 
 **Trade-off:** This adds one navigation step before travel and does not yet add full contracts, crew, events, or final art. Planning selections persist when returning to the shop, and the added step is justified only because it clarifies the real player decision rather than hiding it behind a modal confirmation.
+
+## ADR-015: GPT implementation work proceeds through one testable vertical slice at a time
+
+**Decision:** Bulk implementation may be delegated to a GPT coding agent, but the agent receives the persistent product charter and one narrowly scoped task card at a time. Every card names an observable player behavior, data/command/UI boundary, acceptance criteria, focused automated checks, manual/visual evidence requirement, and exactly one next task. The product lead reviews the player-facing result and test evidence before releasing the next slice.
+
+**Reason:** Market of Ash has a strong central promise but limited alpha scope. Large autonomous batches are likely to introduce generic framework abstraction, content breadth, or mechanics that are genre-appropriate but weaken the economic route decision. Small vertical slices make determinism, save safety, content validation, balance simulation, and player comprehension reviewable.
+
+**Trade-off:** This process is slower than parallel feature generation and requires explicit review gates. It avoids far more expensive rework from schema drift, UI-owned rules, ambiguous visual feedback, and systems that fail to deepen trade/travel decisions.
