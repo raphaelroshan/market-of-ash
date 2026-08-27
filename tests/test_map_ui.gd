@@ -31,7 +31,7 @@ func _initialize() -> void:
 	ui.settings_path = test_settings_path
 	ui.report_path = test_report_path
 	ui.settings_persistence_enabled = true
-	ui.continue_game_button.disabled = true
+	ui._refresh_continue_availability()
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
@@ -136,6 +136,7 @@ func _initialize() -> void:
 	ui._on_save_pressed()
 	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
+	_expect(ui.start_game_button.text == "Start new game" and ui.start_game_button.tooltip_text.contains("confirmation"), "a validated save should make the destructive fresh-start distinction visible before selection")
 	var state_before_new_game_prompt := JSON.stringify(ui.world.serialize())
 	ui._show_main_menu()
 	ui._on_start_game_requested()

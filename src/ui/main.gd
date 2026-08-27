@@ -314,6 +314,9 @@ func _refresh_continue_availability() -> void:
 		backup_preview = bool(preview.get("ok", false))
 	continue_game_button.disabled = not bool(preview.get("ok", false))
 	if continue_game_button.disabled:
+		if start_game_button:
+			start_game_button.text = "Start Game"
+			start_game_button.tooltip_text = "Begin the deterministic Ashgate day-one campaign."
 		continue_game_button.tooltip_text = "No valid saved campaign is available."
 		if FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path):
 			save_status_text = "SAVE — Existing files could not be validated. Start Game remains safe."
@@ -322,6 +325,9 @@ func _refresh_continue_availability() -> void:
 		return
 	var saved_world: AshWorldState = preview.world
 	var source_text := "backup" if backup_preview else "primary"
+	if start_game_button:
+		start_game_button.text = "Start new game"
+		start_game_button.tooltip_text = "Requires confirmation because a validated saved campaign is available."
 	save_status_text = "CONTINUE — Day %d · %s · %d ashmarks · hold %d/%d · %s save" % [saved_world.day, String(saved_world.settlement(saved_world.current_settlement).get("name", saved_world.current_settlement)), saved_world.money, int(saved_world.cargo.get("weight", 0)), saved_world.cargo_capacity, source_text]
 	continue_game_button.tooltip_text = "Validate and continue this saved campaign."
 	if menu_save_status_label:
@@ -1430,6 +1436,9 @@ func _write_save(status_prefix: String) -> bool:
 	if continue_game_button:
 		continue_game_button.disabled = false
 		continue_game_button.tooltip_text = "Validate and continue the saved campaign."
+	if start_game_button:
+		start_game_button.text = "Start new game"
+		start_game_button.tooltip_text = "Requires confirmation because a validated saved campaign is available."
 	return true
 
 func _on_load_pressed() -> bool:
