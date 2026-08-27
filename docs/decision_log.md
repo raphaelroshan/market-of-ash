@@ -231,3 +231,11 @@
 **Reason:** The first political choice needs a viable counter-path to Warden recognition. The Caravan benefit rewards public supply and shared intelligence on an informal corridor, whereas Wardens reward paid official participation on the Toll Road.
 
 **Trade-off:** The current benefits are route-specific fee discounts and can coexist if the player earns both; they are not exclusive ideology locks. The Old Road remains exposed, and faction conflict, access restrictions, and stronger consequences remain later work.
+
+## ADR-030: Arms enter as optional commerce with bounded visible escalation
+
+**Decision:** The first arms proof will add one sealed, regulated, high-value cargo type and a visible `arms_escalation` track from 0 through 6. Every sale names its buyer, payout, escalation/faction deltas, next threshold consequence, and a viable non-arms alternative. Thresholds may alter a specific route fee/risk or service, but never introduce combat or close all recovery paths.
+
+**Reason:** Arms can deepen the region's politics only if they remain part of the trading game. A bounded, previewed state with explicit counterplay lets the player compare immediate margin against future access without turning weapons into mandatory progression or a hidden morality meter.
+
+**Trade-off:** The first implementation will support one arms good and one buyer rather than a broad weapons economy. Non-arms parity and recovery are release gates, so profitable arms tuning may be constrained even when fiction suggests a larger premium.

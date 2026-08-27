@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B7 are implemented. The arms-trade boundary decision is next.
+**Roadmap status:** A0–A1 foundations and B0–B7 are implemented. The B8 arms-trade boundary is specified; gameplay implementation is next.
 
 ## Implemented player-facing spine
 
@@ -234,4 +234,4 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 ## Next permitted task
 
-Card B7/B8: write the bounded alpha arms-trade decision contract before adding any weapon good or mechanic.
+Implement the smallest B8 proof from `docs/politics/arms_trade_contract.md`: one sealed-arms offer, one visible escalation threshold, and one viable non-arms alternative.
