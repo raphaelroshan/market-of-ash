@@ -158,6 +158,9 @@ jobs:
           mkdir -p artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
+      - name: Create release manifest
+        run: |
+          python -c "import json, os, re; m=json.load(open('tools/ci_manifest.json')); p=open('project.godot', encoding='utf-8').read(); c=json.load(open('content/runtime_world.json')); m.update({'game_version': re.search(r'^config/version=\"([^\"]+)\"', p, re.M).group(1), 'content_version': c['content_version'], 'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'], 'run_id': os.environ['GITHUB_RUN_ID'], 'run_number': os.environ['GITHUB_RUN_NUMBER']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2); print(json.dumps(m, indent=2))"
       - name: Upload release candidate
         uses: actions/upload-artifact@v4
         with:

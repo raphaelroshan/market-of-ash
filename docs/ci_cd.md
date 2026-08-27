@@ -44,7 +44,7 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 ## Release behavior
 
-Pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Version tags such as `v0.1.0` invoke the guarded release workflow. The tag workflow requires deterministic tests and both export presets, then uploads the candidates and a release manifest.
+Pull requests and pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Every candidate includes a machine-readable manifest with the game/content versions, exact commit and ref, workflow run ID/number, repository identity, and target platforms. Version tags such as `v0.1.0` invoke the guarded release workflow with the same provenance record.
 
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 
