@@ -958,6 +958,16 @@ func _build_ui() -> void:
 	load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
 	load_button.pressed.connect(_on_load_pressed)
 	controls.add_child(load_button)
+	_link_focus_cycle([
+		destination_option,
+		route_option,
+		cargo_good_option,
+		cargo_quantity.get_line_edit(),
+		commit_departure_button,
+		return_to_shop_button,
+		save_button,
+		load_button,
+	])
 	departure_save_status_label = Label.new()
 	departure_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_save_status_label.add_theme_font_size_override("font_size", 11)
@@ -987,6 +997,14 @@ func _wrapped_action_button(minimum_height: float = 42.0) -> Button:
 	button.custom_minimum_size = Vector2(0, minimum_height)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return button
+
+func _link_focus_cycle(controls: Array) -> void:
+	for index in range(controls.size()):
+		var control: Control = controls[index]
+		var next_control: Control = controls[(index + 1) % controls.size()]
+		var previous_control: Control = controls[(index - 1 + controls.size()) % controls.size()]
+		control.focus_next = control.get_path_to(next_control)
+		control.focus_previous = control.get_path_to(previous_control)
 
 func _populate_destination_options() -> void:
 	if destination_option == null:
