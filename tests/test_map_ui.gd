@@ -91,6 +91,12 @@ func _initialize() -> void:
 	var state_before_future_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_future_load and ui.save_status_label.text.contains("newer than this build"), "a future-version save should be rejected without replacing the active run")
+	var invalid_shape_file := FileAccess.open(test_save_path, FileAccess.WRITE)
+	invalid_shape_file.store_string(JSON.stringify({"save_version": 11, "command_history": "not-a-list"}))
+	invalid_shape_file = null
+	var state_before_invalid_shape := JSON.stringify(ui.world.serialize())
+	ui._on_load_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_invalid_shape and ui.save_status_label.text.contains("command_history must be a list"), "valid JSON with an invalid save shape should be rejected without replacing the active run")
 	ui._on_save_pressed()
 	ui.autosave_enabled = true
 	var action_money_before: int = ui.world.money

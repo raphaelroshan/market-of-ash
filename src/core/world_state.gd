@@ -457,6 +457,9 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	if not migration.ok:
 		return migration
 	var restored: Dictionary = migration.data
+	var validation := _validate_serialized_shape(restored)
+	if not validation.ok:
+		return validation
 	seed = int(restored.get("seed", seed))
 	day = int(restored.get("day", day))
 	money = int(restored.get("money", money))
@@ -539,6 +542,36 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			command_history.append(raw_entry.duplicate(true))
 	_update_crisis_modifiers()
 	return {"ok": true, "data": serialize(), "migrated_from": int(migration.migrated_from)}
+
+func _validate_serialized_shape(data: Dictionary) -> Dictionary:
+	for field in ["seed", "day", "money", "provisions", "cargo_capacity", "crisis_stage", "visit_slots_remaining", "arms_escalation"]:
+		var value: Variant = data.get(field, 0)
+		if typeof(value) != TYPE_INT and typeof(value) != TYPE_FLOAT:
+			return {"ok": false, "reason": "save field %s must be numeric" % field}
+	if int(data.get("day", 1)) < 1:
+		return {"ok": false, "reason": "save day must be at least 1"}
+	if int(data.get("money", 0)) < 0 or int(data.get("provisions", 0)) < 0:
+		return {"ok": false, "reason": "save resources cannot be negative"}
+	if int(data.get("cargo_capacity", 12)) < 1 or int(data.get("cargo_capacity", 12)) > 100:
+		return {"ok": false, "reason": "save cargo capacity is outside supported bounds"}
+	if int(data.get("crisis_stage", 0)) < 0 or int(data.get("crisis_stage", 0)) > 3:
+		return {"ok": false, "reason": "save crisis stage is outside supported bounds"}
+	for field in ["cargo", "reputation", "market_pressure", "active_contracts", "journey_context", "pending_event", "route_conditions", "settlement_resilience", "crew_reports"]:
+		if typeof(data.get(field, {})) != TYPE_DICTIONARY:
+			return {"ok": false, "reason": "save field %s must be an object" % field}
+	for field in ["market_delivery_history", "contract_history", "resolved_event_ids", "event_history", "known_information", "recruited_crew", "arms_trade_history", "log", "command_history"]:
+		if typeof(data.get(field, [])) != TYPE_ARRAY:
+			return {"ok": false, "reason": "save field %s must be a list" % field}
+	for field in ["content_version", "current_settlement", "assigned_crew", "ending_id", "ending_summary"]:
+		if typeof(data.get(field, "")) != TYPE_STRING:
+			return {"ok": false, "reason": "save field %s must be text" % field}
+	var settlement_id := String(data.get("current_settlement", "ashgate"))
+	if not settlement_id.is_empty() and not has_settlement(settlement_id):
+		return {"ok": false, "reason": "save references an unknown current settlement"}
+	var saved_ending_id := String(data.get("ending_id", ""))
+	if not saved_ending_id.is_empty() and MarketContent.ending(saved_ending_id).is_empty():
+		return {"ok": false, "reason": "save references an unknown ending"}
+	return {"ok": true, "reason": ""}
 
 func migrate_serialized(data: Dictionary) -> Dictionary:
 	var source_version := int(data.get("save_version", 0))

@@ -1379,6 +1379,18 @@ func _test_disk_save_sanitization() -> void:
 	_expect(not restored.cargo.has("unknown_good"), "loaded cargo should discard unknown good IDs")
 	_expect(int(restored.reputation.get("wardens", 0)) == 10 and int(restored.reputation.get("caravans", 0)) == -10, "loaded reputation should clamp to authored faction bounds")
 	_expect(not restored.reputation.has("unknown_faction"), "loaded reputation should discard unknown faction IDs")
+	var invalid_shape: Dictionary = source.serialize()
+	invalid_shape["command_history"] = "not-a-list"
+	var rejected_shape := AshWorldState.new(0).load_serialized(invalid_shape)
+	_expect(not rejected_shape.ok and rejected_shape.reason.contains("command_history must be a list"), "load should reject structurally invalid JSON before typed restoration")
+	var invalid_bounds: Dictionary = source.serialize()
+	invalid_bounds["day"] = -4
+	var rejected_bounds := AshWorldState.new(0).load_serialized(invalid_bounds)
+	_expect(not rejected_bounds.ok and rejected_bounds.reason.contains("day must be at least 1"), "load should reject impossible campaign bounds")
+	var invalid_reference: Dictionary = source.serialize()
+	invalid_reference["current_settlement"] = "missing_town"
+	var rejected_reference := AshWorldState.new(0).load_serialized(invalid_reference)
+	_expect(not rejected_reference.ok and rejected_reference.reason.contains("unknown current settlement"), "load should reject unknown authoritative references")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

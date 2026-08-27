@@ -274,7 +274,7 @@
 
 ## ADR-035: Save files are validated before replacing the active campaign
 
-**Decision:** Every successful player command writes the current versioned state to a temporary file, preserves the previous primary as one backup generation, promotes the completed write, and exposes a concise autosave summary. Manual Save uses the same writer. Load parses into a separate candidate world, applies migrations and normalization there, and swaps the live world only after validation succeeds. If the primary is invalid, Load attempts the backup; unrecoverable missing, malformed, or future-version files leave the current run untouched and produce a visible recovery message.
+**Decision:** Every successful player command writes the current versioned state to a temporary file, preserves the previous primary as one backup generation, promotes the completed write, and exposes a concise autosave summary. Manual Save uses the same writer. Load parses into a separate candidate world, validates top-level field types, bounds, and authoritative references, then applies migrations and normalization before swapping the live world. If the primary is invalid, Load attempts the backup; unrecoverable missing, malformed, structurally invalid, or future-version files leave the current run untouched and produce a visible recovery message.
 
 **Reason:** External playtests need recoverable progress and useful bug context without allowing a damaged file to destroy a playable in-memory run. Candidate loading also keeps migration and sanitization inside the simulation boundary rather than duplicating them in UI code.
 
