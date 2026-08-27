@@ -16,6 +16,7 @@ const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
 const REMAPPABLE_ACTIONS := ["ui_accept", "ui_cancel", "ui_pause"]
 const ACTION_LABELS := {"ui_accept": "Accept", "ui_cancel": "Back", "ui_pause": "Pause"}
 const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel": [KEY_ESCAPE], "ui_pause": [KEY_P]}
+const RESERVED_REMAP_KEYS := [KEY_TAB, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 
 var world: AshWorldState
 var game_layer: Control
@@ -370,21 +371,22 @@ func _on_restore_default_bindings() -> void:
 	_save_presentation_settings()
 
 func _capture_keyboard_binding(event: InputEventKey) -> void:
-	if event.physical_keycode == KEY_ESCAPE:
+	var pressed_keycode: int = int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode)
+	if pressed_keycode == KEY_ESCAPE:
 		remapping_action = ""
 		binding_status_label.text = "Key change cancelled."
 		_refresh_binding_labels()
 		return
-	if event.physical_keycode == KEY_NONE or event.physical_keycode == KEY_TAB or event.alt_pressed or event.ctrl_pressed or event.meta_pressed or event.shift_pressed:
+	if pressed_keycode == KEY_NONE or RESERVED_REMAP_KEYS.has(pressed_keycode) or event.alt_pressed or event.ctrl_pressed or event.meta_pressed or event.shift_pressed:
 		binding_status_label.text = "That shortcut is reserved. Press one unmodified key, or Escape to cancel."
 		return
 	for action_name in REMAPPABLE_ACTIONS:
 		if action_name == remapping_action:
 			continue
-		if _keyboard_binding_codes(action_name).has(event.physical_keycode):
-			binding_status_label.text = "%s is already assigned to %s. Choose a different key." % [OS.get_keycode_string(event.physical_keycode), String(ACTION_LABELS.get(action_name, action_name))]
+		if _keyboard_binding_codes(action_name).has(pressed_keycode):
+			binding_status_label.text = "%s is already assigned to %s. Choose a different key." % [OS.get_keycode_string(pressed_keycode), String(ACTION_LABELS.get(action_name, action_name))]
 			return
-	_replace_keyboard_bindings(remapping_action, [event.physical_keycode])
+	_replace_keyboard_bindings(remapping_action, [pressed_keycode])
 	var updated_action := remapping_action
 	remapping_action = ""
 	binding_status_label.text = "%s now uses %s. Controller bindings are unchanged." % [String(ACTION_LABELS.get(updated_action, updated_action)), _keyboard_binding_text(updated_action)]
@@ -439,7 +441,7 @@ func _load_presentation_settings() -> void:
 			break
 		var validated_codes: Array = []
 		for code_value in saved_codes:
-			if (typeof(code_value) != TYPE_INT and typeof(code_value) != TYPE_FLOAT) or int(code_value) == KEY_NONE or int(code_value) == KEY_TAB or claimed_keys.has(int(code_value)):
+			if (typeof(code_value) != TYPE_INT and typeof(code_value) != TYPE_FLOAT) or int(code_value) == KEY_NONE or RESERVED_REMAP_KEYS.has(int(code_value)) or claimed_keys.has(int(code_value)):
 				bindings_valid = false
 				break
 			validated_codes.append(int(code_value))

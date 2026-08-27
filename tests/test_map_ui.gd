@@ -59,6 +59,11 @@ func _initialize() -> void:
 	ui._on_rebind_pressed("ui_cancel")
 	ui._unhandled_input(rebind_pause)
 	_expect(ui.remapping_action == "ui_cancel" and ui.binding_status_label.text.contains("already assigned to Pause"), "keyboard remapping should reject a key already owned by another required action")
+	var reserved_rebind := InputEventKey.new()
+	reserved_rebind.physical_keycode = KEY_DOWN
+	reserved_rebind.pressed = true
+	ui._unhandled_input(reserved_rebind)
+	_expect(ui.remapping_action == "ui_cancel" and ui.binding_status_label.text.contains("reserved"), "keyboard remapping should preserve focus-navigation keys")
 	var cancel_rebind := InputEventKey.new()
 	cancel_rebind.physical_keycode = KEY_ESCAPE
 	cancel_rebind.pressed = true
