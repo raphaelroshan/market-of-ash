@@ -72,6 +72,15 @@ The fixed Reedwatch water probe starts at **32** ashmarks per unit. A four-unit 
 
 Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it triggers; the automated policy pays when affordable. Three Riders triggers on 55% of the high-value Old Road policy runs and the automated policy buys the escort. The isolated Span probe reserves two scrap for the public support, producing the authored 70% trigger rate and a persistent Old Road risk change from 35% to 25%. The isolated shortage-stage Last Barrel probe shares two water, producing the authored 60% trigger rate, crisis-adjusted market memory, and two resilience points. These probes measure deterministic coverage and execution stability rather than human choice quality.
 
+## Arms / Non-Arms Viability Probe
+
+| Policy           | Runs   | Completed   | Median economic   | Mean economic   | Mean escalation   |
+|:-----------------|:-------|:------------|:------------------|:----------------|:------------------|
+| arms_broker_sale | 100    | 100.0%      | 37.0              | 37.0            | 2.0               |
+| non_arms_relief  | 100    | 85.0%       | 71.0              | 53.0            | 0.0               |
+
+The arms path is a same-settlement cash opportunity. The non-arms path accepts and attempts the authored Reedwatch relief contract through normal travel and event resolution. This is a synthetic viability check, not final balance approval.
+
 ## Forecast Calibration
 
 | Policy                | Forecast net   | Realized economic   | Mean error   | Mean absolute error   |

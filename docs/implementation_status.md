@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B7 are implemented. B8 now includes one arms sale, one threshold, and one explicit recovery action; policy comparison is next.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. The first crisis progression and ending proof is next.
 
 ## Implemented player-facing spine
 
@@ -243,7 +243,8 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - At escalation 2, carrying another crate adds a visible five-ashmark Toll Road inspection surcharge; Warden permit discounts compose deterministically with it.
 - The sale result names Reedwatch Water Relief as the viable non-arms alternative. Save version 10 preserves escalation and named arms history.
 - Escalation is recoverable: the public manifest audit is blocked at zero, otherwise lowers pressure by one and records its cost and result without deleting the original sale history.
+- The 100-seed viability probe gives the arms broker a median economic result of 37 with 100% transaction completion, while the risk-bearing non-arms relief path has median 71, mean 53, and 85% contract completion. Non-arms progress clears the contract's 80% median-resource gate and arms do not dominate campaign progress.
 
 ## Next permitted task
 
-Compare arms and non-arms policies against the contract's viability gates before adding another arms offer or threshold.
+Card B8/B9: implement the first three-stage water-crisis progression and one deterministic regional ending summary.

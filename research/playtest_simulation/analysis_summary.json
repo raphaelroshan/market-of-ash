@@ -223,5 +223,23 @@
       "runs": 60,
       "share_of_policy_runs": 0.6
     }
+  ],
+  "arms_policy_summary": [
+    {
+      "policy": "arms_broker_sale",
+      "runs": 100,
+      "completion_rate": 1.0,
+      "median_economic_profit": 37.0,
+      "mean_economic_profit": 37.0,
+      "mean_escalation": 2.0
+    },
+    {
+      "policy": "non_arms_relief",
+      "runs": 100,
+      "completion_rate": 0.85,
+      "median_economic_profit": 71.0,
+      "mean_economic_profit": 53.0,
+      "mean_escalation": 0.0
+    }
   ]
 }

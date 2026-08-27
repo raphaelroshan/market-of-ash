@@ -17,12 +17,15 @@ func _init() -> void:
 	var rows: Array[Dictionary] = []
 	var multi_trip_rows: Array[Dictionary] = []
 	var event_probe_rows: Array[Dictionary] = []
+	var arms_policy_rows: Array[Dictionary] = []
 	for seed in range(1, SEED_COUNT + 1):
 		for policy in POLICIES:
 			rows.append(_run_policy(seed, policy))
 		multi_trip_rows.append_array(_run_multi_trip_policy(seed))
 		event_probe_rows.append(_run_span_event_probe(seed))
 		event_probe_rows.append(_run_last_barrel_probe(seed))
+		arms_policy_rows.append(_run_arms_policy(seed, "arms_broker_sale"))
+		arms_policy_rows.append(_run_arms_policy(seed, "non_arms_relief"))
 	var payload := {
 		"simulation": "Market of Ash first-run single-trade policy simulation",
 		"seed_count": SEED_COUNT,
@@ -31,6 +34,7 @@ func _init() -> void:
 		"rows": rows,
 		"multi_trip_rows": multi_trip_rows,
 		"event_probe_rows": event_probe_rows,
+		"arms_policy_rows": arms_policy_rows,
 		"market_memory_probe": _market_memory_probe(),
 	}
 	var output_path := _output_path()
@@ -45,6 +49,23 @@ func _init() -> void:
 	else:
 		print("SIMULATION_JSON=" + JSON.stringify(payload))
 	quit(0)
+
+func _run_arms_policy(seed: int, policy: String) -> Dictionary:
+	var world := AshWorldState.new(seed)
+	var status := "completed"
+	if policy == "arms_broker_sale":
+		var buy := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "sealed_arms_crate", "quantity": 1}})
+		var sale := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "ashgate_cinder_rider_arms_sale"}}) if buy.ok else {"ok": false, "reason": buy.reason}
+		status = "completed" if sale.ok else String(sale.get("reason", "failed"))
+	else:
+		var accepted := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.ACCEPT_CONTRACT, "inputs": {"contract_id": "reedwatch_water_relief_01"}})
+		var bought := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "water", "quantity": 4}}) if accepted.ok else {"ok": false, "reason": accepted.reason}
+		var departed := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "old_road", "destination_id": "reedwatch"}}) if bought.ok else {"ok": false, "reason": bought.reason}
+		var resolved := _resolve_pending_event_for_policy(world) if departed.ok else {"ok": false, "reason": departed.reason}
+		status = "completed" if resolved.ok and world.has_contract_outcome("reedwatch_water_relief_01") else "contract incomplete"
+	var assumptions := MarketContent.planning_assumptions()
+	var economic_profit := world.money - STARTING_MONEY - (STARTING_PROVISIONS - world.provisions) * int(assumptions.provision_value) - (world.day - 1) * int(assumptions.time_opportunity_cost_per_day)
+	return {"seed": seed, "policy": policy, "status": status, "economic_profit": economic_profit, "ending_money": world.money, "arms_escalation": world.arms_escalation}
 
 func _run_span_event_probe(seed: int) -> Dictionary:
 	var world := AshWorldState.new(seed)
