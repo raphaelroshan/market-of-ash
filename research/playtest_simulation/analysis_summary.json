@@ -1,6 +1,6 @@
 {
   "seed_count": 100,
-  "row_count": 700,
+  "row_count": 500,
   "summary": [
     {
       "policy": "guided_grain_delivery",
@@ -24,40 +24,6 @@
       "policy_label": "Forecast maximizer",
       "runs": 100,
       "completion_rate": 1.0,
-      "incident_rate": 0.1,
-      "mean_forecast_net_profit": 80.0,
-      "mean_realized_cash_profit": 103.8,
-      "mean_realized_economic_profit": 98.8,
-      "median_realized_economic_profit": 102.0,
-      "p10_realized_economic_profit": 98.80000000000001,
-      "p90_realized_economic_profit": 102.0,
-      "loss_rate": 0.0,
-      "mean_forecast_error": 18.8,
-      "mean_quantity": 7.0,
-      "mean_provisions_remaining": 11.0
-    },
-    {
-      "policy": "gross_margin_chaser",
-      "policy_label": "Gross-margin chaser",
-      "runs": 100,
-      "completion_rate": 1.0,
-      "incident_rate": 0.55,
-      "mean_forecast_net_profit": -16.0,
-      "mean_realized_cash_profit": 99.4,
-      "mean_realized_economic_profit": 89.4,
-      "median_realized_economic_profit": 75.0,
-      "p10_realized_economic_profit": 75.0,
-      "p90_realized_economic_profit": 107.0,
-      "loss_rate": 0.0,
-      "mean_forecast_error": 105.4,
-      "mean_quantity": 7.0,
-      "mean_provisions_remaining": 10.0
-    },
-    {
-      "policy": "map_constrained_forecast",
-      "policy_label": "Map-constrained forecast",
-      "runs": 100,
-      "completion_rate": 1.0,
       "incident_rate": 0.35,
       "mean_forecast_net_profit": 32.0,
       "mean_realized_cash_profit": 103.8,
@@ -71,8 +37,8 @@
       "mean_provisions_remaining": 11.0
     },
     {
-      "policy": "map_constrained_gross_margin",
-      "policy_label": "Map-constrained gross-margin",
+      "policy": "gross_margin_chaser",
+      "policy_label": "Gross-margin chaser",
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.35,
@@ -93,15 +59,15 @@
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.1,
-      "mean_forecast_net_profit": 80.0,
-      "mean_realized_cash_profit": 103.8,
-      "mean_realized_economic_profit": 98.8,
-      "median_realized_economic_profit": 102.0,
-      "p10_realized_economic_profit": 98.80000000000001,
-      "p90_realized_economic_profit": 102.0,
-      "loss_rate": 0.0,
-      "mean_forecast_error": 18.8,
-      "mean_quantity": 7.0,
+      "mean_forecast_net_profit": 0.0,
+      "mean_realized_cash_profit": 13.6,
+      "mean_realized_economic_profit": 8.6,
+      "median_realized_economic_profit": 13.0,
+      "p10_realized_economic_profit": 8.600000000000016,
+      "p90_realized_economic_profit": 13.0,
+      "loss_rate": 0.1,
+      "mean_forecast_error": 8.6,
+      "mean_quantity": 3.0,
       "mean_provisions_remaining": 11.0
     },
     {
@@ -126,14 +92,14 @@
     {
       "policy": "forecast_maximizer",
       "policy_label": "Forecast maximizer",
-      "choice": "water \u2192 reedwatch / toll_road",
+      "choice": "water \u2192 reedwatch / old_road",
       "runs": 100,
       "share": 1.0
     },
     {
       "policy": "gross_margin_chaser",
       "policy_label": "Gross-margin chaser",
-      "choice": "water \u2192 reedwatch / dry_cut",
+      "choice": "water \u2192 reedwatch / old_road",
       "runs": 100,
       "share": 1.0
     },
@@ -141,20 +107,6 @@
       "policy": "guided_grain_delivery",
       "policy_label": "Guided grain delivery",
       "choice": "grain \u2192 reedwatch / old_road",
-      "runs": 100,
-      "share": 1.0
-    },
-    {
-      "policy": "map_constrained_forecast",
-      "policy_label": "Map-constrained forecast",
-      "choice": "water \u2192 reedwatch / old_road",
-      "runs": 100,
-      "share": 1.0
-    },
-    {
-      "policy": "map_constrained_gross_margin",
-      "policy_label": "Map-constrained gross-margin",
-      "choice": "water \u2192 reedwatch / old_road",
       "runs": 100,
       "share": 1.0
     },
@@ -168,7 +120,7 @@
     {
       "policy": "toll_road_only",
       "policy_label": "Toll-road-only",
-      "choice": "water \u2192 reedwatch / toll_road",
+      "choice": "medicine \u2192 brine_cross / toll_road",
       "runs": 100,
       "share": 1.0
     }
@@ -185,30 +137,14 @@
     {
       "policy": "forecast_maximizer",
       "policy_label": "Forecast maximizer",
-      "forecast_net": 80.0,
-      "realized_economic": 98.8,
-      "mean_error": 18.8,
-      "mean_absolute_error": 20.8
-    },
-    {
-      "policy": "gross_margin_chaser",
-      "policy_label": "Gross-margin chaser",
-      "forecast_net": -16.0,
-      "realized_economic": 89.4,
-      "mean_error": 105.4,
-      "mean_absolute_error": 105.4
-    },
-    {
-      "policy": "map_constrained_forecast",
-      "policy_label": "Map-constrained forecast",
       "forecast_net": 32.0,
       "realized_economic": 98.8,
       "mean_error": 66.8,
       "mean_absolute_error": 66.8
     },
     {
-      "policy": "map_constrained_gross_margin",
-      "policy_label": "Map-constrained gross-margin",
+      "policy": "gross_margin_chaser",
+      "policy_label": "Gross-margin chaser",
       "forecast_net": 32.0,
       "realized_economic": 98.8,
       "mean_error": 66.8,
@@ -217,10 +153,10 @@
     {
       "policy": "toll_road_only",
       "policy_label": "Toll-road-only",
-      "forecast_net": 80.0,
-      "realized_economic": 98.8,
-      "mean_error": 18.8,
-      "mean_absolute_error": 20.8
+      "forecast_net": 0.0,
+      "realized_economic": 8.6,
+      "mean_error": 8.6,
+      "mean_absolute_error": 14.8
     }
   ]
 }

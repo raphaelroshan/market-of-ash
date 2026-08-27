@@ -106,6 +106,17 @@ def validate(data: Any) -> list[str]:
         route = as_object(routes.get(route_id), f"route {route_id}", errors)
         if not isinstance(route.get("name"), str) or not route["name"]:
             fail(errors, f"route {route_id} must have a non-empty name")
+        endpoints = route.get("endpoints")
+        if not isinstance(endpoints, list) or len(endpoints) != 2:
+            fail(errors, f"route {route_id}.endpoints must contain exactly two settlement ids")
+        elif any(not isinstance(endpoint, str) or not endpoint for endpoint in endpoints):
+            fail(errors, f"route {route_id}.endpoints must contain non-empty settlement ids")
+        elif endpoints[0] == endpoints[1]:
+            fail(errors, f"route {route_id}.endpoints must differ")
+        else:
+            for endpoint in endpoints:
+                if endpoint not in REQUIRED_SETTLEMENTS:
+                    fail(errors, f"route {route_id}.endpoints contains unknown settlement {endpoint}")
         if not isinstance(route.get("description"), str) or not route["description"]:
             fail(errors, f"route {route_id} must have a non-empty description")
         if not isinstance(route.get("cost"), int) or route["cost"] < 0:

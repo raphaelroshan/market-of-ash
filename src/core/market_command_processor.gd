@@ -91,6 +91,12 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		return _failure("unknown destination")
 	if destination_id == world.current_settlement:
 		return _failure("destination must differ from the current settlement")
+	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+		var route := MarketContent.route(route_id)
+		if route.is_empty():
+			return _failure("unknown route")
+		var endpoints: Array = route.get("endpoints", [])
+		return _failure("%s does not connect %s to %s" % [String(route.get("name", route_id)), world.settlement(world.current_settlement).get("name", world.current_settlement), world.settlement(destination_id).get("name", destination_id)])
 	var travel_result := world.travel(route_id)
 	if not travel_result.ok:
 		return _failure(String(travel_result.reason))

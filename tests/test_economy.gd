@@ -36,10 +36,13 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "0.4.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "0.4.1", "runtime content should expose content version")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
+	_expect(MarketContent.route_connects("old_road", "ashgate", "reedwatch"), "old road should connect its authored endpoints")
+	_expect(not MarketContent.route_connects("old_road", "ashgate", "brine_cross"), "old road should reject destinations outside its authored endpoints")
+	_expect(MarketContent.destinations_from("ashgate") == ["reedwatch", "brine_cross"], "Ashgate should expose only the two directly connected destinations")
 
 func _test_base_prices() -> void:
 	_expect(MarketEconomy.base_price("water") == 18, "water base price should be 18")
@@ -138,12 +141,22 @@ func _test_depart_command() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
 	var provisions_before := world.provisions
-	var depart := MarketCommandProcessor.execute(world, {
+	var blocked := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.DEPART_ROUTE,
 		"inputs": {"route_id": "old_road", "destination_id": "brine_cross"},
 	})
-	_expect(depart.ok, "depart command should allow a valid route and destination")
-	_expect(world.current_settlement == "brine_cross", "depart command should move the caravan after successful travel")
+	_expect(not blocked.ok, "depart command should reject a destination outside the authored route endpoints")
+	_expect(blocked.reason.find("does not connect") >= 0, "blocked departure should explain the route-endpoint mismatch")
+	_expect(world.current_settlement == "ashgate", "blocked departure should not move the caravan")
+	_expect(world.money == money_before, "blocked departure should not charge the route cost")
+	_expect(world.provisions == provisions_before, "blocked departure should not consume provisions")
+	_expect(world.command_history.size() == 1 and not world.command_history.back().ok, "blocked departure should be recorded as a failed command")
+	var depart := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(depart.ok, "depart command should allow an authored route endpoint")
+	_expect(world.current_settlement == "reedwatch", "depart command should move the caravan to the connected endpoint")
 	_expect(world.money == money_before - 4, "depart command should charge the route cost")
 	_expect(world.provisions == provisions_before - 1, "depart command should consume route provisions")
 	_expect(depart.state_delta.get("route_id", "") == "old_road", "depart command should identify the resolved route")
@@ -177,7 +190,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "0.4.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "0.4.1", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

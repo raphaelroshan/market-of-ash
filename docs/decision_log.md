@@ -95,3 +95,11 @@
 **Reason:** The earlier menu established a working entry point but did not make its test purpose, completion condition, or next action sufficiently visible. A compact objective ladder lets a new player recognize the core loop and identify whether the market explanation, forecast, and realized transaction are coherent.
 
 **Trade-off:** The refined status text creates a recommended delivery objective but does not assess player skill, promise profit, force route choice, or impose a tutorial contract. It is playtest scaffolding, not an authored quest or a substitute for later event, contract, and campaign systems.
+
+## ADR-013: Authoritative route endpoints
+
+**Decision:** Each runtime route declares exactly two stable settlement endpoints. The command processor rejects a departure unless its selected route connects the caravan’s current settlement and selected destination. Runtime and command-line content validation reject missing, duplicate, or unknown endpoints. The destination and route controls are populated from the same canonical endpoint data.
+
+**Reason:** Route fees, risk, travel animation, profit forecast, and state mutation must all describe the same corridor. Allowing an arbitrary destination after selecting a route created invalid paths that looked legal in the caravan desk but contradicted the traversal map and distorted simulation results.
+
+**Trade-off:** The first alpha map has deliberately limited direct connectivity; inaccessible settlements remain authored economic contexts until a connected corridor or a broader travel system is added. Endpoint validation takes precedence over offering a complete regional travel graph prematurely.

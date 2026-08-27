@@ -22,6 +22,6 @@ The policy sweep checks only quantity boundaries of one and the largest legal af
 
 ## Trade-offs and limitations
 
-The simulation has no persistent market memory, crew, contracts, decision events, route endpoint validation, or multi-run learning. In particular, it faithfully reveals that the current command processor accepts a selected route with any different destination, even if the map presentation implies a different corridor. Results involving that gap must be treated as an implementation finding, not an intended economic balance result.
+The simulation has no persistent market memory, crew, contracts, decision events, or multi-run learning. Route endpoint validation is now authoritative: the simulator reads canonical endpoints from runtime content and executes only departures that the command processor accepts. This removes the earlier mismatch between the visible map corridors and selectable route/destination pairs.
 
 The preview’s expected loss is value-based, while the route resolver removes one cargo unit. Consequently, forecast-versus-realized comparison is a calibration diagnostic, not a proof that either risk system is correct. Human observation remains necessary to answer whether the forecast is comprehensible, trusted, and enjoyable.

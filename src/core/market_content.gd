@@ -92,6 +92,37 @@ static func settlement_ids() -> Array[String]:
 static func routes() -> Dictionary:
 	return runtime_world().get("routes", {}).duplicate(true)
 
+static func route(route_id: String) -> Dictionary:
+	return routes().get(route_id, {}).duplicate(true)
+
+static func route_connects(route_id: String, origin_id: String, destination_id: String) -> bool:
+	if origin_id == destination_id:
+		return false
+	var endpoints: Variant = route(route_id).get("endpoints", [])
+	if typeof(endpoints) != TYPE_ARRAY or endpoints.size() != 2:
+		return false
+	var forward := String(endpoints[0]) == origin_id and String(endpoints[1]) == destination_id
+	var reverse := String(endpoints[1]) == origin_id and String(endpoints[0]) == destination_id
+	return forward or reverse
+
+static func routes_from(settlement_id: String) -> Array[String]:
+	var ids: Array[String] = []
+	for route_id in REQUIRED_ROUTE_IDS:
+		var endpoints: Variant = route(route_id).get("endpoints", [])
+		if typeof(endpoints) == TYPE_ARRAY and endpoints.has(settlement_id):
+			ids.append(route_id)
+	return ids
+
+static func destinations_from(settlement_id: String) -> Array[String]:
+	var ids: Array[String] = []
+	for route_id in routes_from(settlement_id):
+		var endpoints: Array = route(route_id).get("endpoints", [])
+		for endpoint_id in endpoints:
+			var destination_id := String(endpoint_id)
+			if destination_id != settlement_id and not ids.has(destination_id):
+				ids.append(destination_id)
+	return ids
+
 static func validate_runtime(data: Dictionary) -> Dictionary:
 	var errors: Array[String] = []
 	if int(data.get("schema_version", 0)) != 1:
@@ -168,6 +199,19 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			var route: Dictionary = route_value
 			if String(route.get("name", "")).is_empty():
 				errors.append("route %s must have a name" % route_id)
+			var endpoints_value: Variant = route.get("endpoints", [])
+			if typeof(endpoints_value) != TYPE_ARRAY or endpoints_value.size() != 2:
+				errors.append("route %s must declare exactly two endpoints" % route_id)
+			else:
+				var endpoints: Array = endpoints_value
+				var origin_id := String(endpoints[0])
+				var destination_id := String(endpoints[1])
+				if origin_id == destination_id:
+					errors.append("route %s endpoints must differ" % route_id)
+				if not REQUIRED_SETTLEMENT_IDS.has(origin_id):
+					errors.append("route %s has unknown endpoint: %s" % [route_id, origin_id])
+				if not REQUIRED_SETTLEMENT_IDS.has(destination_id):
+					errors.append("route %s has unknown endpoint: %s" % [route_id, destination_id])
 			if int(route.get("cost", -1)) < 0:
 				errors.append("route %s must have a non-negative cost" % route_id)
 			if int(route.get("days", 0)) <= 0:

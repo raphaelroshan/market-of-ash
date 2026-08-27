@@ -1,7 +1,5 @@
 policy,route_id,runs,share
 guided_grain_delivery,old_road,100,1.0
-forecast_maximizer,toll_road,100,1.0
-gross_margin_chaser,dry_cut,100,1.0
-map_constrained_forecast,old_road,100,1.0
-map_constrained_gross_margin,old_road,100,1.0
+forecast_maximizer,old_road,100,1.0
+gross_margin_chaser,old_road,100,1.0
 toll_road_only,toll_road,100,1.0

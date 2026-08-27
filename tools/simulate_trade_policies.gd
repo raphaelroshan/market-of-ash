@@ -11,12 +11,7 @@ const MarketCommandProcessor = preload("res://src/core/market_command_processor.
 const STARTING_MONEY := 120
 const STARTING_PROVISIONS := 12
 const SEED_COUNT := 100
-const POLICIES := ["guided_grain_delivery", "forecast_maximizer", "gross_margin_chaser", "map_constrained_forecast", "map_constrained_gross_margin", "toll_road_only", "no_trade"]
-const MAP_ROUTE_ENDPOINTS := {
-	"old_road": ["ashgate", "reedwatch"],
-	"toll_road": ["ashgate", "brine_cross"],
-	"dry_cut": ["hollow_market", "brine_cross", "reedwatch"],
-}
+const POLICIES := ["guided_grain_delivery", "forecast_maximizer", "gross_margin_chaser", "toll_road_only", "no_trade"]
 
 func _init() -> void:
 	var rows: Array[Dictionary] = []
@@ -75,13 +70,11 @@ func _choose_candidate(world: AshWorldState, policy: String) -> Dictionary:
 	for good_id in MarketContent.good_ids():
 		var origin := world.settlement(world.current_settlement)
 		var purchase_price := MarketEconomy.price_for(good_id, origin, {"crisis_modifiers": world.crisis_modifiers})
-		for destination_id in MarketContent.settlement_ids():
-			if destination_id == world.current_settlement:
-				continue
-			for route_id in world.routes.keys():
+		for destination_id in MarketContent.destinations_from(world.current_settlement):
+			for route_id in MarketContent.routes_from(world.current_settlement):
 				if policy == "toll_road_only" and route_id != "toll_road":
 					continue
-				if _uses_map_constraints(policy) and not _is_map_valid_route_choice(world.current_settlement, destination_id, route_id):
+				if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 					continue
 				var route_cost := int(world.route(route_id).get("cost", 0))
 				var max_quantity := mini(world.cargo_capacity, int((world.money - route_cost) / purchase_price))
@@ -99,6 +92,8 @@ func _choose_candidate(world: AshWorldState, policy: String) -> Dictionary:
 	return best
 
 func _candidate_for(world: AshWorldState, good_id: String, quantity: int, destination_id: String, route_id: String) -> Dictionary:
+	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+		return {}
 	var preview := MarketEconomy.route_profit_preview(
 		good_id,
 		quantity,
@@ -121,19 +116,12 @@ func _candidate_for(world: AshWorldState, good_id: String, quantity: int, destin
 		"preview": preview,
 	}
 
-func _uses_map_constraints(policy: String) -> bool:
-	return policy == "map_constrained_forecast" or policy == "map_constrained_gross_margin"
-
-func _is_map_valid_route_choice(origin_id: String, destination_id: String, route_id: String) -> bool:
-	var endpoints: Array = MAP_ROUTE_ENDPOINTS.get(route_id, [])
-	return endpoints.has(origin_id) and endpoints.has(destination_id)
-
 func _is_better(candidate: Dictionary, incumbent: Dictionary, policy: String) -> bool:
 	if incumbent.is_empty():
 		return true
 	var candidate_preview: Dictionary = candidate.preview
 	var incumbent_preview: Dictionary = incumbent.preview
-	if policy == "gross_margin_chaser" or policy == "map_constrained_gross_margin":
+	if policy == "gross_margin_chaser":
 		if int(candidate_preview.gross_trade_margin) != int(incumbent_preview.gross_trade_margin):
 			return int(candidate_preview.gross_trade_margin) > int(incumbent_preview.gross_trade_margin)
 		if int(candidate_preview.route_cost) != int(incumbent_preview.route_cost):

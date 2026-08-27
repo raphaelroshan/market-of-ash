@@ -180,9 +180,7 @@ func _build_ui() -> void:
 	controls.add_child(_labeled_control("Destination", destination_option))
 
 	route_option = OptionButton.new()
-	for id in world.routes.keys():
-		route_option.add_item(world.routes[id].name)
-		route_option.set_item_metadata(route_option.item_count - 1, id)
+	_populate_route_options()
 	controls.add_child(_labeled_control("Route", route_option))
 
 	cargo_good_option = OptionButton.new()
@@ -208,7 +206,7 @@ func _build_ui() -> void:
 	route_preview_label = _forecast_label()
 	controls.add_child(route_preview_label)
 
-	destination_option.item_selected.connect(_on_forecast_input_changed)
+	destination_option.item_selected.connect(_on_destination_changed)
 	route_option.item_selected.connect(_on_forecast_input_changed)
 	cargo_good_option.item_selected.connect(_on_forecast_input_changed)
 	cargo_quantity.value_changed.connect(_on_forecast_value_changed)
@@ -262,14 +260,31 @@ func _populate_destination_options() -> void:
 		return
 	var previous_destination := _selected_id(destination_option)
 	destination_option.clear()
-	for settlement_id in MarketContent.settlement_ids():
-		if settlement_id == world.current_settlement:
-			continue
+	for settlement_id in MarketContent.destinations_from(world.current_settlement):
 		var settlement := world.settlement(settlement_id)
 		destination_option.add_item(String(settlement.get("name", settlement_id)))
 		destination_option.set_item_metadata(destination_option.item_count - 1, settlement_id)
 		if settlement_id == previous_destination:
 			destination_option.select(destination_option.item_count - 1)
+	if destination_option.selected < 0 and destination_option.item_count > 0:
+		destination_option.select(0)
+
+func _populate_route_options() -> void:
+	if route_option == null:
+		return
+	var previous_route := _selected_id(route_option)
+	var destination_id := _selected_id(destination_option)
+	route_option.clear()
+	for route_id in MarketContent.routes_from(world.current_settlement):
+		if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+			continue
+		var route := world.route(route_id)
+		route_option.add_item(String(route.get("name", route_id)))
+		route_option.set_item_metadata(route_option.item_count - 1, route_id)
+		if route_id == previous_route:
+			route_option.select(route_option.item_count - 1)
+	if route_option.selected < 0 and route_option.item_count > 0:
+		route_option.select(0)
 
 func _selected_id(option: OptionButton) -> String:
 	if option.selected < 0:
@@ -285,6 +300,7 @@ func _on_start_game_pressed() -> void:
 		map_panel.reset_travel(world.current_settlement)
 	_populate_destination_options()
 	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
+	_populate_route_options()
 	_select_option_by_id(route_option, PLAYTEST_ROUTE)
 	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
 	cargo_quantity.value = PLAYTEST_QUANTITY
@@ -303,6 +319,7 @@ func _select_option_by_id(option: OptionButton, target_id: String) -> void:
 
 func _on_guided_test_action() -> void:
 	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
+	_populate_route_options()
 	_select_option_by_id(route_option, PLAYTEST_ROUTE)
 	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
 	cargo_quantity.value = PLAYTEST_QUANTITY
@@ -313,6 +330,10 @@ func _on_guided_test_action() -> void:
 	if result.ok:
 		guided_test_button.disabled = true
 	_show_command_result(result, "Test action")
+
+func _on_destination_changed(_index: int) -> void:
+	_populate_route_options()
+	_refresh_forecasts()
 
 func _on_forecast_input_changed(_index: int) -> void:
 	_refresh_forecasts()
@@ -331,6 +352,9 @@ func _refresh_forecasts() -> void:
 	var destination := world.settlement(destination_id)
 	var world_context := {"crisis_modifiers": world.crisis_modifiers}
 	market_preview_label.text = _market_preview_text(good_id, quantity, origin, world_context)
+	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+		route_preview_label.text = "ROUTE FORECAST\nChoose a directly connected destination and route."
+		return
 	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, world.route(route_id), world_context)
 
 func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:
@@ -394,6 +418,7 @@ func _on_depart_pressed() -> void:
 		if map_panel:
 			map_panel.begin_travel(route_id, previous_settlement, destination_id)
 		_populate_destination_options()
+		_populate_route_options()
 	_show_command_result(result, "Departure")
 
 func _show_command_result(result: Dictionary, label: String) -> void:
@@ -412,6 +437,7 @@ func _on_reset_pressed() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
 	playtest_grain_sold = 0
 	_populate_destination_options()
+	_populate_route_options()
 	selected_map_cell = Vector2i(-1, -1)
 	map_panel.world = world
 	map_panel.reset_travel(world.current_settlement)

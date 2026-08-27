@@ -28,6 +28,14 @@ func _initialize() -> void:
 		failures.append("playtest screen did not expose the guided test action")
 	if ui.playtest_status_label == null or not ui.playtest_status_label.text.contains("STEP 1 OF 3"):
 		failures.append("playtest screen did not explain the opening decision")
+	ui._select_option_by_id(ui.destination_option, "brine_cross")
+	ui._on_destination_changed(ui.destination_option.selected)
+	if ui.route_option.item_count != 1 or ui._selected_id(ui.route_option) != "toll_road":
+		failures.append("destination selection should expose only the connected Toll Road route")
+	ui._select_option_by_id(ui.destination_option, "reedwatch")
+	ui._on_destination_changed(ui.destination_option.selected)
+	if ui.route_option.item_count != 1 or ui._selected_id(ui.route_option) != "old_road":
+		failures.append("destination selection should restore the connected Old Road route")
 
 	if ui.map_panel == null:
 		failures.append("main UI did not create the map panel")

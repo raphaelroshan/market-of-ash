@@ -15,19 +15,15 @@ POLICY_LABELS = {
     "guided_grain_delivery": "Guided grain delivery",
     "forecast_maximizer": "Forecast maximizer",
     "gross_margin_chaser": "Gross-margin chaser",
-    "map_constrained_forecast": "Map-constrained forecast",
-    "map_constrained_gross_margin": "Map-constrained gross-margin",
     "toll_road_only": "Toll-road-only",
     "no_trade": "No trade baseline",
 }
 
 POLICY_RULES = {
     "guided_grain_delivery": "Buys 2 grain; travels Ashgate → Reedwatch via Old Road.",
-    "forecast_maximizer": "Chooses the feasible first trade with highest displayed expected net profit.",
-    "gross_margin_chaser": "Chooses the feasible first trade with highest displayed gross margin.",
-    "map_constrained_forecast": "Chooses the highest displayed net-profit trade, limited to a drawn route corridor.",
-    "map_constrained_gross_margin": "Chooses the highest gross-margin trade, limited to a drawn route corridor.",
-    "toll_road_only": "Chooses the best displayed net-profit trade but only takes Toll Road.",
+    "forecast_maximizer": "Chooses the legal first trade with the highest displayed expected net profit.",
+    "gross_margin_chaser": "Chooses the legal first trade with the highest displayed gross margin.",
+    "toll_road_only": "Chooses the best displayed net-profit trade while using the legal Toll Road corridor only.",
     "no_trade": "Takes no action; baseline for resource preservation.",
 }
 
@@ -56,7 +52,7 @@ def write_chart(summary: pd.DataFrame, path: Path) -> None:
     profit_ax.bar(x, ordered["mean_realized_economic_profit"], color=colors, width=0.66)
     profit_ax.axhline(0, color="#47392f", linewidth=1)
     profit_ax.set_ylabel("Mean realized economic profit\n(ashmarks equivalent)")
-    profit_ax.set_title("First-run policy outcomes across 100 deterministic seeds")
+    profit_ax.set_title("Legal first-run policy outcomes across 100 deterministic seeds")
     profit_ax.set_xticks(x, labels, rotation=16, ha="right")
     for index, value in enumerate(ordered["mean_realized_economic_profit"]):
         profit_ax.text(index, value + (1.0 if value >= 0 else -1.5), signed(value), ha="center", va="bottom" if value >= 0 else "top", fontsize=9)
@@ -92,7 +88,7 @@ def write_choice_chart(choice_mix: pd.DataFrame, path: Path) -> None:
         left += values
     ax.set_xlabel("Share of simulated first-trade choices (%)")
     ax.set_xlim(0, 100)
-    ax.set_title("First-trade choice concentration by policy")
+    ax.set_title("Legal first-trade choice concentration by policy")
     ax.legend(title="Good → destination / route", bbox_to_anchor=(1.02, 1), loc="upper left", frameon=False)
     ax.grid(axis="x", color="#e8dcc7", linewidth=0.7, alpha=0.8)
     ax.spines[["top", "right"]].set_visible(False)
@@ -182,42 +178,22 @@ def main() -> int:
 
     forecast_policy = summary.loc[summary["policy"] == "forecast_maximizer"].iloc[0]
     gross_policy = summary.loc[summary["policy"] == "gross_margin_chaser"].iloc[0]
-    constrained_forecast_policy = summary.loc[summary["policy"] == "map_constrained_forecast"].iloc[0]
-    constrained_gross_policy = summary.loc[summary["policy"] == "map_constrained_gross_margin"].iloc[0]
+    toll_policy = summary.loc[summary["policy"] == "toll_road_only"].iloc[0]
     guided_policy = summary.loc[summary["policy"] == "guided_grain_delivery"].iloc[0]
-    most_concentrated = (
-        choice_mix[choice_mix["policy"] != "no_trade"]
-        .sort_values("share", ascending=False)
-        .iloc[0]
-    )
     forecast_choice = choice_mix[choice_mix["policy"] == "forecast_maximizer"].iloc[0]
-    constrained_forecast_choice = choice_mix[choice_mix["policy"] == "map_constrained_forecast"].iloc[0]
+    gross_choice = choice_mix[choice_mix["policy"] == "gross_margin_chaser"].iloc[0]
+    toll_choice = choice_mix[choice_mix["policy"] == "toll_road_only"].iloc[0]
 
     presentation = summary[
         [
-            "policy_label",
-            "runs",
-            "completion_rate",
-            "incident_rate",
-            "mean_forecast_net_profit",
-            "mean_realized_economic_profit",
-            "median_realized_economic_profit",
-            "loss_rate",
-            "mean_forecast_error",
-            "mean_quantity",
+            "policy_label", "runs", "completion_rate", "incident_rate",
+            "mean_forecast_net_profit", "mean_realized_economic_profit",
+            "median_realized_economic_profit", "loss_rate", "mean_forecast_error", "mean_quantity",
         ]
     ].copy()
     presentation.columns = [
-        "Policy",
-        "Runs",
-        "Completed",
-        "Incident rate",
-        "Forecast net",
-        "Realized economic",
-        "Median realized",
-        "Loss rate",
-        "Forecast error",
-        "Mean units",
+        "Policy", "Runs", "Completed", "Incident rate", "Forecast net", "Realized economic",
+        "Median realized", "Loss rate", "Forecast error", "Mean units",
     ]
     for column in ["Completed", "Incident rate", "Loss rate"]:
         presentation[column] = presentation[column].map(pct)
@@ -236,9 +212,13 @@ def main() -> int:
         calibration_display[column] = calibration_display[column].map(signed)
     calibration_display = calibration_display[["Policy", "Forecast net", "Realized economic", "Mean error", "Mean absolute error"]]
 
-    report = f"""# Market of Ash — Automated First-Run Playtest Simulation
+    report = f"""# Market of Ash — Corrected Automated First-Run Playtest Simulation
 
 > **Scope note:** This is a deterministic, rule-based simulation of the current prototype, not a substitute for human playtests. It reveals what the implemented economy rewards under explicit policies; it does not measure player enjoyment, comprehension, or preference.
+
+## Corrected Topology
+
+Routes now declare exactly two canonical endpoints in `runtime_world.json`. The command processor rejects a departure unless the selected route connects the caravan’s current settlement to the selected destination. The user interface filters destinations and routes from the same content. Consequently, every completed simulation row below is a legal endpoint-to-endpoint departure; there is no separate map-constrained counterfactual policy.
 
 ## Scope and Method
 
@@ -248,15 +228,13 @@ The run starts every simulated trader in the current quick-playtest state: Ashga
 | --- | --- |
 """ + "\n".join(f"| {POLICY_LABELS[key]} | {POLICY_RULES[key]} |" for key in POLICY_LABELS) + f"""
 
-The simulator tests only the initial one-trade loop. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, market memory, route restrictions by location, or player learning over multiple runs.
-
-> **Critical implementation caveat:** The simulator intentionally honors the current command processor, which accepts any selected route with any different destination. The map presentation shows the Toll Road as an Ashgate–Brine Cross corridor, yet the current processor permits the high-performing Water → Reedwatch / Toll Road combination. Treat this as an exposed route-topology rule gap, not as an intended strategic option.
+The simulator tests only the initial one-trade loop. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, market memory, or player learning over multiple runs.
 
 ## Results
 
 {markdown_table(presentation)}
 
-The **unconstrained forecast maximizer** earns a mean realized economic profit of **{signed(float(forecast_policy['mean_realized_economic_profit']))}**, compared with **{signed(float(gross_policy['mean_realized_economic_profit']))}** for the unconstrained gross-margin chaser and **{signed(float(guided_policy['mean_realized_economic_profit']))}** for the guided Grain delivery. Once the drawn map corridors are enforced in the counterfactual, the forecast policy still averages **{signed(float(constrained_forecast_policy['mean_realized_economic_profit']))}** but selects a different route with **{pct(float(constrained_forecast_policy['incident_rate']))}** incidents instead of **{pct(float(forecast_policy['incident_rate']))}**. Its displayed forecast falls from **{signed(float(forecast_policy['mean_forecast_net_profit']))}** to **{signed(float(constrained_forecast_policy['mean_forecast_net_profit']))}** despite the same mean realized payoff. This exposes both the route-topology defect and a risk-forecast calibration gap; it is not an intended player advantage.
+Under legal paths, the **forecast maximizer** selects **{forecast_choice['choice']}** in every seed and averages **{signed(float(forecast_policy['mean_realized_economic_profit']))}** realized economic profit. The **gross-margin chaser** selects **{gross_choice['choice']}** and averages **{signed(float(gross_policy['mean_realized_economic_profit']))}**. The **Toll-road-only** policy selects **{toll_choice['choice']}** and averages **{signed(float(toll_policy['mean_realized_economic_profit']))}**. The guided Grain delivery remains a mechanically legible but deliberately lower-return teaching run at **{signed(float(guided_policy['mean_realized_economic_profit']))}**.
 
 ![Policy outcome chart](policy_outcomes.png)
 
@@ -264,7 +242,7 @@ The **unconstrained forecast maximizer** earns a mean realized economic profit o
 
 {markdown_table(decision_mix_display)}
 
-The most concentrated actionable rule is **{most_concentrated['policy_label']}**, which selects **{most_concentrated['choice']}** in **{pct(float(most_concentrated['share']))}** of its runs. The unconstrained forecast maximizer selects **{forecast_choice['choice']}** in **{pct(float(forecast_choice['share']))}** of its runs; the map-constrained forecast policy selects **{constrained_forecast_choice['choice']}** in **{pct(float(constrained_forecast_choice['share']))}** of its runs. Both are fully concentrated in this linear, single-trade model. The unconstrained choice conflicts with the drawn Toll Road corridor; once topology is valid, remaining concentration becomes a balance question: the opening economy still risks resolving into one obvious legal answer rather than a meaningful trade-off.
+Every deterministic policy still concentrates on one legal initial trade in this linear, one-trip model. That is a genuine early-economy design signal after the topology fix: repeated opening runs may become rote unless market memory, information quality, or a meaningful inventory/risk trade-off produces legible rotation.
 
 ![Choice concentration chart](choice_concentration.png)
 
@@ -272,18 +250,17 @@ The most concentrated actionable rule is **{most_concentrated['policy_label']}**
 
 {markdown_table(calibration_display)}
 
-The displayed forecast is deliberately conservative when compared with realized economic profit because it deducts a percentage of the **entire expected sale value** as expected loss, whereas the actual route incident removes **one cargo unit**. This is a design and calibration issue rather than a simulation error: the current preview describes risk in value terms, but the resolver applies it in units. The gap becomes more visible as cargo loads grow.
+The displayed forecast remains conservative compared with mean realized economic profit because it deducts a percentage of the **entire expected sale value** as expected loss, while an actual route incident removes **one cargo unit**. This is a calibration issue, not a route-topology issue. The discrepancy increases on large loads and is most visible for the gross-margin policy.
 
 ## Economic Bottlenecks and Design Risks
 
-| Finding | Evidence from this run | Why it matters | Suggested next test, not a balance change |
+| Finding | Evidence from corrected run | Why it matters | Suggested next test, not a balance change |
 | --- | --- | --- | --- |
-| **Route/destination permissiveness** | The unconstrained forecast maximizer selects Water → Reedwatch / Toll Road; enforcing the map selects Water → Reedwatch / Old Road. Both average +98.8 realized economic profit, but their displayed forecasts and incident rates differ materially. | A player can select a route fee and risk profile detached from the visible geography, undermining trust in route comparison and obscuring the valid risk/reward trade-off. | Add explicit origin/destination endpoints to route content and reject invalid departures, then rerun both the simulation and a human playtest. |
-| **Opening-choice concentration** | The forecast maximizer is concentrated on one trade/route option for {pct(float(forecast_choice['share']))} of seeds. | Once topology is valid, repeated opening runs may still become rote. | Add bounded market memory (A2), then rerun this harness to measure whether recent deliveries produce meaningful but legible trade rotation. |
-| **Forecast/resolution mismatch** | Mean forecast error ranges from {signed(float(calibration['mean_error'].min()))} to {signed(float(calibration['mean_error'].max()))} ashmarks-equivalent across active policies. | Players may interpret a risk-adjusted forecast as more pessimistic or inconsistent than actual outcomes, weakening trust in the explanation layer. | Make the forecast state that its loss estimate assumes cargo value at risk, or align its expected-loss formula with one-unit loss resolution before external testing. |
-| **Capacity is a dominant early lever** | The profit-seeking policies load an average of {forecast_policy['mean_quantity']:.1f} units against a 12-unit capacity. | The first decision may reward filling the hold more than choosing among goods, routes, or information. | Run a human observation test that asks players to explain their chosen quantity; then compare full-hold behavior against a lower cash/provision preset. |
-| **Safe-route premium** | Toll Road realizes {signed(float(summary.loc[summary['policy'] == 'toll_road_only', 'mean_realized_economic_profit'].iloc[0]))} at 10.0% incidents, while the map-valid Old Road forecast policy realizes {signed(float(constrained_forecast_policy['mean_realized_economic_profit']))} at {pct(float(constrained_forecast_policy['incident_rate']))} incidents. | The safe option currently changes risk exposure and displayed certainty more than mean realized payoff. It should be tested as an insurance choice, not assumed to be economically inferior. | Run paired first-run sessions where the risk display is hidden versus shown, and record route selection plus post-run explanation. |
-| **Guided delivery as teaching case** | The preset Grain delivery has a mean realized economic result of {signed(float(guided_policy['mean_realized_economic_profit']))}. | The suggested first action must teach a legible trade-off even if it is not the globally best economic answer. | Ask first-time testers whether they can explain the Grain/Reedwatch rationale before purchase and whether the end result changes that understanding. |
+| **Route topology is now authoritative** | All completed runs use content-declared endpoints, and invalid Old Road → Brine Cross departures are rejected in regression coverage. | Route fees, risk, map presentation, and forecast now describe the same corridor. | Keep endpoint validation in future route-content review; no balance action is indicated by this implementation fix alone. |
+| **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Implement bounded market memory (A2) and rerun the harness to measure whether recent deliveries create readable trade rotation. |
+| **Forecast/resolution mismatch** | Mean forecast error ranges from {signed(float(calibration['mean_error'].min()))} to {signed(float(calibration['mean_error'].max()))} ashmarks-equivalent across active policies. | A risk-adjusted forecast that is reliably more pessimistic than resolution can weaken trust in the explanation layer. | State the one-unit loss assumption explicitly or align forecast expected-loss calculation with the resolver before external balance changes. |
+| **Capacity dominates the first decision** | The forecast policy loads an average of {forecast_policy['mean_quantity']:.1f} units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
+| **Guided delivery is not an economic optimum** | The Grain teaching run averages {signed(float(guided_policy['mean_realized_economic_profit']))} realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |
 
 ## Recommended Human-Playtest Prompts
 
@@ -297,10 +274,10 @@ The attached raw results were generated by `tools/simulate_trade_policies.gd` an
 
 | Source | Role |
 | --- | --- |
-| `content/runtime_world.json` | Implemented goods, settlement price modifiers, routes, and planning assumptions. |
+| `content/runtime_world.json` | Implemented goods, settlement price modifiers, route endpoints, and planning assumptions. |
 | `src/core/economy.gd` | Implemented prices and forecast calculation. |
-| `src/core/market_command_processor.gd` | Implemented buy, travel, incident, and sell resolution. |
-| `research/playtest_simulation/policy_simulation.json` | Raw 500-run simulation output. |
+| `src/core/market_command_processor.gd` | Implemented buy, endpoint validation, travel, incident, and sell resolution. |
+| `research/playtest_simulation/policy_simulation.json` | Raw 500-run corrected simulation output. |
 """
     (output / "automated_playtest_report.md").write_text(report, encoding="utf-8")
 

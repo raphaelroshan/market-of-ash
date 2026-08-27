@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "0.4.0",
+  "content_version": "0.4.1",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -51,8 +51,8 @@
     }
   },
   "routes": {
-    "old_road": {"name": "Old Road", "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
-    "toll_road": {"name": "Toll Road", "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
-    "dry_cut": {"name": "Dry Cut", "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."}
+    "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
+    "toll_road": {"name": "Toll Road", "endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
+    "dry_cut": {"name": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."}
   }
 }
