@@ -51,12 +51,13 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.12.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.13.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
 	_expect(MarketContent.settlement_action("ashgate_provision_bundle").get("settlement_id", "") == "ashgate", "runtime content should expose the live Ashgate provision action")
+	_expect(int(MarketContent.settlement_action("brine_cross_cistern_queue").get("minimum_crisis_stage", 0)) == 1, "runtime content should expose the shortage-gated Brine Cross action")
 	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 1, "runtime content should expose a Reedwatch opportunity state")
 	_expect(MarketContent.contract("reedwatch_water_relief_01").get("destination_id", "") == "reedwatch", "runtime content should expose the first relief contract")
 	_expect(MarketContent.event("gatekeepers_chalk").get("route_ids", []).has("toll_road"), "runtime content should expose the first Toll Road event")
@@ -365,6 +366,27 @@ func _test_settlement_actions() -> void:
 		"inputs": {"action_id": "ashgate_provision_bundle"},
 	})
 	_expect(not unaffordable.ok and poor_world.visit_slots_remaining == 2 and poor_world.provisions == 12, "an unaffordable opportunity should not mutate resources or visit slots")
+
+	var brine_world := AshWorldState.new(1107)
+	brine_world.current_settlement = "brine_cross"
+	var early_cistern := MarketCommandProcessor.execute(brine_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "brine_cross_cistern_queue"},
+	})
+	_expect(not early_cistern.ok and early_cistern.reason.contains("crisis stage 1"), "Brine Cross cistern queue should explain its crisis-stage gate")
+	_expect(brine_world.day == 1 and brine_world.visit_slots_remaining == 2 and brine_world.resilience_for("brine_cross") == 0, "blocked cistern work should not mutate time, slots, or resilience")
+	brine_world.advance_day(3)
+	var cistern := MarketCommandProcessor.execute(brine_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "brine_cross_cistern_queue"},
+	})
+	_expect(cistern.ok and brine_world.day == 5 and brine_world.visit_slots_remaining == 1, "shortage-stage cistern work should spend one day and one visit slot")
+	_expect(brine_world.resilience_for("brine_cross") == 1 and brine_world.known_information.has("brine_pump_failures"), "cistern work should strengthen Brine Cross and preserve its pump-failure lead")
+	var repeated_cistern := MarketCommandProcessor.execute(brine_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "brine_cross_cistern_queue"},
+	})
+	_expect(not repeated_cistern.ok and repeated_cistern.reason.contains("already complete"), "the one-time cistern investigation should not be farmable")
 
 func _test_reedwatch_relief_contract() -> void:
 	var world := AshWorldState.new(1)
@@ -1289,7 +1311,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.12.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.13.0", "serialized state should declare the content version")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)

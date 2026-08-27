@@ -433,6 +433,11 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 			errors.append("settlement action %s service_slots must be between 1 and the visit limit" % action_id)
 		if int(action.get("time_cost", -1)) < 0:
 			errors.append("settlement action %s time_cost must be non-negative" % action_id)
+		var minimum_crisis_stage := int(action.get("minimum_crisis_stage", 0))
+		if minimum_crisis_stage < 0 or minimum_crisis_stage > 3:
+			errors.append("settlement action %s minimum_crisis_stage must be between 0 and 3" % action_id)
+		if typeof(action.get("once_per_campaign", false)) != TYPE_BOOL:
+			errors.append("settlement action %s once_per_campaign must be boolean" % action_id)
 		var effects_value: Variant = action.get("effects", {})
 		if typeof(effects_value) != TYPE_DICTIONARY:
 			errors.append("settlement action %s effects must be an object" % action_id)
@@ -451,6 +456,12 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 					errors.append("settlement action %s arms_sale must name a non-arms alternative" % action_id)
 		elif bool(action.get("available", false)) and action_id == "ashgate_provision_bundle" and int(effects_value.get("provisions", 0)) <= 0:
 			errors.append("settlement action ashgate_provision_bundle must add provisions")
+		elif bool(action.get("available", false)) and action_id == "brine_cross_cistern_queue":
+			var resilience: Dictionary = effects_value.get("settlement_resilience", {})
+			if String(effects_value.get("information_id", "")).is_empty():
+				errors.append("settlement action brine_cross_cistern_queue must record information")
+			if String(resilience.get("settlement_id", "")) != "brine_cross" or int(resilience.get("delta", 0)) <= 0:
+				errors.append("settlement action brine_cross_cistern_queue must strengthen Brine Cross resilience")
 		if not bool(action.get("available", false)) and String(action.get("unavailable_reason", "")).is_empty():
 			errors.append("unavailable settlement action %s must declare unavailable_reason" % action_id)
 

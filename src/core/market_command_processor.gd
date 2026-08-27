@@ -641,6 +641,11 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 		return _failure("%s is only available in %s" % [String(action.get("name", action_id)), String(action_settlement.get("name", action.get("settlement_id", "")))])
 	if not bool(action.get("available", false)):
 		return _failure(String(action.get("unavailable_reason", "this opportunity is not available yet")))
+	if world.crisis_stage < int(action.get("minimum_crisis_stage", 0)):
+		return _failure(String(action.get("unavailable_reason", "this opportunity is not available at the current crisis stage")))
+	var information_id := String(action.get("effects", {}).get("information_id", ""))
+	if bool(action.get("once_per_campaign", false)) and not information_id.is_empty() and world.known_information.has(information_id):
+		return _failure("this opportunity is already complete; its information remains in the caravan log")
 	var slots_required := int(action.get("service_slots", 0))
 	if world.visit_slots_remaining < slots_required:
 		return _failure("no visit slots remain; depart and arrive at a settlement to refresh them")
@@ -651,12 +656,39 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	match action_id:
 		"ashgate_provision_bundle":
 			return _apply_provision_bundle(world, action)
+		"brine_cross_cistern_queue":
+			return _apply_cistern_queue(world, action)
 		"ashgate_cinder_rider_arms_sale":
 			return _apply_arms_sale(world, action)
 		"ashgate_public_manifest_audit":
 			return _apply_arms_recovery(world, action)
 		_:
 			return _failure(String(action.get("unavailable_reason", "this opportunity is not implemented yet")))
+
+static func _apply_cistern_queue(world: AshWorldState, action: Dictionary) -> Dictionary:
+	var slots := int(action.get("service_slots", 1))
+	var days := int(action.get("time_cost", 0))
+	var effects: Dictionary = action.get("effects", {})
+	var information_id := String(effects.get("information_id", ""))
+	var information_added := world.record_information(information_id)
+	var resilience_effect: Dictionary = effects.get("settlement_resilience", {})
+	var resilience_result := world.adjust_settlement_resilience(
+		String(resilience_effect.get("settlement_id", world.current_settlement)),
+		int(resilience_effect.get("delta", 0)),
+	)
+	world.visit_slots_remaining -= slots
+	if days > 0:
+		world.advance_day(days, false)
+	var message := "Waited with the Brine Cross cistern queue for %d day. Local resilience is now %d/10; pump-failure information was recorded." % [days, int(resilience_result.get("after", 0))]
+	world.log.append(message)
+	return _success(message, {
+		"action_id": String(action.id),
+		"day": days,
+		"visit_slots": -slots,
+		"visit_slots_remaining": world.visit_slots_remaining,
+		"settlement_resilience": resilience_result,
+		"information_id": information_id if information_added else "",
+	})
 
 static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) -> Dictionary:
 	var cost := int(action.get("cost", 0))

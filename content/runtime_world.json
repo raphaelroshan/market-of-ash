@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.12.0",
+  "content_version": "1.13.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -44,14 +44,16 @@
         "settlement_id": "brine_cross",
         "name": "Join the cistern queue",
         "category": "information",
-        "available": false,
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
         "cost": 0,
         "service_slots": 1,
         "time_cost": 1,
-        "effects": {},
+        "effects": {"information_id": "brine_pump_failures", "settlement_resilience": {"settlement_id": "brine_cross", "delta": 1}},
         "description": "Wait with the wellkeepers to learn which pumps are failing.",
-        "tradeoff": "Better local information in exchange for a day.",
-        "unavailable_reason": "Cistern reports are not connected to the simulation yet."
+        "tradeoff": "Gain a durable pump-failure lead and strengthen the local reserve by one, but spend a day.",
+        "unavailable_reason": "Available when Thin Wells begins at crisis stage 1."
       },
       {
         "id": "ashgate_cinder_rider_arms_sale",

@@ -1102,10 +1102,19 @@ func _refresh_opportunities() -> void:
 			effect_summary = "+%d ashmarks, -%d sealed crate, escalation +%d" % [int(arms_sale.get("payout", 0)), int(arms_sale.get("quantity", 0)), int(arms_sale.get("escalation_delta", 0))]
 		elif effects.has("arms_recovery"):
 			effect_summary = "arms escalation %d" % int(effects.get("arms_recovery", {}).get("escalation_delta", 0))
+		elif effects.has("settlement_resilience"):
+			var resilience_effect: Dictionary = effects.get("settlement_resilience", {})
+			effect_summary = "+%d local resilience, information" % int(resilience_effect.get("delta", 0))
 		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
 			action_button.disabled = true
+		elif world.crisis_stage < int(action.get("minimum_crisis_stage", 0)):
+			action_button.disabled = true
+			unavailable_reason = String(action.get("unavailable_reason", "Unavailable at the current crisis stage."))
+		elif bool(action.get("once_per_campaign", false)) and world.known_information.has(String(effects.get("information_id", ""))):
+			action_button.disabled = true
+			unavailable_reason = "Already completed; its information remains in the caravan log."
 		elif world.visit_slots_remaining < slots:
 			action_button.disabled = true
 			unavailable_reason = "No visit slots remain. Depart and arrive at a settlement to refresh them."

@@ -124,6 +124,11 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
             fail(errors, f"settlement action {action_id}.service_slots must be between 1 and the visit limit")
         if not isinstance(action.get("time_cost"), int) or action["time_cost"] < 0:
             fail(errors, f"settlement action {action_id}.time_cost must be a non-negative integer")
+        minimum_crisis_stage = action.get("minimum_crisis_stage", 0)
+        if not isinstance(minimum_crisis_stage, int) or not 0 <= minimum_crisis_stage <= 3:
+            fail(errors, f"settlement action {action_id}.minimum_crisis_stage must be an integer from 0 through 3")
+        if not isinstance(action.get("once_per_campaign", False), bool):
+            fail(errors, f"settlement action {action_id}.once_per_campaign must be boolean")
         effects = action.get("effects")
         if not isinstance(effects, dict):
             fail(errors, f"settlement action {action_id}.effects must be an object")
@@ -142,6 +147,12 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
         elif action.get("available") is True and action_id == "ashgate_provision_bundle":
             if not isinstance(effects.get("provisions"), int) or effects["provisions"] <= 0:
                 fail(errors, "settlement action ashgate_provision_bundle must add provisions")
+        elif action.get("available") is True and action_id == "brine_cross_cistern_queue":
+            resilience = effects.get("settlement_resilience")
+            if not isinstance(effects.get("information_id"), str) or not effects["information_id"]:
+                fail(errors, "settlement action brine_cross_cistern_queue must record information")
+            if not isinstance(resilience, dict) or resilience.get("settlement_id") != "brine_cross" or not isinstance(resilience.get("delta"), int) or resilience["delta"] <= 0:
+                fail(errors, "settlement action brine_cross_cistern_queue must strengthen Brine Cross resilience")
         if action.get("available") is False and not action.get("unavailable_reason"):
             fail(errors, f"unavailable settlement action {action_id} must declare unavailable_reason")
 

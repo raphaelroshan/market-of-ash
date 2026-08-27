@@ -311,3 +311,11 @@
 **Reason:** Price inflation alone does not make the regional crisis legible at the travel decision. Named route pressure makes late-campaign margins and safety visibly different while preserving one authoritative calculation path.
 
 **Trade-off:** Crisis pressure currently changes only the Old Road and Toll Road. Dry Cut remains the authored high-provision alternative until its settlement links and late-crisis role receive a dedicated slice.
+
+## ADR-040: Thin Wells activates Brine Cross's cistern queue
+
+**Decision:** `brine_cross_cistern_queue` becomes available at crisis stage one. It costs one visit slot and one day, adds one bounded Brine Cross resilience point, and records the durable `brine_pump_failures` lead. The action is one-time per campaign and remains visible with its stage or completion reason when disabled.
+
+**Reason:** Crisis progression needs to change a settlement decision as well as prices and routes. Waiting at the queue trades time for public capacity and information, making Brine Cross more than a resale destination without creating a separate investigation system.
+
+**Trade-off:** The pump-failure lead is currently a visible campaign fact rather than a prerequisite for another contract. Cinderford, Hollow Market, and Reedwatch still need their own non-event settlement actions before all five locations meet the full identity target.
