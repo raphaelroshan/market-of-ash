@@ -687,6 +687,12 @@ func _initialize() -> void:
 	_expect(ui.reset_confirmation_dialog.position.y >= 0 and ui.reset_confirmation_dialog.position.y + ui.reset_confirmation_dialog.size.y <= int(ui.get_viewport().get_visible_rect().end.y), "large text should keep the reset confirmation fully visible")
 	ui.reset_confirmation_dialog.canceled.emit()
 	ui.reset_confirmation_dialog.hide()
+	ui._show_main_menu()
+	ui._on_start_game_requested()
+	await process_frame
+	_expect(ui.new_game_confirmation_dialog.visible and ui.new_game_confirmation_dialog.position.y >= 0 and ui.new_game_confirmation_dialog.position.y + ui.new_game_confirmation_dialog.size.y <= int(ui.get_viewport().get_visible_rect().end.y), "large text should keep the new-game replacement warning fully visible")
+	ui.new_game_confirmation_dialog.canceled.emit()
+	ui.new_game_confirmation_dialog.hide()
 
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):
