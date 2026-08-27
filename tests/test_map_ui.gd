@@ -3,6 +3,7 @@ extends SceneTree
 var failures: Array[String] = []
 
 func _initialize() -> void:
+	root.size = Vector2i(960, 540)
 	var scene: PackedScene = load("res://scenes/Main.tscn")
 	var ui: Control = scene.instantiate()
 	root.add_child(ui)
