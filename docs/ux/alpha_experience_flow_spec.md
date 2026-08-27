@@ -93,7 +93,7 @@ flowchart TD
     J --> K[Departure Desk]
 ```
 
-The key alpha rule is **no map visible behind buying and selling controls**. The player can make a local trade decision without scanning a competing route image. The button **Plan Departure** carries the currently selected good and quantity as a planning context; it does not execute travel.
+The key alpha rule is **no map visible behind buying and selling controls**. The player can make a local trade decision without scanning a competing route image. The pinned departure button names the current planning context (for example, **Plan Water x2 to Reedwatch**); it does not execute travel.
 
 ### 4.3 Departure Desk — map and commitment screen
 
@@ -105,7 +105,7 @@ The departure desk is entered by a visible transition: the market foreground fal
 | **Route cards** | Which road fits this plan? | Destination selector, legal route selector, fee, days, risk, route description. | Route state chips: guarded, washed out, watched, scouted, toll raised, caravan traffic. |
 | **Load context** | What am I risking? | Selected planning good and quantity; current cargo/hold. | Cargo-value-at-risk, spoilage, contract obligations, crew/escort mitigation, “leave behind” decision. |
 | **Forecast ledger** | What do I expect to gain or lose? | Scenario purchase, expected sale, gross margin, route fee, provisions, time, expected loss, expected net, and an explicit comparison between selected quantity and cargo actually held. | Range/uncertainty bands, source of uncertainty, alternative route comparison, what changes the forecast. |
-| **Commitment rail** | Am I ready to leave? | **Commit Departure**, Return to Shop, save/reset. | One final summary sentence; hold-to-confirm option; pre-departure autosave; explicit irreversibility marker. |
+| **Commitment rail** | Am I ready to leave? | Pinned **Commit** and Return to Shop actions; Commit repeats the current ashmark/provision cost. Save/load remain in the scrollable detail rail. | One final summary sentence; hold-to-confirm option; pre-departure autosave; explicit irreversibility marker. |
 | **Route outcome layer** | What happened on the road? | Caravan movement and command result. | Traveling audio, animated route pulse, event card, summary of resource deltas, pause/save policy. |
 
 **Departure interaction flow**
