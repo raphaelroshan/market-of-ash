@@ -796,7 +796,7 @@ func _build_ui() -> void:
 	left.add_child(map_hint)
 
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 320)
+	spacer.custom_minimum_size = Vector2(0, 220)
 	left.add_child(spacer)
 
 	event_label = Label.new()
@@ -813,11 +813,14 @@ func _build_ui() -> void:
 	var right := PanelContainer.new()
 	right.custom_minimum_size = Vector2(360, 0)
 	columns.add_child(right)
+	var controls_shell := VBoxContainer.new()
+	controls_shell.add_theme_constant_override("separation", 10)
+	right.add_child(controls_shell)
 	var controls_scroll := ScrollContainer.new()
 	controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	controls_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	controls_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(controls_scroll)
+	controls_shell.add_child(controls_scroll)
 	var controls := VBoxContainer.new()
 	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	controls.add_theme_constant_override("separation", 10)
@@ -893,24 +896,31 @@ func _build_ui() -> void:
 
 	return_to_shop_button = Button.new()
 	return_to_shop_button.text = "Return to shop"
+	return_to_shop_button.custom_minimum_size = Vector2(0, 44)
 	return_to_shop_button.tooltip_text = "Go back to the settlement market without spending resources."
 	return_to_shop_button.pressed.connect(_on_return_to_shop_pressed)
-	controls.add_child(return_to_shop_button)
+	var travel_actions := HBoxContainer.new()
+	travel_actions.add_theme_constant_override("separation", 10)
+	controls_shell.add_child(travel_actions)
+	return_to_shop_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	travel_actions.add_child(return_to_shop_button)
 
 	commit_departure_button = Button.new()
 	commit_departure_button.text = "Commit departure"
 	commit_departure_button.custom_minimum_size = Vector2(0, 48)
+	commit_departure_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	commit_departure_button.tooltip_text = "Pay the displayed route cost, consume provisions, and resolve this route's risk."
 	commit_departure_button.pressed.connect(_on_depart_pressed)
-	controls.add_child(commit_departure_button)
+	travel_actions.add_child(commit_departure_button)
 
 	arrival_pending = false
 	enter_settlement_button = Button.new()
 	enter_settlement_button.text = "Enter settlement"
+	enter_settlement_button.custom_minimum_size = Vector2(0, 48)
 	enter_settlement_button.tooltip_text = "Return to the central shop after reviewing the route outcome."
 	enter_settlement_button.pressed.connect(_on_enter_settlement_pressed)
 	enter_settlement_button.visible = false
-	controls.add_child(enter_settlement_button)
+	controls_shell.add_child(enter_settlement_button)
 
 	departure_status_label = Label.new()
 	departure_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART

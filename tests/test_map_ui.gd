@@ -348,7 +348,8 @@ func _initialize() -> void:
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("FORECAST SCENARIO") and ui.departure_load_label.text.contains("Water x2") and ui.departure_load_label.text.contains("actually held 2"), "departure desk did not distinguish its forecast scenario from actual cargo")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
-	_expect(_has_scroll_ancestor(ui.commit_departure_button), "the departure control rail should remain reachable through a scroll container")
+	_expect(not _has_scroll_ancestor(ui.commit_departure_button) and not _has_scroll_ancestor(ui.return_to_shop_button), "the primary departure actions should remain pinned outside the long planning rail")
+	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "Commit departure and Return to shop should remain visible without scrolling")
 	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 2/4"), "departure desk did not pin the active contract and cargo shortfall")
 	_expect(ui.route_preview_label.text.contains("1 Water unit at risk"), "departure desk did not disclose the one-unit cargo risk basis")
 	_expect(ui.route_preview_label.text.contains("Risk source:"), "departure desk did not disclose the authored route-risk source")
@@ -637,6 +638,8 @@ func _initialize() -> void:
 	ui._on_start_game_pressed()
 	ui._on_guided_test_action()
 	ui._on_plan_departure_pressed()
+	await process_frame
+	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "large text should keep Commit departure and Return to shop visible outside the planning rail: commit %s, return %s, layer %s" % [ui.commit_departure_button.get_global_rect(), ui.return_to_shop_button.get_global_rect(), ui.game_layer.get_global_rect()])
 	ui._on_depart_pressed()
 	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")
 
