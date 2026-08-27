@@ -620,6 +620,10 @@ func _initialize() -> void:
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the pinned departure action visible")
 	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the primary Buy action visible before scrolling")
+	ui._show_main_menu()
+	await process_frame
+	_expect(ui.start_game_button.get_global_rect().end.y <= ui.menu_layer.get_global_rect().end.y, "large text should keep Start new game visible before optional settings")
+	ui._show_shop()
 	ui.reduce_motion_checkbox.button_pressed = true
 	ui.interface_sounds_checkbox.button_pressed = false
 	var saved_settings := ConfigFile.new()
