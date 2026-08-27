@@ -315,8 +315,9 @@ func _refresh_continue_availability() -> void:
 	continue_game_button.disabled = not bool(preview.get("ok", false))
 	if continue_game_button.disabled:
 		if start_game_button:
-			start_game_button.text = "Start Game"
-			start_game_button.tooltip_text = "Begin the deterministic Ashgate day-one campaign."
+			var existing_files := FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path)
+			start_game_button.text = "Start new game" if existing_files else "Start Game"
+			start_game_button.tooltip_text = "Requires confirmation because campaign save files already exist." if existing_files else "Begin the deterministic Ashgate day-one campaign."
 		continue_game_button.tooltip_text = "No valid saved campaign is available."
 		if FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path):
 			save_status_text = "SAVE — Existing files could not be validated. Start Game remains safe."
@@ -1001,13 +1002,14 @@ func _on_start_game_pressed() -> void:
 	_show_shop()
 
 func _on_start_game_requested() -> void:
-	if continue_game_button == null or continue_game_button.disabled:
+	var save_files_exist := FileAccess.file_exists(save_path) or FileAccess.file_exists(save_path + ".bak")
+	if not save_files_exist:
 		_on_start_game_pressed()
 		return
 	if new_game_confirmation_dialog == null:
 		new_game_confirmation_dialog = ConfirmationDialog.new()
 		new_game_confirmation_dialog.title = "Start a new campaign?"
-		new_game_confirmation_dialog.dialog_text = "A validated saved campaign already exists. It remains loadable until the new run's first successful autosave, which will replace it."
+		new_game_confirmation_dialog.dialog_text = "Campaign save files already exist. They remain untouched until the new run's first successful autosave, which may replace them."
 		new_game_confirmation_dialog.ok_button_text = "Start new campaign"
 		new_game_confirmation_dialog.cancel_button_text = "Keep saved campaign"
 		new_game_confirmation_dialog.confirmed.connect(_on_start_game_pressed)

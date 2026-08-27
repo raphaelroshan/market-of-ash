@@ -186,6 +186,7 @@ func _initialize() -> void:
 	var state_before_future_load := JSON.stringify(ui.world.serialize())
 	ui._refresh_continue_availability()
 	_expect(ui.continue_game_button.disabled and ui.menu_save_status_label.text.contains("could not be validated"), "Continue should disable when neither primary nor backup can be validated")
+	_expect(ui.start_game_button.text == "Start new game" and ui.start_game_button.tooltip_text.contains("confirmation"), "unreadable save files should still require confirmation before a fresh run can overwrite them")
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_future_load and ui.save_status_label.text.contains("newer than this build"), "a future-version save should be rejected without replacing the active run")
 	var invalid_shape_file := FileAccess.open(test_save_path, FileAccess.WRITE)
