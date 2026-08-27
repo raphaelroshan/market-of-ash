@@ -95,10 +95,13 @@ var large_text_enabled := false
 var interface_sounds_enabled := true
 var audio_player: AudioStreamPlayer
 var audio_cues: Dictionary = {}
+var run_started_msec := 0
+var first_trade_elapsed_msec := -1
 var map_panel
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	run_started_msec = Time.get_ticks_msec()
 	world = AshWorldState.new(PLAYTEST_SEED)
 	_load_presentation_settings()
 	theme = Theme.new()
@@ -980,6 +983,8 @@ func _on_start_game_pressed() -> void:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = AshWorldState.new(PLAYTEST_SEED)
+	run_started_msec = Time.get_ticks_msec()
+	first_trade_elapsed_msec = -1
 	if map_panel:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
@@ -1035,6 +1040,7 @@ func _on_guided_test_action() -> void:
 		"id": MarketCommandProcessor.BUY_GOODS,
 		"inputs": {"good_id": PLAYTEST_GOOD, "quantity": PLAYTEST_QUANTITY},
 	})
+	_record_first_trade(result)
 	if result.ok:
 		guided_test_button.disabled = true
 	_show_command_result(result, "Test action")
@@ -1118,13 +1124,19 @@ func _on_pause_main_menu_pressed() -> void:
 	_show_main_menu()
 
 func _on_export_report_pressed() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
 	var report := {
-		"report_version": 1,
+		"report_version": 2,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
 		"build_commit": String(ProjectSettings.get_setting("market_of_ash/build_commit", "development")),
 		"build_run": String(ProjectSettings.get_setting("market_of_ash/build_run", "local")),
+		"platform": OS.get_name(),
+		"viewport": {"width": int(viewport_size.x), "height": int(viewport_size.y)},
+		"presentation": {"large_text": large_text_enabled, "reduced_motion": reduce_motion_enabled, "interface_sounds": interface_sounds_enabled},
+		"session_elapsed_seconds": maxf(0.0, float(Time.get_ticks_msec() - run_started_msec) / 1000.0),
+		"time_to_first_trade_seconds": null if first_trade_elapsed_msec < 0 else float(first_trade_elapsed_msec) / 1000.0,
 		"seed": world.seed,
 		"day": world.day,
 		"settlement_id": world.current_settlement,
@@ -1347,6 +1359,7 @@ func _on_buy_pressed() -> void:
 			"quantity": int(cargo_quantity.value),
 		},
 	})
+	_record_first_trade(result)
 	_show_command_result(result, "Purchase")
 
 func _on_sell_pressed() -> void:
@@ -1360,7 +1373,12 @@ func _on_sell_pressed() -> void:
 			"quantity": quantity,
 		},
 	})
+	_record_first_trade(result)
 	_show_command_result(result, "Sale")
+
+func _record_first_trade(result: Dictionary) -> void:
+	if bool(result.get("ok", false)) and first_trade_elapsed_msec < 0:
+		first_trade_elapsed_msec = maxi(0, Time.get_ticks_msec() - run_started_msec)
 
 func _on_depart_pressed() -> void:
 	var route_id := _selected_id(route_option)

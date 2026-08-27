@@ -291,6 +291,7 @@ func _initialize() -> void:
 	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v11"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3"), "water purchase did not advance the playtest objective")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "the guided purchase should move focus from its disabled button to the stated Plan departure action")
+	_expect(ui.first_trade_elapsed_msec >= 0, "the first successful trade should record privacy-safe elapsed session timing")
 	ui._on_save_pressed()
 	ui._on_start_game_pressed()
 	ui._on_load_pressed()
@@ -310,7 +311,12 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 1 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 2 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
+	_expect(int(report.get("viewport", {}).get("width", 0)) > 0, "playtest report should capture the current viewport")
+	_expect(float(report.get("session_elapsed_seconds", -1.0)) >= 0.0, "playtest report should capture elapsed session time")
+	_expect(report.has("time_to_first_trade_seconds"), "playtest report should declare time-to-first-trade context even when the current run has not observed one")
+	_expect(typeof(report.get("presentation", {})) == TYPE_DICTIONARY and report.get("presentation", {}).has("large_text") and report.get("presentation", {}).has("reduced_motion") and report.get("presentation", {}).has("interface_sounds"), "playtest report should include the presentation settings needed to reproduce usability feedback")
 	_expect(report.has("active_contracts") and report.has("contract_history") and report.has("event_history") and report.has("route_conditions") and report.has("known_information") and report.has("ending_summary"), "playtest report should include the campaign evidence needed to reconstruct decisions and outcomes")
 	_expect(ui.event_label.text.contains("No personal data is included"), "report export should explain its privacy boundary")
 	ui._open_pause()
