@@ -42,6 +42,14 @@ func _initialize() -> void:
 	_expect(ui.continue_game_button != null and ui.continue_game_button.text == "Continue saved game", "main menu should expose a separate validated continue action")
 	_expect(ui.reduce_motion_checkbox != null and ui.reduce_motion_checkbox.text == "Reduce travel motion", "main menu should expose a reduced-motion option")
 	_expect(ui.large_text_checkbox != null and ui.large_text_checkbox.text == "Large text", "main menu should expose a large-text option")
+	_expect(ui.interface_sounds_checkbox != null and ui.interface_sounds_checkbox.text == "Interface sounds" and ui.interface_sounds_checkbox.button_pressed, "main menu should expose enabled-by-default nonessential interface sounds")
+	_expect(ui.audio_player != null and ui.audio_cues.size() == 3, "the UI should prepare distinct success, blocked-action, and travel cues")
+	ui._play_ui_cue("success")
+	var enabled_audio_stream: AudioStream = ui.audio_player.stream
+	ui.interface_sounds_checkbox.button_pressed = false
+	ui._play_ui_cue("blocked")
+	_expect(ui.audio_player.stream == enabled_audio_stream, "disabled interface sounds should not replace or play another cue")
+	ui.interface_sounds_checkbox.button_pressed = true
 	_expect(_action_has_joypad_button("ui_accept", 0), "ui_accept should retain the primary controller button")
 	_expect(_action_has_joypad_button("ui_cancel", 1), "ui_cancel should retain the secondary controller button")
 	_expect(_action_has_joypad_button("ui_pause", 6), "ui_pause should expose the controller menu button")
@@ -568,12 +576,14 @@ func _initialize() -> void:
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	ui.reduce_motion_checkbox.button_pressed = true
+	ui.interface_sounds_checkbox.button_pressed = false
 	var saved_settings := ConfigFile.new()
-	_expect(saved_settings.load(test_settings_path) == OK and bool(saved_settings.get_value("accessibility", "large_text", false)) and bool(saved_settings.get_value("accessibility", "reduce_motion", false)), "accessibility preferences should persist outside the campaign save")
+	_expect(saved_settings.load(test_settings_path) == OK and bool(saved_settings.get_value("accessibility", "large_text", false)) and bool(saved_settings.get_value("accessibility", "reduce_motion", false)) and not bool(saved_settings.get_value("audio", "interface_sounds", true)), "accessibility and audio preferences should persist outside the campaign save")
 	ui.large_text_enabled = false
 	ui.reduce_motion_enabled = false
+	ui.interface_sounds_enabled = true
 	ui._load_presentation_settings()
-	_expect(ui.large_text_enabled and ui.reduce_motion_enabled, "saved accessibility preferences should load with safe defaults")
+	_expect(ui.large_text_enabled and ui.reduce_motion_enabled and not ui.interface_sounds_enabled, "saved accessibility and audio preferences should load with safe defaults")
 	ui._on_start_game_pressed()
 	ui._on_guided_test_action()
 	ui._on_plan_departure_pressed()

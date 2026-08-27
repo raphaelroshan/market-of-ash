@@ -37,6 +37,7 @@ var remapping_action: String = ""
 var reset_confirmation_dialog: ConfirmationDialog
 var reduce_motion_checkbox: CheckBox
 var large_text_checkbox: CheckBox
+var interface_sounds_checkbox: CheckBox
 var shop_good_option: OptionButton
 var shop_quantity: SpinBox
 var shop_market_preview_label: Label
@@ -89,6 +90,9 @@ var settings_persistence_enabled := true
 var report_path := DEFAULT_REPORT_PATH
 var reduce_motion_enabled := false
 var large_text_enabled := false
+var interface_sounds_enabled := true
+var audio_player: AudioStreamPlayer
+var audio_cues: Dictionary = {}
 var map_panel
 
 func _ready() -> void:
@@ -97,6 +101,7 @@ func _ready() -> void:
 	_load_presentation_settings()
 	theme = Theme.new()
 	theme.default_font_size = 20 if large_text_enabled else 16
+	_build_audio_cues()
 	game_layer = Control.new()
 	game_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(game_layer)
@@ -169,6 +174,12 @@ func _build_main_menu() -> void:
 	large_text_checkbox.button_pressed = large_text_enabled
 	large_text_checkbox.toggled.connect(_on_large_text_toggled)
 	content.add_child(large_text_checkbox)
+	interface_sounds_checkbox = CheckBox.new()
+	interface_sounds_checkbox.text = "Interface sounds"
+	interface_sounds_checkbox.tooltip_text = "Play restrained confirmation, blocked-action, and travel cues. All essential feedback remains visible as text."
+	interface_sounds_checkbox.button_pressed = interface_sounds_enabled
+	interface_sounds_checkbox.toggled.connect(_on_interface_sounds_toggled)
+	content.add_child(interface_sounds_checkbox)
 	var bindings_title := Label.new()
 	bindings_title.text = "KEYBOARD BINDINGS"
 	bindings_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -360,6 +371,45 @@ func _on_reduce_motion_toggled(enabled: bool) -> void:
 		map_panel.reduce_motion = enabled
 	_save_presentation_settings()
 
+func _on_interface_sounds_toggled(enabled: bool) -> void:
+	interface_sounds_enabled = enabled
+	if not enabled and audio_player:
+		audio_player.stop()
+	_save_presentation_settings()
+
+func _build_audio_cues() -> void:
+	audio_player = AudioStreamPlayer.new()
+	audio_player.volume_db = -14.0
+	add_child(audio_player)
+	audio_cues = {
+		"success": _tone_stream(660.0, 0.08),
+		"blocked": _tone_stream(220.0, 0.11),
+		"travel": _tone_stream(360.0, 0.14),
+	}
+
+func _tone_stream(frequency: float, duration: float) -> AudioStreamWAV:
+	var sample_rate := 22050
+	var sample_count := int(round(duration * sample_rate))
+	var samples := PackedByteArray()
+	samples.resize(sample_count * 2)
+	for index in range(sample_count):
+		var progress := float(index) / float(maxi(1, sample_count - 1))
+		var envelope := sin(PI * progress)
+		var sample := int(round(sin(TAU * frequency * float(index) / float(sample_rate)) * envelope * 32767.0 * 0.12))
+		samples.encode_s16(index * 2, sample)
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = samples
+	return stream
+
+func _play_ui_cue(cue_id: String) -> void:
+	if not interface_sounds_enabled or audio_player == null or not audio_cues.has(cue_id):
+		return
+	audio_player.stream = audio_cues[cue_id]
+	audio_player.play()
+
 func _on_rebind_pressed(action_name: String) -> void:
 	remapping_action = action_name
 	binding_status_label.text = "Press one unmodified key for %s. Escape cancels." % String(ACTION_LABELS.get(action_name, action_name))
@@ -435,6 +485,7 @@ func _load_presentation_settings() -> void:
 		return
 	large_text_enabled = bool(config.get_value("accessibility", "large_text", false))
 	reduce_motion_enabled = bool(config.get_value("accessibility", "reduce_motion", false))
+	interface_sounds_enabled = bool(config.get_value("audio", "interface_sounds", true))
 	var requested_bindings: Dictionary = {}
 	var claimed_keys: Array = []
 	var bindings_valid := true
@@ -465,6 +516,7 @@ func _save_presentation_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value("accessibility", "large_text", large_text_enabled)
 	config.set_value("accessibility", "reduce_motion", reduce_motion_enabled)
+	config.set_value("audio", "interface_sounds", interface_sounds_enabled)
 	for action_name in REMAPPABLE_ACTIONS:
 		config.set_value("input", action_name, _keyboard_binding_codes(action_name))
 	config.save(settings_path)
@@ -1285,10 +1337,12 @@ func _on_depart_pressed() -> void:
 
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
+		_play_ui_cue("travel" if label == "Departure" else "success")
 		_set_event("%s\nNEXT — %s" % [String(result.message), _next_step_text()])
 		if autosave_enabled:
 			_write_save("AUTOSAVED")
 	else:
+		_play_ui_cue("blocked")
 		_set_event("%s blocked: %s.\nNEXT — %s" % [label, String(result.reason), _next_step_text()])
 	_refresh_ui()
 
