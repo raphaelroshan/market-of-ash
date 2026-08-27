@@ -1204,7 +1204,7 @@ func _on_pause_main_menu_pressed() -> void:
 func _on_export_report_pressed() -> void:
 	var viewport_size := _report_viewport_size()
 	var report := {
-		"report_version": 3,
+		"report_version": 4,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
@@ -1213,6 +1213,7 @@ func _on_export_report_pressed() -> void:
 		"platform": OS.get_name(),
 		"input_device": last_input_device,
 		"viewport": {"width": int(viewport_size.x), "height": int(viewport_size.y)},
+		"display_scale": _report_display_scale(),
 		"presentation": {"large_text": large_text_enabled, "reduced_motion": reduce_motion_enabled, "interface_sounds": interface_sounds_enabled},
 		"session_elapsed_seconds": maxf(0.0, float(Time.get_ticks_msec() - run_started_msec) / 1000.0),
 		"time_to_first_trade_seconds": null if first_trade_elapsed_msec < 0 else float(first_trade_elapsed_msec) / 1000.0,
@@ -1273,6 +1274,15 @@ func _report_viewport_size() -> Vector2i:
 	if window_size.x > 0 and window_size.y > 0:
 		return window_size
 	return Vector2i(get_viewport().get_visible_rect().size)
+
+func _report_display_scale() -> float:
+	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+		var browser_scale := float(bridge.call("eval", "window.devicePixelRatio"))
+		if browser_scale > 0.0:
+			return browser_scale
+	var screen_scale := DisplayServer.screen_get_scale(DisplayServer.window_get_current_screen())
+	return screen_scale if screen_scale > 0.0 else 1.0
 
 func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))
