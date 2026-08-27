@@ -174,6 +174,19 @@ static func crisis_stage(stage_id: int) -> Dictionary:
 			return raw_stage.duplicate(true)
 	return {}
 
+static func ending_records() -> Array[Dictionary]:
+	var records: Array[Dictionary] = []
+	for raw_ending in crisis_rules().get("endings", []):
+		if typeof(raw_ending) == TYPE_DICTIONARY:
+			records.append(raw_ending.duplicate(true))
+	return records
+
+static func ending(ending_id: String) -> Dictionary:
+	for ending_record in ending_records():
+		if String(ending_record.get("id", "")) == ending_id:
+			return ending_record.duplicate(true)
+	return {}
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -709,12 +722,33 @@ static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
 		var stage: Dictionary = stages[index]
 		if int(stage.get("id", -1)) != index or int(stage.get("starts_day", 0)) <= 0 or String(stage.get("label", "")).is_empty() or String(stage.get("objective", "")).is_empty():
 			errors.append("crisis stage %d is invalid" % index)
-	var ending: Dictionary = rules.get("ending", {})
-	for field in ["id", "title", "required_contract_id", "summary"]:
-		if String(ending.get(field, "")).is_empty():
-			errors.append("crisis ending must declare %s" % field)
-	if int(ending.get("minimum_reedwatch_resilience", -1)) < 0 or int(ending.get("maximum_arms_escalation", -1)) < 0:
-		errors.append("crisis ending bounds must be non-negative")
+	var endings: Array = rules.get("endings", [])
+	if endings.size() < 2:
+		errors.append("crisis must declare at least two endings")
+	var ending_ids: Dictionary = {}
+	for raw_ending in endings:
+		if typeof(raw_ending) != TYPE_DICTIONARY:
+			errors.append("crisis endings must be objects")
+			continue
+		var ending: Dictionary = raw_ending
+		var ending_id := String(ending.get("id", ""))
+		for field in ["id", "title", "summary"]:
+			if String(ending.get(field, "")).is_empty():
+				errors.append("crisis ending must declare %s" % field)
+		if ending_ids.has(ending_id):
+			errors.append("duplicate crisis ending id: %s" % ending_id)
+		ending_ids[ending_id] = true
+		if int(ending.get("maximum_arms_escalation", -1)) < 0:
+			errors.append("crisis ending maximum_arms_escalation must be non-negative")
+		match ending_id:
+			"open_routes_relief":
+				if String(ending.get("required_contract_id", "")).is_empty() or int(ending.get("minimum_reedwatch_resilience", -1)) < 0:
+					errors.append("open_routes_relief must declare its contract and resilience bounds")
+			"ending_warden_reserve":
+				if int(ending.get("minimum_warden_reputation", -1)) < 0 or int(ending.get("maximum_caravan_reputation", -1)) < 0:
+					errors.append("ending_warden_reserve must declare faction bounds")
+			_:
+				errors.append("unsupported crisis ending id: %s" % ending_id)
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

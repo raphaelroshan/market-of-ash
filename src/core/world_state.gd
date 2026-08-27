@@ -325,19 +325,28 @@ func advance_day(days: int) -> void:
 func evaluate_ending() -> bool:
 	if not ending_id.is_empty() or crisis_stage < 3:
 		return not ending_id.is_empty()
-	var ending: Dictionary = MarketContent.crisis_rules().get("ending", {})
-	if not has_contract_outcome(String(ending.get("required_contract_id", ""))):
+	for ending in MarketContent.ending_records():
+		if not _ending_is_eligible(ending):
+			continue
+		ending_id = String(ending.get("id", ""))
+		ending_summary = String(ending.get("summary", ""))
+		log.append("Ending reached: %s — %s" % [String(ending.get("title", ending_id)), ending_summary])
+		return true
+	return false
+
+func _ending_is_eligible(ending: Dictionary) -> bool:
+	if arms_escalation > int(ending.get("maximum_arms_escalation", 6)):
 		return false
-	var required_contract_completed := false
-	for contract in contract_history:
-		if String(contract.get("id", "")) == String(ending.get("required_contract_id", "")) and String(contract.get("status", "")) == "completed":
-			required_contract_completed = true
-	if not required_contract_completed or resilience_for("reedwatch") < int(ending.get("minimum_reedwatch_resilience", 0)) or arms_escalation > int(ending.get("maximum_arms_escalation", 0)):
-		return false
-	ending_id = String(ending.get("id", ""))
-	ending_summary = String(ending.get("summary", ""))
-	log.append("Ending reached: %s — %s" % [String(ending.get("title", ending_id)), ending_summary])
-	return true
+	match String(ending.get("id", "")):
+		"open_routes_relief":
+			var required_contract_id := String(ending.get("required_contract_id", ""))
+			for contract in contract_history:
+				if String(contract.get("id", "")) == required_contract_id and String(contract.get("status", "")) == "completed":
+					return resilience_for("reedwatch") >= int(ending.get("minimum_reedwatch_resilience", 0))
+			return false
+		"ending_warden_reserve":
+			return int(reputation.get("wardens", 0)) >= int(ending.get("minimum_warden_reputation", 0)) and int(reputation.get("caravans", 0)) <= int(ending.get("maximum_caravan_reputation", 10))
+	return false
 
 func _decay_market_pressure(days: int) -> void:
 	if days <= 0 or market_pressure.is_empty():

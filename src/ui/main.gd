@@ -1288,7 +1288,7 @@ func _refresh_ui() -> void:
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
 		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
 		if not world.ending_id.is_empty():
-			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.crisis_rules().get("ending", {}).get("title", world.ending_id)), world.ending_summary]
+			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if diagnostics_label:
 		var last_command := "none"
 		if not world.command_history.is_empty():

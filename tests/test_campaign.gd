@@ -48,6 +48,24 @@ func _init() -> void:
 	var canonical_result := canonical_restore.load_serialized(restored.serialize())
 	_expect(canonical_result.ok and JSON.stringify(canonical_restore.serialize()) == JSON.stringify(restored.serialize()), "a normalized campaign save should remain stable across another load")
 
+	var warden_world := AshWorldState.new(1107)
+	_expect_ok(_command(warden_world, MarketCommandProcessor.USE_SETTLEMENT_ACTION, {"action_id": "ashgate_provision_bundle"}), "earn initial Warden standing through logistics")
+	_expect_ok(_command(warden_world, MarketCommandProcessor.BUY_GOODS, {"good_id": "medicine", "quantity": 2}), "buy a valuable regulated-road cargo")
+	_expect_ok(_command(warden_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "toll_road", "destination_id": "brine_cross"}), "take medicine through the Toll Road")
+	_expect(warden_world.pending_event.get("id", "") == "gatekeepers_chalk", "the regulated campaign should encounter the Gatekeeper's Chalk")
+	_expect_ok(_command(warden_world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "gatekeepers_chalk", "choice_id": "pay_posted_toll"}), "pay the posted Warden toll")
+	_expect_ok(_command(warden_world, MarketCommandProcessor.SELL_GOODS, {"good_id": "medicine", "quantity": 2}), "sell the medicine at Brine Cross")
+	_expect_ok(_command(warden_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "toll_road", "destination_id": "ashgate"}), "return to Ashgate under Warden oversight")
+	_expect_ok(_command(warden_world, MarketCommandProcessor.USE_SETTLEMENT_ACTION, {"action_id": "ashgate_provision_bundle"}), "cross the recognized-carrier threshold")
+	_expect(int(warden_world.reputation.get("wardens", 0)) == 3 and int(warden_world.reputation.get("caravans", 0)) == 0, "the regulated path should establish its distinct faction state")
+	var route_targets := ["reedwatch", "ashgate", "reedwatch", "ashgate", "reedwatch", "ashgate", "reedwatch"]
+	for destination_id in route_targets:
+		_expect_ok(_command(warden_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": destination_id}), "advance the regulated campaign toward day ten")
+	_expect(warden_world.day == 10 and warden_world.crisis_stage == 3, "the regulated campaign should reach the settlement-decision stage")
+	_expect(warden_world.ending_id == "ending_warden_reserve", "the high-Warden strategy should reach Order at the Cistern")
+	_expect(warden_world.ending_id != world.ending_id, "the two fresh command paths should produce distinct campaign conclusions")
+	_expect(warden_world.ending_summary.contains("predictable access") and warden_world.ending_summary.contains("regulated margins"), "the regulated ending should explain access and trade-style consequences")
+
 	if failures.is_empty():
 		print("Campaign smoke: PASS")
 	else:

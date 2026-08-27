@@ -207,8 +207,11 @@ def main() -> int:
     crisis_errors = validate(invalid_crisis)
     expected_crisis_fragments = (
         "crisis must declare exactly four stages",
-        "crisis ending must declare id",
-        "crisis ending bounds must be non-negative",
+        "must declare title",
+        "must declare a non-negative maximum_arms_escalation",
+        "open_routes_relief must declare required_contract_id",
+        "open_routes_relief must declare a non-negative resilience bound",
+        "duplicate crisis ending id",
     )
     missing_crisis = [fragment for fragment in expected_crisis_fragments if not any(fragment in error for error in crisis_errors)]
     if missing_crisis:

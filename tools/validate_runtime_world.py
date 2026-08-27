@@ -400,13 +400,34 @@ def validate_crisis(value: Any, errors: list[str]) -> None:
             stage = as_object(raw_stage, f"crisis.stages[{index}]", errors)
             if stage.get("id") != index or not isinstance(stage.get("starts_day"), int) or stage["starts_day"] <= 0 or not isinstance(stage.get("label"), str) or not stage["label"] or not isinstance(stage.get("objective"), str) or not stage["objective"]:
                 fail(errors, f"crisis stage {index} is invalid")
-    ending = as_object(rules.get("ending"), "crisis.ending", errors)
-    for field in ("id", "title", "required_contract_id", "summary"):
-        if not isinstance(ending.get(field), str) or not ending[field]:
-            fail(errors, f"crisis ending must declare {field}")
-    for field in ("minimum_reedwatch_resilience", "maximum_arms_escalation"):
-        if not isinstance(ending.get(field), int) or ending[field] < 0:
-            fail(errors, "crisis ending bounds must be non-negative")
+    endings = rules.get("endings")
+    if not isinstance(endings, list) or len(endings) < 2:
+        fail(errors, "crisis.endings must contain at least two endings")
+        return
+    seen_ids: set[str] = set()
+    for index, raw_ending in enumerate(endings):
+        ending = as_object(raw_ending, f"crisis.endings[{index}]", errors)
+        ending_id = ending.get("id")
+        for field in ("id", "title", "summary"):
+            if not isinstance(ending.get(field), str) or not ending[field]:
+                fail(errors, f"crisis ending at index {index} must declare {field}")
+        if isinstance(ending_id, str):
+            if ending_id in seen_ids:
+                fail(errors, f"duplicate crisis ending id: {ending_id}")
+            seen_ids.add(ending_id)
+        if not isinstance(ending.get("maximum_arms_escalation"), int) or ending["maximum_arms_escalation"] < 0:
+            fail(errors, f"crisis ending {ending_id} must declare a non-negative maximum_arms_escalation")
+        if ending_id == "open_routes_relief":
+            if not isinstance(ending.get("required_contract_id"), str) or not ending["required_contract_id"]:
+                fail(errors, "open_routes_relief must declare required_contract_id")
+            if not isinstance(ending.get("minimum_reedwatch_resilience"), int) or ending["minimum_reedwatch_resilience"] < 0:
+                fail(errors, "open_routes_relief must declare a non-negative resilience bound")
+        elif ending_id == "ending_warden_reserve":
+            for field in ("minimum_warden_reputation", "maximum_caravan_reputation"):
+                if not isinstance(ending.get(field), int) or ending[field] < 0:
+                    fail(errors, f"ending_warden_reserve must declare a non-negative {field}")
+        elif isinstance(ending_id, str):
+            fail(errors, f"unsupported crisis ending id: {ending_id}")
 
 
 def validate(data: Any) -> list[str]:

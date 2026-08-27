@@ -287,3 +287,11 @@
 **Reason:** The alpha's core route can be made substantially more usable without introducing a settings framework into the deterministic simulation. Scrollable rails let text reflow instead of clipping, while reduced motion preserves immediate access to the same resolved outcome.
 
 **Trade-off:** Preferences are not persisted yet, directional focus still relies on Godot's default traversal, and physical-controller/high-DPI verification remains a manual release gate.
+
+## ADR-037: Ending selection is ordered and supports a regulated Warden conclusion
+
+**Decision:** Replace the singular runtime ending record with an ordered `crisis.endings` list. `open_routes_relief` remains first and wins if its contract/resilience predicate overlaps another ending. `ending_warden_reserve` becomes the second conclusion at crisis stage three when Warden standing is at least three, Free Caravan standing is at most one, and arms escalation is at most one.
+
+**Reason:** The campaign roadmap requires distinct viable conclusions from different trade and relationship strategies. A medicine trade through the Toll Road plus repeated visible Warden logistics choices now produces a materially different outcome without adding a new subsystem or making arms mandatory.
+
+**Trade-off:** Only two of the four concept-manifest endings are implemented. Ending predicates remain explicit core branches rather than a generic expression interpreter, and the shared-relief outcome has deliberate precedence when both qualify.

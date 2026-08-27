@@ -46,7 +46,7 @@ func _initialize() -> void:
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
-	_expect(ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.9.0"), "shop diagnostics should expose reproducible seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.10.0"), "shop diagnostics should expose reproducible seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -312,6 +312,11 @@ func _initialize() -> void:
 	ui.world.advance_day(8)
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "open_routes_relief" and ui.shop_status_label.text.contains("ENDING — Open Routes, Shared Wells"), "qualified crisis state did not expose the deterministic ending summary")
+	ui._on_start_game_pressed()
+	ui.world.adjust_reputation("wardens", 3)
+	ui.world.advance_day(9)
+	ui._refresh_ui()
+	_expect(ui.world.ending_id == "ending_warden_reserve" and ui.shop_status_label.text.contains("ENDING — Order at the Cistern"), "regulated crisis state did not expose the second deterministic ending summary")
 
 	var state_before_text_scale := JSON.stringify(ui.world.serialize())
 	ui.large_text_checkbox.button_pressed = true
