@@ -123,6 +123,8 @@ def main() -> int:
         "trade_mode is unsupported",
         "requires_active_contract must be boolean",
         "resilience_delta must be an integer from 0 through 10",
+        "cargo_cost must be an object",
+        "information_id must use lower_snake_case",
         "route_condition must be an object",
     )
     missing_events = [

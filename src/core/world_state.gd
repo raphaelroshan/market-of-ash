@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 7
+const SAVE_VERSION := 8
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -29,6 +29,7 @@ var resolved_event_ids: Array[String] = []
 var event_history: Array[Dictionary] = []
 var route_conditions: Dictionary = {}
 var settlement_resilience: Dictionary = {}
+var known_information: Array[String] = []
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -91,6 +92,12 @@ func adjust_settlement_resilience(settlement_id: String, delta: int) -> Dictiona
 	var after := clampi(before + delta, 0, 10)
 	settlement_resilience[settlement_id] = after
 	return {"ok": true, "before": before, "after": after, "delta": after - before}
+
+func record_information(information_id: String) -> bool:
+	if information_id.is_empty() or known_information.has(information_id):
+		return false
+	known_information.append(information_id)
+	return true
 
 func has_settlement(id: String) -> bool:
 	return settlements.has(id)
@@ -308,6 +315,7 @@ func serialize() -> Dictionary:
 		"event_history": event_history.duplicate(true),
 		"route_conditions": route_conditions.duplicate(true),
 		"settlement_resilience": settlement_resilience.duplicate(true),
+		"known_information": known_information.duplicate(),
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -364,6 +372,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			event_history.append(raw_event.duplicate(true))
 	route_conditions = _sanitize_route_conditions(restored.get("route_conditions", {}))
 	settlement_resilience = _sanitize_settlement_resilience(restored.get("settlement_resilience", {}))
+	known_information.clear()
+	for information_id_value in restored.get("known_information", []):
+		var information_id := String(information_id_value)
+		if not information_id.is_empty() and not known_information.has(information_id):
+			known_information.append(information_id)
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -408,6 +421,9 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 	if source_version < 7:
 		migrated["save_version"] = 7
 		migrated["settlement_resilience"] = migrated.get("settlement_resilience", {})
+	if source_version < 8:
+		migrated["save_version"] = 8
+		migrated["known_information"] = migrated.get("known_information", [])
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:

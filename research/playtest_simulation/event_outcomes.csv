@@ -1,4 +1,6 @@
 policy_label,event_id,event_choice_id,runs,share_of_policy_runs
 Toll-road-only,gatekeepers_chalk,pay_posted_toll,65,0.65
+Forecast maximizer,three_riders_no_banner,pay_for_escort,55,0.55
+Gross-margin chaser,three_riders_no_banner,pay_for_escort,55,0.55
 Span material-reserve probe,span_at_cinderford,reserve_materials_for_span,70,0.7
 Last Barrel fair-share probe,last_clean_barrel,share_barrels_fairly,60,0.6

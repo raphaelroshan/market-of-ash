@@ -32,6 +32,8 @@
           "trade_mode": "magic",
           "requires_active_contract": "yes",
           "resilience_delta": 11,
+          "cargo_cost": "bad",
+          "information_id": "Bad Lead",
           "route_condition": "bad",
           "outcome": ""
         },

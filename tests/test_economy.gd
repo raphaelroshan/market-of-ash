@@ -22,6 +22,7 @@ func _init() -> void:
 	_test_gatekeepers_chalk_event()
 	_test_span_at_cinderford_event()
 	_test_last_clean_barrel_event()
+	_test_three_riders_no_banner_event()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -43,7 +44,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.0.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.1.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -53,6 +54,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.event("gatekeepers_chalk").get("route_ids", []).has("toll_road"), "runtime content should expose the first Toll Road event")
 	_expect(MarketContent.event("span_at_cinderford").get("route_ids", []).has("old_road"), "runtime content should expose the Cinderford span event")
 	_expect(MarketContent.event("last_clean_barrel").get("destination_ids", []).has("reedwatch"), "runtime content should expose the shortage settlement event")
+	_expect(MarketContent.event("three_riders_no_banner").get("route_ids", []).has("old_road"), "runtime content should expose the suspicious escort event")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -143,6 +145,7 @@ func _test_incident_loss_model() -> void:
 	_expect(MarketEconomy.expected_incident_loss(world.route("old_road"), empty_basis) == 0, "empty cargo should have zero expected loss")
 
 	world.cargo = {"water": 2, "medicine": 1, "weight": 3}
+	world.resolved_event_ids.append("three_riders_no_banner")
 	var incident := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.DEPART_ROUTE,
 		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
@@ -155,6 +158,7 @@ func _test_incident_loss_model() -> void:
 
 	var replay_world := AshWorldState.new(3)
 	replay_world.cargo = {"water": 2, "medicine": 1, "weight": 3}
+	replay_world.resolved_event_ids.append("three_riders_no_banner")
 	var replay := MarketCommandProcessor.execute(replay_world, {
 		"id": MarketCommandProcessor.DEPART_ROUTE,
 		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
@@ -839,6 +843,139 @@ func _test_last_clean_barrel_event() -> void:
 	})
 	_expect(JSON.stringify(restored_result) == JSON.stringify(equivalent_result), "saved barrel event and choice should replay deterministically")
 
+func _test_three_riders_no_banner_event() -> void:
+	var pay_world := AshWorldState.new(5)
+	pay_world.cargo = {"medicine": 2, "weight": 2}
+	var pay_depart := MarketCommandProcessor.execute(pay_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(pay_depart.ok and pay_world.pending_event.get("id", "") == "three_riders_no_banner", "high-value exposed cargo should trigger Three Riders, No Banner")
+	_expect(pay_world.pending_event.loss_basis.get("loss_good_id", "") == "medicine", "escort event should freeze the disclosed exposed cargo unit")
+	var pay := MarketCommandProcessor.execute(pay_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "pay_for_escort"},
+	})
+	_expect(pay.ok and pay_world.money == 106 and int(pay_world.cargo.get("medicine", 0)) == 2, "paid escort should charge ten ashmarks and preserve cargo")
+
+	var low_money_world := AshWorldState.new(5)
+	low_money_world.money = 4
+	low_money_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(low_money_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var blocked_pay := MarketCommandProcessor.execute(low_money_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "pay_for_escort"},
+	})
+	_expect(not blocked_pay.ok and not low_money_world.pending_event.is_empty(), "unaffordable escort should remain blocked without clearing the event")
+
+	var solo_world := AshWorldState.new(5)
+	solo_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(solo_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var solo := MarketCommandProcessor.execute(solo_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "cross_without_escort"},
+	})
+	_expect(solo.ok and is_equal_approx(float(solo.state_delta.outcome.resolution_roll), 0.24), "solo crossing should use the frozen deterministic resolution roll")
+	_expect(int(solo_world.cargo.get("medicine", 0)) == 1, "solo loss seed should remove exactly the disclosed medicine unit")
+	var safe_solo_world := AshWorldState.new(3)
+	safe_solo_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(safe_solo_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var safe_solo := MarketCommandProcessor.execute(safe_solo_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "cross_without_escort"},
+	})
+	_expect(safe_solo.ok and is_equal_approx(float(safe_solo.state_delta.outcome.resolution_roll), 0.62) and int(safe_solo_world.cargo.get("medicine", 0)) == 2, "solo safe seed should preserve cargo above the disclosed 45% risk")
+	var repeated_solo := MarketCommandProcessor.execute(safe_solo_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "cross_without_escort"},
+	})
+	_expect(not repeated_solo.ok and safe_solo_world.event_history.size() == 1, "resolved escort should reject duplicate resolution")
+
+	var medicine_world := AshWorldState.new(5)
+	medicine_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(medicine_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var medicine_passage := MarketCommandProcessor.execute(medicine_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "trade_medicine_for_passage"},
+	})
+	_expect(medicine_passage.ok and int(medicine_world.cargo.get("medicine", 0)) == 1, "medicine passage should consume exactly one medicine and avoid the cargo roll")
+	var missing_medicine_world := AshWorldState.new(5)
+	missing_medicine_world.cargo = {"cloth": 4, "weight": 4}
+	MarketCommandProcessor.execute(missing_medicine_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var blocked_medicine := MarketCommandProcessor.execute(missing_medicine_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "trade_medicine_for_passage"},
+	})
+	_expect(not blocked_medicine.ok and not missing_medicine_world.pending_event.is_empty(), "medicine passage should show a recoverable block when the good is absent")
+	var wait := MarketCommandProcessor.execute(missing_medicine_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "wait_and_read_the_tracks"},
+	})
+	_expect(wait.ok and missing_medicine_world.day == 3 and missing_medicine_world.known_information.has("three_riders_sponsor_mark"), "wait recovery should cost one day and record the sponsor lead")
+	_expect(not missing_medicine_world.record_information("three_riders_sponsor_mark") and missing_medicine_world.known_information.size() == 1, "known information should not duplicate")
+	var restored_information := AshWorldState.new(0)
+	var restored_information_result := restored_information.load_serialized(missing_medicine_world.serialize())
+	_expect(restored_information_result.ok and restored_information.known_information.has("three_riders_sponsor_mark"), "save/load should preserve the rider sponsor lead")
+
+	var low_value_world := AshWorldState.new(5)
+	low_value_world.cargo = {"grain": 2, "weight": 2}
+	var low_value := MarketCommandProcessor.execute(low_value_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(low_value.ok and low_value_world.pending_event.is_empty(), "low-value cargo should not trigger the suspicious escort")
+	var wrong_route_world := AshWorldState.new(5)
+	wrong_route_world.resolved_event_ids.append("gatekeepers_chalk")
+	wrong_route_world.cargo = {"medicine": 2, "weight": 2}
+	var wrong_route := MarketCommandProcessor.execute(wrong_route_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(wrong_route.ok and wrong_route_world.pending_event.is_empty(), "regulated Toll Road travel should not trigger the unmarked escort")
+	var no_trigger_world := AshWorldState.new(1)
+	no_trigger_world.cargo = {"medicine": 2, "weight": 2}
+	var no_trigger := MarketCommandProcessor.execute(no_trigger_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(no_trigger.ok and no_trigger_world.pending_event.is_empty(), "eligible no-trigger seed should complete normal exposed-route arrival")
+
+	var replay_world := AshWorldState.new(5)
+	replay_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(replay_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var pending_save := replay_world.serialize()
+	var restored_replay := AshWorldState.new(0)
+	restored_replay.load_serialized(pending_save)
+	var restored_result := MarketCommandProcessor.execute(restored_replay, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "cross_without_escort"},
+	})
+	var equivalent_replay := AshWorldState.new(0)
+	equivalent_replay.load_serialized(pending_save)
+	var equivalent_result := MarketCommandProcessor.execute(equivalent_replay, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "three_riders_no_banner", "choice_id": "cross_without_escort"},
+	})
+	_expect(JSON.stringify(restored_result) == JSON.stringify(equivalent_result), "saved escort event and solo choice should replay deterministically")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -907,7 +1044,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.0.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.1.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -971,6 +1108,13 @@ func _test_legacy_save_migration() -> void:
 	var migration_v6_result := migrated_v6.load_serialized(version_six_save)
 	_expect(migration_v6_result.ok and int(migration_v6_result.migrated_from) == 6, "version-six saves should migrate to the settlement-resilience schema")
 	_expect(migrated_v6.settlement_resilience.is_empty(), "version-six migration should initialize empty settlement resilience")
+	var version_seven_save := legacy_world.serialize()
+	version_seven_save["save_version"] = 7
+	version_seven_save.erase("known_information")
+	var migrated_v7 := AshWorldState.new(0)
+	var migration_v7_result := migrated_v7.load_serialized(version_seven_save)
+	_expect(migration_v7_result.ok and int(migration_v7_result.migrated_from) == 7, "version-seven saves should migrate to the known-information schema")
+	_expect(migrated_v7.known_information.is_empty(), "version-seven migration should initialize empty known information")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)

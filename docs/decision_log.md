@@ -183,3 +183,11 @@
 **Reason:** The Desperate Settlement template must change the next market decision rather than attach moral prose to an ordinary sale. Reusing market memory makes released water soften scarcity consistently, frozen pricing protects replay, and a small visible resilience state records the non-cash public outcome without creating a general settlement simulation.
 
 **Trade-off:** Resilience is currently a visible bounded campaign fact but does not yet modify prices, services, or crisis transitions; those effects require explicit later rules. The event handles water only in its first version, and eligible journeys replace rather than stack with another travel event.
+
+## ADR-024: Suspicious escort risk reuses the exposed-unit model
+
+**Decision:** Implement `three_riders_no_banner` on exposed Old Road and Dry Cut journeys carrying at least 70 ashmarks of destination-valued cargo. Paying ten ashmarks or trading one medicine guarantees passage; refusing uses a saved 45% roll against the same disclosed one-unit loss basis as route incidents; waiting one day guarantees safe arrival and records the stable information lead `three_riders_sponsor_mark`.
+
+**Reason:** The fourth canonical event needs valuable cargo—not a generic random encounter—to create the decision. Reusing the calibrated exposed-unit model keeps the risky refusal legible, while the medicine alternative and information-bearing wait make cargo composition and patience useful without requiring combat, a hidden reputation mutation, or an unfinished crew system.
+
+**Trade-off:** A triggered escort scene replaces the generic route incident, so a policy that always buys escort can reduce realized variance compared with the pre-event forecast. Known information is currently displayed as a lead count and saved for later faction/contact content; it has no hidden mechanical bonus yet.

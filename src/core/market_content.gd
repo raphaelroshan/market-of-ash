@@ -522,6 +522,19 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 				errors.append("event %s choice %s requires_active_contract must be boolean" % [event_id, choice_id])
 			if int(choice.get("resilience_delta", 0)) < 0 or int(choice.get("resilience_delta", 0)) > 10:
 				errors.append("event %s choice %s resilience_delta must be between 0 and 10" % [event_id, choice_id])
+			var cargo_cost_value: Variant = choice.get("cargo_cost", {})
+			if typeof(cargo_cost_value) != TYPE_DICTIONARY:
+				errors.append("event %s choice %s cargo_cost must be an object" % [event_id, choice_id])
+			else:
+				var cargo_cost: Dictionary = cargo_cost_value
+				if not cargo_cost.is_empty():
+					if not REQUIRED_GOOD_IDS.has(String(cargo_cost.get("good_id", ""))):
+						errors.append("event %s choice %s cargo_cost references an unknown good" % [event_id, choice_id])
+					if int(cargo_cost.get("quantity", 0)) <= 0:
+						errors.append("event %s choice %s cargo_cost quantity must be positive" % [event_id, choice_id])
+			var information_id := String(choice.get("information_id", ""))
+			if not information_id.is_empty() and (not information_id.is_valid_identifier() or information_id != information_id.to_lower()):
+				errors.append("event %s choice %s information_id must use lower_snake_case" % [event_id, choice_id])
 			var condition_value: Variant = choice.get("route_condition", {})
 			if typeof(condition_value) != TYPE_DICTIONARY:
 				errors.append("event %s choice %s route_condition must be an object" % [event_id, choice_id])

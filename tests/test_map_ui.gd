@@ -163,6 +163,26 @@ func _initialize() -> void:
 	ui._on_enter_settlement_pressed()
 	_expect(ui.shop_status_label.text.contains("Settlement resilience: 2/10"), "settlement shop did not expose the event's persistent resilience result")
 
+	ui._on_start_game_pressed()
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	_expect(ui.world.pending_event.get("id", "") == "three_riders_no_banner", "high-value Old Road cargo did not present Three Riders, No Banner")
+	_expect(ui.event_title_label.text == "Three Riders, No Banner", "escort event card did not render its authored title")
+	_expect(ui.event_stakes_label.text.contains("1 Medicine unit") and ui.event_stakes_label.text.contains("Old Road"), "escort event did not expose its route and loss basis")
+	_expect(ui.event_choice_buttons.size() == 4, "escort event should expose all four authored choices")
+	_expect(ui.event_choice_buttons[0].text.contains("10 ashmarks") and ui.event_choice_buttons[1].text.contains("45% cargo risk"), "escort choices did not disclose payment and solo-crossing risk")
+	_expect(ui.event_choice_buttons[2].text.contains("1 medicine") and not ui.event_choice_buttons[2].disabled, "medicine-for-passage choice did not expose its real cargo prerequisite")
+	_expect(ui.event_choice_buttons[3].focus_mode != Control.FOCUS_NONE, "information recovery choice should remain focusable")
+	ui._on_event_choice_pressed("three_riders_no_banner", "wait_and_read_the_tracks")
+	_expect(ui.world.known_information.has("three_riders_sponsor_mark") and ui.world.day == 3, "waiting for the riders did not record the sponsor lead and delay")
+	_expect(ui.event_label.text.contains("New information recorded"), "escort arrival report did not name the persistent information result")
+	ui._on_enter_settlement_pressed()
+	_expect(ui.shop_status_label.text.contains("Known leads: 1"), "settlement shop did not expose the persistent information lead")
+
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

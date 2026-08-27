@@ -76,6 +76,7 @@ func _run_span_event_probe(seed: int) -> Dictionary:
 
 func _run_last_barrel_probe(seed: int) -> Dictionary:
 	var world := AshWorldState.new(seed)
+	world.resolved_event_ids.append("three_riders_no_banner")
 	world.crisis_stage = 1
 	world._update_crisis_modifiers()
 	world.cargo = {"water": 2, "weight": 2}
@@ -226,6 +227,8 @@ func _resolve_pending_event_for_policy(world: AshWorldState) -> Dictionary:
 		choice_id = "reserve_materials_for_span" if int(material_basis.get("quantity", 0)) >= 2 else "turn_back_with_cargo"
 	elif event_id == "last_clean_barrel":
 		choice_id = "keep_barrels_sealed"
+	elif event_id == "three_riders_no_banner":
+		choice_id = "pay_for_escort" if world.money >= 10 else "wait_and_read_the_tracks"
 	return MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.RESOLVE_EVENT,
 		"inputs": {"event_id": event_id, "choice_id": choice_id},

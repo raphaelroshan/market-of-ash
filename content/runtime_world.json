@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.0.0",
+  "content_version": "1.1.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -318,6 +318,82 @@
             "requires_active_contract": false,
             "resilience_delta": 0,
             "outcome": "The caravan keeps control of the load and enters the ordinary market."
+          }
+        ]
+      },
+      {
+        "id": "three_riders_no_banner",
+        "title": "Three Riders, No Banner",
+        "category": "travel_decision",
+        "route_ids": ["old_road", "dry_cut"],
+        "trigger_chance": 0.55,
+        "trigger_roll_salt": 29,
+        "minimum_cargo_value": 70,
+        "active_contract_relevant": false,
+        "setup": "Three unmarked riders match the caravan's pace and offer to guarantee the exposed crossing for a price.",
+        "stakes": "Buy certainty, risk one disclosed cargo unit, trade medicine for passage, or wait long enough to identify their sponsor mark.",
+        "choices": [
+          {
+            "id": "pay_for_escort",
+            "label": "Pay 10 ashmarks for escort",
+            "money_cost": 10,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The riders form a close screen around the caravan until the destination markers appear."
+          },
+          {
+            "id": "cross_without_escort",
+            "label": "Refuse and cross alone",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.45,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The caravan keeps its money and accepts the disclosed exposed-unit risk."
+          },
+          {
+            "id": "trade_medicine_for_passage",
+            "label": "Trade 1 medicine for passage",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "cargo_cost": {"good_id": "medicine", "quantity": 1},
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "One rider pockets the sealed medicine and leads the caravan through a screened cut."
+          },
+          {
+            "id": "wait_and_read_the_tracks",
+            "label": "Wait and read the riders' tracks",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "three_riders_sponsor_mark",
+            "outcome": "At dusk the riders leave; their tack has pressed a repeated sponsor mark into the ash."
           }
         ]
       }

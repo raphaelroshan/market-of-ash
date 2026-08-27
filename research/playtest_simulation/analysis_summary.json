@@ -24,15 +24,15 @@
       "policy_label": "Forecast maximizer",
       "runs": 100,
       "completion_rate": 1.0,
-      "incident_rate": 0.35,
+      "incident_rate": 0.15,
       "mean_forecast_net_profit": 99.0,
-      "mean_realized_cash_profit": 103.8,
-      "mean_realized_economic_profit": 98.8,
-      "median_realized_economic_profit": 110.0,
+      "mean_realized_cash_profit": 104.7,
+      "mean_realized_economic_profit": 99.7,
+      "median_realized_economic_profit": 100.0,
       "p10_realized_economic_profit": 78.0,
       "p90_realized_economic_profit": 110.0,
       "loss_rate": 0.0,
-      "mean_forecast_error": -0.2,
+      "mean_forecast_error": 0.7,
       "mean_quantity": 7.0,
       "mean_provisions_remaining": 11.0
     },
@@ -41,15 +41,15 @@
       "policy_label": "Gross-margin chaser",
       "runs": 100,
       "completion_rate": 1.0,
-      "incident_rate": 0.35,
+      "incident_rate": 0.15,
       "mean_forecast_net_profit": 99.0,
-      "mean_realized_cash_profit": 103.8,
-      "mean_realized_economic_profit": 98.8,
-      "median_realized_economic_profit": 110.0,
+      "mean_realized_cash_profit": 104.7,
+      "mean_realized_economic_profit": 99.7,
+      "median_realized_economic_profit": 100.0,
       "p10_realized_economic_profit": 78.0,
       "p90_realized_economic_profit": 110.0,
       "loss_rate": 0.0,
-      "mean_forecast_error": -0.2,
+      "mean_forecast_error": 0.7,
       "mean_quantity": 7.0,
       "mean_provisions_remaining": 11.0
     },
@@ -138,17 +138,17 @@
       "policy": "forecast_maximizer",
       "policy_label": "Forecast maximizer",
       "forecast_net": 99.0,
-      "realized_economic": 98.8,
-      "mean_error": -0.2,
-      "mean_absolute_error": 14.5
+      "realized_economic": 99.7,
+      "mean_error": 0.7,
+      "mean_absolute_error": 7.0
     },
     {
       "policy": "gross_margin_chaser",
       "policy_label": "Gross-margin chaser",
       "forecast_net": 99.0,
-      "realized_economic": 98.8,
-      "mean_error": -0.2,
-      "mean_absolute_error": 14.5
+      "realized_economic": 99.7,
+      "mean_error": 0.7,
+      "mean_absolute_error": 7.0
     },
     {
       "policy": "toll_road_only",
@@ -194,6 +194,20 @@
       "event_choice_id": "pay_posted_toll",
       "runs": 65,
       "share_of_policy_runs": 0.65
+    },
+    {
+      "policy_label": "Forecast maximizer",
+      "event_id": "three_riders_no_banner",
+      "event_choice_id": "pay_for_escort",
+      "runs": 55,
+      "share_of_policy_runs": 0.55
+    },
+    {
+      "policy_label": "Gross-margin chaser",
+      "event_id": "three_riders_no_banner",
+      "event_choice_id": "pay_for_escort",
+      "runs": 55,
+      "share_of_policy_runs": 0.55
     },
     {
       "policy_label": "Span material-reserve probe",

@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations, B0–B4, and two of three B5 events are implemented. The final canonical travel event is next.
+**Roadmap status:** A0–A1 foundations and B0–B5 are implemented. The first crew proof is next.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 7 and runtime content version `1.0.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 8 and runtime content version `1.1.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -22,6 +22,7 @@
 - Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
+- High-value Old Road or Dry Cut loads can meet `Three Riders, No Banner`; money, medicine, disclosed one-unit risk, and a time-for-information recovery create distinct responses without combat.
 
 ## Current command IDs
 
@@ -61,6 +62,7 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `event_history`
 - `route_conditions`
 - `settlement_resilience`
+- `known_information`
 - `log`
 - `command_history`
 
@@ -132,6 +134,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The UI names that unit, destination value, expected loss, percentage risk, and authored risk source.
 - Forecast-maximizer mean error improved from `+66.8` to `-0.2` ashmarks-equivalent across 100 seeds.
 - Forecast-maximizer mean absolute error improved from `66.8` to `14.5`; the residual is binary incident variance rather than structural load-size error.
+- With all four travel events active, the current synthetic policy's event choices reduce forecast-maximizer mean absolute error further to `7.0`; this is policy behavior, not a retuning of the forecast formula.
 
 ## B1 market-memory result
 
@@ -179,6 +182,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The commitment choice is available only for a matching active relief contract and then delegates to normal contract resolution. Keeping cargo sealed is always available.
 - Save version 7 preserves settlement resilience. The 100-seed fair-share probe triggered exactly 60 times and applied the authored memory/resilience result.
 
+## B5 final-event result
+
+- Old Road and Dry Cut journeys carrying at least 70 destination-valued ashmarks have a deterministic 55% chance to meet `Three Riders, No Banner`.
+- Paying ten ashmarks guarantees passage; crossing alone uses a saved 45% one-exposed-unit cargo roll; one medicine can buy safe passage; waiting one day is always available and records a sponsor-mark lead.
+- The event reuses the calibrated loss basis, blocks unaffordable choices without mutation, and persists information without duplication through save version 8.
+- In the 100-seed opening simulation, both high-value Old Road policies triggered the event 55 times and selected the explicit paid-escort response.
+
 ## Next permitted task
 
-Card B4b: add `Three Riders, No Banner` as the Suspicious Escort template using the same tested event seam.
+Card B5: implement Nara Vey as the first crew proof, beginning with a visible scout-informed route forecast.

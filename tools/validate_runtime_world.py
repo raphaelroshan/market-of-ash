@@ -275,6 +275,17 @@ def validate_events(value: Any, errors: list[str]) -> None:
             resilience_delta = choice.get("resilience_delta", 0)
             if not isinstance(resilience_delta, int) or not 0 <= resilience_delta <= 10:
                 fail(errors, f"event {event_id} choice {choice_id}.resilience_delta must be an integer from 0 through 10")
+            cargo_cost = choice.get("cargo_cost", {})
+            if not isinstance(cargo_cost, dict):
+                fail(errors, f"event {event_id} choice {choice_id}.cargo_cost must be an object")
+            elif cargo_cost:
+                if cargo_cost.get("good_id") not in REQUIRED_GOODS:
+                    fail(errors, f"event {event_id} choice {choice_id}.cargo_cost references an unknown good")
+                if not isinstance(cargo_cost.get("quantity"), int) or cargo_cost["quantity"] <= 0:
+                    fail(errors, f"event {event_id} choice {choice_id}.cargo_cost quantity must be positive")
+            information_id = choice.get("information_id", "")
+            if not isinstance(information_id, str) or (information_id and not re.fullmatch(r"[a-z][a-z0-9_]*", information_id)):
+                fail(errors, f"event {event_id} choice {choice_id}.information_id must use lower_snake_case")
             condition = choice.get("route_condition", {})
             if not isinstance(condition, dict):
                 fail(errors, f"event {event_id} choice {choice_id}.route_condition must be an object")
