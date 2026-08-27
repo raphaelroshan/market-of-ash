@@ -9,8 +9,13 @@ func _initialize() -> void:
 	await process_frame
 	var test_save_path := "user://market_of_ash_map_ui_test.save"
 	var absolute_test_save_path := ProjectSettings.globalize_path(test_save_path)
-	if FileAccess.file_exists(test_save_path):
-		DirAccess.remove_absolute(absolute_test_save_path)
+	var test_backup_path := test_save_path + ".bak"
+	var absolute_test_backup_path := ProjectSettings.globalize_path(test_backup_path)
+	var test_temporary_path := test_save_path + ".tmp"
+	var absolute_test_temporary_path := ProjectSettings.globalize_path(test_temporary_path)
+	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
+		if FileAccess.file_exists(test_path):
+			DirAccess.remove_absolute(test_path)
 	ui.save_path = test_save_path
 	ui.autosave_enabled = false
 	ui.continue_game_button.disabled = true
@@ -53,12 +58,16 @@ func _initialize() -> void:
 	_expect(JSON.stringify(ui.world.serialize()) != manual_save_state, "save/load fixture should mutate the active run before restoration")
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == manual_save_state and ui.save_status_label.text.contains("LOADED — Day 1 · Ashgate"), "loading a valid save should restore the exact campaign state")
+	ui._on_save_pressed()
+	_expect(FileAccess.file_exists(test_backup_path), "replacing a valid save should preserve one backup generation")
 	var corrupt_file := FileAccess.open(test_save_path, FileAccess.WRITE)
 	corrupt_file.store_string("{not valid json")
 	corrupt_file = null
 	var state_before_corrupt_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
-	_expect(JSON.stringify(ui.world.serialize()) == state_before_corrupt_load and ui.save_status_label.text.contains("not a valid save object"), "a corrupt save should be rejected without replacing the active run")
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_corrupt_load and ui.save_status_label.text.contains("RECOVERED BACKUP"), "a corrupt primary save should recover the previous validated generation")
+	if FileAccess.file_exists(test_backup_path):
+		DirAccess.remove_absolute(absolute_test_backup_path)
 	var future_save: Dictionary = ui.world.serialize()
 	future_save["save_version"] = 999
 	var future_file := FileAccess.open(test_save_path, FileAccess.WRITE)
@@ -315,8 +324,9 @@ func _initialize() -> void:
 	ui._on_depart_pressed()
 	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")
 
-	if FileAccess.file_exists(test_save_path):
-		DirAccess.remove_absolute(absolute_test_save_path)
+	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
+		if FileAccess.file_exists(test_path):
+			DirAccess.remove_absolute(test_path)
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

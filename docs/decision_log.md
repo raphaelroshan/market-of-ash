@@ -274,11 +274,11 @@
 
 ## ADR-035: Save files are validated before replacing the active campaign
 
-**Decision:** Every successful player command writes the current versioned state to the prototype save path and exposes a concise autosave summary. Manual Save uses the same writer. Load parses into a separate candidate world, applies migrations and normalization there, and swaps the live world only after validation succeeds. Missing, malformed, or future-version files leave the current run untouched and produce a visible recovery message.
+**Decision:** Every successful player command writes the current versioned state to a temporary file, preserves the previous primary as one backup generation, promotes the completed write, and exposes a concise autosave summary. Manual Save uses the same writer. Load parses into a separate candidate world, applies migrations and normalization there, and swaps the live world only after validation succeeds. If the primary is invalid, Load attempts the backup; unrecoverable missing, malformed, or future-version files leave the current run untouched and produce a visible recovery message.
 
 **Reason:** External playtests need recoverable progress and useful bug context without allowing a damaged file to destroy a playable in-memory run. Candidate loading also keeps migration and sanitization inside the simulation boundary rather than duplicating them in UI code.
 
-**Trade-off:** The prototype currently maintains one save slot and does not yet use a temporary-file/backup rotation for interrupted writes. Campaign saves intentionally exclude device-specific accessibility and input preferences.
+**Trade-off:** The prototype currently maintains one primary slot and one backup generation rather than a save browser or journaling system. Campaign saves intentionally exclude device-specific accessibility and input preferences.
 
 ## ADR-036: Accessibility options change presentation, never simulation
 

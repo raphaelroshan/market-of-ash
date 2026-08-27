@@ -15,7 +15,7 @@
 | Text size/reflow | A Main Menu option increases inherited and explicit interface text by 25%; the long Shop and Departure rails use vertical scrolling. | UI smoke test checks scaling without campaign mutation and verifies both rails have scroll ancestors. |
 | Color independence | Money, provisions, risk, crisis, standing, escalation, disabled reasons, and outcomes are always written as text; color is supplementary. | Static UI inspection and UI text assertions. |
 | Timing | No choice has a real-time deadline. Travel motion never blocks `Enter settlement`, and reduced motion can remove it. | Command/UI architecture and reduced-motion test. |
-| Save recovery | Successful commands autosave; manual Save and Load expose day, settlement, save version, and content version. Invalid or newer files are validated in a candidate world and cannot replace the active run. | UI smoke tests missing, valid, corrupt, and autosave paths; core save normalization tests. |
+| Save recovery | Successful commands autosave through a temporary file and keep one backup generation; manual Save and Load expose day, settlement, save version, and content version. Invalid or newer files are validated in a candidate world and cannot replace the active run. | UI smoke tests missing, valid, corrupt-primary recovery, future-version rejection, and autosave paths; core save normalization tests. |
 
 ## Manual input matrix
 

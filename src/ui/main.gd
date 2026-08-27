@@ -888,13 +888,39 @@ func _on_save_pressed() -> void:
 	_refresh_ui()
 
 func _write_save(status_prefix: String) -> bool:
-	var file := FileAccess.open(save_path, FileAccess.WRITE)
+	var temporary_path := save_path + ".tmp"
+	var backup_path := save_path + ".bak"
+	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
 	if file == null:
-		save_status_text = "SAVE ERROR — Could not open the save path. Current run unchanged."
+		save_status_text = "SAVE ERROR — Could not open a temporary save file. Current run unchanged."
 		return false
 	file.store_string(JSON.stringify(world.serialize()))
+	file.flush()
 	if file.get_error() != OK:
 		save_status_text = "SAVE ERROR — Could not finish writing. Current run unchanged."
+		return false
+	file = null
+	var target_absolute := ProjectSettings.globalize_path(save_path)
+	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
+	var backup_absolute := ProjectSettings.globalize_path(backup_path)
+	if FileAccess.file_exists(save_path):
+		if FileAccess.file_exists(backup_path):
+			DirAccess.remove_absolute(backup_absolute)
+		var backup_error := DirAccess.copy_absolute(target_absolute, backup_absolute)
+		if backup_error != OK:
+			DirAccess.remove_absolute(temporary_absolute)
+			save_status_text = "SAVE ERROR — Could not preserve the previous save. Current run unchanged."
+			return false
+		var remove_error := DirAccess.remove_absolute(target_absolute)
+		if remove_error != OK:
+			DirAccess.remove_absolute(temporary_absolute)
+			save_status_text = "SAVE ERROR — Could not replace the previous save. Current run unchanged."
+			return false
+	var promote_error := DirAccess.rename_absolute(temporary_absolute, target_absolute)
+	if promote_error != OK:
+		if FileAccess.file_exists(backup_path) and not FileAccess.file_exists(save_path):
+			DirAccess.copy_absolute(backup_absolute, target_absolute)
+		save_status_text = "SAVE ERROR — Could not promote the validated save. Previous save preserved when available."
 		return false
 	var settlement_name := String(world.settlement(world.current_settlement).get("name", world.current_settlement))
 	save_status_text = "%s — Day %d · %s · save v%d · content %s" % [status_prefix, world.day, settlement_name, AshWorldState.SAVE_VERSION, MarketContent.content_version()]
@@ -904,32 +930,24 @@ func _write_save(status_prefix: String) -> bool:
 	return true
 
 func _on_load_pressed() -> void:
-	if not FileAccess.file_exists(save_path):
+	var backup_path := save_path + ".bak"
+	if not FileAccess.file_exists(save_path) and not FileAccess.file_exists(backup_path):
 		save_status_text = "LOAD BLOCKED — No saved campaign exists yet. Current run unchanged."
 		_set_event(save_status_text)
 		_refresh_ui()
 		return
-	var file := FileAccess.open(save_path, FileAccess.READ)
-	if file == null:
-		save_status_text = "LOAD BLOCKED — The save could not be opened. Current run unchanged."
+	var load_attempt := _load_candidate(save_path)
+	var recovered_backup := false
+	if not bool(load_attempt.get("ok", false)) and FileAccess.file_exists(backup_path):
+		load_attempt = _load_candidate(backup_path)
+		recovered_backup = bool(load_attempt.get("ok", false))
+	if not bool(load_attempt.get("ok", false)):
+		save_status_text = "LOAD BLOCKED — %s. Current run unchanged." % String(load_attempt.get("reason", "Save validation failed"))
 		_set_event(save_status_text)
 		_refresh_ui()
 		return
-	var parser := JSON.new()
-	var parse_error := parser.parse(file.get_as_text())
-	var parsed: Variant = parser.data
-	if parse_error != OK or typeof(parsed) != TYPE_DICTIONARY:
-		save_status_text = "LOAD BLOCKED — The file is not a valid save object. Current run unchanged."
-		_set_event(save_status_text)
-		_refresh_ui()
-		return
-	var candidate := AshWorldState.new(world.seed)
-	var load_result := candidate.load_serialized(parsed)
-	if not bool(load_result.get("ok", false)):
-		save_status_text = "LOAD BLOCKED — %s. Current run unchanged." % String(load_result.get("reason", "Save validation failed"))
-		_set_event(save_status_text)
-		_refresh_ui()
-		return
+	var candidate: AshWorldState = load_attempt.world
+	var load_result: Dictionary = load_attempt.result
 	world = candidate
 	arrival_pending = false
 	selected_map_cell = Vector2i(-1, -1)
@@ -941,12 +959,30 @@ func _on_load_pressed() -> void:
 	_populate_route_options()
 	var migrated_from := int(load_result.get("migrated_from", AshWorldState.SAVE_VERSION))
 	var migration_text := " · migrated from v%d" % migrated_from if migrated_from < AshWorldState.SAVE_VERSION else ""
-	save_status_text = "LOADED — Day %d · %s · save v%d%s" % [world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), AshWorldState.SAVE_VERSION, migration_text]
+	var status_prefix := "RECOVERED BACKUP" if recovered_backup else "LOADED"
+	save_status_text = "%s — Day %d · %s · save v%d%s" % [status_prefix, world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), AshWorldState.SAVE_VERSION, migration_text]
 	_set_event("Saved campaign loaded after validation. Seed %d and command history are restored." % world.seed)
 	if world.pending_event.is_empty():
 		_show_shop()
 	else:
 		_show_departure()
+
+func _load_candidate(candidate_path: String) -> Dictionary:
+	if not FileAccess.file_exists(candidate_path):
+		return {"ok": false, "reason": "No saved campaign exists at this path"}
+	var file := FileAccess.open(candidate_path, FileAccess.READ)
+	if file == null:
+		return {"ok": false, "reason": "The save could not be opened"}
+	var parser := JSON.new()
+	var parse_error := parser.parse(file.get_as_text())
+	var parsed: Variant = parser.data
+	if parse_error != OK or typeof(parsed) != TYPE_DICTIONARY:
+		return {"ok": false, "reason": "The file is not a valid save object"}
+	var candidate := AshWorldState.new(world.seed)
+	var load_result := candidate.load_serialized(parsed)
+	if not bool(load_result.get("ok", false)):
+		return {"ok": false, "reason": String(load_result.get("reason", "Save validation failed"))}
+	return {"ok": true, "world": candidate, "result": load_result}
 
 func _on_reset_pressed() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
