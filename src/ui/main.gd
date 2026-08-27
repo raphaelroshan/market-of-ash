@@ -915,7 +915,8 @@ func _build_ui() -> void:
 
 	commit_departure_button = Button.new()
 	commit_departure_button.text = "Commit departure"
-	commit_departure_button.custom_minimum_size = Vector2(0, 48)
+	commit_departure_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	commit_departure_button.custom_minimum_size = Vector2(0, 56)
 	commit_departure_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	commit_departure_button.tooltip_text = "Pay the displayed route cost, consume provisions, and resolve this route's risk."
 	commit_departure_button.pressed.connect(_on_depart_pressed)
@@ -1373,9 +1374,15 @@ func _refresh_forecasts() -> void:
 		departure_load_label.text = "FORECAST SCENARIO\n%s x%d · actually held %d · total hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get(good_id, 0)), int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		route_preview_label.text = "ROUTE FORECAST\nChoose a directly connected destination and route."
+		if commit_departure_button:
+			commit_departure_button.text = "Commit departure"
 		return
 	var selected_route := world.route(route_id, world.current_settlement, destination_id)
 	selected_route["provisions"] = world.route_provision_cost(route_id, destination_id)
+	if commit_departure_button:
+		var provision_count := int(selected_route.get("provisions", 0))
+		var provision_label := "provision" if provision_count == 1 else "provisions"
+		commit_departure_button.text = "Commit — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
 	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 
 func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:

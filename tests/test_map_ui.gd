@@ -364,6 +364,7 @@ func _initialize() -> void:
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("FORECAST SCENARIO") and ui.departure_load_label.text.contains("Water x2") and ui.departure_load_label.text.contains("actually held 2"), "departure desk did not distinguish its forecast scenario from actual cargo")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
+	_expect(ui.commit_departure_button.text.contains("4 ashmarks") and ui.commit_departure_button.text.contains("1 provision"), "the pinned Commit action should repeat the current route cost, got %s" % ui.commit_departure_button.text)
 	_expect(not _has_scroll_ancestor(ui.commit_departure_button) and not _has_scroll_ancestor(ui.return_to_shop_button), "the primary departure actions should remain pinned outside the long planning rail")
 	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "Commit departure and Return to shop should remain visible without scrolling")
 	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 2/4"), "departure desk did not pin the active contract and cargo shortfall")
@@ -586,7 +587,7 @@ func _initialize() -> void:
 	ui.world.adjust_reputation("caravans", 2)
 	ui._select_option_by_id(ui.destination_option, "reedwatch")
 	ui._on_destination_changed(ui.destination_option.selected)
-	_expect(ui.route_preview_label.text.contains("Route fee 2") and ui.route_preview_label.text.contains("Known road-sharers pay 2 fewer"), "Free Caravan threshold did not show the discounted Old Road fee")
+	_expect(ui.route_preview_label.text.contains("Route fee 2") and ui.route_preview_label.text.contains("Known road-sharers pay 2 fewer") and ui.commit_departure_button.text.contains("2 ashmarks"), "Free Caravan threshold did not update both the forecast and pinned Commit cost")
 	_expect(ui.route_preview_label.text.contains("does not reduce the route's exposed cargo risk"), "Free Caravan threshold did not disclose its risk tradeoff")
 
 	ui._on_start_game_pressed()
