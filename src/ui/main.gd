@@ -623,17 +623,22 @@ func _build_shop() -> void:
 	var buy_button := Button.new()
 	buy_button.name = "BuyCargoButton"
 	buy_button.text = "Buy cargo"
+	buy_button.custom_minimum_size = Vector2(0, 44)
+	buy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	buy_button.pressed.connect(_on_buy_pressed)
 	purchase_row.add_child(buy_button)
 	var sell_button := Button.new()
 	sell_button.name = "SellCargoButton"
 	sell_button.text = "Sell selected cargo"
+	sell_button.custom_minimum_size = Vector2(0, 44)
+	sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
 	sell_button.pressed.connect(_on_sell_pressed)
 	purchase_row.add_child(sell_button)
 	guided_test_button = Button.new()
 	guided_test_button.text = "Optional: Buy 2 water"
+	guided_test_button.custom_minimum_size = Vector2(0, 44)
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	guided_test_button.pressed.connect(_on_guided_test_action)
 	market_shell.add_child(guided_test_button)

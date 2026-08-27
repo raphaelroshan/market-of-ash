@@ -116,6 +116,7 @@ func _initialize() -> void:
 	var buy_cargo_button: Button = ui.find_child("BuyCargoButton", true, false)
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
+	_expect(buy_cargo_button.custom_minimum_size.y >= 44 and sell_cargo_button.custom_minimum_size.y >= 44 and ui.guided_test_button.custom_minimum_size.y >= 44, "first-trade actions should expose comfortable pointer and controller targets")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(_has_scroll_ancestor(ui.shop_good_option), "the primary Shop trade workflow should remain reachable through a scroll container")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
