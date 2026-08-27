@@ -43,6 +43,8 @@ var interface_sounds_checkbox: CheckBox
 var shop_good_option: OptionButton
 var shop_quantity: SpinBox
 var shop_market_preview_label: Label
+var shop_buy_button: Button
+var shop_sell_button: Button
 var shop_status_label: Label
 var shop_cargo_label: Label
 var opportunity_status_label: Label
@@ -620,22 +622,22 @@ func _build_shop() -> void:
 	var purchase_row := HBoxContainer.new()
 	purchase_row.add_theme_constant_override("separation", 12)
 	market_shell.add_child(purchase_row)
-	var buy_button := Button.new()
-	buy_button.name = "BuyCargoButton"
-	buy_button.text = "Buy cargo"
-	buy_button.custom_minimum_size = Vector2(0, 44)
-	buy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	buy_button.tooltip_text = "Buy the selected cargo from this settlement."
-	buy_button.pressed.connect(_on_buy_pressed)
-	purchase_row.add_child(buy_button)
-	var sell_button := Button.new()
-	sell_button.name = "SellCargoButton"
-	sell_button.text = "Sell selected cargo"
-	sell_button.custom_minimum_size = Vector2(0, 44)
-	sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
-	sell_button.pressed.connect(_on_sell_pressed)
-	purchase_row.add_child(sell_button)
+	shop_buy_button = Button.new()
+	shop_buy_button.name = "BuyCargoButton"
+	shop_buy_button.text = "Buy cargo"
+	shop_buy_button.custom_minimum_size = Vector2(0, 44)
+	shop_buy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_buy_button.tooltip_text = "Buy the selected cargo from this settlement."
+	shop_buy_button.pressed.connect(_on_buy_pressed)
+	purchase_row.add_child(shop_buy_button)
+	shop_sell_button = Button.new()
+	shop_sell_button.name = "SellCargoButton"
+	shop_sell_button.text = "Sell selected cargo"
+	shop_sell_button.custom_minimum_size = Vector2(0, 44)
+	shop_sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
+	shop_sell_button.pressed.connect(_on_sell_pressed)
+	purchase_row.add_child(shop_sell_button)
 	guided_test_button = Button.new()
 	guided_test_button.text = "Optional: Buy 2 water"
 	guided_test_button.custom_minimum_size = Vector2(0, 44)
@@ -1337,6 +1339,14 @@ func _refresh_forecasts() -> void:
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
+	if shop_buy_button:
+		var unit_price := MarketEconomy.price_for(good_id, origin, world_context)
+		shop_buy_button.text = "Buy %d %s — %d ashmarks" % [quantity, good_id.capitalize(), unit_price * quantity]
+	if shop_sell_button:
+		var held_quantity := int(world.cargo.get(good_id, 0))
+		shop_sell_button.text = "Sell %d %s" % [quantity, good_id.capitalize()]
+		shop_sell_button.disabled = held_quantity < quantity
+		shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan." if not shop_sell_button.disabled else "Hold contains %d of the selected %d %s." % [held_quantity, quantity, good_id.capitalize()]
 	if departure_load_label:
 		departure_load_label.text = "FORECAST SCENARIO\n%s x%d · actually held %d · total hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get(good_id, 0)), int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):

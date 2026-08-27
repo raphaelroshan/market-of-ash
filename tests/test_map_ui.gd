@@ -117,6 +117,8 @@ func _initialize() -> void:
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
 	_expect(buy_cargo_button.custom_minimum_size.y >= 44 and sell_cargo_button.custom_minimum_size.y >= 44 and ui.guided_test_button.custom_minimum_size.y >= 44, "first-trade actions should expose comfortable pointer and controller targets")
+	_expect(buy_cargo_button.text.contains("Buy 2 Water") and buy_cargo_button.text.contains("30 ashmarks"), "Buy should state the selected quantity, cargo, and total cost")
+	_expect(sell_cargo_button.text == "Sell 2 Water" and sell_cargo_button.disabled and sell_cargo_button.tooltip_text.contains("Hold contains 0"), "Sell should be visibly unavailable when the selected quantity is not held")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(_has_scroll_ancestor(ui.shop_good_option), "the primary Shop trade workflow should remain reachable through a scroll container")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
@@ -289,6 +291,7 @@ func _initialize() -> void:
 
 	ui._on_guided_test_action()
 	_expect(int(ui.world.cargo.get("water", 0)) == 2 and int(ui.world.cargo.get("weight", 0)) == 2, "guided test action did not execute the promised water purchase")
+	_expect(not sell_cargo_button.disabled, "Sell should become available once the selected quantity is held")
 	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "guided test action did not use the explicit command boundary")
 	_expect(ui.event_label.text.contains("NEXT —") and ui.event_label.text.contains("Plan departure"), "a successful shop command should end with a concrete next action")
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")
@@ -642,6 +645,7 @@ func _initialize() -> void:
 	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "large text should keep Commit departure and Return to shop visible outside the planning rail: commit %s, return %s, layer %s" % [ui.commit_departure_button.get_global_rect(), ui.return_to_shop_button.get_global_rect(), ui.game_layer.get_global_rect()])
 	ui._on_depart_pressed()
 	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")
+	_expect(ui.enter_settlement_button.visible and ui.enter_settlement_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "large text should keep the arrival handoff visible outside the result rail")
 
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):
