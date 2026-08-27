@@ -1,0 +1,8 @@
+policy,policy_label,choice,runs,share
+forecast_maximizer,Forecast maximizer,water → reedwatch / toll_road,100,1.0
+gross_margin_chaser,Gross-margin chaser,water → reedwatch / dry_cut,100,1.0
+guided_grain_delivery,Guided grain delivery,grain → reedwatch / old_road,100,1.0
+map_constrained_forecast,Map-constrained forecast,water → reedwatch / old_road,100,1.0
+map_constrained_gross_margin,Map-constrained gross-margin,water → reedwatch / old_road,100,1.0
+no_trade,No trade baseline,No trade,100,1.0
+toll_road_only,Toll-road-only,water → reedwatch / toll_road,100,1.0

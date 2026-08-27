@@ -1,0 +1,701 @@
+destination_id,ending_day,ending_money,ending_provisions,forecast_expected_loss,forecast_expected_net_profit,forecast_gross_trade_margin,forecast_risk,good_id,incident,note,policy,quantity_purchased,quantity_sold,realized_cash_profit,realized_economic_profit,route_id,route_roll,seed,status,policy_label,forecast_error,choice
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.79,1,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.79,1,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.1,1,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.79,1,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.79,1,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.79,1,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,1,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.96,2,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.96,2,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.27,2,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.96,2,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.96,2,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.96,2,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,2,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.13,3,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.13,3,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.44,3,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.13,3,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.13,3,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.13,3,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,3,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.3,4,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.3,4,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.61,4,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.3,4,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.3,4,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.3,4,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,4,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.47,5,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.47,5,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.78,5,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.47,5,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.47,5,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.47,5,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,5,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.64,6,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.64,6,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.95,6,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.64,6,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.64,6,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.64,6,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,6,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.81,7,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.81,7,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.12,7,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.81,7,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.81,7,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.81,7,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,7,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.98,8,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.98,8,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.29,8,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.98,8,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.98,8,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.98,8,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,8,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.15,9,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.15,9,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.46,9,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.15,9,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.15,9,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.15,9,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,9,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.32,10,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.32,10,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.63,10,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.32,10,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.32,10,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.32,10,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,10,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.49,11,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.49,11,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.8,11,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.49,11,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.49,11,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.49,11,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,11,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.66,12,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.66,12,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.97,12,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.66,12,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.66,12,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.66,12,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,12,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.83,13,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.83,13,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.14,13,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.83,13,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.83,13,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.83,13,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,13,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.0,14,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.0,14,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.31,14,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.0,14,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.0,14,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.0,14,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,14,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.17,15,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.17,15,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.48,15,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.17,15,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.17,15,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.17,15,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,15,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.34,16,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.34,16,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.65,16,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.34,16,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.34,16,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.34,16,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,16,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.51,17,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.51,17,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.82,17,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.51,17,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.51,17,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.51,17,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,17,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.68,18,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.68,18,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.99,18,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.68,18,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.68,18,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.68,18,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,18,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.85,19,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.85,19,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.16,19,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.85,19,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.85,19,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.85,19,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,19,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.02,20,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.02,20,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.33,20,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.02,20,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.02,20,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.02,20,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,20,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.19,21,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.19,21,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.5,21,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.19,21,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.19,21,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.19,21,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,21,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.36,22,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.36,22,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.67,22,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.36,22,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.36,22,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.36,22,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,22,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.53,23,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.53,23,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.84,23,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.53,23,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.53,23,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.53,23,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,23,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.7,24,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.7,24,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.01,24,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.7,24,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.7,24,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.7,24,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,24,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.87,25,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.87,25,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.18,25,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.87,25,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.87,25,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.87,25,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,25,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.04,26,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.04,26,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.35,26,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.04,26,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.04,26,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.04,26,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,26,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.21,27,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.21,27,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.52,27,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.21,27,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.21,27,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.21,27,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,27,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.38,28,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.38,28,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.69,28,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.38,28,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.38,28,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.38,28,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,28,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.55,29,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.55,29,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.86,29,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.55,29,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.55,29,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.55,29,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,29,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.72,30,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.72,30,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.03,30,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.72,30,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.72,30,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.72,30,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,30,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.89,31,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.89,31,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.2,31,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.89,31,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.89,31,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.89,31,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,31,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.06,32,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.06,32,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.37,32,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.06,32,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.06,32,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.06,32,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,32,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.23,33,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.23,33,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.54,33,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.23,33,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.23,33,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.23,33,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,33,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.4,34,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.4,34,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.71,34,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.4,34,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.4,34,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.4,34,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,34,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.57,35,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.57,35,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.88,35,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.57,35,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.57,35,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.57,35,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,35,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.74,36,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.74,36,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.05,36,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.74,36,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.74,36,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.74,36,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,36,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.91,37,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.91,37,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.22,37,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.91,37,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.91,37,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.91,37,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,37,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.08,38,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.08,38,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.39,38,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.08,38,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.08,38,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.08,38,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,38,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.25,39,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.25,39,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.56,39,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.25,39,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.25,39,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.25,39,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,39,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.42,40,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.42,40,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.73,40,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.42,40,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.42,40,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.42,40,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,40,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.59,41,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.59,41,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.9,41,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.59,41,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.59,41,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.59,41,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,41,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.76,42,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.76,42,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.07,42,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.76,42,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.76,42,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.76,42,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,42,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.93,43,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.93,43,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.24,43,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.93,43,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.93,43,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.93,43,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,43,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.1,44,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.1,44,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.41,44,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.1,44,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.1,44,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.1,44,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,44,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.27,45,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.27,45,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.58,45,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.27,45,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.27,45,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.27,45,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,45,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.44,46,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.44,46,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.75,46,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.44,46,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.44,46,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.44,46,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,46,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.61,47,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.61,47,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.92,47,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.61,47,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.61,47,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.61,47,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,47,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.78,48,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.78,48,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.09,48,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.78,48,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.78,48,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.78,48,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,48,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.95,49,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.95,49,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.26,49,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.95,49,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.95,49,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.95,49,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,49,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.12,50,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.12,50,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.43,50,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.12,50,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.12,50,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.12,50,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,50,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.29,51,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.29,51,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.6,51,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.29,51,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.29,51,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.29,51,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,51,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.46,52,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.46,52,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.77,52,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.46,52,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.46,52,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.46,52,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,52,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.63,53,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.63,53,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.94,53,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.63,53,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.63,53,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.63,53,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,53,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.8,54,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.8,54,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.11,54,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.8,54,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.8,54,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.8,54,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,54,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.97,55,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.97,55,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.28,55,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.97,55,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.97,55,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.97,55,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,55,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.14,56,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.14,56,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.45,56,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.14,56,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.14,56,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.14,56,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,56,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.31,57,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.31,57,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.62,57,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.31,57,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.31,57,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.31,57,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,57,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.48,58,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.48,58,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.79,58,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.48,58,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.48,58,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.48,58,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,58,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.65,59,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.65,59,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.96,59,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.65,59,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.65,59,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.65,59,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,59,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.82,60,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.82,60,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.13,60,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.82,60,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.82,60,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.82,60,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,60,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.99,61,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.99,61,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.3,61,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.99,61,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.99,61,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.99,61,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,61,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.16,62,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.16,62,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.47,62,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.16,62,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.16,62,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.16,62,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,62,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.33,63,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.33,63,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.64,63,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.33,63,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.33,63,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.33,63,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,63,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.5,64,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.5,64,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.81,64,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.5,64,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.5,64,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.5,64,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,64,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.67,65,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.67,65,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.98,65,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.67,65,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.67,65,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.67,65,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,65,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.84,66,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.84,66,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.15,66,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.84,66,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.84,66,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.84,66,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,66,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.01,67,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.01,67,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.32,67,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.01,67,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.01,67,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.01,67,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,67,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.18,68,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.18,68,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.49,68,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.18,68,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.18,68,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.18,68,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,68,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.35,69,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.35,69,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.66,69,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.35,69,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.35,69,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.35,69,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,69,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.52,70,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.52,70,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.83,70,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.52,70,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.52,70,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.52,70,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,70,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.69,71,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.69,71,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.0,71,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.69,71,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.69,71,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.69,71,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,71,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.86,72,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.86,72,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.17,72,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.86,72,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.86,72,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.86,72,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,72,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.03,73,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.03,73,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.34,73,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.03,73,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.03,73,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.03,73,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,73,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.2,74,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.2,74,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.51,74,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.2,74,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.2,74,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.2,74,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,74,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.37,75,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.37,75,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.68,75,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.37,75,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.37,75,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.37,75,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,75,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.54,76,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.54,76,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.85,76,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.54,76,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.54,76,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.54,76,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,76,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.71,77,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.71,77,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.02,77,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.71,77,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.71,77,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.71,77,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,77,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.88,78,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.88,78,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.19,78,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.88,78,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.88,78,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.88,78,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,78,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.05,79,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.05,79,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.36,79,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.05,79,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.05,79,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.05,79,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,79,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.22,80,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.22,80,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.53,80,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.22,80,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.22,80,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.22,80,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,80,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.39,81,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.39,81,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.7,81,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.39,81,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.39,81,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.39,81,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,81,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.56,82,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.56,82,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.87,82,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.56,82,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.56,82,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.56,82,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,82,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.73,83,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.73,83,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.04,83,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.73,83,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.73,83,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.73,83,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,83,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.9,84,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.9,84,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.21,84,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.9,84,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.9,84,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.9,84,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,84,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.07,85,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.07,85,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.38,85,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.07,85,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.07,85,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.07,85,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,85,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.24,86,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.24,86,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.55,86,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.24,86,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.24,86,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.24,86,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,86,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.41,87,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.41,87,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.72,87,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.41,87,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.41,87,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.41,87,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,87,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.58,88,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.58,88,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.89,88,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.58,88,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.58,88,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.58,88,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,88,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.75,89,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.75,89,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.06,89,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.75,89,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.75,89,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.75,89,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,89,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.92,90,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.92,90,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.23,90,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.92,90,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.92,90,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.92,90,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,90,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.09,91,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,forecast_maximizer,7,6,75,70,toll_road,0.09,91,completed,Forecast maximizer,-10,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.4,91,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.09,91,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.09,91,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,195,11,22,80,119,0.1,water,True,Sold 6 water for 192 ashmarks.,toll_road_only,7,6,75,70,toll_road,0.09,91,completed,Toll-road-only,-10,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,91,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.26,92,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.26,92,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.57,92,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.26,92,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.26,92,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.26,92,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,92,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.43,93,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.43,93,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.74,93,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.43,93,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.43,93,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.43,93,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,93,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.6,94,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.6,94,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.91,94,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.6,94,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.6,94,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.6,94,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,94,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.77,95,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.77,95,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.08,95,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.77,95,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.77,95,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.77,95,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,95,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.94,96,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.94,96,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.25,96,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.94,96,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.94,96,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.94,96,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,96,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.11,97,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.11,97,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,205,10,123,-16,119,0.55,water,True,Sold 6 water for 192 ashmarks.,gross_margin_chaser,7,6,85,75,dry_cut,0.42,97,completed,Gross-margin chaser,91,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.11,97,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.11,97,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.11,97,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,97,no action,No trade baseline,0,No trade
+reedwatch,2,100,11,6,-23,-8,0.35,grain,True,Sold 1 grain for 8 ashmarks.,guided_grain_delivery,2,1,-20,-25,old_road,0.28,98,completed,Guided grain delivery,-2,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.28,98,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.59,98,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_forecast,7,6,83,78,old_road,0.28,98,completed,Map-constrained forecast,46,water → reedwatch / old_road
+reedwatch,2,203,11,78,32,119,0.35,water,True,Sold 6 water for 192 ashmarks.,map_constrained_gross_margin,7,6,83,78,old_road,0.28,98,completed,Map-constrained gross-margin,46,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.28,98,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,98,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.45,99,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.45,99,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.76,99,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.45,99,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.45,99,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.45,99,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,99,no action,No trade baseline,0,No trade
+reedwatch,2,108,11,6,-23,-8,0.35,grain,False,Sold 2 grain for 16 ashmarks.,guided_grain_delivery,2,2,-12,-17,old_road,0.62,100,completed,Guided grain delivery,6,grain → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,forecast_maximizer,7,7,107,102,toll_road,0.62,100,completed,Forecast maximizer,22,water → reedwatch / toll_road
+reedwatch,3,237,10,123,-16,119,0.55,water,False,Sold 7 water for 224 ashmarks.,gross_margin_chaser,7,7,117,107,dry_cut,0.93,100,completed,Gross-margin chaser,123,water → reedwatch / dry_cut
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_forecast,7,7,115,110,old_road,0.62,100,completed,Map-constrained forecast,78,water → reedwatch / old_road
+reedwatch,2,235,11,78,32,119,0.35,water,False,Sold 7 water for 224 ashmarks.,map_constrained_gross_margin,7,7,115,110,old_road,0.62,100,completed,Map-constrained gross-margin,78,water → reedwatch / old_road
+reedwatch,2,227,11,22,80,119,0.1,water,False,Sold 7 water for 224 ashmarks.,toll_road_only,7,7,107,102,toll_road,0.62,100,completed,Toll-road-only,22,water → reedwatch / toll_road
+,1,120,12,0,0,0,0.0,,False,No trade taken,no_trade,0,0,0,0,,-1.0,100,no action,No trade baseline,0,No trade
