@@ -638,13 +638,17 @@ func _build_shop() -> void:
 	shop_quantity.value_changed.connect(_on_shop_quantity_changed)
 
 	var action_card := PanelContainer.new()
+	action_card.name = "ShopActionCard"
 	action_card.custom_minimum_size = Vector2(360, 0)
 	columns.add_child(action_card)
+	var action_shell := VBoxContainer.new()
+	action_shell.add_theme_constant_override("separation", 10)
+	action_card.add_child(action_shell)
 	var action_scroll := ScrollContainer.new()
 	action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	action_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	action_card.add_child(action_scroll)
+	action_shell.add_child(action_scroll)
 	var actions := VBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_theme_constant_override("separation", 14)
@@ -687,13 +691,13 @@ func _build_shop() -> void:
 	next_step.text = "When the load makes sense, take it to the Departure Desk. Planning a trip does not spend resources."
 	next_step.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	next_step.add_theme_color_override("font_color", Color("#c7b49a"))
-	actions.add_child(next_step)
+	action_shell.add_child(next_step)
 	plan_departure_button = Button.new()
 	plan_departure_button.text = "Plan departure"
 	plan_departure_button.custom_minimum_size = Vector2(0, 48)
 	plan_departure_button.tooltip_text = "Open the regional map, choose a legal corridor, and inspect the full route forecast."
 	plan_departure_button.pressed.connect(_on_plan_departure_pressed)
-	actions.add_child(plan_departure_button)
+	action_shell.add_child(plan_departure_button)
 	var save_button := Button.new()
 	save_button.text = "Save prototype state"
 	save_button.pressed.connect(_on_save_pressed)

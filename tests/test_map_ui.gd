@@ -112,7 +112,7 @@ func _initialize() -> void:
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "water" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")
 	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text == "Plan departure", "shop did not expose the plan-departure handoff")
-	_expect(_has_scroll_ancestor(ui.plan_departure_button), "the long shop action rail should remain reachable through a scroll container")
+	_expect(not _has_scroll_ancestor(ui.plan_departure_button) and ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "Plan departure should remain pinned outside the long action rail and visible without scrolling")
 	var buy_cargo_button: Button = ui.find_child("BuyCargoButton", true, false)
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and buy_cargo_button.get_parent().get_index() < ui.shop_market_preview_label.get_index() and sell_cargo_button.get_parent().get_index() < ui.shop_market_preview_label.get_index(), "primary trade actions should appear before the longer price explanation")
