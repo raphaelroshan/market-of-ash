@@ -153,6 +153,14 @@ jobs:
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi
+      - name: Smoke test exported builds
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          test -s "build/${slug}.exe"
+          test -s build/web/index.html
+          test -s build/web/index.pck
+          test -s build/web/index.wasm
+          "./build/${slug}.exe" --headless --quit-after 2
       - name: Package source snapshot
         run: |
           mkdir -p artifacts
