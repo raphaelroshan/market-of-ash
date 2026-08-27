@@ -1,6 +1,7 @@
 extends SceneTree
 
 const AshWorldState = preload("res://src/core/world_state.gd")
+const MarketContent = preload("res://src/core/market_content.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
 var failures: Array[String] = []
@@ -125,6 +126,44 @@ func _init() -> void:
 	_expect(visited.size() == 5 and tour_world.current_settlement == "hollow_market", "the authored three-route graph should make all five settlements reachable from a fresh save")
 	_expect(tour_world.money >= 0 and tour_world.provisions >= 0, "the empty-cargo five-settlement tour should not soft-lock on route resources")
 
+	var fresh_ashgate := AshWorldState.new(1107)
+	var loaded_exposed_route := AshWorldState.new(1107)
+	_expect_ok(_command(loaded_exposed_route, MarketCommandProcessor.BUY_GOODS, {"good_id": "medicine", "quantity": 2}), "prepare the exposed-route fixture")
+	_expect_ok(_command(loaded_exposed_route, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "toll_road", "destination_id": "brine_cross"}), "trigger the exposed-route fixture")
+	loaded_exposed_route.money = 0
+	loaded_exposed_route.provisions = 0
+	var low_provisions := AshWorldState.new(1107)
+	low_provisions.money = 6
+	low_provisions.provisions = 0
+	var saturated_reedwatch := AshWorldState.new(1107)
+	saturated_reedwatch.current_settlement = "reedwatch"
+	saturated_reedwatch.money = 0
+	saturated_reedwatch.provisions = 0
+	saturated_reedwatch.cargo["grain"] = 2
+	saturated_reedwatch.cargo["weight"] = 2
+	saturated_reedwatch.record_market_delivery("reedwatch", "grain", 6)
+	var active_contract_deadline := AshWorldState.new(1107)
+	_expect_ok(_command(active_contract_deadline, MarketCommandProcessor.ACCEPT_CONTRACT, {"contract_id": "reedwatch_water_relief_01"}), "prepare the near-deadline contract fixture")
+	active_contract_deadline.day = int(active_contract_deadline.active_contract("reedwatch_water_relief_01").get("deadline_day", 3)) - 1
+	var crew_hook := AshWorldState.new(1107)
+	_expect_ok(_command(crew_hook, MarketCommandProcessor.RECRUIT_CREW, {"crew_id": "nara_vey"}), "prepare the crew fixture")
+	_expect_ok(_command(crew_hook, MarketCommandProcessor.ASSIGN_CREW, {"crew_id": "nara_vey"}), "activate the crew fixture")
+	var faction_threshold := AshWorldState.new(1107)
+	faction_threshold.adjust_reputation("wardens", 3)
+	var recovery_fixtures := {
+		"fresh_ashgate": fresh_ashgate,
+		"loaded_exposed_route": loaded_exposed_route,
+		"low_provisions": low_provisions,
+		"saturated_reedwatch": saturated_reedwatch,
+		"active_contract_deadline": active_contract_deadline,
+		"crew_hook": crew_hook,
+		"faction_threshold": faction_threshold,
+	}
+	for fixture_name in recovery_fixtures.keys():
+		var fixture: AshWorldState = recovery_fixtures[fixture_name]
+		var recovery_command := _first_legal_progression(fixture)
+		_expect(not recovery_command.is_empty(), "%s should retain at least one legal recovery or progression command" % fixture_name)
+
 	if failures.is_empty():
 		print("Campaign smoke: PASS")
 	else:
@@ -144,6 +183,39 @@ func _contract_status(world: AshWorldState, contract_id: String) -> String:
 		if String(record.get("id", "")) == contract_id:
 			return String(record.get("status", ""))
 	return ""
+
+func _first_legal_progression(world: AshWorldState) -> String:
+	if not world.pending_event.is_empty():
+		for raw_choice in world.pending_event.get("choices", []):
+			if typeof(raw_choice) != TYPE_DICTIONARY:
+				continue
+			var choice: Dictionary = raw_choice
+			var choice_id := String(choice.get("id", ""))
+			if _trial_command_ok(world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": String(world.pending_event.get("id", "")), "choice_id": choice_id}):
+				return "%s/%s" % [MarketCommandProcessor.RESOLVE_EVENT, choice_id]
+		return ""
+	for good_id in MarketContent.good_ids():
+		if int(world.cargo.get(good_id, 0)) > 0 and _trial_command_ok(world, MarketCommandProcessor.SELL_GOODS, {"good_id": good_id, "quantity": 1}):
+			return "%s/%s" % [MarketCommandProcessor.SELL_GOODS, good_id]
+	for action in MarketContent.settlement_actions_for(world.current_settlement):
+		var action_id := String(action.get("id", ""))
+		if _trial_command_ok(world, MarketCommandProcessor.USE_SETTLEMENT_ACTION, {"action_id": action_id}):
+			return "%s/%s" % [MarketCommandProcessor.USE_SETTLEMENT_ACTION, action_id]
+	for destination_id in MarketContent.destinations_from(world.current_settlement):
+		for route_id in MarketContent.routes_from(world.current_settlement):
+			if MarketContent.route_connects(route_id, world.current_settlement, destination_id) and _trial_command_ok(world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": route_id, "destination_id": destination_id}):
+				return "%s/%s/%s" % [MarketCommandProcessor.DEPART_ROUTE, route_id, destination_id]
+	for good_id in MarketContent.good_ids():
+		if _trial_command_ok(world, MarketCommandProcessor.BUY_GOODS, {"good_id": good_id, "quantity": 1}):
+			return "%s/%s" % [MarketCommandProcessor.BUY_GOODS, good_id]
+	return ""
+
+func _trial_command_ok(source: AshWorldState, command_id: String, inputs: Dictionary) -> bool:
+	var candidate := AshWorldState.new(source.seed)
+	var restored := candidate.load_serialized(source.serialize())
+	if not bool(restored.get("ok", false)):
+		return false
+	return bool(_command(candidate, command_id, inputs).get("ok", false))
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:

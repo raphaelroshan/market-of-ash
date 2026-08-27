@@ -27,7 +27,7 @@ The repository already contains a narrow but real playable spine. A player can l
 Use the following prompt as persistent context in every new agent session.
 
 ```text
-You are the lead implementation agent for Market of Ash, a Godot 4.x premium single-player Windows game. Read, in order: design/design_prompt.md, README.md, AGENTS.md, docs/decision_log.md, docs/alpha_release_roadmap.md, docs/ux/alpha_experience_flow_spec.md, and the smallest relevant source/test files before editing.
+You are the lead implementation agent for Market of Ash, a Godot 4.x premium single-player Windows game. Read, in order: design/design_prompt.md, README.md, AGENTS.md, docs/decision_log.md, docs/implementation_status.md, docs/ux/alpha_experience_flow_spec.md, and the smallest relevant source/test files before editing.
 
 The game is a compact trade-and-travel RPG inspired by the useful rhythm of Frontier: inspect a local market, form a trade plan, deliberately commit to travel, face a legible consequence, arrive in a changed place, and reinvest. Do not copy Frontier assets, layout, or dated interface complexity.
 
@@ -417,7 +417,7 @@ The alpha is not complete because all planned screens exist. It is complete beca
 
 [1]: [Full Agent Design Prompt](../design/design_prompt.md)  
 [2]: [Agent Operating Contract](../AGENTS.md)  
-[3]: [Roadmap to Alpha](alpha_release_roadmap.md)  
+[3]: [Current Implementation Status](implementation_status.md)
 [4]: [Alpha Experience Flow and UX Polish Specification](ux/alpha_experience_flow_spec.md)  
 [5]: [Current Agent Feeding Guide](agent_feeding_guide.md)
 [6]: [Event, Occurrence, and Regional Development Catalogue](events/event_occurrence_catalogue.md)

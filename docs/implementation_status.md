@@ -117,10 +117,8 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 ## Remaining roadmap-to-code mismatches
 
-1. **One charter reference is stale.** `docs/gpt_agent_handoff_roadmap.md` references `docs/alpha_release_roadmap.md`, which is not present. The active roadmap is `docs/gpt_agent_handoff_roadmap.md`.
-2. **Most named campaign fixtures are not present.** A fresh command-only ending path and the first invalid market-memory fixture exist, but the broader saturated/contract/event/faction/crisis/ending fixture matrix remains planned.
-3. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
-4. **Local export templates are not installed.** Windows and Web presets now exist and CI installs matching Godot 4.4.1 templates, but this laptop's temporary editor can only verify preset parsing/project import until templates are installed.
+1. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
+2. **Local export templates are not installed.** Windows and Web presets now exist and CI installs matching Godot 4.4.1 templates, but this laptop's temporary editor can only verify preset parsing/project import until templates are installed.
 
 ## Baseline verification commands
 
