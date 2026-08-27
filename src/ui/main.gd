@@ -58,6 +58,7 @@ var campaign_outlook_label: Label
 var ending_panel: PanelContainer
 var ending_label: Label
 var plan_departure_button: Button
+var departure_travel_actions: HBoxContainer
 var return_to_shop_button: Button
 var commit_departure_button: Button
 var enter_settlement_button: Button
@@ -919,11 +920,11 @@ func _build_ui() -> void:
 	return_to_shop_button.custom_minimum_size = Vector2(0, 44)
 	return_to_shop_button.tooltip_text = "Go back to the settlement market without spending resources."
 	return_to_shop_button.pressed.connect(_on_return_to_shop_pressed)
-	var travel_actions := HBoxContainer.new()
-	travel_actions.add_theme_constant_override("separation", 10)
-	controls_shell.add_child(travel_actions)
+	departure_travel_actions = HBoxContainer.new()
+	departure_travel_actions.add_theme_constant_override("separation", 10)
+	controls_shell.add_child(departure_travel_actions)
 	return_to_shop_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	travel_actions.add_child(return_to_shop_button)
+	departure_travel_actions.add_child(return_to_shop_button)
 
 	commit_departure_button = Button.new()
 	commit_departure_button.text = "Commit departure"
@@ -932,7 +933,7 @@ func _build_ui() -> void:
 	commit_departure_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	commit_departure_button.tooltip_text = "Pay the displayed route cost, consume provisions, and resolve this route's risk."
 	commit_departure_button.pressed.connect(_on_depart_pressed)
-	travel_actions.add_child(commit_departure_button)
+	departure_travel_actions.add_child(commit_departure_button)
 
 	arrival_pending = false
 	enter_settlement_button = Button.new()
@@ -2049,6 +2050,8 @@ func _set_event(text: String) -> void:
 func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
+	if departure_travel_actions:
+		departure_travel_actions.visible = not journey_locked
 	if destination_option:
 		destination_option.disabled = journey_locked
 	if route_option:
