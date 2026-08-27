@@ -127,3 +127,11 @@
 **Reason:** The previous forecast multiplied risk by the entire selected load value while the resolver removed at most one unit. This made forecasts structurally too pessimistic as load size increased and weakened trust in the commitment screen. A shared one-unit model matches actual resolution, stays legible for mixed cargo, and preserves recovery after an unlucky early trip.
 
 **Trade-off:** The most valuable destination unit is predictably exposed, so mixed-cargo players cannot use content-order accidents to shield expensive goods. This is intentionally conservative and simple; later guards, packing services, or crew hooks may change the exposed-unit selection only through an explicit, tested rule.
+
+## ADR-017: Events are controlled trade consequences, not random interruption volume
+
+**Decision:** The project uses a structured catalogue of travel events, settlement occurrences, market pulses, chance meetings, faction pressure, crisis beats, and regional projects. Events are selected from explicit deterministic predicates and bounded by relevance, cooldown, journey/visit cadence, and prior state. Each implemented major entry must change at least one material category: route access, information, cargo/money, faction reputation, crew trust, settlement resilience, or crisis stage. Every entry has visible stakes, a follow-up state where appropriate, and a recoverable early-game failure outcome.
+
+**Reason:** The game needs an inhabited region and Frontier-style consequential travel, but generic random encounters would interrupt commerce, obscure risk, and create content breadth without memory. A small number of authored scenes with state-sensitive variants makes route choice, cargo, people, and regional projects feel connected.
+
+**Trade-off:** Authoring truth tables and tests per scene is more disciplined than prose-first content generation. It prevents opaque procedural content and allows the initial four canonical events to establish a reliable resolver/UI/content seam before additional variants are activated.

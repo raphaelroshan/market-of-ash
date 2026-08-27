@@ -174,7 +174,7 @@ Do not start a slice until the previous slice’s gate passes. If a gate reveals
 | **B1** | Bounded market memory | Make deliveries reshape local opportunity without permanent solved towns. | B0. | Obvious loops saturate/recover deterministically and remain explainable. |
 | **B2** | Settlement visit and opportunity shell | Make each arrival a concise place with trade plus competing services/opportunities. | B1. | Trade stays primary; players can identify one meaningful non-trade opportunity. |
 | **B3** | Contracts | Add buyer/deadline/reward commitments that change route planning. | B2. | Contract and spot trade each win in a clear circumstance. |
-| **B4** | Travel event foundation and Toll Dispute | Make a journey contain one state-sensitive, recoverable choice. | B0–B3. | Player can predict options/costs and explain the outcome’s next-trade consequence. |
+| **B4** | Travel event foundation and Toll Dispute | Make a journey contain one state-sensitive, recoverable choice. | B0–B3. | Player can predict options/costs and explain the outcome’s next-trade consequence. Use the canonical event catalogue and truth-table contract.[6] |
 | **B5** | Remaining three events | Establish minimal event variety without a generic event-engine overbuild. | B4. | All four templates have full outcome/precondition/serialization tests. |
 | **B6** | Crew and services | Make Nara, Jorun, and Tess alter route/trade/event options with costs and personality. | B2–B5. | Each crew member creates one observed choice, not only a hidden modifier. |
 | **B7** | Factions and visible politics | Make Wardens and Free Caravans alter access, information, costs, and contracts. | B3–B6. | Players can describe the commercial consequence of both affiliations. |
@@ -237,7 +237,7 @@ Do not start a slice until the previous slice’s gate passes. If a gate reveals
 
 ### B4 — Travel event foundation and Toll Dispute
 
-**Player behavior:** A route is not a passive timer. On an exposed or regulated journey, the player sees a problem tied to their actual plan, chooses among clear tradeoffs, and reaches an actionable arrival state.
+**Player behavior:** A route is not a passive timer. On an exposed or regulated journey, the player sees a problem tied to their actual plan, chooses among clear tradeoffs, and reaches an actionable arrival state. The implementation starts with `E01 — The Gatekeeper’s Chalk` from the canonical event catalogue; the catalogue also defines its variants, follow-through, writing rules, and complete event-test contract.[6]
 
 | Item | Implementation standard |
 | --- | --- |
@@ -420,3 +420,4 @@ The alpha is not complete because all planned screens exist. It is complete beca
 [3]: [Roadmap to Alpha](alpha_release_roadmap.md)  
 [4]: [Alpha Experience Flow and UX Polish Specification](ux/alpha_experience_flow_spec.md)  
 [5]: [Current Agent Feeding Guide](agent_feeding_guide.md)
+[6]: [Event, Occurrence, and Regional Development Catalogue](events/event_occurrence_catalogue.md)

@@ -164,6 +164,8 @@ Acceptance criteria:
 ```text
 Task: Implement only the Toll Dispute as the first state-sensitive travel event.
 
+Read first: docs/events/event_occurrence_catalogue.md, especially E01 — The Gatekeeper’s Chalk, the event-selection principles, and the event-test contract.
+
 Player behavior: On a relevant journey, a player sees an understandable dispute tied to route/cargo/state, chooses pay or detour, and receives a causal outcome that affects the next market decision.
 
 Scope: Add the narrowest pending-event state and resolve_event command necessary for this one event. Event data can declare stable IDs, display text keys, trigger/choice IDs, and numeric parameters; deterministic core code owns resolution. Do not add a generic script interpreter, all four events, combat, or broad narrative content.
@@ -186,7 +188,7 @@ Task: Add Broken Bridge, Desperate Settlement, and Suspicious Escort one at a ti
 
 Player behavior: This route event makes a distinct preparation choice matter and changes the following trade/route/relationship decision.
 
-For the selected event, create docs/events/[EVENT_ID]_truth_table.md with trigger, setup, prerequisites, choices, deltas, result text, recovery, and tests before implementation. Reuse the Toll Dispute seam; do not refactor the event architecture unless an ADR shows why the current seam cannot express this content.
+For the selected event, read its entry in docs/events/event_occurrence_catalogue.md and create docs/events/[EVENT_ID]_truth_table.md with trigger, setup, prerequisites, choices, deltas, result text, follow-up state, recovery, and tests before implementation. Reuse the Toll Dispute seam; do not refactor the event architecture unless an ADR shows why the current seam cannot express this content.
 
 Acceptance criteria:
 1. At least two options are intelligible and distinct.
