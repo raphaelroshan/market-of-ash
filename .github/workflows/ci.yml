@@ -222,15 +222,16 @@ jobs:
           done
           curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null
           chrome=$(command -v google-chrome || command -v chromium)
-          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --window-size=960,540 --virtual-time-budget=15000 --screenshot=artifacts/web-render/main-menu-960x540.png http://127.0.0.1:8765/index.html
-          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --window-size=1280,720 --virtual-time-budget=15000 --screenshot=artifacts/web-render/main-menu-1280x720.png http://127.0.0.1:8765/index.html
-          "$chrome" --headless=new --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --virtual-time-budget=15000 --dump-dom http://127.0.0.1:8765/index.html > artifacts/web-render/dom.html
+          "$chrome" --headless=new --no-sandbox --no-first-run --disable-background-networking --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --user-data-dir="${RUNNER_TEMP}/chrome-960" --window-size=960,540 --timeout=30000 --run-all-compositor-stages-before-draw --screenshot=artifacts/web-render/main-menu-960x540.png http://127.0.0.1:8765/index.html
+          "$chrome" --headless=new --no-sandbox --no-first-run --disable-background-networking --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --user-data-dir="${RUNNER_TEMP}/chrome-1280" --window-size=1280,720 --timeout=30000 --run-all-compositor-stages-before-draw --screenshot=artifacts/web-render/main-menu-1280x720.png http://127.0.0.1:8765/index.html
+          "$chrome" --headless=new --no-sandbox --no-first-run --disable-background-networking --disable-dev-shm-usage --use-angle=swiftshader --enable-unsafe-swiftshader --user-data-dir="${RUNNER_TEMP}/chrome-dom" --timeout=30000 --dump-dom http://127.0.0.1:8765/index.html > artifacts/web-render/dom.html
           if grep -q 'id="status"' artifacts/web-render/dom.html; then
             echo "Godot loading overlay remained in the rendered DOM"
             exit 1
           fi
           python -c "import struct; from pathlib import Path; expected={'main-menu-960x540.png':(960,540),'main-menu-1280x720.png':(1280,720)}; [(lambda d,p: (_ for _ in ()).throw(AssertionError(f'{p.name}: invalid PNG')) if d[:8] != b'\x89PNG\r\n\x1a\n' else None)(p.read_bytes(), p) for p in [Path('artifacts/web-render')/n for n in expected]]; [(lambda d,p,w,h: (_ for _ in ()).throw(AssertionError(f'{p.name}: expected {(w,h)}, got {struct.unpack(\">II\", d[16:24])}')) if struct.unpack('>II', d[16:24]) != (w,h) or len(d) < 10000 else None)(p.read_bytes(), p, *expected[p.name]) for p in [Path('artifacts/web-render')/n for n in expected]]; print('Web render captures: PASS')"
       - name: Upload rendered browser evidence
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: web-render-${{ github.run_number }}
