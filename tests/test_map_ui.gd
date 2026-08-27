@@ -50,6 +50,16 @@ func _initialize() -> void:
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "pausing from the shop should stop the tree and focus Resume")
 	ui._close_pause()
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "resuming should restore the previous gameplay focus")
+	var valid_test_save_path: String = ui.save_path
+	ui.save_path = "user://market_of_ash_missing_parent_test/campaign.save"
+	ui.autosave_enabled = true
+	ui._open_pause()
+	ui._on_pause_main_menu_pressed()
+	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.shop_layer.visible and not ui.menu_layer.visible, "Return to main menu should keep the live campaign open when its protective autosave fails")
+	_expect(ui.pause_summary_label.text.contains("RETURN BLOCKED") and ui.pause_summary_label.text.contains("could not be saved"), "a blocked return should explain the save failure inside Pause")
+	ui.save_path = valid_test_save_path
+	ui.autosave_enabled = false
+	ui._close_pause()
 	_expect(ui.world.current_settlement == "ashgate" and ui.world.day == 1, "Start Game did not load the authored Ashgate day-one preset")
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "grain" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")

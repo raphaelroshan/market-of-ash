@@ -863,8 +863,11 @@ func _on_pause_load_pressed() -> void:
 	_on_load_pressed()
 
 func _on_pause_main_menu_pressed() -> void:
-	if autosave_enabled:
-		_write_save("AUTOSAVED")
+	if autosave_enabled and not _write_save("AUTOSAVED"):
+		_set_event("Return to main menu blocked because the campaign could not be saved. The current run remains open and unchanged.")
+		_refresh_ui()
+		_refresh_pause_summary("RETURN BLOCKED — The campaign could not be saved. Resume to keep playing or choose another save path before leaving.")
+		return
 	_close_pause()
 	_show_main_menu()
 
