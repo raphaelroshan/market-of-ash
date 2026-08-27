@@ -191,3 +191,11 @@
 **Reason:** The fourth canonical event needs valuable cargo—not a generic random encounter—to create the decision. Reusing the calibrated exposed-unit model keeps the risky refusal legible, while the medicine alternative and information-bearing wait make cargo composition and patience useful without requiring combat, a hidden reputation mutation, or an unfinished crew system.
 
 **Trade-off:** A triggered escort scene replaces the generic route incident, so a policy that always buys escort can reduce realized variance compared with the pre-event forecast. Known information is currently displayed as a lead count and saved for later faction/contact content; it has no hidden mechanical bonus yet.
+
+## ADR-025: Nara improves forecast confidence without changing route odds
+
+**Decision:** Nara Vey is recruited in Ashgate for twenty ashmarks and one visit slot, then assigned or refreshed for one visit slot. Assignment records same-day notes for routes leaving the current settlement. The departure forecast distinguishes unavailable, stale, and `Nara-informed` reports and displays her authored route note alongside the unchanged numeric risk.
+
+**Reason:** The first crew member must visibly change planning while preserving honest uncertainty. A dated report gives Nara a concrete, testable job and a real visit-budget cost without introducing hidden modifiers, morale, a skill tree, or a second travel resolver.
+
+**Trade-off:** Nara does not lower risk and her reports expire as soon as the day advances. This makes assignment a recurring opportunity-cost decision; later crew or relationship work may extend report life or add event choices only through explicit content and commands.

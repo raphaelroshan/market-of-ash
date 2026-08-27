@@ -133,6 +133,16 @@ static func event(event_id: String) -> Dictionary:
 			return event_record.duplicate(true)
 	return {}
 
+static func crew_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("crew", {})
+	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
+
+static func crew_member(crew_id: String) -> Dictionary:
+	for raw_crew in crew_rules().get("records", []):
+		if typeof(raw_crew) == TYPE_DICTIONARY and String(raw_crew.get("id", "")) == crew_id:
+			return raw_crew.duplicate(true)
+	return {}
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -264,6 +274,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
 	_validate_contracts(data.get("contracts", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
+	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_events(data.get("events", {}), errors)
 
 	var routes_data: Variant = data.get("routes", {})
@@ -549,6 +560,41 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 					var risk_delta := float(condition.get("risk_delta", 0.0))
 					if risk_delta < -1.0 or risk_delta > 1.0:
 						errors.append("event %s choice %s route_condition risk_delta must be between -1 and 1" % [event_id, choice_id])
+
+static func _validate_crew(value: Variant, visit_slot_limit: int, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("crew must be an object")
+		return
+	var seen_ids: Dictionary = {}
+	for raw_crew in value.get("records", []):
+		if typeof(raw_crew) != TYPE_DICTIONARY:
+			errors.append("crew records must be objects")
+			continue
+		var crew: Dictionary = raw_crew
+		var crew_id := String(crew.get("id", ""))
+		if crew_id.is_empty() or not crew_id.is_valid_identifier() or crew_id != crew_id.to_lower():
+			errors.append("crew ids must use lower_snake_case")
+		elif seen_ids.has(crew_id):
+			errors.append("duplicate crew id: %s" % crew_id)
+		else:
+			seen_ids[crew_id] = true
+		for field in ["name", "role", "personality", "limitation", "hook"]:
+			if String(crew.get(field, "")).is_empty():
+				errors.append("crew %s must declare %s" % [crew_id, field])
+		if not REQUIRED_SETTLEMENT_IDS.has(String(crew.get("recruit_settlement_id", ""))):
+			errors.append("crew %s recruit_settlement_id must reference a known settlement" % crew_id)
+		if int(crew.get("recruit_cost", -1)) < 0:
+			errors.append("crew %s recruit_cost must be non-negative" % crew_id)
+		for field in ["recruit_service_slots", "assignment_service_slots"]:
+			var slots := int(crew.get(field, 0))
+			if slots <= 0 or slots > visit_slot_limit:
+				errors.append("crew %s %s must be between 1 and the visit limit" % [crew_id, field])
+		if int(crew.get("report_valid_days", -1)) < 0:
+			errors.append("crew %s report_valid_days must be non-negative" % crew_id)
+		var route_notes: Dictionary = crew.get("route_notes", {})
+		for route_id in REQUIRED_ROUTE_IDS:
+			if String(route_notes.get(route_id, "")).is_empty():
+				errors.append("crew %s route_notes must describe %s" % [crew_id, route_id])
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

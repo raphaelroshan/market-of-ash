@@ -138,6 +138,28 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_crew = copy.deepcopy(runtime)
+    invalid_crew["crew"] = json.loads(
+        (ROOT / "tests/fixtures/crew_invalid.json").read_text(encoding="utf-8")
+    )
+    crew_errors = validate(invalid_crew)
+    expected_crew_fragments = (
+        "must use a lower_snake_case id",
+        "must declare name",
+        "recruit_settlement_id must reference a known settlement",
+        "recruit_cost must be a non-negative integer",
+        "recruit_service_slots must be between 1 and the visit limit",
+        "assignment_service_slots must be between 1 and the visit limit",
+        "report_valid_days must be a non-negative integer",
+        "route_notes must describe old_road",
+    )
+    missing_crew = [fragment for fragment in expected_crew_fragments if not any(fragment in error for error in crew_errors)]
+    if missing_crew:
+        print("FAIL: invalid crew fixture did not produce expected errors")
+        for fragment in missing_crew:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

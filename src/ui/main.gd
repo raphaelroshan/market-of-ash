@@ -25,6 +25,7 @@ var opportunity_status_label: Label
 var opportunity_list: VBoxContainer
 var opportunity_buttons: Array[Button] = []
 var contract_buttons: Array[Button] = []
+var crew_buttons: Array[Button] = []
 var active_contract_label: Label
 var plan_departure_button: Button
 var return_to_shop_button: Button
@@ -573,6 +574,20 @@ func _on_resolve_contract_pressed(contract_id: String) -> void:
 	})
 	_show_command_result(result, "Contract")
 
+func _on_recruit_crew_pressed(crew_id: String) -> void:
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RECRUIT_CREW,
+		"inputs": {"crew_id": crew_id},
+	})
+	_show_command_result(result, "Recruitment")
+
+func _on_assign_crew_pressed(crew_id: String) -> void:
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ASSIGN_CREW,
+		"inputs": {"crew_id": crew_id},
+	})
+	_show_command_result(result, "Crew assignment")
+
 func _on_event_choice_pressed(event_id: String, choice_id: String) -> void:
 	var result := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.RESOLVE_EVENT,
@@ -628,6 +643,7 @@ func _refresh_forecasts() -> void:
 	var destination := world.settlement(destination_id)
 	var world_context := world.pricing_context()
 	world_context["cargo"] = world.cargo
+	world_context["route_intelligence"] = world.route_intelligence(route_id)
 	var market_text := _market_preview_text(good_id, quantity, origin, world_context)
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
@@ -672,7 +688,9 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 		cargo_risk_text = "Cargo risk: no carried cargo is currently at risk; expected loss 0 at %d%% risk." % int(round(float(preview.risk) * 100.0))
 	else:
 		cargo_risk_text = "Cargo risk: 1 %s unit at risk, valued at %d at %s; expected loss %d at %d%% risk." % [String(preview.loss_good_id).capitalize(), int(preview.loss_unit_value), destination.get("name", "the destination"), int(preview.expected_loss), int(round(float(preview.risk) * 100.0))]
-	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source)]
+	var intelligence: Dictionary = world_context.get("route_intelligence", {})
+	var intelligence_text := "%s — %s" % [String(intelligence.get("label", "Scout unavailable")), String(intelligence.get("detail", "No current field report."))]
+	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text]
 
 func _on_buy_pressed() -> void:
 	_sync_shop_plan_to_departure()
@@ -771,6 +789,7 @@ func _refresh_opportunities() -> void:
 		child.queue_free()
 	opportunity_buttons.clear()
 	contract_buttons.clear()
+	crew_buttons.clear()
 	var slot_limit := int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
 	opportunity_status_label.text = "%d of %d visit slots remain. Trading never consumes a slot." % [world.visit_slots_remaining, slot_limit]
 	_refresh_contract_summary()
@@ -854,6 +873,44 @@ func _refresh_opportunities() -> void:
 		details.add_theme_color_override("font_color", Color("#aa9a87"))
 		details.text = unavailable_reason if action_button.disabled else "%s Cost: %d ashmarks, %d visit slot, %s. %s" % [String(action.get("description", "")), cost, slots, "no day" if time_cost == 0 else "%d day" % time_cost, String(action.get("tradeoff", ""))]
 		opportunity_list.add_child(details)
+	_append_crew_opportunity()
+
+func _append_crew_opportunity() -> void:
+	var crew := MarketContent.crew_member("nara_vey")
+	if crew.is_empty():
+		return
+	var recruited := world.is_crew_recruited("nara_vey")
+	if not recruited and world.current_settlement != String(crew.get("recruit_settlement_id", "")):
+		return
+	var button := Button.new()
+	var reason := ""
+	if not recruited:
+		button.text = "Recruit Nara Vey — %d ashmarks, %d slot" % [int(crew.get("recruit_cost", 0)), int(crew.get("recruit_service_slots", 1))]
+		if world.money < int(crew.get("recruit_cost", 0)):
+			button.disabled = true
+			reason = "Needs %d ashmarks; you have %d." % [int(crew.get("recruit_cost", 0)), world.money]
+		elif world.visit_slots_remaining < int(crew.get("recruit_service_slots", 1)):
+			button.disabled = true
+			reason = "No visit slots remain."
+		button.pressed.connect(_on_recruit_crew_pressed.bind("nara_vey"))
+	else:
+		button.text = "Refresh Nara's route notes — %d slot" % int(crew.get("assignment_service_slots", 1))
+		if MarketContent.routes_from(world.current_settlement).is_empty():
+			button.disabled = true
+			reason = "No authored routes leave this settlement."
+		elif world.visit_slots_remaining < int(crew.get("assignment_service_slots", 1)):
+			button.disabled = true
+			reason = "No visit slots remain."
+		button.pressed.connect(_on_assign_crew_pressed.bind("nara_vey"))
+	button.tooltip_text = reason if button.disabled else String(crew.get("hook", ""))
+	opportunity_list.add_child(button)
+	crew_buttons.append(button)
+	var details := Label.new()
+	details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	details.add_theme_font_size_override("font_size", 12)
+	details.add_theme_color_override("font_color", Color("#aa9a87"))
+	details.text = reason if button.disabled else "%s — %s %s" % [String(crew.get("role", "Crew")), String(crew.get("personality", "")), String(crew.get("limitation", ""))]
+	opportunity_list.add_child(details)
 
 func _refresh_contract_summary() -> void:
 	if active_contract_label == null or departure_contract_label == null:

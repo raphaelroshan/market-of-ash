@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 8
+const SAVE_VERSION := 9
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -30,6 +30,9 @@ var event_history: Array[Dictionary] = []
 var route_conditions: Dictionary = {}
 var settlement_resilience: Dictionary = {}
 var known_information: Array[String] = []
+var recruited_crew: Array[String] = []
+var assigned_crew: String = ""
+var crew_reports: Dictionary = {}
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -98,6 +101,24 @@ func record_information(information_id: String) -> bool:
 		return false
 	known_information.append(information_id)
 	return true
+
+func is_crew_recruited(crew_id: String) -> bool:
+	return recruited_crew.has(crew_id)
+
+func route_intelligence(route_id: String) -> Dictionary:
+	if route(route_id).is_empty():
+		return {"status": "unavailable", "label": "No route", "detail": "No authored route is selected."}
+	var nara := MarketContent.crew_member("nara_vey")
+	if not is_crew_recruited("nara_vey"):
+		return {"status": "unavailable", "label": "Scout unavailable", "detail": "Recruit Nara Vey in Ashgate for route-specific field notes."}
+	var report_value: Variant = crew_reports.get(route_id, {})
+	if assigned_crew != "nara_vey" or typeof(report_value) != TYPE_DICTIONARY:
+		return {"status": "stale", "label": "Scout report stale", "detail": "Assign Nara during this settlement visit to refresh nearby route notes."}
+	var report: Dictionary = report_value
+	var age := day - int(report.get("observed_day", day))
+	if age > int(nara.get("report_valid_days", 0)):
+		return {"status": "stale", "label": "Scout report stale", "detail": "Nara's note is %d day old; refresh it before relying on current signs." % age}
+	return {"status": "scout_informed", "label": "Nara-informed", "detail": String(report.get("note", "Nara confirms the route remains uncertain.")), "observed_day": int(report.get("observed_day", day))}
 
 func has_settlement(id: String) -> bool:
 	return settlements.has(id)
@@ -316,6 +337,9 @@ func serialize() -> Dictionary:
 		"route_conditions": route_conditions.duplicate(true),
 		"settlement_resilience": settlement_resilience.duplicate(true),
 		"known_information": known_information.duplicate(),
+		"recruited_crew": recruited_crew.duplicate(),
+		"assigned_crew": assigned_crew,
+		"crew_reports": crew_reports.duplicate(true),
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -377,6 +401,15 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		var information_id := String(information_id_value)
 		if not information_id.is_empty() and not known_information.has(information_id):
 			known_information.append(information_id)
+	recruited_crew.clear()
+	for crew_id_value in restored.get("recruited_crew", []):
+		var crew_id := String(crew_id_value)
+		if not MarketContent.crew_member(crew_id).is_empty() and not recruited_crew.has(crew_id):
+			recruited_crew.append(crew_id)
+	assigned_crew = String(restored.get("assigned_crew", ""))
+	if not recruited_crew.has(assigned_crew):
+		assigned_crew = ""
+	crew_reports = restored.get("crew_reports", {}).duplicate(true) if typeof(restored.get("crew_reports", {})) == TYPE_DICTIONARY else {}
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -424,6 +457,11 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 	if source_version < 8:
 		migrated["save_version"] = 8
 		migrated["known_information"] = migrated.get("known_information", [])
+	if source_version < 9:
+		migrated["save_version"] = 9
+		migrated["recruited_crew"] = migrated.get("recruited_crew", [])
+		migrated["assigned_crew"] = migrated.get("assigned_crew", "")
+		migrated["crew_reports"] = migrated.get("crew_reports", {})
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:

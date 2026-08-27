@@ -300,6 +300,41 @@ def validate_events(value: Any, errors: list[str]) -> None:
                     fail(errors, f"event {event_id} choice {choice_id}.route_condition risk_delta must be between -1 and 1")
 
 
+def validate_crew(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
+    rules = as_object(value, "crew", errors)
+    records = rules.get("records")
+    if not isinstance(records, list):
+        fail(errors, "crew.records must be a list")
+        return
+    seen_ids: set[str] = set()
+    for index, raw_crew in enumerate(records):
+        crew = as_object(raw_crew, f"crew.records[{index}]", errors)
+        crew_id = crew.get("id")
+        if not isinstance(crew_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", crew_id):
+            fail(errors, f"crew at index {index} must use a lower_snake_case id")
+            crew_id = f"index_{index}"
+        elif crew_id in seen_ids:
+            fail(errors, f"duplicate crew id: {crew_id}")
+        seen_ids.add(crew_id)
+        for field in ("name", "role", "personality", "limitation", "hook"):
+            if not isinstance(crew.get(field), str) or not crew[field]:
+                fail(errors, f"crew {crew_id} must declare {field}")
+        if crew.get("recruit_settlement_id") not in REQUIRED_SETTLEMENTS:
+            fail(errors, f"crew {crew_id}.recruit_settlement_id must reference a known settlement")
+        if not isinstance(crew.get("recruit_cost"), int) or crew["recruit_cost"] < 0:
+            fail(errors, f"crew {crew_id}.recruit_cost must be a non-negative integer")
+        for field in ("recruit_service_slots", "assignment_service_slots"):
+            value = crew.get(field)
+            if not isinstance(value, int) or not isinstance(visit_slot_limit, int) or not 1 <= value <= visit_slot_limit:
+                fail(errors, f"crew {crew_id}.{field} must be between 1 and the visit limit")
+        if not isinstance(crew.get("report_valid_days"), int) or crew["report_valid_days"] < 0:
+            fail(errors, f"crew {crew_id}.report_valid_days must be a non-negative integer")
+        route_notes = as_object(crew.get("route_notes"), f"crew {crew_id}.route_notes", errors)
+        for route_id in REQUIRED_ROUTES:
+            if not isinstance(route_notes.get(route_id), str) or not route_notes[route_id]:
+                fail(errors, f"crew {crew_id}.route_notes must describe {route_id}")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -322,6 +357,7 @@ def validate(data: Any) -> list[str]:
     settlement_action_rules = root.get("settlement_actions")
     visit_slot_limit = settlement_action_rules.get("visit_slots_per_arrival") if isinstance(settlement_action_rules, dict) else None
     validate_contracts(root.get("contracts"), visit_slot_limit, errors)
+    validate_crew(root.get("crew"), visit_slot_limit, errors)
     validate_events(root.get("events"), errors)
 
     goods = root.get("goods")

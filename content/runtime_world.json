@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.1.0",
+  "content_version": "1.2.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -114,6 +114,28 @@
         "description": "Carry four sealed water units from Ashgate to Reedwatch before the public reserve is rationed.",
         "tradeoff": "A guaranteed premium and visible relief, but four hold spaces and a short deadline are committed.",
         "failure_recovery": "Late cargo remains yours to sell, and the penalty never takes more ashmarks than you hold."
+      }
+    ]
+  },
+  "crew": {
+    "records": [
+      {
+        "id": "nara_vey",
+        "name": "Nara Vey",
+        "role": "Scout",
+        "personality": "Patient with evidence, impatient with official certainty.",
+        "recruit_settlement_id": "ashgate",
+        "recruit_cost": 20,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "limitation": "Nara's report covers routes leaving the current settlement and becomes stale after the day advances.",
+        "hook": "A same-day assignment adds scout confidence and a route-specific warning without removing uncertainty.",
+        "route_notes": {
+          "old_road": "Fresh wheel cuts leave room for improvised blocks and unmarked riders.",
+          "toll_road": "The road surface is sound; queues, chalk marks, and inspections remain the uncertainty.",
+          "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours."
+        }
       }
     ]
   },

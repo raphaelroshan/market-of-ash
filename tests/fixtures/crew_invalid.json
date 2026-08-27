@@ -1,0 +1,18 @@
+{
+  "records": [
+    {
+      "id": "Bad Crew",
+      "name": "",
+      "role": "",
+      "personality": "",
+      "recruit_settlement_id": "missing",
+      "recruit_cost": -1,
+      "recruit_service_slots": 0,
+      "assignment_service_slots": 9,
+      "report_valid_days": -1,
+      "limitation": "",
+      "hook": "",
+      "route_notes": {}
+    }
+  ]
+}

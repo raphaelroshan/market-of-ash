@@ -23,6 +23,7 @@ func _init() -> void:
 	_test_span_at_cinderford_event()
 	_test_last_clean_barrel_event()
 	_test_three_riders_no_banner_event()
+	_test_nara_vey_crew()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -44,7 +45,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.1.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.2.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -55,6 +56,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.event("span_at_cinderford").get("route_ids", []).has("old_road"), "runtime content should expose the Cinderford span event")
 	_expect(MarketContent.event("last_clean_barrel").get("destination_ids", []).has("reedwatch"), "runtime content should expose the shortage settlement event")
 	_expect(MarketContent.event("three_riders_no_banner").get("route_ids", []).has("old_road"), "runtime content should expose the suspicious escort event")
+	_expect(MarketContent.crew_member("nara_vey").get("role", "") == "Scout", "runtime content should expose Nara Vey's stable crew record")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -976,6 +978,52 @@ func _test_three_riders_no_banner_event() -> void:
 	})
 	_expect(JSON.stringify(restored_result) == JSON.stringify(equivalent_result), "saved escort event and solo choice should replay deterministically")
 
+func _test_nara_vey_crew() -> void:
+	var world := AshWorldState.new(1)
+	var baseline_risk := float(world.route("old_road").risk)
+	_expect(world.route_intelligence("old_road").status == "unavailable", "route forecast should identify Nara as unavailable before recruitment")
+	var blocked_assign := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ASSIGN_CREW,
+		"inputs": {"crew_id": "nara_vey"},
+	})
+	_expect(not blocked_assign.ok and world.visit_slots_remaining == 2, "assigning unrecruited Nara should fail without consuming a visit slot")
+	var poor_world := AshWorldState.new(1)
+	poor_world.money = 19
+	var blocked_recruit := MarketCommandProcessor.execute(poor_world, {
+		"id": MarketCommandProcessor.RECRUIT_CREW,
+		"inputs": {"crew_id": "nara_vey"},
+	})
+	_expect(not blocked_recruit.ok and poor_world.money == 19 and poor_world.visit_slots_remaining == 2, "Nara's recruitment cost should block cleanly when unaffordable")
+	var recruit := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RECRUIT_CREW,
+		"inputs": {"crew_id": "nara_vey"},
+	})
+	_expect(recruit.ok and world.is_crew_recruited("nara_vey") and world.money == 100 and world.visit_slots_remaining == 1, "recruiting Nara should charge twenty ashmarks and one visit slot")
+	_expect(world.route_intelligence("old_road").status == "stale", "recruited but unassigned Nara should show a stale route report")
+	var assign := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ASSIGN_CREW,
+		"inputs": {"crew_id": "nara_vey"},
+	})
+	_expect(assign.ok and world.assigned_crew == "nara_vey" and world.visit_slots_remaining == 0, "assigning Nara should consume the remaining visit slot")
+	var informed := world.route_intelligence("old_road")
+	_expect(informed.status == "scout_informed" and String(informed.detail).contains("unmarked riders"), "same-day Nara assignment should expose the authored Old Road warning")
+	_expect(is_equal_approx(float(world.route("old_road").risk), baseline_risk), "Nara's information should not silently guarantee or alter route safety")
+	world.advance_day(1)
+	_expect(world.route_intelligence("old_road").status == "stale", "Nara's report should become stale after the day advances")
+	var restored := AshWorldState.new(0)
+	var restored_result := restored.load_serialized(world.serialize())
+	_expect(restored_result.ok and restored.is_crew_recruited("nara_vey") and restored.assigned_crew == "nara_vey", "save/load should preserve Nara's recruited and assigned state")
+	_expect(restored.route_intelligence("old_road").status == "stale", "save/load should preserve the age of Nara's report")
+	var no_route_world := AshWorldState.new(1)
+	no_route_world.recruited_crew.append("nara_vey")
+	no_route_world.current_settlement = "cinderford"
+	var no_route := MarketCommandProcessor.execute(no_route_world, {
+		"id": MarketCommandProcessor.ASSIGN_CREW,
+		"inputs": {"crew_id": "nara_vey"},
+	})
+	_expect(not no_route.ok and no_route_world.visit_slots_remaining == 2, "Nara assignment should block without mutation where no authored route leaves")
+	_expect(world.route_intelligence("missing").status == "unavailable", "route intelligence should handle a missing route safely")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -1044,7 +1092,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.1.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.2.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -1115,6 +1163,15 @@ func _test_legacy_save_migration() -> void:
 	var migration_v7_result := migrated_v7.load_serialized(version_seven_save)
 	_expect(migration_v7_result.ok and int(migration_v7_result.migrated_from) == 7, "version-seven saves should migrate to the known-information schema")
 	_expect(migrated_v7.known_information.is_empty(), "version-seven migration should initialize empty known information")
+	var version_eight_save := legacy_world.serialize()
+	version_eight_save["save_version"] = 8
+	version_eight_save.erase("recruited_crew")
+	version_eight_save.erase("assigned_crew")
+	version_eight_save.erase("crew_reports")
+	var migrated_v8 := AshWorldState.new(0)
+	var migration_v8_result := migrated_v8.load_serialized(version_eight_save)
+	_expect(migration_v8_result.ok and int(migration_v8_result.migrated_from) == 8, "version-eight saves should migrate to the crew schema")
+	_expect(migrated_v8.recruited_crew.is_empty() and migrated_v8.assigned_crew.is_empty() and migrated_v8.crew_reports.is_empty(), "version-eight migration should initialize empty crew state")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)

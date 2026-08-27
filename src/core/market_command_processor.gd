@@ -15,6 +15,8 @@ const USE_SETTLEMENT_ACTION := "use_settlement_action"
 const ACCEPT_CONTRACT := "accept_contract"
 const RESOLVE_CONTRACT := "resolve_contract"
 const RESOLVE_EVENT := "resolve_event"
+const RECRUIT_CREW := "recruit_crew"
+const ASSIGN_CREW := "assign_crew"
 
 static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 	var command_id := String(command.get("id", ""))
@@ -40,6 +42,10 @@ static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 			result = _resolve_contract(world, inputs)
 		RESOLVE_EVENT:
 			result = _resolve_event(world, inputs)
+		RECRUIT_CREW:
+			result = _recruit_crew(world, inputs)
+		ASSIGN_CREW:
+			result = _assign_crew(world, inputs)
 		_:
 			result = _failure("unknown command: %s" % command_id)
 	return _record(world, command, result)
@@ -68,6 +74,50 @@ static func _buy_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 		"cargo": {good_id: quantity, "weight": int(validation.added_weight)},
 		"unit_price": unit_price,
 	})
+
+static func _recruit_crew(world: AshWorldState, inputs: Dictionary) -> Dictionary:
+	var crew_id := String(inputs.get("crew_id", ""))
+	var crew := MarketContent.crew_member(crew_id)
+	if crew.is_empty():
+		return _failure("unknown crew member")
+	if world.is_crew_recruited(crew_id):
+		return _failure("%s is already recruited" % String(crew.get("name", crew_id)))
+	if world.current_settlement != String(crew.get("recruit_settlement_id", "")):
+		return _failure("%s can only be recruited in %s" % [String(crew.get("name", crew_id)), String(world.settlement(String(crew.get("recruit_settlement_id", ""))).get("name", "their home settlement"))])
+	var cost := int(crew.get("recruit_cost", 0))
+	var slots := int(crew.get("recruit_service_slots", 1))
+	if world.money < cost:
+		return _failure("recruiting %s needs %d ashmarks, but you have %d" % [String(crew.get("name", crew_id)), cost, world.money])
+	if world.visit_slots_remaining < slots:
+		return _failure("no visit slots remain; depart and arrive to recruit %s later" % String(crew.get("name", crew_id)))
+	world.money -= cost
+	world.visit_slots_remaining -= slots
+	world.recruited_crew.append(crew_id)
+	var message := "Recruited %s, %s. %s" % [String(crew.get("name", crew_id)), String(crew.get("role", "crew")), String(crew.get("limitation", ""))]
+	world.log.append(message)
+	return _success(message, {"crew_id": crew_id, "money": -cost, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining})
+
+static func _assign_crew(world: AshWorldState, inputs: Dictionary) -> Dictionary:
+	var crew_id := String(inputs.get("crew_id", ""))
+	var crew := MarketContent.crew_member(crew_id)
+	if crew.is_empty():
+		return _failure("unknown crew member")
+	if not world.is_crew_recruited(crew_id):
+		return _failure("recruit %s before assigning them" % String(crew.get("name", crew_id)))
+	var route_ids := MarketContent.routes_from(world.current_settlement)
+	if route_ids.is_empty():
+		return _failure("no authored routes leave this settlement, so there is nothing for %s to scout" % String(crew.get("name", crew_id)))
+	var slots := int(crew.get("assignment_service_slots", 1))
+	if world.visit_slots_remaining < slots:
+		return _failure("no visit slots remain; depart and arrive to refresh %s's route notes later" % String(crew.get("name", crew_id)))
+	world.visit_slots_remaining -= slots
+	world.assigned_crew = crew_id
+	var route_notes: Dictionary = crew.get("route_notes", {})
+	for route_id in route_ids:
+		world.crew_reports[route_id] = {"crew_id": crew_id, "observed_day": world.day, "note": String(route_notes.get(route_id, "Route signs remain uncertain."))}
+	var message := "Assigned %s. Same-day scout reports are ready for %s." % [String(crew.get("name", crew_id)), ", ".join(route_ids)]
+	world.log.append(message)
+	return _success(message, {"crew_id": crew_id, "assigned": true, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "route_ids": route_ids})
 
 static func _sell_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var good_id := String(inputs.get("good_id", ""))

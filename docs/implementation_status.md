@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B5 are implemented. The first crew proof is next.
+**Roadmap status:** A0–A1 foundations and B0–B5 are implemented. B6 crew work has begun with Nara Vey.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 8 and runtime content version `1.1.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 9 and runtime content version `1.2.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -23,6 +23,7 @@
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
 - High-value Old Road or Dry Cut loads can meet `Three Riders, No Banner`; money, medicine, disclosed one-unit risk, and a time-for-information recovery create distinct responses without combat.
+- Nara Vey can be recruited and assigned through the visit budget; departure forecasts distinguish unavailable, stale, and same-day scout-informed route notes without changing the authored risk.
 
 ## Current command IDs
 
@@ -35,6 +36,8 @@
 | `accept_contract` | `MarketCommandProcessor` | Freezes authored terms after validating origin, free cargo capacity, prior outcome, and visit-slot cost. |
 | `resolve_contract` | `MarketCommandProcessor` | Completes an on-time delivery or applies a bounded late penalty while preserving recoverable spot cargo. |
 | `resolve_event` | `MarketCommandProcessor` | Validates a pending event choice, applies explicit deterministic costs/outcomes and route follow-up, archives the result, and completes arrival or a disclosed return. |
+| `recruit_crew` | `MarketCommandProcessor` | Validates Nara's location, fee, prior recruitment, and visit slot before adding her to the caravan. |
+| `assign_crew` | `MarketCommandProcessor` | Validates recruitment, outgoing routes, and visit budget before writing same-day route reports. |
 
 Successful and failed commands append to `command_history`, bounded to 100 records.
 
@@ -63,6 +66,9 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `route_conditions`
 - `settlement_resilience`
 - `known_information`
+- `recruited_crew`
+- `assigned_crew`
+- `crew_reports`
 - `log`
 - `command_history`
 
@@ -189,6 +195,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The event reuses the calibrated loss basis, blocks unaffordable choices without mutation, and persists information without duplication through save version 8.
 - In the 100-seed opening simulation, both high-value Old Road policies triggered the event 55 times and selected the explicit paid-escort response.
 
+## B6 first-crew result
+
+- Ashgate exposes Nara Vey as a 20-ashmark, one-slot recruit with an explicit scout role, personality, and same-day limitation.
+- Assigning her costs one visit slot and writes reports only for authored routes leaving the current settlement; locations without routes block safely.
+- Forecasts show `Scout unavailable`, `Scout report stale`, or `Nara-informed` and include a route-specific field note. The underlying risk remains unchanged and visible.
+- Save version 9 preserves recruitment, assignment, report text, and report age.
+
 ## Next permitted task
 
-Card B5: implement Nara Vey as the first crew proof, beginning with a visible scout-informed route forecast.
+Continue Card B5/B6 crew breadth one member at a time; Jorun Pale's logistics hook is the next smallest slice.
