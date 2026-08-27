@@ -3,19 +3,19 @@
   "row_count": 500,
   "summary": [
     {
-      "policy": "guided_grain_delivery",
-      "policy_label": "Guided grain delivery",
+      "policy": "guided_water_delivery",
+      "policy_label": "Guided water delivery",
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.35,
-      "mean_forecast_net_profit": -20.0,
-      "mean_realized_cash_profit": -14.8,
-      "mean_realized_economic_profit": -19.8,
-      "median_realized_economic_profit": -17.0,
-      "p10_realized_economic_profit": -25.0,
-      "p90_realized_economic_profit": -17.0,
-      "loss_rate": 1.0,
-      "mean_forecast_error": 0.2,
+      "mean_forecast_net_profit": 14.0,
+      "mean_realized_cash_profit": 18.8,
+      "mean_realized_economic_profit": 13.8,
+      "median_realized_economic_profit": 25.0,
+      "p10_realized_economic_profit": -7.0,
+      "p90_realized_economic_profit": 25.0,
+      "loss_rate": 0.35,
+      "mean_forecast_error": -0.2,
       "mean_quantity": 2.0,
       "mean_provisions_remaining": 11.0
     },
@@ -104,9 +104,9 @@
       "share": 1.0
     },
     {
-      "policy": "guided_grain_delivery",
-      "policy_label": "Guided grain delivery",
-      "choice": "grain \u2192 reedwatch / old_road",
+      "policy": "guided_water_delivery",
+      "policy_label": "Guided water delivery",
+      "choice": "water \u2192 reedwatch / old_road",
       "runs": 100,
       "share": 1.0
     },
@@ -127,12 +127,12 @@
   ],
   "calibration": [
     {
-      "policy": "guided_grain_delivery",
-      "policy_label": "Guided grain delivery",
-      "forecast_net": -20.0,
-      "realized_economic": -19.8,
-      "mean_error": 0.2,
-      "mean_absolute_error": 3.7
+      "policy": "guided_water_delivery",
+      "policy_label": "Guided water delivery",
+      "forecast_net": 14.0,
+      "realized_economic": 13.8,
+      "mean_error": -0.2,
+      "mean_absolute_error": 14.5
     },
     {
       "policy": "forecast_maximizer",

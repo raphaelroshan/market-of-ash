@@ -8,7 +8,7 @@ Use a **one-off, deterministic, read-only simulation** that invokes the same buy
 
 | Policy | Purpose | Rule |
 | --- | --- | --- |
-| Guided grain delivery | Test the authored first-run recommendation | Buy two Grain, travel to Reedwatch through Old Road, then sell remaining Grain. |
+| Guided water delivery | Test the authored first-run recommendation | Buy two Water, travel to Reedwatch through Old Road, then sell remaining Water. |
 | Forecast maximizer | Test the visible route-profit preview as a decision aid | Choose the feasible first trade with the highest displayed expected net profit. |
 | Gross-margin chaser | Identify the consequence of ignoring full journey costs | Choose the feasible first trade with the highest displayed gross trade margin. |
 | Toll-road-only | Test the safe-route premium in isolation | Choose the best displayed net-profit trade while using Toll Road only. |

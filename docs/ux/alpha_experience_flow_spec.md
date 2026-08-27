@@ -58,7 +58,7 @@ Every response should acknowledge cause and effect in the same format: an outcom
 | Element | Purpose | Alpha behavior | Polish requirement |
 | --- | --- | --- | --- |
 | **Start Game / Continue** | Enter a deterministic first-run preset or validate and restore an existing campaign. | Starts Ashgate, day one, 120 ashmarks, 12 provisions, and empty cargo; Continue is separately enabled when a save exists and shows save status. | Add multiple save slots only if playtesting demonstrates a need. |
-| **Quick Playtest card** | Explain the test state and avoid false promises. | States the first-run preset and optional grain learning move. | Shows estimated loop length and what feedback is being tested. |
+| **Quick Playtest card** | Explain the test state and avoid false promises. | States the first-run preset and optional two-water learning move, whose forecast remains positive after disclosed route costs and expected loss. | Shows estimated loop length and what feedback is being tested. |
 | **Settings** | Make comfort and control discoverable before play. | Main Menu exposes large text, reduced motion, and mouse/keyboard/controller guidance. | Add audio, runtime remapping, and persisted accessibility preferences. |
 | **Quit** | Give a conventional, safe exit. | Desktop-only. | Confirms only if unsaved changes exist; never presents an intrusive quit prompt during the first minute. |
 
@@ -149,7 +149,7 @@ The first arrival after a route incident must distinguish planning failure from 
 
 ### 5.1 First-run learning path
 
-The first run is guidance, not a script. The shop highlights the Grain price card, explains the optional 2-grain example, and calls out **Plan Departure** only after the player has inspected or made a trade. The departure desk begins with Reedwatch and Old Road selected, but the player can freely compare Brine Cross/Toll Road or return to change cargo. The guidance completes only when a player has seen a forecast, bought or chosen not to buy, committed a route, and reached an arrival state.
+The first run is guidance, not a script. The shop highlights the Water price card, explains the optional 2-water example, and calls out **Plan Departure** only after the player has inspected or made a trade. The departure desk begins with Reedwatch and Old Road selected, but the player can freely compare Brine Cross/Toll Road or return to change cargo. The guidance completes only when a player has seen a forecast, bought or chosen not to buy, committed a route, and reached an arrival state.
 
 ### 5.2 Returning-player loop
 

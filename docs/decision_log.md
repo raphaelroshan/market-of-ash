@@ -82,7 +82,7 @@
 
 ## ADR-011: Thin main menu and deterministic quick-playtest preset
 
-**Decision:** Launch to a minimal main menu with one `Start Game` action. Starting a game creates a fresh, deterministic Ashgate day-one state with 120 ashmarks, twelve provisions, empty cargo, and the initial Grain-to-Reedwatch/Old Road forecast selected. The market screen exposes one optional, single-use `Test action: Buy 2 grain` control that executes the normal explicit buy command; departure remains the player’s decision.
+**Decision:** Launch to a minimal main menu with one `Start Game` action. Starting a game creates a fresh, deterministic Ashgate day-one state with 120 ashmarks, twelve provisions, empty cargo, and the initial Water-to-Reedwatch/Old Road forecast selected. The market screen exposes one optional, single-use `Test action: Buy 2 water` control that executes the normal explicit buy command; departure remains the player’s decision.
 
 **Reason:** The project needs a frictionless external-playtest entry point that demonstrates the game’s core trade decision without introducing a tutorial contract, scenario system, or parallel simulation path. The preset makes the intended first decision reproducible for observation and regression testing.
 
@@ -90,7 +90,7 @@
 
 ## ADR-012: Optional objective ladder with a player-selected route
 
-**Decision:** Refine the quick playtest with a visible three-step objective: inspect the grain forecast and buy two units, choose a route and reach Reedwatch with grain, then sell the grain. The screen reports completion only after the normal sale command succeeds. The test action remains optional, and the player may choose another cargo, destination, route, or continued trading.
+**Decision:** Refine the quick playtest with a visible three-step objective: inspect the water forecast and buy two units, choose a route and reach Reedwatch with water, then sell the water. The proposed load is included in the route's exposed-cargo calculation even before purchase. The screen reports completion only after the normal sale command succeeds. The test action remains optional, and the player may choose another cargo, destination, route, or continued trading.
 
 **Reason:** The earlier menu established a working entry point but did not make its test purpose, completion condition, or next action sufficiently visible. A compact objective ladder lets a new player recognize the core loop and identify whether the market explanation, forecast, and realized transaction are coherent.
 

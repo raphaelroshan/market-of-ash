@@ -6,7 +6,7 @@ const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
 const PLAYTEST_SEED := 1107
-const PLAYTEST_GOOD := "grain"
+const PLAYTEST_GOOD := "water"
 const PLAYTEST_QUANTITY := 2
 const PLAYTEST_DESTINATION := "reedwatch"
 const PLAYTEST_ROUTE := "old_road"
@@ -69,7 +69,7 @@ var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
 var playtest_status_label: Label
-var playtest_grain_sold := 0
+var playtest_cargo_sold := 0
 var status_label: Label
 var event_label: Label
 var destination_option: OptionButton
@@ -148,7 +148,7 @@ func _build_main_menu() -> void:
 	subtitle.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(subtitle)
 	var preset := Label.new()
-	preset.text = "QUICK PLAYTEST\nAshgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo\nSuggested first move: buy 2 grain, then compare the Old Road to Reedwatch."
+	preset.text = "QUICK PLAYTEST\nAshgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo\nSuggested first move: buy 2 water, then compare the profitable but exposed Old Road to Reedwatch."
 	preset.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	preset.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
@@ -555,7 +555,7 @@ func _build_shop() -> void:
 	sell_button.pressed.connect(_on_sell_pressed)
 	purchase_row.add_child(sell_button)
 	guided_test_button = Button.new()
-	guided_test_button.text = "Optional: Buy 2 grain"
+	guided_test_button.text = "Optional: Buy 2 water"
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	guided_test_button.pressed.connect(_on_guided_test_action)
 	market.add_child(guided_test_button)
@@ -911,7 +911,7 @@ func _on_start_game_pressed() -> void:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = AshWorldState.new(PLAYTEST_SEED)
-	playtest_grain_sold = 0
+	playtest_cargo_sold = 0
 	if map_panel:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
@@ -1172,7 +1172,9 @@ func _refresh_forecasts() -> void:
 	var origin := world.settlement(world.current_settlement)
 	var destination := world.settlement(destination_id)
 	var world_context := world.pricing_context()
-	world_context["cargo"] = world.cargo
+	var forecast_cargo := world.cargo.duplicate(true)
+	forecast_cargo[good_id] = maxi(int(forecast_cargo.get(good_id, 0)), quantity)
+	world_context["cargo"] = forecast_cargo
 	world_context["route_intelligence"] = world.route_intelligence(route_id)
 	var market_text := _market_preview_text(good_id, quantity, origin, world_context)
 	market_preview_label.text = market_text
@@ -1254,7 +1256,7 @@ func _on_sell_pressed() -> void:
 		},
 	})
 	if result.ok and world.current_settlement == PLAYTEST_DESTINATION and good_id == PLAYTEST_GOOD:
-		playtest_grain_sold += quantity
+		playtest_cargo_sold += quantity
 	_show_command_result(result, "Sale")
 
 func _on_depart_pressed() -> void:
@@ -1424,7 +1426,7 @@ func _confirm_reset() -> void:
 	if reset_confirmation_dialog:
 		reset_confirmation_dialog.hide()
 	world = AshWorldState.new(PLAYTEST_SEED)
-	playtest_grain_sold = 0
+	playtest_cargo_sold = 0
 	_populate_destination_options()
 	_populate_route_options()
 	map_panel.world = world
@@ -1456,15 +1458,15 @@ func _on_map_settlement_selected(settlement_id: String) -> void:
 func _refresh_playtest_status() -> void:
 	if playtest_status_label == null:
 		return
-	var grain_held := int(world.cargo.get(PLAYTEST_GOOD, 0))
-	if playtest_grain_sold >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "RUN COMPLETE — You moved grain to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
-	elif world.current_settlement == PLAYTEST_DESTINATION and grain_held >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "STEP 3 OF 3 — You reached Reedwatch with grain. Sell 2 grain to see the delivery result."
-	elif grain_held >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "STEP 2 OF 3 — Grain is loaded. Read the Old Road forecast, compare it with the Toll Road, then choose whether to depart for Reedwatch."
+	var guided_cargo_held := int(world.cargo.get(PLAYTEST_GOOD, 0))
+	if playtest_cargo_sold >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "RUN COMPLETE — You moved water to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
+	elif world.current_settlement == PLAYTEST_DESTINATION and guided_cargo_held >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "STEP 3 OF 3 — You reached Reedwatch with water. Sell 2 water to see the delivery result."
+	elif guided_cargo_held >= PLAYTEST_QUANTITY:
+		playtest_status_label.text = "STEP 2 OF 3 — Water is loaded. Read the Old Road forecast, compare it with the Toll Road, then choose whether to depart for Reedwatch."
 	else:
-		playtest_status_label.text = "STEP 1 OF 3 — Read the Grain market price and route forecast. Buy 2 grain when you are ready; the marked test button simply executes that normal trade."
+		playtest_status_label.text = "STEP 1 OF 3 — Read the Water market price and route forecast. Buy 2 water when you are ready; the marked test button simply executes that normal trade."
 
 func _refresh_opportunities() -> void:
 	if opportunity_list == null or opportunity_status_label == null:

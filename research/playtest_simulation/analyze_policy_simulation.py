@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 
 POLICY_LABELS = {
-    "guided_grain_delivery": "Guided grain delivery",
+    "guided_water_delivery": "Guided water delivery",
     "forecast_maximizer": "Forecast maximizer",
     "gross_margin_chaser": "Gross-margin chaser",
     "toll_road_only": "Toll-road-only",
@@ -20,7 +20,7 @@ POLICY_LABELS = {
 }
 
 POLICY_RULES = {
-    "guided_grain_delivery": "Buys 2 grain; travels Ashgate → Reedwatch via Old Road.",
+    "guided_water_delivery": "Buys 2 water; travels Ashgate → Reedwatch via Old Road.",
     "forecast_maximizer": "Chooses the legal first trade with the highest displayed expected net profit.",
     "gross_margin_chaser": "Chooses the legal first trade with the highest displayed gross margin.",
     "toll_road_only": "Chooses the best displayed net-profit trade while using the legal Toll Road corridor only.",
@@ -33,7 +33,6 @@ EVENT_PROBE_LABELS = {
 }
 
 PRE_B0_CALIBRATION = {
-    "guided_grain_delivery": {"mean_error": 3.2, "mean_absolute_error": 4.6},
     "forecast_maximizer": {"mean_error": 66.8, "mean_absolute_error": 66.8},
     "gross_margin_chaser": {"mean_error": 66.8, "mean_absolute_error": 66.8},
     "toll_road_only": {"mean_error": 8.6, "mean_absolute_error": 14.8},
@@ -261,7 +260,7 @@ def main() -> int:
     forecast_policy = summary.loc[summary["policy"] == "forecast_maximizer"].iloc[0]
     gross_policy = summary.loc[summary["policy"] == "gross_margin_chaser"].iloc[0]
     toll_policy = summary.loc[summary["policy"] == "toll_road_only"].iloc[0]
-    guided_policy = summary.loc[summary["policy"] == "guided_grain_delivery"].iloc[0]
+    guided_policy = summary.loc[summary["policy"] == "guided_water_delivery"].iloc[0]
     forecast_choice = choice_mix[choice_mix["policy"] == "forecast_maximizer"].iloc[0]
     gross_choice = choice_mix[choice_mix["policy"] == "gross_margin_chaser"].iloc[0]
     toll_choice = choice_mix[choice_mix["policy"] == "toll_road_only"].iloc[0]
@@ -330,7 +329,7 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 
 {markdown_table(presentation)}
 
-Under legal paths, the **forecast maximizer** selects **{forecast_choice['choice']}** in every seed and averages **{signed(float(forecast_policy['mean_realized_economic_profit']))}** realized economic profit. The **gross-margin chaser** selects **{gross_choice['choice']}** and averages **{signed(float(gross_policy['mean_realized_economic_profit']))}**. The **Toll-road-only** policy selects **{toll_choice['choice']}** and averages **{signed(float(toll_policy['mean_realized_economic_profit']))}**. The guided Grain delivery remains a mechanically legible but deliberately lower-return teaching run at **{signed(float(guided_policy['mean_realized_economic_profit']))}**.
+Under legal paths, the **forecast maximizer** selects **{forecast_choice['choice']}** in every seed and averages **{signed(float(forecast_policy['mean_realized_economic_profit']))}** realized economic profit. The **gross-margin chaser** selects **{gross_choice['choice']}** and averages **{signed(float(gross_policy['mean_realized_economic_profit']))}**. The **Toll-road-only** policy selects **{toll_choice['choice']}** and averages **{signed(float(toll_policy['mean_realized_economic_profit']))}**. The guided Water delivery remains a smaller, understandable positive-margin teaching run at **{signed(float(guided_policy['mean_realized_economic_profit']))}**.
 
 ![Policy outcome chart](policy_outcomes.png)
 
@@ -382,7 +381,7 @@ The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashm
 | **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Use the repeated-delivery results above to judge whether current pressure/decay values create enough readable rotation before changing balance. |
 | **Forecast/resolution calibration** | Mean forecast error ranges from {signed(float(calibration['mean_error'].min()))} to {signed(float(calibration['mean_error'].max()))} ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
 | **Capacity dominates the first decision** | The forecast policy loads an average of {forecast_policy['mean_quantity']:.1f} units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
-| **Guided delivery is not an economic optimum** | The Grain teaching run averages {signed(float(guided_policy['mean_realized_economic_profit']))} realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |
+| **Guided delivery teaches a positive but non-optimal margin** | The Water teaching run averages {signed(float(guided_policy['mean_realized_economic_profit']))} realized economic profit. | The suggested first action now rewards completing the loop while leaving the larger-load forecast optimum visibly available. | Ask testers whether the smaller safe-to-afford recommendation helps them understand the forecast before they optimize quantity. |
 
 ## Recommended Human-Playtest Prompts
 

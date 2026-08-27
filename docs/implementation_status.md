@@ -14,6 +14,7 @@
 - The scroll-safe Main Menu keeps fresh-start and validated-continue actions above optional accessibility/input settings, and exposes reduced motion, large text, keyboard remapping, and default restoration.
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
+- The optional first-run Water delivery has a positive risk-adjusted forecast, and pre-purchase route forecasts include the proposed load in the same one-exposed-unit risk model used after purchase.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.
 - Saves declare save version 11 and runtime content version `1.15.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.

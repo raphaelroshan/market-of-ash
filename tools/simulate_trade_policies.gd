@@ -11,7 +11,7 @@ const MarketCommandProcessor = preload("res://src/core/market_command_processor.
 const STARTING_MONEY := 120
 const STARTING_PROVISIONS := 12
 const SEED_COUNT := 100
-const POLICIES := ["guided_grain_delivery", "forecast_maximizer", "gross_margin_chaser", "toll_road_only", "no_trade"]
+const POLICIES := ["guided_water_delivery", "forecast_maximizer", "gross_margin_chaser", "toll_road_only", "no_trade"]
 
 func _init() -> void:
 	var rows: Array[Dictionary] = []
@@ -295,8 +295,8 @@ func _market_memory_probe() -> Dictionary:
 	}
 
 func _choose_candidate(world: AshWorldState, policy: String) -> Dictionary:
-	if policy == "guided_grain_delivery":
-		return _candidate_for(world, "grain", 2, "reedwatch", "old_road")
+	if policy == "guided_water_delivery":
+		return _candidate_for(world, "water", 2, "reedwatch", "old_road")
 	var best: Dictionary = {}
 	for good_id in MarketContent.good_ids():
 		var origin := world.settlement(world.current_settlement)
