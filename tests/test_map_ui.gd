@@ -24,12 +24,16 @@ func _initialize() -> void:
 	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
 	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled, "Ashgate should expose one usable local opportunity")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
+	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
 	var action_money_before: int = ui.world.money
 	var action_provisions_before: int = ui.world.provisions
 	ui._on_settlement_action_pressed("ashgate_provision_bundle")
 	_expect(ui.world.money == action_money_before - 6 and ui.world.provisions == action_provisions_before + 4, "local opportunity UI did not execute the command's visible effects")
 	_expect(ui.opportunity_status_label.text.contains("1 of 2 visit slots remain"), "local opportunity UI did not refresh the remaining visit budget")
 	ui._on_start_game_pressed()
+	ui._on_accept_contract_pressed("reedwatch_water_relief_01")
+	_expect(not ui.world.active_contract("reedwatch_water_relief_01").is_empty(), "contract card did not accept the relief contract through the command boundary")
+	_expect(ui.active_contract_label.text.contains("4 water at Reedwatch by Day 3"), "shop did not show the frozen active-contract terms")
 
 	var forecast_before: String = JSON.stringify(ui.world.serialize())
 	ui.shop_quantity.value = 3
@@ -43,7 +47,7 @@ func _initialize() -> void:
 
 	ui._on_guided_test_action()
 	_expect(int(ui.world.cargo.get("grain", 0)) == 2 and int(ui.world.cargo.get("weight", 0)) == 2, "guided test action did not execute the promised grain purchase")
-	_expect(ui.world.command_history.size() == 1, "guided test action did not use the explicit command boundary")
+	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "guided test action did not use the explicit command boundary")
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3"), "grain purchase did not advance the playtest objective")
 
@@ -53,6 +57,7 @@ func _initialize() -> void:
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("Grain x2"), "departure desk did not carry the planned load forward")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
+	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 0/4"), "departure desk did not pin the active contract and cargo shortfall")
 	_expect(ui.route_preview_label.text.contains("1 Grain unit at risk"), "departure desk did not disclose the one-unit cargo risk basis")
 	_expect(ui.route_preview_label.text.contains("Risk source:"), "departure desk did not disclose the authored route-risk source")
 	ui._on_return_to_shop_pressed()
@@ -90,6 +95,8 @@ func _initialize() -> void:
 	_expect(ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "arrival did not refresh the destination visit budget")
 	_expect(ui.opportunity_buttons.size() == 1 and ui.opportunity_buttons[0].disabled, "Reedwatch should show its unavailable opportunity with a disabled control")
 	_expect(ui.opportunity_buttons[0].tooltip_text.contains("relief-contract system"), "disabled Reedwatch opportunity did not explain its dependency")
+	_expect(ui.contract_buttons.size() == 1 and ui.contract_buttons[0].disabled, "partial contract should remain visible but blocked until required cargo is acquired")
+	_expect(ui.contract_buttons[0].tooltip_text.contains("Acquire 4 more water"), "partial contract should explain the exact missing cargo")
 	ui._on_sell_pressed()
 	_expect(ui.playtest_status_label.text.contains("RUN COMPLETE"), "selling delivered grain from the destination shop did not complete the playtest objective")
 	_expect(ui.shop_market_preview_label.text.contains("Market memory: your last 2 grain delivered here softened this price by 8%"), "completed sale did not expose the local delivery-memory explanation")

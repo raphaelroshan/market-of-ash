@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "0.6.0",
+  "content_version": "0.7.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -93,6 +93,27 @@
         "description": "Reserve delivered goods for a protected local supply point.",
         "tradeoff": "Sacrifice immediate margin to strengthen a future market.",
         "unavailable_reason": "The shelter requires the relief-contract system."
+      }
+    ]
+  },
+  "contracts": {
+    "max_history": 20,
+    "records": [
+      {
+        "id": "reedwatch_water_relief_01",
+        "name": "Reedwatch Water Relief",
+        "sponsor": "Reedwatch Wellkeepers",
+        "origin_id": "ashgate",
+        "destination_id": "reedwatch",
+        "good_id": "water",
+        "quantity": 4,
+        "deadline_days": 2,
+        "reward": 150,
+        "failure_penalty": 8,
+        "service_slots": 1,
+        "description": "Carry four sealed water units from Ashgate to Reedwatch before the public reserve is rationed.",
+        "tradeoff": "A guaranteed premium and visible relief, but four hold spaces and a short deadline are committed.",
+        "failure_recovery": "Late cargo remains yours to sell, and the penalty never takes more ashmarks than you hold."
       }
     ]
   },

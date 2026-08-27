@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B2 are implemented. B3's first delivery contract is next.
+**Roadmap status:** A0–A1 foundations and B0–B3 are implemented. B4's first state-sensitive travel event is next.
 
 ## Implemented player-facing spine
 
@@ -13,11 +13,12 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 3 and runtime content version `0.6.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 4 and runtime content version `0.7.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
 - Settlement visits expose a two-slot auxiliary-action budget. Ashgate's live provision service competes with cargo spending; future settlement actions remain visible with dependency reasons.
+- Ashgate offers one fixed-term Reedwatch water-relief contract; accepted terms are pinned during departure and resolve deterministically on arrival.
 
 ## Current command IDs
 
@@ -27,6 +28,8 @@
 | `sell_goods` | `MarketCommandProcessor` | Validates good, quantity, held cargo, and settlement; then mutates money/cargo. |
 | `depart_route` | `MarketCommandProcessor` | Validates destination and canonical route endpoints, charges fee/provisions, advances time, resolves one deterministic incident roll, and moves the caravan. |
 | `use_settlement_action` | `MarketCommandProcessor` | Validates current settlement, availability, money, and visit slots; the first implementation packs Ashgate route provisions. |
+| `accept_contract` | `MarketCommandProcessor` | Freezes authored terms after validating origin, free cargo capacity, prior outcome, and visit-slot cost. |
+| `resolve_contract` | `MarketCommandProcessor` | Completes an on-time delivery or applies a bounded late penalty while preserving recoverable spot cargo. |
 
 Successful and failed commands append to `command_history`, bounded to 100 records.
 
@@ -46,6 +49,8 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `market_pressure`
 - `market_delivery_history`
 - `visit_slots_remaining`
+- `active_contracts`
+- `contract_history`
 - `log`
 - `command_history`
 
@@ -130,6 +135,14 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Brine Cross, Cinderford, Hollow Market, and Reedwatch show one disabled future opportunity each with a specific dependency reason.
 - A third auxiliary action is blocked without changing resources, and save version 3 preserves remaining slots.
 
+## B3 first-contract result
+
+- The Reedwatch Wellkeepers offer a four-water delivery due two days after acceptance for 150 ashmarks.
+- Acceptance consumes one visit slot, freezes terms, and reserves no cargo; spot buying and selling remain available.
+- The Departure Desk pins destination, deadline, reward, held quantity, and free hold space.
+- Route incidents resolve before delivery. A complete load auto-delivers; a partial load remains active with the exact shortfall; late failure costs at most eight ashmarks and leaves cargo sellable.
+- Save version 4 preserves active and resolved contract state.
+
 ## Next permitted task
 
-Card B3: implement one Reedwatch relief delivery contract that changes cargo and route planning while preserving spot trade.
+Card B4a: define and implement the first Toll Dispute event using the canonical event catalogue and a narrow deterministic event seam.

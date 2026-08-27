@@ -12,6 +12,8 @@ const BUY_GOODS := "buy_goods"
 const SELL_GOODS := "sell_goods"
 const DEPART_ROUTE := "depart_route"
 const USE_SETTLEMENT_ACTION := "use_settlement_action"
+const ACCEPT_CONTRACT := "accept_contract"
+const RESOLVE_CONTRACT := "resolve_contract"
 
 static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 	var command_id := String(command.get("id", ""))
@@ -29,6 +31,10 @@ static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 			result = _depart_route(world, inputs)
 		USE_SETTLEMENT_ACTION:
 			result = _use_settlement_action(world, inputs)
+		ACCEPT_CONTRACT:
+			result = _accept_contract(world, inputs)
+		RESOLVE_CONTRACT:
+			result = _resolve_contract(world, inputs)
 		_:
 			result = _failure("unknown command: %s" % command_id)
 	return _record(world, command, result)
@@ -153,7 +159,120 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		else:
 			message = "You arrived at %s by the %s. The route held; the exposed %s arrived intact." % [world.settlement(destination_id).name, world.route(route_id).name, String(loss_basis.loss_good_id)]
 	world.log.append(message)
+	var contract_resolutions := _resolve_arrival_contracts(world)
+	if not contract_resolutions.is_empty():
+		state_delta["contract_resolutions"] = contract_resolutions
+		var resolution_messages: Array[String] = []
+		for resolution in contract_resolutions:
+			resolution_messages.append(String(resolution.get("message", "")))
+		message += " " + " ".join(resolution_messages)
 	return _success(message, state_delta)
+
+static func _accept_contract(world: AshWorldState, inputs: Dictionary) -> Dictionary:
+	var contract_id := String(inputs.get("contract_id", ""))
+	var contract_record := MarketContent.contract(contract_id)
+	if contract_record.is_empty():
+		return _failure("unknown contract")
+	if String(contract_record.get("origin_id", "")) != world.current_settlement:
+		return _failure("%s can only be accepted in %s" % [String(contract_record.get("name", contract_id)), String(world.settlement(String(contract_record.get("origin_id", ""))).get("name", contract_record.get("origin_id", "")))])
+	if not world.active_contract(contract_id).is_empty():
+		return _failure("contract is already active")
+	if world.has_contract_outcome(contract_id):
+		return _failure("contract has already been resolved")
+	var slots_required := int(contract_record.get("service_slots", 1))
+	if world.visit_slots_remaining < slots_required:
+		return _failure("no visit slots remain; depart and arrive at a settlement to refresh them")
+	var good_id := String(contract_record.get("good_id", ""))
+	var quantity := int(contract_record.get("quantity", 0))
+	var required_weight := int(MarketContent.good(good_id).get("weight", 0)) * quantity
+	var free_capacity := world.cargo_capacity - int(world.cargo.get("weight", 0))
+	if free_capacity < required_weight:
+		return _failure("contract requires %d free cargo space, but only %d is available" % [required_weight, free_capacity])
+	var snapshot := contract_record.duplicate(true)
+	snapshot["accepted_day"] = world.day
+	snapshot["deadline_day"] = world.day + int(contract_record.get("deadline_days", 0))
+	snapshot["status"] = "active"
+	world.active_contracts[contract_id] = snapshot
+	world.visit_slots_remaining -= slots_required
+	var message := "Accepted %s. Deliver %d %s to %s by Day %d for %d ashmarks. %d visit slot remains." % [String(snapshot.name), quantity, good_id, String(world.settlement(String(snapshot.destination_id)).name), int(snapshot.deadline_day), int(snapshot.reward), world.visit_slots_remaining]
+	world.log.append(message)
+	return _success(message, {
+		"contract_id": contract_id,
+		"status": "active",
+		"accepted_day": world.day,
+		"deadline_day": int(snapshot.deadline_day),
+		"visit_slots": -slots_required,
+		"visit_slots_remaining": world.visit_slots_remaining,
+	})
+
+static func _resolve_contract(world: AshWorldState, inputs: Dictionary) -> Dictionary:
+	var contract_id := String(inputs.get("contract_id", ""))
+	var snapshot := world.active_contract(contract_id)
+	if snapshot.is_empty():
+		return _failure("contract is not active")
+	if world.day > int(snapshot.get("deadline_day", 0)):
+		var penalty := mini(world.money, int(snapshot.get("failure_penalty", 0)))
+		world.money -= penalty
+		var failed := world.archive_contract(contract_id, "failed", {"penalty_paid": penalty})
+		var failure_message := "%s expired on Day %d. You paid %d ashmarks; the cargo remains yours to trade." % [String(snapshot.name), int(snapshot.deadline_day), penalty]
+		world.log.append(failure_message)
+		return _success(failure_message, {
+			"contract_id": contract_id,
+			"status": "failed",
+			"money": -penalty,
+			"contract": failed,
+		})
+	if world.current_settlement != String(snapshot.get("destination_id", "")):
+		return _failure("deliver this contract to %s by Day %d" % [String(world.settlement(String(snapshot.destination_id)).name), int(snapshot.deadline_day)])
+	var good_id := String(snapshot.get("good_id", ""))
+	var quantity := int(snapshot.get("quantity", 0))
+	var held_quantity := int(world.cargo.get(good_id, 0))
+	if held_quantity < quantity:
+		return _failure("contract needs %d more %s by Day %d" % [quantity - held_quantity, good_id, int(snapshot.deadline_day)])
+	var memory_result := world.record_market_delivery(world.current_settlement, good_id, quantity)
+	if not memory_result.ok:
+		return _failure(String(memory_result.reason))
+	var removed_weight := int(MarketContent.good(good_id).get("weight", 0)) * quantity
+	var reward := int(snapshot.get("reward", 0))
+	world.cargo[good_id] = held_quantity - quantity
+	world.cargo["weight"] = maxi(0, int(world.cargo.get("weight", 0)) - removed_weight)
+	world.money += reward
+	var completed := world.archive_contract(contract_id, "completed", {"reward_paid": reward})
+	var message := "Completed %s: delivered %d %s to %s and received %d ashmarks." % [String(snapshot.name), quantity, good_id, String(world.settlement(world.current_settlement).name), reward]
+	world.log.append(message)
+	return _success(message, {
+		"contract_id": contract_id,
+		"status": "completed",
+		"money": reward,
+		"cargo": {good_id: -quantity, "weight": -removed_weight},
+		"market_memory": memory_result.record,
+		"contract": completed,
+	})
+
+static func _resolve_arrival_contracts(world: AshWorldState) -> Array[Dictionary]:
+	var resolutions: Array[Dictionary] = []
+	var contract_ids: Array = world.active_contracts.keys()
+	contract_ids.sort()
+	for contract_id_value in contract_ids:
+		var contract_id := String(contract_id_value)
+		var snapshot := world.active_contract(contract_id)
+		var should_resolve := world.day > int(snapshot.get("deadline_day", 0))
+		if world.current_settlement == String(snapshot.get("destination_id", "")) and int(world.cargo.get(String(snapshot.get("good_id", "")), 0)) >= int(snapshot.get("quantity", 0)):
+			should_resolve = true
+		if should_resolve:
+			var command := {"id": RESOLVE_CONTRACT, "inputs": {"contract_id": contract_id, "automatic": true}}
+			var result := _resolve_contract(world, command.inputs)
+			world.record_command(command, result)
+			resolutions.append(result)
+		elif world.current_settlement == String(snapshot.get("destination_id", "")):
+			var remaining := int(snapshot.get("quantity", 0)) - int(world.cargo.get(String(snapshot.get("good_id", "")), 0))
+			resolutions.append({
+				"ok": true,
+				"reason": "",
+				"message": "%s remains active: acquire %d more %s by Day %d." % [String(snapshot.name), remaining, String(snapshot.good_id), int(snapshot.deadline_day)],
+				"state_delta": {},
+			})
+	return resolutions
 
 static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var action_id := String(inputs.get("action_id", ""))

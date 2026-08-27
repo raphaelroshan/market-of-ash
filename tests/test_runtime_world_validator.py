@@ -71,6 +71,32 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_contracts = copy.deepcopy(runtime)
+    invalid_contracts["contracts"] = json.loads(
+        (ROOT / "tests/fixtures/contracts_invalid.json").read_text(encoding="utf-8")
+    )
+    contract_errors = validate(invalid_contracts)
+    expected_contract_fragments = (
+        "contracts.max_history must be an integer from 1 through 100",
+        "must use a lower_snake_case id",
+        "must declare name",
+        "origin_id must reference a known settlement",
+        "destination_id must reference a known settlement",
+        "good_id must reference a known good",
+        "quantity must be a positive integer",
+        "failure_penalty must be a non-negative integer",
+    )
+    missing_contracts = [
+        fragment
+        for fragment in expected_contract_fragments
+        if not any(fragment in error for error in contract_errors)
+    ]
+    if missing_contracts:
+        print("FAIL: invalid contract fixture did not produce expected errors")
+        for fragment in missing_contracts:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

@@ -18,6 +18,7 @@ func _init() -> void:
 	_test_command_buy_and_sell()
 	_test_market_memory()
 	_test_settlement_actions()
+	_test_reedwatch_relief_contract()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -39,12 +40,13 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "0.6.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "0.7.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
 	_expect(MarketContent.settlement_action("ashgate_provision_bundle").get("settlement_id", "") == "ashgate", "runtime content should expose the live Ashgate provision action")
 	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 1, "runtime content should expose a Reedwatch opportunity state")
+	_expect(MarketContent.contract("reedwatch_water_relief_01").get("destination_id", "") == "reedwatch", "runtime content should expose the first relief contract")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -340,6 +342,98 @@ func _test_settlement_actions() -> void:
 	})
 	_expect(not unaffordable.ok and poor_world.visit_slots_remaining == 2 and poor_world.provisions == 12, "an unaffordable opportunity should not mutate resources or visit slots")
 
+func _test_reedwatch_relief_contract() -> void:
+	var world := AshWorldState.new(1)
+	var accept := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	_expect(accept.ok, "Reedwatch relief contract should be accepted at Ashgate")
+	var snapshot := world.active_contract("reedwatch_water_relief_01")
+	_expect(int(snapshot.accepted_day) == 1 and int(snapshot.deadline_day) == 3, "accepted contract should freeze its acceptance day and deadline")
+	_expect(int(snapshot.quantity) == 4 and int(snapshot.reward) == 150, "accepted contract should snapshot quantity and reward")
+	_expect(world.visit_slots_remaining == 1 and int(world.cargo.get("water", 0)) == 0, "acceptance should consume one visit slot without creating cargo")
+	var duplicate_accept := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	_expect(not duplicate_accept.ok, "an active contract should not be accepted twice")
+	var buy := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": "water", "quantity": 4},
+	})
+	_expect(buy.ok, "contract cargo should be bought through normal spot trade")
+	var depart := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(depart.ok and depart.message.contains("Completed Reedwatch Water Relief"), "eligible contract should complete automatically in the arrival result")
+	_expect(world.active_contract("reedwatch_water_relief_01").is_empty(), "completed contract should leave the active set")
+	_expect(world.contract_history.size() == 1 and world.contract_history.back().status == "completed", "completed contract should be archived once")
+	_expect(world.command_history[-2].id == MarketCommandProcessor.RESOLVE_CONTRACT, "automatic arrival completion should be logged through the contract command boundary")
+	_expect(int(world.cargo.get("water", 0)) == 0 and world.money == 206, "contract completion should consume four water and pay the frozen reward")
+	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.16), "contract delivery should update local market memory")
+	var duplicate_completion := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RESOLVE_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	_expect(not duplicate_completion.ok, "a completed contract should not resolve twice")
+
+	var partial_world := AshWorldState.new(1)
+	MarketCommandProcessor.execute(partial_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	MarketCommandProcessor.execute(partial_world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": "water", "quantity": 3},
+	})
+	var partial_arrival := MarketCommandProcessor.execute(partial_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(partial_arrival.ok and partial_arrival.message.contains("acquire 1 more water"), "partial on-time delivery should stay active with a concrete recovery instruction")
+	_expect(not partial_world.active_contract("reedwatch_water_relief_01").is_empty(), "partial delivery should not consume or fail the contract")
+
+	var capacity_world := AshWorldState.new(1)
+	capacity_world.cargo = {"grain": 9, "weight": 9}
+	var capacity_block := MarketCommandProcessor.execute(capacity_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	_expect(not capacity_block.ok and capacity_block.reason.contains("4 free cargo space"), "contract acceptance should disclose insufficient cargo capacity")
+	_expect(capacity_world.visit_slots_remaining == 2, "blocked contract acceptance should not consume a visit slot")
+
+	var late_world := AshWorldState.new(1)
+	MarketCommandProcessor.execute(late_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	late_world.cargo = {"water": 4, "weight": 4}
+	late_world.advance_day(3)
+	var late_money := late_world.money
+	var late := MarketCommandProcessor.execute(late_world, {
+		"id": MarketCommandProcessor.RESOLVE_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	_expect(late.ok and late.state_delta.status == "failed", "late contract resolution should produce one deterministic failure outcome")
+	_expect(late_world.money == late_money - 8 and int(late_world.cargo.get("water", 0)) == 4, "late failure should charge the bounded penalty while preserving cargo for recovery trade")
+	_expect(late_world.contract_history.back().status == "failed", "failed contract should be archived once")
+	var duplicate_failure := MarketCommandProcessor.execute(late_world, {
+		"id": MarketCommandProcessor.RESOLVE_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	_expect(not duplicate_failure.ok and late_world.contract_history.size() == 1, "a failed contract should not resolve or archive twice")
+
+	var saved_world := AshWorldState.new(1)
+	MarketCommandProcessor.execute(saved_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	var restored := AshWorldState.new(0)
+	var restore_result := restored.load_serialized(saved_world.serialize())
+	_expect(restore_result.ok and restored.active_contract("reedwatch_water_relief_01") == saved_world.active_contract("reedwatch_water_relief_01"), "save/load should preserve frozen active-contract terms")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -408,7 +502,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "0.6.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "0.7.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -432,7 +526,7 @@ func _test_legacy_save_migration() -> void:
 	var migrated_v1 := AshWorldState.new(0)
 	var migration_v1_result := migrated_v1.load_serialized(version_one_save)
 	_expect(migration_v1_result.ok and int(migration_v1_result.migrated_from) == 1, "version-one saves should migrate to the market-memory schema")
-	_expect(migrated_v1.serialize().save_version == 3, "version-one migration should produce the current save version")
+	_expect(migrated_v1.serialize().save_version == AshWorldState.SAVE_VERSION, "version-one migration should produce the current save version")
 	var version_two_save := legacy_world.serialize()
 	version_two_save["save_version"] = 2
 	version_two_save.erase("visit_slots_remaining")
@@ -440,6 +534,14 @@ func _test_legacy_save_migration() -> void:
 	var migration_v2_result := migrated_v2.load_serialized(version_two_save)
 	_expect(migration_v2_result.ok and int(migration_v2_result.migrated_from) == 2, "version-two saves should migrate to the visit-budget schema")
 	_expect(migrated_v2.visit_slots_remaining == 2, "version-two migration should initialize the visit budget")
+	var version_three_save := legacy_world.serialize()
+	version_three_save["save_version"] = 3
+	version_three_save.erase("active_contracts")
+	version_three_save.erase("contract_history")
+	var migrated_v3 := AshWorldState.new(0)
+	var migration_v3_result := migrated_v3.load_serialized(version_three_save)
+	_expect(migration_v3_result.ok and int(migration_v3_result.migrated_from) == 3, "version-three saves should migrate to the contract schema")
+	_expect(migrated_v3.active_contracts.is_empty() and migrated_v3.contract_history.is_empty(), "version-three migration should initialize empty contract state")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)

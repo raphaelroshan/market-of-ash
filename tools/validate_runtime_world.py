@@ -134,6 +134,48 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
             fail(errors, f"unavailable settlement action {action_id} must declare unavailable_reason")
 
 
+def validate_contracts(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
+    rules = as_object(value, "contracts", errors)
+    history_limit = rules.get("max_history")
+    if not isinstance(history_limit, int) or not 1 <= history_limit <= 100:
+        fail(errors, "contracts.max_history must be an integer from 1 through 100")
+    records = rules.get("records")
+    if not isinstance(records, list):
+        fail(errors, "contracts.records must be a list")
+        return
+    seen_ids: set[str] = set()
+    for index, raw_contract in enumerate(records):
+        contract = as_object(raw_contract, f"contracts.records[{index}]", errors)
+        contract_id = contract.get("id")
+        if not isinstance(contract_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", contract_id):
+            fail(errors, f"contract at index {index} must use a lower_snake_case id")
+            contract_id = f"index_{index}"
+        elif contract_id in seen_ids:
+            fail(errors, f"duplicate contract id: {contract_id}")
+        seen_ids.add(contract_id)
+        for field in ("name", "sponsor", "description", "tradeoff", "failure_recovery"):
+            if not isinstance(contract.get(field), str) or not contract[field]:
+                fail(errors, f"contract {contract_id} must declare {field}")
+        for field in ("origin_id", "destination_id"):
+            if contract.get(field) not in REQUIRED_SETTLEMENTS:
+                fail(errors, f"contract {contract_id}.{field} must reference a known settlement")
+        if contract.get("origin_id") == contract.get("destination_id"):
+            fail(errors, f"contract {contract_id} origin and destination must differ")
+        if contract.get("good_id") not in REQUIRED_GOODS:
+            fail(errors, f"contract {contract_id}.good_id must reference a known good")
+        for field in ("quantity", "deadline_days", "reward", "service_slots"):
+            if not isinstance(contract.get(field), int) or contract[field] <= 0:
+                fail(errors, f"contract {contract_id}.{field} must be a positive integer")
+        if (
+            isinstance(contract.get("service_slots"), int)
+            and isinstance(visit_slot_limit, int)
+            and contract["service_slots"] > visit_slot_limit
+        ):
+            fail(errors, f"contract {contract_id}.service_slots must not exceed the visit limit")
+        if not isinstance(contract.get("failure_penalty"), int) or contract["failure_penalty"] < 0:
+            fail(errors, f"contract {contract_id}.failure_penalty must be a non-negative integer")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -153,6 +195,9 @@ def validate(data: Any) -> list[str]:
 
     validate_market_memory(root.get("market_memory"), errors)
     validate_settlement_actions(root.get("settlement_actions"), errors)
+    settlement_action_rules = root.get("settlement_actions")
+    visit_slot_limit = settlement_action_rules.get("visit_slots_per_arrival") if isinstance(settlement_action_rules, dict) else None
+    validate_contracts(root.get("contracts"), visit_slot_limit, errors)
 
     goods = root.get("goods")
     if not isinstance(goods, list):

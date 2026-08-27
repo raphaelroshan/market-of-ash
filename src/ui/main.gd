@@ -24,11 +24,14 @@ var shop_cargo_label: Label
 var opportunity_status_label: Label
 var opportunity_list: VBoxContainer
 var opportunity_buttons: Array[Button] = []
+var contract_buttons: Array[Button] = []
+var active_contract_label: Label
 var plan_departure_button: Button
 var return_to_shop_button: Button
 var commit_departure_button: Button
 var enter_settlement_button: Button
 var departure_load_label: Label
+var departure_contract_label: Label
 var departure_status_label: Label
 var arrival_pending := false
 var guided_test_button: Button
@@ -222,6 +225,10 @@ func _build_shop() -> void:
 	opportunity_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	opportunity_status_label.add_theme_color_override("font_color", Color("#c7b49a"))
 	actions.add_child(opportunity_status_label)
+	active_contract_label = Label.new()
+	active_contract_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	active_contract_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	actions.add_child(active_contract_label)
 	opportunity_list = VBoxContainer.new()
 	opportunity_list.add_theme_constant_override("separation", 8)
 	actions.add_child(opportunity_list)
@@ -357,6 +364,10 @@ func _build_ui() -> void:
 	departure_load_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_load_label.add_theme_color_override("font_color", Color("#f4e6c7"))
 	controls.add_child(departure_load_label)
+	departure_contract_label = Label.new()
+	departure_contract_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	departure_contract_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	controls.add_child(departure_contract_label)
 
 	market_preview_label = _forecast_label()
 	market_preview_label.visible = false
@@ -519,6 +530,20 @@ func _on_settlement_action_pressed(action_id: String) -> void:
 		"inputs": {"action_id": action_id},
 	})
 	_show_command_result(result, "Opportunity")
+
+func _on_accept_contract_pressed(contract_id: String) -> void:
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": contract_id},
+	})
+	_show_command_result(result, "Contract")
+
+func _on_resolve_contract_pressed(contract_id: String) -> void:
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RESOLVE_CONTRACT,
+		"inputs": {"contract_id": contract_id},
+	})
+	_show_command_result(result, "Contract")
 
 func _on_shop_plan_changed(_index: int) -> void:
 	_sync_shop_plan_to_departure()
@@ -705,8 +730,62 @@ func _refresh_opportunities() -> void:
 		opportunity_list.remove_child(child)
 		child.queue_free()
 	opportunity_buttons.clear()
+	contract_buttons.clear()
 	var slot_limit := int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
 	opportunity_status_label.text = "%d of %d visit slots remain. Trading never consumes a slot." % [world.visit_slots_remaining, slot_limit]
+	_refresh_contract_summary()
+	for contract_record in MarketContent.contracts_from(world.current_settlement):
+		var contract_id := String(contract_record.get("id", ""))
+		var active := world.active_contract(contract_id)
+		var contract_button := Button.new()
+		contract_button.text = "Accept %s" % String(contract_record.get("name", "Contract"))
+		var contract_reason := ""
+		if not active.is_empty():
+			contract_button.disabled = true
+			contract_button.text = "%s — active" % String(contract_record.get("name", "Contract"))
+			contract_reason = "Already accepted; see the pinned contract summary."
+		elif world.has_contract_outcome(contract_id):
+			contract_button.disabled = true
+			contract_button.text = "%s — resolved" % String(contract_record.get("name", "Contract"))
+			contract_reason = "This one-time alpha contract has already been resolved."
+		elif world.visit_slots_remaining < int(contract_record.get("service_slots", 1)):
+			contract_button.disabled = true
+			contract_reason = "No visit slots remain. Depart and arrive at a settlement to refresh them."
+		else:
+			var good := MarketContent.good(String(contract_record.get("good_id", "")))
+			var required_weight := int(good.get("weight", 0)) * int(contract_record.get("quantity", 0))
+			var free_capacity := world.cargo_capacity - int(world.cargo.get("weight", 0))
+			if free_capacity < required_weight:
+				contract_button.disabled = true
+				contract_reason = "Needs %d free cargo space; only %d is available." % [required_weight, free_capacity]
+		contract_button.tooltip_text = contract_reason if contract_button.disabled else String(contract_record.get("tradeoff", ""))
+		contract_button.pressed.connect(_on_accept_contract_pressed.bind(contract_id))
+		opportunity_list.add_child(contract_button)
+		contract_buttons.append(contract_button)
+		var contract_details := Label.new()
+		contract_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		contract_details.add_theme_font_size_override("font_size", 12)
+		contract_details.add_theme_color_override("font_color", Color("#aa9a87"))
+		contract_details.text = contract_reason if contract_button.disabled else "%s Sponsor: %s. Deliver %d %s to %s within %d days for %d ashmarks. Failure: %d ashmarks. %s" % [String(contract_record.get("description", "")), String(contract_record.get("sponsor", "")), int(contract_record.get("quantity", 0)), String(contract_record.get("good_id", "")), String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination")), int(contract_record.get("deadline_days", 0)), int(contract_record.get("reward", 0)), int(contract_record.get("failure_penalty", 0)), String(contract_record.get("failure_recovery", ""))]
+		opportunity_list.add_child(contract_details)
+	var active_ids: Array = world.active_contracts.keys()
+	active_ids.sort()
+	for active_id_value in active_ids:
+		var active_id := String(active_id_value)
+		var active := world.active_contract(active_id)
+		if world.current_settlement != String(active.get("destination_id", "")):
+			continue
+		var resolve_button := Button.new()
+		var remaining := maxi(0, int(active.get("quantity", 0)) - int(world.cargo.get(String(active.get("good_id", "")), 0)))
+		resolve_button.text = "Deliver %s" % String(active.get("name", "contract"))
+		if world.day <= int(active.get("deadline_day", 0)) and remaining > 0:
+			resolve_button.disabled = true
+			resolve_button.tooltip_text = "Acquire %d more %s by Day %d." % [remaining, String(active.get("good_id", "")), int(active.get("deadline_day", 0))]
+		else:
+			resolve_button.tooltip_text = "Resolve the contract using the currently carried cargo and deadline."
+		resolve_button.pressed.connect(_on_resolve_contract_pressed.bind(active_id))
+		opportunity_list.add_child(resolve_button)
+		contract_buttons.append(resolve_button)
 	var actions := MarketContent.settlement_actions_for(world.current_settlement)
 	for action in actions:
 		var action_button := Button.new()
@@ -735,6 +814,25 @@ func _refresh_opportunities() -> void:
 		details.add_theme_color_override("font_color", Color("#aa9a87"))
 		details.text = unavailable_reason if action_button.disabled else "%s Cost: %d ashmarks, %d visit slot, %s. %s" % [String(action.get("description", "")), cost, slots, "no day" if time_cost == 0 else "%d day" % time_cost, String(action.get("tradeoff", ""))]
 		opportunity_list.add_child(details)
+
+func _refresh_contract_summary() -> void:
+	if active_contract_label == null or departure_contract_label == null:
+		return
+	var contract_ids: Array = world.active_contracts.keys()
+	contract_ids.sort()
+	if contract_ids.is_empty():
+		active_contract_label.text = "ACTIVE CONTRACT — none. Spot trade remains unrestricted."
+		departure_contract_label.text = "ACTIVE CONTRACT — none."
+		return
+	var contract_record := world.active_contract(String(contract_ids[0]))
+	var good_id := String(contract_record.get("good_id", ""))
+	var quantity := int(contract_record.get("quantity", 0))
+	var held := int(world.cargo.get(good_id, 0))
+	var free_capacity := world.cargo_capacity - int(world.cargo.get("weight", 0))
+	var destination_name := String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination"))
+	var summary := "%s — %s wants %d %s at %s by Day %d for %d ashmarks. Held %d/%d; free hold %d." % [String(contract_record.get("name", "Contract")), String(contract_record.get("sponsor", "Sponsor")), quantity, good_id, destination_name, int(contract_record.get("deadline_day", 0)), int(contract_record.get("reward", 0)), held, quantity, free_capacity]
+	active_contract_label.text = "ACTIVE CONTRACT\n" + summary
+	departure_contract_label.text = "CONTRACT PIN\n" + summary
 
 func _set_event(text: String) -> void:
 	event_label.text = text

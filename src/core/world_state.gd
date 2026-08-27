@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 3
+const SAVE_VERSION := 4
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -21,6 +21,8 @@ var crisis_modifiers: Dictionary = {}
 var market_pressure: Dictionary = {}
 var market_delivery_history: Array[Dictionary] = []
 var visit_slots_remaining: int = 2
+var active_contracts: Dictionary = {}
+var contract_history: Array[Dictionary] = []
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -78,6 +80,33 @@ func latest_market_delivery(settlement_id: String, good_id: String) -> Dictionar
 
 func reset_visit_slots() -> void:
 	visit_slots_remaining = int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
+
+func active_contract(contract_id: String) -> Dictionary:
+	var value: Variant = active_contracts.get(contract_id, {})
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+	return value.duplicate(true)
+
+func has_contract_outcome(contract_id: String) -> bool:
+	for record in contract_history:
+		if String(record.get("id", "")) == contract_id:
+			return true
+	return false
+
+func archive_contract(contract_id: String, status: String, extra: Dictionary = {}) -> Dictionary:
+	var snapshot := active_contract(contract_id)
+	if snapshot.is_empty():
+		return {}
+	active_contracts.erase(contract_id)
+	snapshot["status"] = status
+	snapshot["resolved_day"] = day
+	for key in extra.keys():
+		snapshot[key] = extra[key]
+	contract_history.append(snapshot)
+	var history_limit := int(MarketContent.contract_rules().get("max_history", 1))
+	while contract_history.size() > history_limit:
+		contract_history.pop_front()
+	return snapshot.duplicate(true)
 
 func record_market_delivery(settlement_id: String, good_id: String, quantity: int) -> Dictionary:
 	if not has_settlement(settlement_id):
@@ -203,6 +232,8 @@ func serialize() -> Dictionary:
 		"market_pressure": market_pressure.duplicate(true),
 		"market_delivery_history": market_delivery_history.duplicate(true),
 		"visit_slots_remaining": visit_slots_remaining,
+		"active_contracts": active_contracts.duplicate(true),
+		"contract_history": contract_history.duplicate(true),
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -237,6 +268,13 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		0,
 		int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2)),
 	)
+	active_contracts = _sanitize_active_contracts(restored.get("active_contracts", {}))
+	contract_history.clear()
+	var saved_contract_history: Array = restored.get("contract_history", [])
+	var contract_history_limit := int(MarketContent.contract_rules().get("max_history", 1))
+	for raw_contract in saved_contract_history.slice(maxi(0, saved_contract_history.size() - contract_history_limit)):
+		if typeof(raw_contract) == TYPE_DICTIONARY and not String(raw_contract.get("id", "")).is_empty():
+			contract_history.append(raw_contract.duplicate(true))
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -265,7 +303,30 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 	if source_version < 3:
 		migrated["save_version"] = 3
 		migrated["visit_slots_remaining"] = int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
+	if source_version < 4:
+		migrated["save_version"] = 4
+		migrated["active_contracts"] = migrated.get("active_contracts", {})
+		migrated["contract_history"] = migrated.get("contract_history", [])
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
+
+func _sanitize_active_contracts(value: Variant) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+	var sanitized: Dictionary = {}
+	var records: Dictionary = value
+	for contract_id in records.keys():
+		var raw_snapshot: Variant = records.get(contract_id, {})
+		if typeof(raw_snapshot) != TYPE_DICTIONARY:
+			continue
+		var snapshot: Dictionary = raw_snapshot
+		var normalized_id := String(snapshot.get("id", contract_id))
+		if normalized_id.is_empty():
+			continue
+		snapshot = snapshot.duplicate(true)
+		snapshot["id"] = normalized_id
+		snapshot["status"] = "active"
+		sanitized[normalized_id] = snapshot
+	return sanitized
 
 func _sanitize_market_pressure(value: Variant) -> Dictionary:
 	if typeof(value) != TYPE_DICTIONARY:

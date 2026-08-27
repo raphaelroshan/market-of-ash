@@ -151,3 +151,11 @@
 **Reason:** Settlement visits need a small opportunity-cost layer without turning trade into a menu tax. Two slots make optional preparation compete for attention while preserving immediate commerce and a quick departure path. One explicit live action proves the content, command, UI, save, and focus seams before broader service implementation.
 
 **Trade-off:** The first implementation is intentionally asymmetric: Ashgate has one usable logistics service while other settlements preview disabled future opportunities. This creates honest scaffolding without pretending unfinished systems are interactive.
+
+## ADR-020: Accepted contracts freeze terms and resolve through the command boundary
+
+**Decision:** The first delivery contract is an authored Ashgate-to-Reedwatch water relief commitment. Acceptance copies its economic terms into serializable active state and consumes one visit slot without creating cargo. Arrival attempts deterministic resolution after route incidents: sufficient on-time cargo completes the contract, partial cargo remains actionable, and overdue contracts fail with a bounded cash penalty while leaving cargo available for spot trade.
+
+**Reason:** A contract should change cargo and route planning without becoming a generic quest engine or invalidating normal market trade. Frozen terms protect active commitments from content changes, while command-driven completion and failure make every mutation testable and replayable.
+
+**Trade-off:** The alpha exposes one fixed contract and one active-contract summary rather than a broad contract board. Automatic arrival resolution is convenient, but it means route incidents are resolved before delivery and can force a visible local recovery purchase.

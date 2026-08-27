@@ -90,6 +90,33 @@ static func settlement_actions_for(settlement_id: String) -> Array[Dictionary]:
 			matches.append(action.duplicate(true))
 	return matches
 
+static func contract_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("contracts", {})
+	if typeof(rules) != TYPE_DICTIONARY:
+		return {}
+	return rules.duplicate(true)
+
+static func contract(contract_id: String) -> Dictionary:
+	var records: Array = contract_rules().get("records", [])
+	for raw_contract in records:
+		if typeof(raw_contract) != TYPE_DICTIONARY:
+			continue
+		var contract_record: Dictionary = raw_contract
+		if String(contract_record.get("id", "")) == contract_id:
+			return contract_record.duplicate(true)
+	return {}
+
+static func contracts_from(settlement_id: String) -> Array[Dictionary]:
+	var matches: Array[Dictionary] = []
+	var records: Array = contract_rules().get("records", [])
+	for raw_contract in records:
+		if typeof(raw_contract) != TYPE_DICTIONARY:
+			continue
+		var contract_record: Dictionary = raw_contract
+		if String(contract_record.get("origin_id", "")) == settlement_id:
+			matches.append(contract_record.duplicate(true))
+	return matches
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -219,6 +246,8 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 				errors.append("settlement %s must have a positive faction_price_modifier" % settlement_id)
 
 	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
+	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
+	_validate_contracts(data.get("contracts", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 
 	var routes_data: Variant = data.get("routes", {})
 	if typeof(routes_data) != TYPE_DICTIONARY:
@@ -336,6 +365,49 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 			errors.append("settlement action ashgate_provision_bundle must add provisions")
 		if not bool(action.get("available", false)) and String(action.get("unavailable_reason", "")).is_empty():
 			errors.append("unavailable settlement action %s must declare unavailable_reason" % action_id)
+
+static func _validate_contracts(value: Variant, visit_slot_limit: int, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("contracts must be an object")
+		return
+	var rules: Dictionary = value
+	var history_limit := int(rules.get("max_history", 0))
+	if history_limit < 1 or history_limit > 100:
+		errors.append("contracts max_history must be between 1 and 100")
+	var records_value: Variant = rules.get("records", [])
+	if typeof(records_value) != TYPE_ARRAY:
+		errors.append("contracts records must be an array")
+		return
+	var seen_ids: Dictionary = {}
+	for raw_contract in records_value:
+		if typeof(raw_contract) != TYPE_DICTIONARY:
+			errors.append("each contract must be an object")
+			continue
+		var contract_record: Dictionary = raw_contract
+		var contract_id := String(contract_record.get("id", ""))
+		if contract_id.is_empty() or not contract_id.is_valid_identifier() or contract_id != contract_id.to_lower():
+			errors.append("contract ids must use lower_snake_case")
+		elif seen_ids.has(contract_id):
+			errors.append("duplicate contract id: %s" % contract_id)
+		else:
+			seen_ids[contract_id] = true
+		for required_text in ["name", "sponsor", "description", "tradeoff", "failure_recovery"]:
+			if String(contract_record.get(required_text, "")).is_empty():
+				errors.append("contract %s must declare %s" % [contract_id, required_text])
+		for settlement_field in ["origin_id", "destination_id"]:
+			if not REQUIRED_SETTLEMENT_IDS.has(String(contract_record.get(settlement_field, ""))):
+				errors.append("contract %s %s must reference a known settlement" % [contract_id, settlement_field])
+		if String(contract_record.get("origin_id", "")) == String(contract_record.get("destination_id", "")):
+			errors.append("contract %s origin and destination must differ" % contract_id)
+		if not REQUIRED_GOOD_IDS.has(String(contract_record.get("good_id", ""))):
+			errors.append("contract %s good_id must reference a known good" % contract_id)
+		for positive_field in ["quantity", "deadline_days", "reward", "service_slots"]:
+			if int(contract_record.get(positive_field, 0)) <= 0:
+				errors.append("contract %s %s must be positive" % [contract_id, positive_field])
+		if int(contract_record.get("service_slots", 0)) > visit_slot_limit:
+			errors.append("contract %s service_slots must not exceed the visit limit" % contract_id)
+		if int(contract_record.get("failure_penalty", -1)) < 0:
+			errors.append("contract %s failure_penalty must be non-negative" % contract_id)
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:
