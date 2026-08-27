@@ -71,6 +71,8 @@ func _initialize() -> void:
 	ui._on_save_pressed()
 	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
+	ui._refresh_continue_availability()
+	_expect(ui.menu_save_status_label.text.contains("CONTINUE — Day 1 · Ashgate · 120 ashmarks · hold 0/12 · primary save"), "main menu should preview a validated saved campaign before loading")
 	var manual_save_state := JSON.stringify(ui.world.serialize())
 	ui._on_settlement_action_pressed("ashgate_provision_bundle")
 	_expect(JSON.stringify(ui.world.serialize()) != manual_save_state, "save/load fixture should mutate the active run before restoration")
@@ -82,6 +84,8 @@ func _initialize() -> void:
 	corrupt_file.store_string("{not valid json")
 	corrupt_file = null
 	var state_before_corrupt_load := JSON.stringify(ui.world.serialize())
+	ui._refresh_continue_availability()
+	_expect(not ui.continue_game_button.disabled and ui.menu_save_status_label.text.contains("backup save"), "a valid backup should keep Continue available when the primary is corrupt")
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_corrupt_load and ui.save_status_label.text.contains("RECOVERED BACKUP"), "a corrupt primary save should recover the previous validated generation")
 	if FileAccess.file_exists(test_backup_path):
@@ -91,12 +95,21 @@ func _initialize() -> void:
 	var future_file := FileAccess.open(test_save_path, FileAccess.WRITE)
 	future_file.store_string(JSON.stringify(future_save))
 	future_file = null
+	var future_backup_file := FileAccess.open(test_backup_path, FileAccess.WRITE)
+	future_backup_file.store_string(JSON.stringify(future_save))
+	future_backup_file = null
 	var state_before_future_load := JSON.stringify(ui.world.serialize())
+	ui._refresh_continue_availability()
+	_expect(ui.continue_game_button.disabled and ui.menu_save_status_label.text.contains("could not be validated"), "Continue should disable when neither primary nor backup can be validated")
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_future_load and ui.save_status_label.text.contains("newer than this build"), "a future-version save should be rejected without replacing the active run")
 	var invalid_shape_file := FileAccess.open(test_save_path, FileAccess.WRITE)
-	invalid_shape_file.store_string(JSON.stringify({"save_version": 11, "command_history": "not-a-list"}))
+	var invalid_shape_payload := JSON.stringify({"save_version": 11, "command_history": "not-a-list"})
+	invalid_shape_file.store_string(invalid_shape_payload)
 	invalid_shape_file = null
+	var invalid_shape_backup_file := FileAccess.open(test_backup_path, FileAccess.WRITE)
+	invalid_shape_backup_file.store_string(invalid_shape_payload)
+	invalid_shape_backup_file = null
 	var state_before_invalid_shape := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_invalid_shape and ui.save_status_label.text.contains("command_history must be a list"), "valid JSON with an invalid save shape should be rejected without replacing the active run")

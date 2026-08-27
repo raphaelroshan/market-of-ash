@@ -88,8 +88,6 @@ func _ready() -> void:
 	_load_presentation_settings()
 	theme = Theme.new()
 	theme.default_font_size = 20 if large_text_enabled else 16
-	if FileAccess.file_exists(save_path):
-		save_status_text = "SAVE — Existing save available. Load validates it before replacing this run."
 	game_layer = Control.new()
 	game_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(game_layer)
@@ -97,6 +95,7 @@ func _ready() -> void:
 	_build_shop()
 	_build_main_menu()
 	_build_pause_menu()
+	_refresh_continue_availability()
 	if large_text_enabled:
 		_apply_text_scale(self, 1.25)
 	_show_main_menu()
@@ -239,6 +238,30 @@ func _show_main_menu() -> void:
 	menu_layer.visible = true
 	if start_game_button:
 		start_game_button.grab_focus()
+
+func _refresh_continue_availability() -> void:
+	if continue_game_button == null:
+		return
+	var backup_path := save_path + ".bak"
+	var preview := _load_candidate(save_path)
+	var backup_preview := false
+	if not bool(preview.get("ok", false)) and FileAccess.file_exists(backup_path):
+		preview = _load_candidate(backup_path)
+		backup_preview = bool(preview.get("ok", false))
+	continue_game_button.disabled = not bool(preview.get("ok", false))
+	if continue_game_button.disabled:
+		continue_game_button.tooltip_text = "No valid saved campaign is available."
+		if FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path):
+			save_status_text = "SAVE — Existing files could not be validated. Start Game remains safe."
+		if menu_save_status_label:
+			menu_save_status_label.text = save_status_text
+		return
+	var saved_world: AshWorldState = preview.world
+	var source_text := "backup" if backup_preview else "primary"
+	save_status_text = "CONTINUE — Day %d · %s · %d ashmarks · hold %d/%d · %s save" % [saved_world.day, String(saved_world.settlement(saved_world.current_settlement).get("name", saved_world.current_settlement)), saved_world.money, int(saved_world.cargo.get("weight", 0)), saved_world.cargo_capacity, source_text]
+	continue_game_button.tooltip_text = "Validate and continue this saved campaign."
+	if menu_save_status_label:
+		menu_save_status_label.text = save_status_text
 
 func _show_shop() -> void:
 	menu_layer.visible = false
