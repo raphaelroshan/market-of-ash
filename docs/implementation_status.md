@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B9 are implemented. B10 build operations are configured; broader manual accessibility review remains.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. The first B9 ending proof is playable through ordinary commands. B10 build operations and focus continuity are configured; broader manual accessibility review remains.
 
 ## Implemented player-facing spine
 
@@ -97,7 +97,8 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 ## Current test scripts
 
 - `tests/test_economy.gd`: content loading, prices, crisis modifiers, capacity, route forecasts, command success/failure/history, route topology, travel resources, saves, and migration.
-- `tests/test_map_ui.gd`: main-menu start, non-mutating forecast/navigation, guided purchase command use, Shop → Departure Desk transition, legal route filtering, forecast presentation, and route geometry.
+- `tests/test_map_ui.gd`: main-menu start, non-mutating forecast/navigation, guided purchase command use, Shop → Departure Desk transition, legal route filtering, forecast presentation, route geometry, and predictable keyboard/controller focus across screen and event transitions.
+- `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and exact save/load restoration.
 - `tools/simulate_trade_policies.gd`: read-only 100-seed opening-policy simulation through the production command boundary.
 
 ## Current UI transitions
@@ -115,7 +116,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 ## Remaining roadmap-to-code mismatches
 
 1. **One charter reference is stale.** `docs/gpt_agent_handoff_roadmap.md` references `docs/alpha_release_roadmap.md`, which is not present. The active roadmap is `docs/gpt_agent_handoff_roadmap.md`.
-2. **Most campaign fixtures are not present.** The first invalid market-memory fixture exists, but the broader fresh/saturated/contract/event/faction/crisis/ending fixture matrix remains planned.
+2. **Most named campaign fixtures are not present.** A fresh command-only ending path and the first invalid market-memory fixture exist, but the broader saturated/contract/event/faction/crisis/ending fixture matrix remains planned.
 3. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
 4. **Local export templates are not installed.** Windows and Web presets now exist and CI installs matching Godot 4.4.1 templates, but this laptop's temporary editor can only verify preset parsing/project import until templates are installed.
 
@@ -140,6 +141,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 - Economy suite: `PASS: Market of Ash economy tests`
 - Map UI suite: `Map UI smoke: PASS`
+- Campaign suite: `Campaign smoke: PASS`
 - Headless editor import: completed successfully; Godot emitted a non-fatal shutdown warning after its filesystem scan.
 - Repository policy: pass, with expected warnings for local `.godot/` import metadata.
 - Content manifest, political geography, tribal conflict, economy/settlement, and runtime-world validators: pass.
@@ -254,6 +256,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
 - Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
 - Save version 11 preserves the ending. Tests cover every stage boundary, unmet predicates, successful resolution, save/load, migration, and UI presentation.
+- A fresh seed-1107 campaign now reaches the ending through fifteen ordinary commands: accept and fulfill relief, make a second public water delivery, advance through legal routes, then restore the exact completed state from a save.
 
 ## B10 build-operations result
 
@@ -261,8 +264,9 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Pull-request packaging and tagged releases export both targets with Godot 4.4.1 templates before uploading artifacts.
 - The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
 - The settlement shop exposes seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
-- Local preset parsing and project import pass. A local Web binary export remains blocked only by the temporary editor installation's missing export templates; CI explicitly installs them.
+- Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
+- Local preset parsing and project import pass. CI run 36 exported and uploaded a 94 MB Windows executable plus a complete Web payload (`index.html`, JavaScript, PCK, and WASM); direct local export remains unavailable only because the temporary editor installation lacks templates.
 
 ## Next permitted task
 
-Continue B10 with packaged-build smoke execution and a manual visual/accessibility review at supported window sizes.
+Continue B10 with a documented input/accessibility audit and the lowest-risk blockers it identifies.

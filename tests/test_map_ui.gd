@@ -15,6 +15,7 @@ func _initialize() -> void:
 
 	ui._on_start_game_pressed()
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
 	_expect(ui.world.current_settlement == "ashgate" and ui.world.day == 1, "Start Game did not load the authored Ashgate day-one preset")
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "grain" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")
@@ -58,6 +59,7 @@ func _initialize() -> void:
 	var shop_state: String = JSON.stringify(ui.world.serialize())
 	ui._on_plan_departure_pressed()
 	_expect(not ui.shop_layer.visible and ui.game_layer.visible, "Plan departure should open the dedicated departure map")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "opening departure planning should focus the destination control")
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("Grain x2"), "departure desk did not carry the planned load forward")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
@@ -69,6 +71,7 @@ func _initialize() -> void:
 	cancel_event.pressed = true
 	ui._unhandled_input(cancel_event)
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Return to shop should close the departure map")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "returning to the shop should restore a predictable keyboard focus target")
 	if JSON.stringify(ui.world.serialize()) != shop_state:
 		failures.append("returning from departure planning mutated authoritative world state")
 
@@ -93,6 +96,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel.traveling, "successful departure did not start presentation traversal")
 		_expect(ui.map_panel.travel_points.size() == 3, "travel traversal did not create origin, waypoint, destination")
 		_expect(ui.enter_settlement_button.visible and ui.commit_departure_button.disabled, "arrival state did not present an explicit settlement-entry action")
+		_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "an uninterrupted arrival should focus the settlement-entry action")
 		_expect(ui.playtest_status_label.text.contains("STEP 3 OF 3"), "arrival with grain did not advance the playtest objective")
 		await process_frame
 		_expect(ui.map_panel.travel_progress > 0.0, "presentation traversal did not advance")
@@ -125,10 +129,12 @@ func _initialize() -> void:
 	_expect(ui.event_choice_buttons.size() == 4, "Gatekeeper's Chalk should expose its three base choices and Tess's visible negotiation option")
 	_expect(ui.event_choice_buttons[3].disabled and ui.event_choice_buttons[3].tooltip_text.contains("Tess Oryn"), "Tess's Gatekeeper option should remain visible with its assignment prerequisite")
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "a route decision should focus its first available choice")
 	_expect(ui.departure_status_label.text.contains("ROUTE DECISION"), "departure screen did not identify the paused route decision")
 	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
 	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "brine_cross", "paying the event toll did not complete arrival")
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "resolving a route decision should move focus to settlement entry")
 	_expect(ui.world.event_history.size() == 1 and ui.world.event_history.back().choice_id == "pay_posted_toll", "event UI did not preserve the chosen outcome")
 
 	ui._on_start_game_pressed()

@@ -130,11 +130,32 @@ func _show_shop() -> void:
 	if return_to_shop_button:
 		return_to_shop_button.disabled = false
 	_refresh_ui()
+	_grab_focus_if_available(shop_good_option)
 
 func _show_departure() -> void:
 	shop_layer.visible = false
 	game_layer.visible = true
 	_refresh_ui()
+	if not world.pending_event.is_empty():
+		_grab_first_enabled(event_choice_buttons)
+	elif arrival_pending:
+		_grab_focus_if_available(enter_settlement_button)
+	else:
+		_grab_focus_if_available(destination_option)
+
+func _grab_focus_if_available(control: Control) -> bool:
+	if control == null or not control.is_visible_in_tree() or control.focus_mode == Control.FOCUS_NONE:
+		return false
+	if control is BaseButton and control.disabled:
+		return false
+	control.grab_focus()
+	return true
+
+func _grab_first_enabled(controls: Array[Button]) -> bool:
+	for control in controls:
+		if _grab_focus_if_available(control):
+			return true
+	return false
 
 func _build_shop() -> void:
 	shop_layer = Control.new()
@@ -971,6 +992,8 @@ func _refresh_event_card() -> void:
 	var pending := world.pending_event
 	event_card.visible = not pending.is_empty()
 	if pending.is_empty():
+		if arrival_pending:
+			_grab_focus_if_available(enter_settlement_button)
 		return
 	event_title_label.text = String(pending.get("title", "Route decision"))
 	event_setup_label.text = String(pending.get("setup", ""))
@@ -1044,6 +1067,7 @@ func _refresh_event_card() -> void:
 		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
 		event_choice_list.add_child(button)
 		event_choice_buttons.append(button)
+	_grab_first_enabled(event_choice_buttons)
 
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
 	for contract_id in world.active_contracts.keys():

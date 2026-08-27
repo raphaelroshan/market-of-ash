@@ -263,3 +263,11 @@
 **Reason:** A campaign proof needs a reproducible regional outcome built from previously visible trade, event, and political decisions. The predicate rewards delivery, public supply, and escalation recovery without inventing a separate score or requiring combat.
 
 **Trade-off:** This implements one ending only. Players who reach day ten without the predicate remain in the decision stage and may continue trading; additional endings and richer world-state summaries remain later slices.
+
+## ADR-034: Primary screen transitions restore predictable focus
+
+**Decision:** Opening the Settlement Shop focuses the cargo selector, opening the Departure Desk focuses the destination selector, a pending route event focuses its first enabled response, and a completed journey focuses `Enter settlement`. Returning with `ui_cancel` restores the shop target. Focus changes occur only at these navigation boundaries, not during ordinary forecast refreshes.
+
+**Reason:** Mouse, keyboard, and controller players need the same primary path without guessing which control owns input after a layer change or dynamically rebuilt event card. Explicit transition focus is small, deterministic, and regression-testable.
+
+**Trade-off:** Godot's default directional traversal still determines movement between controls, and disabled-choice explanations remain visible text rather than focusable controls. A manual controller and assistive-readability audit is still required before external alpha distribution.
