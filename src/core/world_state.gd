@@ -571,6 +571,25 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 	var saved_ending_id := String(data.get("ending_id", ""))
 	if not saved_ending_id.is_empty() and MarketContent.ending(saved_ending_id).is_empty():
 		return {"ok": false, "reason": "save references an unknown ending"}
+	var contracts: Dictionary = data.get("active_contracts", {})
+	for contract_id_value in contracts.keys():
+		var contract_id := String(contract_id_value)
+		var snapshot: Variant = contracts.get(contract_id_value, {})
+		if MarketContent.contract(contract_id).is_empty() or typeof(snapshot) != TYPE_DICTIONARY or String(snapshot.get("id", contract_id)) != contract_id:
+			return {"ok": false, "reason": "save references an invalid active contract"}
+	var pending: Dictionary = data.get("pending_event", {})
+	var journey: Dictionary = data.get("journey_context", {})
+	if pending.is_empty() != journey.is_empty():
+		return {"ok": false, "reason": "save has an incomplete pending journey"}
+	if not pending.is_empty():
+		var event_id := String(pending.get("id", ""))
+		var route_id := String(journey.get("route_id", ""))
+		var origin_id := String(journey.get("origin_id", ""))
+		var destination_id := String(journey.get("destination_id", ""))
+		if MarketContent.event(event_id).is_empty() or typeof(pending.get("choices", [])) != TYPE_ARRAY:
+			return {"ok": false, "reason": "save references an invalid pending event"}
+		if not MarketContent.route_connects(route_id, origin_id, destination_id) or settlement_id != origin_id:
+			return {"ok": false, "reason": "save references an invalid pending journey"}
 	return {"ok": true, "reason": ""}
 
 func migrate_serialized(data: Dictionary) -> Dictionary:
@@ -699,7 +718,7 @@ func _sanitize_active_contracts(value: Variant) -> Dictionary:
 			continue
 		var snapshot: Dictionary = raw_snapshot
 		var normalized_id := String(snapshot.get("id", contract_id))
-		if normalized_id.is_empty():
+		if normalized_id.is_empty() or MarketContent.contract(normalized_id).is_empty():
 			continue
 		snapshot = snapshot.duplicate(true)
 		snapshot["id"] = normalized_id

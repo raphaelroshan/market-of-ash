@@ -1391,6 +1391,19 @@ func _test_disk_save_sanitization() -> void:
 	invalid_reference["current_settlement"] = "missing_town"
 	var rejected_reference := AshWorldState.new(0).load_serialized(invalid_reference)
 	_expect(not rejected_reference.ok and rejected_reference.reason.contains("unknown current settlement"), "load should reject unknown authoritative references")
+	var invalid_contract: Dictionary = source.serialize()
+	invalid_contract["active_contracts"] = {"invented_contract": {"id": "invented_contract", "status": "active"}}
+	var rejected_contract := AshWorldState.new(0).load_serialized(invalid_contract)
+	_expect(not rejected_contract.ok and rejected_contract.reason.contains("invalid active contract"), "load should reject unknown active-contract references")
+	var invalid_pending: Dictionary = source.serialize()
+	invalid_pending["pending_event"] = {"id": "invented_event", "choices": []}
+	invalid_pending["journey_context"] = {"origin_id": "ashgate", "destination_id": "reedwatch", "route_id": "old_road"}
+	var rejected_pending := AshWorldState.new(0).load_serialized(invalid_pending)
+	_expect(not rejected_pending.ok and rejected_pending.reason.contains("invalid pending event"), "load should reject pending events that cannot be resolved")
+	var orphaned_journey: Dictionary = source.serialize()
+	orphaned_journey["journey_context"] = {"origin_id": "ashgate", "destination_id": "reedwatch", "route_id": "old_road"}
+	var rejected_orphan := AshWorldState.new(0).load_serialized(orphaned_journey)
+	_expect(not rejected_orphan.ok and rejected_orphan.reason.contains("incomplete pending journey"), "load should reject an orphaned journey that could soft-lock navigation")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
