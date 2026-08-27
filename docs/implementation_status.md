@@ -280,6 +280,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The settlement shop exposes seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
 - Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
 - Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. The Main Menu explains both schemes.
+- P/controller Menu pauses from any gameplay state; Escape/B pauses where it cannot safely act as Back. The modal preserves pending events and restores the previous focus on Resume.
 - A reduced-motion option skips caravan interpolation without changing route time or outcome.
 - A large-text option increases interface text by 25%; scrollable Shop and Departure rails keep long content reachable as it reflows.
 - Successful commands autosave to the prototype slot while rotating one backup generation. Manual Save, Continue, and Load show day/location/version context; a corrupt primary recovers from backup, while unrecoverable missing, malformed, and future saves are rejected before the active world is replaced.

@@ -29,6 +29,7 @@ environment/defaults/default_clear_color=Color(0.055, 0.047, 0.039, 1)
 [input]
 ui_accept={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":4194309), Object(InputEventKey,"physical_keycode":32), Object(InputEventJoypadButton,"button_index":0)]}
 ui_cancel={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":4194308), Object(InputEventJoypadButton,"button_index":1)]}
+ui_pause={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":80), Object(InputEventJoypadButton,"button_index":6)]}
 
 [debug]
 

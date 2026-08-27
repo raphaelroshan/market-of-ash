@@ -343,3 +343,11 @@
 **Reason:** A deterministic ending is not a meaningful player goal if its predicate is only visible in code or documentation. Showing exact thresholds lets the player intentionally pursue or avoid a political/economic outcome before day ten.
 
 **Trade-off:** The outlook is intentionally numeric and compact for the alpha. It does not predict future event availability or recommend a morally preferred ending.
+
+## ADR-044: Pause never bypasses a committed route decision
+
+**Decision:** Add a modal pause layer available through P/controller Menu from gameplay. Escape/controller B remains Back only during uncommitted departure planning; in the Shop, a route event, or an arrival report it opens Pause. Resume restores the prior focused control, and the menu offers Save, validated Load, and Return to main menu.
+
+**Reason:** A consistent pause path is required for external testing, but Cancel must not silently escape a paid route event or mutate the campaign. Separating navigation Back from modal Pause preserves both expectations.
+
+**Trade-off:** Runtime remapping and persisted accessibility preferences remain future work. Returning to the main menu relies on the current autosave/manual-save system rather than an unsaved-changes confirmation dialog.

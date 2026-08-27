@@ -16,6 +16,10 @@ var world: AshWorldState
 var game_layer: Control
 var shop_layer: Control
 var menu_layer: Control
+var pause_layer: Control
+var pause_resume_button: Button
+var pause_summary_label: Label
+var focus_before_pause: Control
 var start_game_button: Button
 var continue_game_button: Button
 var menu_save_status_label: Label
@@ -72,6 +76,7 @@ var map_panel
 var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	world = AshWorldState.new(PLAYTEST_SEED)
 	theme = Theme.new()
 	theme.default_font_size = 16
@@ -83,6 +88,7 @@ func _ready() -> void:
 	_build_ui()
 	_build_shop()
 	_build_main_menu()
+	_build_pause_menu()
 	_show_main_menu()
 
 func _build_main_menu() -> void:
@@ -123,7 +129,7 @@ func _build_main_menu() -> void:
 	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
 	content.add_child(preset)
 	var controls_hint := Label.new()
-	controls_hint.text = "Controls: mouse, keyboard arrows/Tab + Enter/Space, or controller D-pad/stick + A. Escape or B returns from departure planning."
+	controls_hint.text = "Controls: mouse, keyboard arrows/Tab + Enter/Space, or controller D-pad/stick + A. Escape/B goes back or pauses; P/Menu always pauses during play."
 	controls_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	controls_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls_hint.add_theme_color_override("font_color", Color("#c7b49a"))
@@ -157,7 +163,59 @@ func _build_main_menu() -> void:
 	menu_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(menu_save_status_label)
 
+func _build_pause_menu() -> void:
+	pause_layer = Control.new()
+	pause_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	pause_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_layer.visible = false
+	add_child(pause_layer)
+	var backdrop := ColorRect.new()
+	backdrop.color = Color(0.05, 0.04, 0.03, 0.88)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_layer.add_child(backdrop)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pause_layer.add_child(center)
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(480, 0)
+	center.add_child(card)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 14)
+	card.add_child(content)
+	var title := Label.new()
+	title.text = "PAUSED"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color("#e6c58d"))
+	content.add_child(title)
+	pause_summary_label = Label.new()
+	pause_summary_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	pause_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	pause_summary_label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	content.add_child(pause_summary_label)
+	pause_resume_button = Button.new()
+	pause_resume_button.text = "Resume"
+	pause_resume_button.custom_minimum_size = Vector2(0, 46)
+	pause_resume_button.pressed.connect(_close_pause)
+	content.add_child(pause_resume_button)
+	var save_button := Button.new()
+	save_button.text = "Save campaign"
+	save_button.pressed.connect(_on_save_pressed)
+	content.add_child(save_button)
+	var load_button := Button.new()
+	load_button.text = "Load saved campaign"
+	load_button.pressed.connect(_on_pause_load_pressed)
+	content.add_child(load_button)
+	var menu_button := Button.new()
+	menu_button.text = "Return to main menu"
+	menu_button.pressed.connect(_on_pause_main_menu_pressed)
+	content.add_child(menu_button)
+
 func _show_main_menu() -> void:
+	get_tree().paused = false
+	if pause_layer:
+		pause_layer.visible = false
 	game_layer.visible = false
 	shop_layer.visible = false
 	menu_layer.visible = true
@@ -685,9 +743,49 @@ func _on_return_to_shop_pressed() -> void:
 	_show_shop()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("ui_cancel") and game_layer != null and game_layer.visible and world.pending_event.is_empty():
+	if pause_layer != null and pause_layer.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_pause")):
+		_close_pause()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_pause") and menu_layer != null and not menu_layer.visible:
+		_open_pause()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel") and game_layer != null and game_layer.visible and world.pending_event.is_empty() and not arrival_pending:
 		_on_return_to_shop_pressed()
 		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("ui_cancel") and menu_layer != null and not menu_layer.visible:
+		_open_pause()
+		get_viewport().set_input_as_handled()
+
+func _open_pause() -> void:
+	if pause_layer == null or menu_layer.visible:
+		return
+	focus_before_pause = get_viewport().gui_get_focus_owner()
+	pause_summary_label.text = "Day %d · %s · %d ashmarks · hold %d/%d\n%s" % [world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity, save_status_text]
+	pause_layer.visible = true
+	get_tree().paused = true
+	pause_resume_button.grab_focus()
+
+func _close_pause() -> void:
+	get_tree().paused = false
+	pause_layer.visible = false
+	if _grab_focus_if_available(focus_before_pause):
+		return
+	if shop_layer.visible:
+		_grab_focus_if_available(shop_good_option)
+	elif not world.pending_event.is_empty():
+		_grab_first_enabled(event_choice_buttons)
+	else:
+		_grab_focus_if_available(destination_option)
+
+func _on_pause_load_pressed() -> void:
+	_close_pause()
+	_on_load_pressed()
+
+func _on_pause_main_menu_pressed() -> void:
+	if autosave_enabled:
+		_write_save("AUTOSAVED")
+	_close_pause()
+	_show_main_menu()
 
 func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))

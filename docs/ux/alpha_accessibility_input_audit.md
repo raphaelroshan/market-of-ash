@@ -8,14 +8,15 @@
 
 | Area | Current behavior | Evidence |
 | --- | --- | --- |
-| Keyboard | Tab/directional navigation uses Godot focus traversal; Enter and Space activate the focused control; Escape returns from uncommitted departure planning. | `tests/test_map_ui.gd` and `project.godot` input-map assertions. |
-| Controller | D-pad/stick focus traversal uses Godot UI actions; A accepts and B returns from uncommitted departure planning. | Controller bindings are source controlled and asserted by the UI smoke test. |
+| Keyboard | Tab/directional navigation uses Godot focus traversal; Enter and Space activate the focused control; Escape returns from uncommitted departure planning or pauses elsewhere; P always pauses during play. | `tests/test_map_ui.gd` and `project.godot` input-map assertions. |
+| Controller | D-pad/stick focus traversal uses Godot UI actions; A accepts, B goes back/pauses, and Menu pauses during play. | Controller bindings are source controlled and asserted by the UI smoke test. |
 | Focus continuity | Shop, Departure Desk, route decisions, and arrival each establish a predictable enabled focus target. | UI smoke assertions cover every transition. |
 | Reduced motion | A Main Menu option skips caravan interpolation and presents the completed route immediately without changing simulation time or outcome. | UI smoke test checks completed progress and no active animation. |
 | Text size/reflow | A Main Menu option increases inherited and explicit interface text by 25%; the long Shop and Departure rails use vertical scrolling. | UI smoke test checks scaling without campaign mutation and verifies both rails have scroll ancestors. |
 | Color independence | Money, provisions, risk, crisis, standing, escalation, disabled reasons, and outcomes are always written as text; color is supplementary. | Static UI inspection and UI text assertions. |
 | Timing | No choice has a real-time deadline. Travel motion never blocks `Enter settlement`, and reduced motion can remove it. | Command/UI architecture and reduced-motion test. |
 | Save recovery | Successful commands autosave through a temporary file and keep one backup generation; manual Save and Load expose day, settlement, save version, and content version. Invalid or newer files are validated in a candidate world and cannot replace the active run. | UI smoke tests missing, valid, corrupt-primary recovery, future-version rejection, and autosave paths; core save normalization tests. |
+| Pause | A modal layer stops the scene tree, reports current run/save context, and offers Resume, Save, Load, and Return to main menu. Event decisions remain pending underneath it. | UI smoke checks paused state, Resume focus, focus restoration, and event preservation. |
 
 ## Manual input matrix
 
@@ -26,7 +27,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 | Main Menu → Start | Click | Tab, Enter/Space | D-pad/stick, A | Starts in Shop with cargo selector focused. |
 | Shop trade | Click selectors/buttons | Tab/arrows, Enter/Space | D-pad/stick, A | Price explanation remains visible; buy/sell result and autosave status update. |
 | Shop → Departure | Click | Focus Plan departure, Enter/Space | Focus Plan departure, A | Destination receives focus; no resources change. |
-| Departure edit/back | Click / Return button | Selectors; Escape | Selectors; B | Legal routes update; back restores Shop focus and does not mutate state. |
+| Departure edit/back | Click / Return button | Selectors; Escape | Selectors; B | Legal routes update; back restores Shop focus and does not mutate state. P/Menu opens Pause. |
 | Commit/event | Click | Focus Commit, Enter/Space | Focus Commit, A | First enabled event response receives focus; disabled reason remains visible as adjacent text. |
 | Arrival | Click Enter settlement | Enter/Space | A | Entry action receives focus and returns to the destination Shop. |
 | Save/load | Click | Tab, Enter/Space | D-pad/stick, A | Summary identifies day/location/version; bad save leaves current run intact. |
@@ -46,7 +47,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 
 1. Large-text reflow and scrolling are implemented but still need rendered checks at minimum window and high OS scaling for clipping and comfortable line length.
 2. Controller behavior is configured and headlessly asserted but has not been exercised on physical Windows hardware.
-3. There is no pause/settings overlay or runtime input remapping yet. Escape/B intentionally backs out only from uncommitted departure planning.
+3. Runtime input remapping is not implemented yet; the pause layer currently exposes the fixed bindings.
 4. Audio cues and screen-reader semantics are not implemented; essential information remains available as text.
 
 ## Remapping plan
