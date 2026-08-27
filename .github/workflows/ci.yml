@@ -40,6 +40,8 @@ jobs:
           python tools/validate_economy_and_settlements.py \
             --economy content/economy_framework.json \
             --settlements content/settlement_actions.json
+      - name: Validate runtime world content
+        run: python tools/validate_runtime_world.py --data content/runtime_world.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})

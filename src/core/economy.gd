@@ -4,18 +4,10 @@ extends RefCounted
 ## Deterministic, data-driven price calculation for the Market of Ash prototype.
 ## The simulation contains no rendering or UI dependencies so it can run headlessly.
 
-const GOODS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth"]
+const MarketContent = preload("res://src/core/market_content.gd")
 
 static func base_price(good: String) -> int:
-	var prices := {
-		"grain": 12,
-		"water": 18,
-		"scrap": 9,
-		"medicine": 32,
-		"charcoal": 14,
-		"cloth": 24,
-	}
-	return int(prices.get(good, 0))
+	return int(MarketContent.good(good).get("base_price", 0))
 
 static func price_for(good: String, settlement: Dictionary, world: Dictionary) -> int:
 	var base := base_price(good)
@@ -49,12 +41,19 @@ static func explain_price(good: String, settlement: Dictionary, world: Dictionar
 	return ", ".join(reasons)
 
 static func validate_trade(cargo: Dictionary, good: String, quantity: int, capacity: int) -> Dictionary:
-	if not GOODS.has(good):
+	var good_record := MarketContent.good(good)
+	if good_record.is_empty():
 		return {"ok": false, "reason": "unknown good"}
 	if quantity <= 0:
 		return {"ok": false, "reason": "quantity must be positive"}
 	var current_weight := int(cargo.get("weight", 0))
 	var current_quantity := int(cargo.get(good, 0))
-	if current_weight + quantity > capacity:
+	var added_weight := int(good_record.get("weight", 0)) * quantity
+	if current_weight + added_weight > capacity:
 		return {"ok": false, "reason": "cargo capacity exceeded"}
-	return {"ok": true, "new_quantity": current_quantity + quantity, "new_weight": current_weight + quantity}
+	return {
+		"ok": true,
+		"new_quantity": current_quantity + quantity,
+		"new_weight": current_weight + added_weight,
+		"added_weight": added_weight,
+	}

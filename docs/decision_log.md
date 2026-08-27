@@ -63,3 +63,11 @@
 **Reason:** The requested map should be usable immediately, while image generation is not guaranteed and generated maps cannot be trusted to encode gameplay-accurate settlement or route geometry.
 
 **Trade-off:** The current build will not claim final pixel art. Generated assets may improve atmosphere later, but gameplay geometry remains deterministic and code-driven.
+
+## ADR-009: Runtime world content and command/result boundary
+
+**Decision:** Store the initial six goods, five settlements, and three routes in validated `content/runtime_world.json`. Route buy, sell, and depart actions through `MarketCommandProcessor`, which accepts stable command IDs and plain inputs, validates state, applies deterministic changes, returns structured player-facing results, and records a bounded serializable command history. Save data now declares a `save_version` and `content_version`; unversioned prototype saves migrate to version 1, while newer incompatible saves fail safely.
+
+**Reason:** The vertical slice needs one canonical content source, reproducible state changes, UI-independent validation, and actionable test/debug evidence before economy presentation, market memory, events, or faction work expand the system.
+
+**Trade-off:** The first command processor supports only the already playable buy, sell, and depart actions. Future contracts, services, events, faction effects, and upgrades must be added as explicit commands rather than interpreting authored effect text.

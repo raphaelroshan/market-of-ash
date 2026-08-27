@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "content_version": "0.4.0",
+  "goods": [
+    {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
+    {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
+    {"id": "scrap", "name": "Scrap", "base_price": 9, "weight": 1},
+    {"id": "medicine", "name": "Medicine", "base_price": 32, "weight": 1},
+    {"id": "charcoal", "name": "Charcoal", "base_price": 14, "weight": 1},
+    {"id": "cloth", "name": "Dyed Cloth", "base_price": 24, "weight": 1}
+  ],
+  "settlements": {
+    "ashgate": {
+      "name": "Ashgate",
+      "role": "regulated hub",
+      "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1},
+      "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1},
+      "faction_price_modifier": 1.0
+    },
+    "brine_cross": {
+      "name": "Brine Cross",
+      "role": "water market",
+      "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95},
+      "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95},
+      "faction_price_modifier": 1.0
+    },
+    "cinderford": {
+      "name": "Cinderford",
+      "role": "foundry town",
+      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15},
+      "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0},
+      "faction_price_modifier": 1.0
+    },
+    "hollow_market": {
+      "name": "Hollow Market",
+      "role": "free-trade bazaar",
+      "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75},
+      "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8},
+      "faction_price_modifier": 0.95
+    },
+    "reedwatch": {
+      "name": "Reedwatch",
+      "role": "frontier settlement",
+      "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9},
+      "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0},
+      "faction_price_modifier": 1.05
+    }
+  },
+  "routes": {
+    "old_road": {"name": "Old Road", "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
+    "toll_road": {"name": "Toll Road", "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
+    "dry_cut": {"name": "Dry Cut", "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."}
+  }
+}

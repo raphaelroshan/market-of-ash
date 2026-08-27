@@ -1,7 +1,8 @@
 extends Control
 
-const MarketEconomy = preload("res://src/core/economy.gd")
+const MarketContent = preload("res://src/core/market_content.gd")
 const AshWorldState = preload("res://src/core/world_state.gd")
+const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
 var world: AshWorldState
 var status_label: Label
@@ -112,7 +113,7 @@ func _build_ui() -> void:
 	controls.add_child(_labeled_control("Route", route_option))
 
 	cargo_good_option = OptionButton.new()
-	for good in MarketEconomy.GOODS:
+	for good in MarketContent.good_ids():
 		cargo_good_option.add_item(good.capitalize())
 		cargo_good_option.set_item_metadata(cargo_good_option.item_count - 1, good)
 	controls.add_child(_labeled_control("Cargo", cargo_good_option))
@@ -165,62 +166,51 @@ func _selected_id(option: OptionButton) -> String:
 	return String(option.get_item_metadata(option.selected))
 
 func _on_buy_pressed() -> void:
-	var good := _selected_id(cargo_good_option)
-	var quantity := int(cargo_quantity.value)
-	var origin := world.settlement(world.current_settlement)
-	var price := MarketEconomy.price_for(good, origin, {"crisis_modifiers": world.crisis_modifiers})
-	var result := MarketEconomy.validate_trade(world.cargo, good, quantity, world.cargo_capacity)
-	if not result.ok:
-		_set_event("Purchase blocked: %s." % result.reason)
-		return
-	var total := price * quantity
-	if world.money < total:
-		_set_event("Purchase blocked: you need %d ashmarks, but have %d." % [total, world.money])
-		return
-	world.money -= total
-	world.cargo[good] = int(world.cargo.get(good, 0)) + quantity
-	world.cargo.weight = int(world.cargo.get("weight", 0)) + quantity
-	_set_event("Bought %d %s for %d ashmarks. %s." % [quantity, good, total, MarketEconomy.explain_price(good, origin, {"crisis_modifiers": world.crisis_modifiers})])
-	_refresh_ui()
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {
+			"good_id": _selected_id(cargo_good_option),
+			"quantity": int(cargo_quantity.value),
+		},
+	})
+	_show_command_result(result, "Purchase")
 
 func _on_sell_pressed() -> void:
-	var good := _selected_id(cargo_good_option)
-	var quantity := mini(int(cargo_quantity.value), int(world.cargo.get(good, 0)))
-	if quantity <= 0:
-		_set_event("You do not have any %s to sell." % good)
-		return
-	var destination := world.settlement(world.current_settlement)
-	var price := MarketEconomy.price_for(good, destination, {"crisis_modifiers": world.crisis_modifiers})
-	world.money += price * quantity
-	world.cargo[good] = int(world.cargo.get(good, 0)) - quantity
-	world.cargo.weight = int(world.cargo.get("weight", 0)) - quantity
-	_set_event("Sold %d %s for %d ashmarks." % [quantity, good, price * quantity])
-	_refresh_ui()
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.SELL_GOODS,
+		"inputs": {
+			"good_id": _selected_id(cargo_good_option),
+			"quantity": int(cargo_quantity.value),
+		},
+	})
+	_show_command_result(result, "Sale")
 
 func _on_depart_pressed() -> void:
 	var route_id := _selected_id(route_option)
 	var destination_id := _selected_id(destination_option)
 	var previous_settlement: String = world.current_settlement
-	var result := world.travel(route_id)
-	if not result.ok:
-		_set_event("Departure blocked: %s." % result.reason)
-		return
-	world.current_settlement = destination_id
-	map_panel.begin_travel(route_id, previous_settlement, destination_id)
-	var risk: float = float(result.risk)
-	var roll := fmod(float(world.seed * 17 + world.day * 31), 100.0) / 100.0
-	if roll < risk:
-		var lost := mini(int(world.cargo.get("weight", 0)), 1)
-		world.cargo.weight = int(world.cargo.get("weight", 0)) - lost
-		_set_event("The %s was hit by a route incident. You lost %d cargo weight, but arrived at %s." % [world.route(route_id).name, lost, world.settlement(destination_id).name])
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {
+			"route_id": route_id,
+			"destination_id": destination_id,
+		},
+	})
+	if result.ok and map_panel:
+		map_panel.begin_travel(route_id, previous_settlement, destination_id)
+	_show_command_result(result, "Departure")
+
+func _show_command_result(result: Dictionary, label: String) -> void:
+	if result.ok:
+		_set_event(String(result.message))
 	else:
-		_set_event("You arrived at %s by the %s. The route held." % [world.settlement(destination_id).name, world.route(route_id).name])
+		_set_event("%s blocked: %s." % [label, String(result.reason)])
 	_refresh_ui()
 
 func _on_save_pressed() -> void:
 	var file := FileAccess.open("user://market_of_ash_prototype.save", FileAccess.WRITE)
 	file.store_string(JSON.stringify(world.serialize()))
-	_set_event("Prototype state saved. The production version will add versioned migrations and Steam Cloud/Epic adapters.")
+	_set_event("Versioned prototype state saved. Command history is included for deterministic review.")
 
 func _on_reset_pressed() -> void:
 	world = AshWorldState.new(1107)
@@ -241,7 +231,7 @@ func _set_event(text: String) -> void:
 func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
 	var cargo_lines: Array[String] = []
-	for good in MarketEconomy.GOODS:
+	for good in MarketContent.good_ids():
 		var count := int(world.cargo.get(good, 0))
 		if count > 0:
 			cargo_lines.append("%s x%d" % [good.capitalize(), count])
