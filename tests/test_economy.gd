@@ -1371,6 +1371,17 @@ func _test_save_round_trip() -> void:
 	_expect(bounded_history_result.ok, "a structurally valid save with excess command history should load")
 	_expect(bounded_history_world.command_history.size() == AshWorldState.MAX_COMMAND_HISTORY, "load should restore no more than the runtime command-history bound")
 	_expect(bounded_history_world.command_history.front().id == "test_5" and bounded_history_world.command_history.back().id == "test_104", "load should retain the newest bounded command-history records")
+	var bounded_log_source := AshWorldState.new(44)
+	for index in range(205):
+		bounded_log_source.add_log("entry_%d" % index)
+	_expect(bounded_log_source.log.size() == AshWorldState.MAX_LOG_ENTRIES and bounded_log_source.log.front() == "entry_5", "runtime campaign logs should retain only their newest bounded entries")
+	var oversized_log_save := AshWorldState.new(45).serialize()
+	for index in range(205):
+		oversized_log_save.log.append("saved_entry_%d" % index)
+	var bounded_log_world := AshWorldState.new(0)
+	var bounded_log_result := bounded_log_world.load_serialized(oversized_log_save)
+	_expect(bounded_log_result.ok and bounded_log_world.log.size() == AshWorldState.MAX_LOG_ENTRIES, "load should restore no more than the campaign-log bound")
+	_expect(bounded_log_world.log.front() == "saved_entry_5" and bounded_log_world.log.back() == "saved_entry_204", "load should retain the newest bounded campaign-log entries")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)

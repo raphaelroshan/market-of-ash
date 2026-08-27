@@ -18,6 +18,7 @@
 - Forecasts label selected quantities as trade scenarios, show the matching quantity actually held, and warn that departure carries only the real hold when a proposed load has not been purchased.
 - First-run objective progress is reconstructed from saved command evidence, so loading after the guided purchase or completed sale cannot reset the prompt or repeat its one-use action; missing cargo produces a specific recovery prompt instead of silently returning to step one.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary; runtime and loaded histories both retain only the newest 100 command records.
+- The human-readable campaign log retains the newest 200 entries both during play and after load, preventing long sessions or imported saves from inflating saves and diagnostic reports without bound.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.
 - Saves declare save version 11 and runtime content version `1.15.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.

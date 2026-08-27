@@ -68,7 +68,7 @@ static func _buy_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	world.cargo[good_id] = int(validation.new_quantity)
 	world.cargo["weight"] = int(validation.new_weight)
 	var message := "Bought %d %s for %d ashmarks. %s." % [quantity, good_id, total, MarketEconomy.explain_price(good_id, origin, world.pricing_context())]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {
 		"money": -total,
 		"cargo": {good_id: quantity, "weight": int(validation.added_weight)},
@@ -94,7 +94,7 @@ static func _recruit_crew(world: AshWorldState, inputs: Dictionary) -> Dictionar
 	world.visit_slots_remaining -= slots
 	world.recruited_crew.append(crew_id)
 	var message := "Recruited %s, %s. %s" % [String(crew.get("name", crew_id)), String(crew.get("role", "crew")), String(crew.get("limitation", ""))]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {"crew_id": crew_id, "money": -cost, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining})
 
 static func _assign_crew(world: AshWorldState, inputs: Dictionary) -> Dictionary:
@@ -116,7 +116,7 @@ static func _assign_crew(world: AshWorldState, inputs: Dictionary) -> Dictionary
 	for route_id in route_ids:
 		world.crew_reports[route_id] = {"crew_id": crew_id, "observed_day": world.day, "note": String(route_notes.get(route_id, "Route signs remain uncertain."))}
 	var message := "Assigned %s. Same-day scout reports are ready for %s." % [String(crew.get("name", crew_id)), ", ".join(route_ids)]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {"crew_id": crew_id, "assigned": true, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "route_ids": route_ids})
 
 static func _sell_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
@@ -146,7 +146,7 @@ static func _sell_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var memory_record: Dictionary = memory_result.record
 	var pressure_points := int(round(float(memory_record.effective_impact) * 100.0))
 	var message := "Sold %d %s for %d ashmarks. Your delivery softened this market's %s price pressure by %d%%." % [requested_quantity, good_id, total, good_id, pressure_points]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {
 		"money": total,
 		"cargo": {good_id: -requested_quantity, "weight": -removed_weight},
@@ -210,7 +210,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		state_delta["pending_event"] = pending.duplicate(true)
 		state_delta["journey_context"] = journey.duplicate(true)
 		var event_message := "%s — %s %s" % [String(pending.title), String(pending.setup), String(pending.stakes)]
-		world.log.append(event_message)
+		world.add_log(event_message)
 		return _success(event_message, state_delta)
 
 	world.current_settlement = destination_id
@@ -232,7 +232,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 			message = "You arrived at %s by the %s. The route held, and no cargo was exposed." % [world.settlement(destination_id).name, world.route(route_id).name]
 		else:
 			message = "You arrived at %s by the %s. The route held; the exposed %s arrived intact." % [world.settlement(destination_id).name, world.route(route_id).name, String(loss_basis.loss_good_id)]
-	world.log.append(message)
+	world.add_log(message)
 	var contract_resolutions := _resolve_arrival_contracts(world)
 	if not contract_resolutions.is_empty():
 		state_delta["contract_resolutions"] = contract_resolutions
@@ -429,7 +429,7 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 	var reputation_message := " Warden standing is now %d." % int(world.reputation.get("wardens", 0)) if reputation_results.has("wardens") else ""
 	var movement_message := "You returned to %s." % String(world.settlement(resulting_settlement_id).name) if arrival_target == "origin" else "You arrived at %s." % String(world.settlement(resulting_settlement_id).name)
 	var message := "%s %s%s%s%s%s%s%s %s" % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), material_message, trade_message, resilience_message, information_message, reputation_message, cargo_loss_message, movement_message]
-	world.log.append(message)
+	world.add_log(message)
 	var contract_resolutions: Array[Dictionary] = []
 	if arrival_target == "destination":
 		contract_resolutions = _resolve_arrival_contracts(world)
@@ -552,7 +552,7 @@ static func _accept_contract(world: AshWorldState, inputs: Dictionary) -> Dictio
 	world.active_contracts[contract_id] = snapshot
 	world.visit_slots_remaining -= slots_required
 	var message := "Accepted %s. Deliver %d %s to %s by Day %d for %d ashmarks. %d visit slot remains." % [String(snapshot.name), quantity, good_id, String(world.settlement(String(snapshot.destination_id)).name), int(snapshot.deadline_day), int(snapshot.reward), world.visit_slots_remaining]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {
 		"contract_id": contract_id,
 		"status": "active",
@@ -572,7 +572,7 @@ static func _resolve_contract(world: AshWorldState, inputs: Dictionary) -> Dicti
 		world.money -= penalty
 		var failed := world.archive_contract(contract_id, "failed", {"penalty_paid": penalty})
 		var failure_message := "%s expired on Day %d. You paid %d ashmarks; the cargo remains yours to trade." % [String(snapshot.name), int(snapshot.deadline_day), penalty]
-		world.log.append(failure_message)
+		world.add_log(failure_message)
 		return _success(failure_message, {
 			"contract_id": contract_id,
 			"status": "failed",
@@ -596,7 +596,7 @@ static func _resolve_contract(world: AshWorldState, inputs: Dictionary) -> Dicti
 	world.money += reward
 	var completed := world.archive_contract(contract_id, "completed", {"reward_paid": reward})
 	var message := "Completed %s: delivered %d %s to %s and received %d ashmarks." % [String(snapshot.name), quantity, good_id, String(world.settlement(world.current_settlement).name), reward]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {
 		"contract_id": contract_id,
 		"status": "completed",
@@ -696,7 +696,7 @@ static func _apply_civic_action(world: AshWorldState, action: Dictionary) -> Dic
 	if days > 0:
 		world.advance_day(days, false)
 	var message := String(action.get("result", "%s completed." % String(action.get("name", "Local action"))))
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {
 		"action_id": String(action.id),
 		"money": -cost,
@@ -735,7 +735,7 @@ static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) ->
 		world.advance_day(time_cost, false)
 	var standing_message := " Warden standing is now %d." % int(world.reputation.get("wardens", 0)) if reputation_results.has("wardens") else ""
 	var message := "Packed %d route provisions for %d ashmarks. %d of %d visit slots remain.%s" % [provisions_added, cost, world.visit_slots_remaining, int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2)), standing_message]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {
 		"action_id": String(action.id),
 		"money": -cost,
@@ -768,7 +768,7 @@ static func _apply_arms_sale(world: AshWorldState, action: Dictionary) -> Dictio
 		reputation_results[faction_id] = world.adjust_reputation(faction_id, int(reputation_delta.get(faction_id_value, 0)))
 	var alternative := MarketContent.contract(String(sale.get("alternative_contract_id", "")))
 	var message := "Sold %d sealed arms crate for %d ashmarks. Arms escalation is now %d/6; Wardens and Free Caravans each lost standing. Non-arms alternative: %s." % [quantity, payout, world.arms_escalation, String(alternative.get("name", "relief trade"))]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {"action_id": String(action.id), "money": payout, "cargo": {good_id: -quantity, "weight": -removed_weight}, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "arms_escalation": escalation, "reputation": reputation_results})
 
 static func _apply_arms_recovery(world: AshWorldState, action: Dictionary) -> Dictionary:
@@ -786,7 +786,7 @@ static func _apply_arms_recovery(world: AshWorldState, action: Dictionary) -> Di
 	var information_id := String(recovery.get("information_id", ""))
 	world.record_information(information_id)
 	var message := "Funded the public manifest audit for %d ashmarks and %d day. Arms escalation fell to %d/6; the published audit is now a known lead." % [cost, days, world.arms_escalation]
-	world.log.append(message)
+	world.add_log(message)
 	return _success(message, {"action_id": String(action.id), "money": -cost, "day": days, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "arms_escalation": escalation, "information_id": information_id})
 
 static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Dictionary:

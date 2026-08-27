@@ -7,6 +7,7 @@ extends RefCounted
 const MarketContent = preload("res://src/core/market_content.gd")
 const SAVE_VERSION := 11
 const MAX_COMMAND_HISTORY := 100
+const MAX_LOG_ENTRIES := 200
 
 var seed: int = 1107
 var day: int = 1
@@ -333,7 +334,7 @@ func advance_day(days: int, evaluate_campaign: bool = true) -> void:
 	if next_stage != crisis_stage:
 		crisis_stage = next_stage
 		_update_crisis_modifiers()
-		log.append("Crisis stage %d: %s." % [crisis_stage, String(MarketContent.crisis_stage(crisis_stage).get("label", "Regional pressure"))])
+		add_log("Crisis stage %d: %s." % [crisis_stage, String(MarketContent.crisis_stage(crisis_stage).get("label", "Regional pressure"))])
 	if evaluate_campaign:
 		evaluate_ending()
 
@@ -345,7 +346,7 @@ func evaluate_ending() -> bool:
 			continue
 		ending_id = String(ending.get("id", ""))
 		ending_summary = String(ending.get("summary", ""))
-		log.append("Ending reached: %s — %s" % [String(ending.get("title", ending_id)), ending_summary])
+		add_log("Ending reached: %s — %s" % [String(ending.get("title", ending_id)), ending_summary])
 		return true
 	return false
 
@@ -415,6 +416,11 @@ func record_command(command: Dictionary, result: Dictionary) -> void:
 	command_history.append(entry)
 	if command_history.size() > MAX_COMMAND_HISTORY:
 		command_history.pop_front()
+
+func add_log(message: String) -> void:
+	log.append(message)
+	if log.size() > MAX_LOG_ENTRIES:
+		log.pop_front()
 
 func serialize() -> Dictionary:
 	return {
@@ -533,7 +539,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	ending_summary = String(restored.get("ending_summary", ""))
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
-	for log_entry in saved_log:
+	for log_entry in saved_log.slice(maxi(0, saved_log.size() - MAX_LOG_ENTRIES)):
 		log.append(String(log_entry))
 	command_history.clear()
 	var saved_history: Array = restored.get("command_history", [])
