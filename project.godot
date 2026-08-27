@@ -35,3 +35,7 @@ ui_pause={"deadzone": 0.5, "events": [Object(InputEventKey,"physical_keycode":80
 
 [gui]
 theme/default_font_multichannel_signed_distance_field=true
+
+[market_of_ash]
+build_commit="development"
+build_run="local"

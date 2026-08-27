@@ -278,7 +278,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Source-controlled export presets now define `Windows Desktop` and `Web` artifacts.
 - Pull-request packaging and tagged releases export both targets with Godot 4.4.1 templates, verify the Web payload, and launch the packaged Windows executable headlessly before upload; each candidate carries a manifest with game/content versions and exact commit/ref/run provenance.
 - The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
-- The settlement shop exposes seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
+- The settlement shop exposes the packaged build commit, seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
 - Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
 - Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. The Main Menu explains both schemes.
 - P/controller Menu pauses from any gameplay state; Escape/B pauses where it cannot safely act as Back. The modal preserves pending events and restores the previous focus on Resume.
@@ -286,7 +286,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Successful commands autosave to the prototype slot while rotating one backup generation. Manual Save, Continue, and Load show day/location/version context; a corrupt primary recovers from backup, while unrecoverable missing, malformed, and future saves are rejected before the active world is replaced.
 - Returning from Pause to the Main Menu requires its protective autosave to succeed; a write failure leaves the live campaign paused and explains how to resume instead of silently discarding the session.
 - The Main Menu pre-validates primary and backup saves, shows day/location/money/cargo before Continue, and disables Continue when neither generation is safe to load.
-- Shop and Pause can export a privacy-safe JSON playtest report containing build/content/save versions, seed, current resources, contracts, events, route conditions, information, crew, ending context, command history, and game log without personal identifiers. Pause keeps the result and output path visible above the overlay actions.
+- Shop and Pause can export a versioned, privacy-safe JSON playtest report containing the exact packaged commit/run, build/content/save versions, seed, current resources, contracts, events, route conditions, information, crew, ending context, command history, and game log without personal identifiers. Pause keeps the result and output path visible above the overlay actions.
 - Local preset parsing and project import pass. CI run 36 exported and uploaded a 94 MB Windows executable plus a complete Web payload (`index.html`, JavaScript, PCK, and WASM); direct local export remains unavailable only because the temporary editor installation lacks templates.
 - `docs/ux/alpha_accessibility_input_audit.md` separates automated evidence from the physical-controller, high-DPI, minimum-window, color-simulation, and browser checks still requiring human execution. `docs/playtest_feedback_form.md` captures comprehension and causal run stories without personal data.
 

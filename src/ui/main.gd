@@ -872,9 +872,12 @@ func _on_pause_main_menu_pressed() -> void:
 
 func _on_export_report_pressed() -> void:
 	var report := {
+		"report_version": 1,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
+		"build_commit": String(ProjectSettings.get_setting("market_of_ash/build_commit", "development")),
+		"build_run": String(ProjectSettings.get_setting("market_of_ash/build_run", "local")),
 		"seed": world.seed,
 		"day": world.day,
 		"settlement_id": world.current_settlement,
@@ -1615,7 +1618,9 @@ func _refresh_ui() -> void:
 		if not world.command_history.is_empty():
 			var latest: Dictionary = world.command_history.back()
 			last_command = "%s (%s)" % [String(latest.get("id", "unknown")), "ok" if bool(latest.get("ok", false)) else "blocked"]
-		diagnostics_label.text = "DIAGNOSTICS — seed %d · save v%d · content %s · last command %s" % [world.seed, AshWorldState.SAVE_VERSION, MarketContent.content_version(), last_command]
+		var build_commit := String(ProjectSettings.get_setting("market_of_ash/build_commit", "development"))
+		var build_label := build_commit.substr(0, 8) if build_commit != "development" and build_commit.length() > 8 else build_commit
+		diagnostics_label.text = "DIAGNOSTICS — build %s · seed %d · save v%d · content %s · last command %s" % [build_label, world.seed, AshWorldState.SAVE_VERSION, MarketContent.content_version(), last_command]
 	if save_status_label:
 		save_status_label.text = save_status_text
 	if departure_save_status_label:

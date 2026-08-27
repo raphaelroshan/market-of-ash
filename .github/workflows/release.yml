@@ -32,6 +32,9 @@ jobs:
         run: bash scripts/verify.sh
       - name: Require export presets for release builds
         run: test -f export_presets.cfg
+      - name: Stamp build provenance
+        run: |
+          python -c "import os; from pathlib import Path; p=Path('project.godot'); s=p.read_text(encoding='utf-8'); s=s.replace('build_commit=\"development\"', 'build_commit=\"'+os.environ['GITHUB_SHA']+'\"').replace('build_run=\"local\"', 'build_run=\"'+os.environ['GITHUB_RUN_ID']+'\"'); p.write_text(s, encoding='utf-8')"
       - name: Export Windows Desktop
         run: |
           mkdir -p build artifacts
