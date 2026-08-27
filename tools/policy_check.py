@@ -24,6 +24,13 @@ def git_diff_names(base: str, root: Path) -> list[str]:
     return [line for line in result.stdout.splitlines() if line]
 
 
+def tracked_files(root: Path) -> list[Path]:
+    result = subprocess.run(["git", "ls-files", "-z"], cwd=root, check=False, capture_output=True)
+    if result.returncode != 0:
+        return [path for path in root.rglob("*") if path.is_file() and ".git" not in path.parts]
+    return [root / raw_path.decode("utf-8") for raw_path in result.stdout.split(b"\0") if raw_path]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", required=True)
@@ -48,8 +55,8 @@ def main() -> int:
     if changed and any(path.endswith(".gd") for path in changed) and not any("test" in path.lower() for path in changed):
         warnings.append("GDScript changed without a changed test file; review coverage manually")
 
-    for path in root.rglob("*"):
-        if not path.is_file() or ".git" in path.parts:
+    for path in tracked_files(root):
+        if not path.is_file():
             continue
         relative = str(path.relative_to(root))
         if ".godot" in path.parts or path.suffix in {".save", ".log"} or "user://" in relative:
