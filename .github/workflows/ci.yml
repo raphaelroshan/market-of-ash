@@ -148,6 +148,8 @@ jobs:
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           if [ -f export_presets.cfg ]; then
             godot --headless --path . --export-release "Windows Desktop" "build/${slug}.exe"
+            mkdir -p build/web
+            godot --headless --path . --export-release "Web" "build/web/index.html"
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi

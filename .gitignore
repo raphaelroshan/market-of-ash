@@ -2,7 +2,6 @@
 *.import
 *.translation
 export.cfg
-export_presets.cfg
 user://
 *.save
 *.log

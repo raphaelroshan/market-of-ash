@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B9 are implemented. Alpha UX, accessibility, and build operations are next.
+**Roadmap status:** A0–A1 foundations and B0–B9 are implemented. B10 build operations are configured; broader manual accessibility review remains.
 
 ## Implemented player-facing spine
 
@@ -117,7 +117,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 1. **One charter reference is stale.** `docs/gpt_agent_handoff_roadmap.md` references `docs/alpha_release_roadmap.md`, which is not present. The active roadmap is `docs/gpt_agent_handoff_roadmap.md`.
 2. **Most campaign fixtures are not present.** The first invalid market-memory fixture exists, but the broader fresh/saturated/contract/event/faction/crisis/ending fixture matrix remains planned.
 3. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
-4. **Browser export is not configured.** A local `--export-release Web` smoke attempt reaches project import but stops because the repository has no `export_presets.cfg`; configuring distributable exports remains a B10 operation.
+4. **Local export templates are not installed.** Windows and Web presets now exist and CI installs matching Godot 4.4.1 templates, but this laptop's temporary editor can only verify preset parsing/project import until templates are installed.
 
 ## Baseline verification commands
 
@@ -255,6 +255,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
 - Save version 11 preserves the ending. Tests cover every stage boundary, unmet predicates, successful resolution, save/load, migration, and UI presentation.
 
+## B10 build-operations result
+
+- Source-controlled export presets now define `Windows Desktop` and `Web` artifacts.
+- Pull-request packaging and tagged releases export both targets with Godot 4.4.1 templates before uploading artifacts.
+- The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
+- Local preset parsing and project import pass. A local Web binary export remains blocked only by the temporary editor installation's missing export templates; CI explicitly installs them.
+
 ## Next permitted task
 
-Begin B10 with export configuration and a browser smoke build, then continue input/scaling and diagnostics checks.
+Continue B10 with packaged-build smoke execution, input/accessibility review, and player-facing diagnostics.
