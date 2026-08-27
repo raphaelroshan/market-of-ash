@@ -1640,7 +1640,7 @@ func _refresh_event_card() -> void:
 	var pending := world.pending_event
 	event_card.visible = not pending.is_empty()
 	if pending.is_empty():
-		if arrival_pending:
+		if arrival_pending and (pause_layer == null or not pause_layer.visible):
 			_grab_focus_if_available(enter_settlement_button)
 		return
 	event_title_label.text = String(pending.get("title", "Route decision"))
@@ -1723,7 +1723,8 @@ func _refresh_event_card() -> void:
 			reason_label.add_theme_color_override("font_color", Color("#b5a18b"))
 			event_choice_list.add_child(reason_label)
 			event_choice_reason_labels.append(reason_label)
-	_grab_first_enabled(event_choice_buttons)
+	if pause_layer == null or not pause_layer.visible:
+		_grab_first_enabled(event_choice_buttons)
 
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
 	for contract_id in world.active_contracts.keys():

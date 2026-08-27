@@ -375,6 +375,9 @@ func _initialize() -> void:
 	_expect(ui.departure_status_label.text.contains("ROUTE DECISION"), "departure screen did not identify the paused route decision")
 	ui._unhandled_input(cancel_event)
 	_expect(ui.pause_layer.visible and not ui.world.pending_event.is_empty(), "Escape during a route decision should pause without bypassing the pending choice")
+	ui._on_save_pressed()
+	await process_frame
+	_expect(ui.pause_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "saving a pending route decision should not move focus behind the Pause overlay")
 	ui._unhandled_input(cancel_event)
 	_expect(not ui.pause_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "closing pause during an event should restore the focused response")
 	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
