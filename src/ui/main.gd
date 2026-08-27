@@ -611,18 +611,17 @@ func _build_shop() -> void:
 	shop_quantity.max_value = 12
 	shop_quantity.value = PLAYTEST_QUANTITY
 	market.add_child(_labeled_control("Quantity", shop_quantity))
-	shop_market_preview_label = _forecast_label()
-	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
-	market.add_child(shop_market_preview_label)
 	var purchase_row := HBoxContainer.new()
 	purchase_row.add_theme_constant_override("separation", 12)
 	market.add_child(purchase_row)
 	var buy_button := Button.new()
+	buy_button.name = "BuyCargoButton"
 	buy_button.text = "Buy cargo"
 	buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	buy_button.pressed.connect(_on_buy_pressed)
 	purchase_row.add_child(buy_button)
 	var sell_button := Button.new()
+	sell_button.name = "SellCargoButton"
 	sell_button.text = "Sell selected cargo"
 	sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
 	sell_button.pressed.connect(_on_sell_pressed)
@@ -632,6 +631,9 @@ func _build_shop() -> void:
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	guided_test_button.pressed.connect(_on_guided_test_action)
 	market.add_child(guided_test_button)
+	shop_market_preview_label = _forecast_label()
+	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
+	market.add_child(shop_market_preview_label)
 	shop_good_option.item_selected.connect(_on_shop_plan_changed)
 	shop_quantity.value_changed.connect(_on_shop_quantity_changed)
 
