@@ -21,6 +21,7 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | AI QA review | Edge cases, test gaps, input paths, save/load, reproducibility | Reports; blocks on critical findings. |
 | AI security review | Credential exposure, unsafe process behavior, dependency and prompt-injection risks | Reports; blocks on critical findings. |
 | Packaging | Project import, source snapshot, Windows export, and Web export | Blocks after export presets are present. |
+| Web render | Launches the packaged Web build in Linux Chrome, verifies the loading overlay clears, and captures minimum/standard viewport screenshots. | Blocks on browser startup, persistent loading/error state, missing captures, invalid PNGs, or unexpected dimensions. |
 
 ## Multi-agent model
 
@@ -44,7 +45,7 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 ## Release behavior
 
-Pull requests and pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Packaging verifies the expected Web payload and launches the exported Windows executable headlessly for two frames before upload. Every candidate includes a machine-readable manifest with the game/content versions, exact commit and ref, workflow run ID/number, repository identity, and target platforms, plus `SHA256SUMS.txt` covering the executable, core Web payload, source snapshot, and manifest. Version tags such as `v0.1.0` invoke the guarded release workflow with the same smoke test, provenance record, and checksums.
+Pull requests and pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Packaging verifies the expected Web payload and launches the exported Windows executable headlessly for two frames before upload. A dependent Linux job serves the packaged Web files with Godot's requested isolation headers, launches Chrome, rejects a persistent loading overlay, and uploads 960×540 and 1280×720 rendered screenshots. Every candidate includes a machine-readable manifest with the game/content versions, exact commit and ref, workflow run ID/number, repository identity, and target platforms, plus `SHA256SUMS.txt` covering the executable, core Web payload, source snapshot, and manifest. Version tags such as `v0.1.0` invoke the guarded release workflow with the same smoke test, provenance record, and checksums.
 
 Runtime exports include the game scenes, scripts, and canonical content but exclude repository-only tests, tools, research, documentation, and workflow files. The separately packaged source snapshot retains those materials for review and reproduction.
 

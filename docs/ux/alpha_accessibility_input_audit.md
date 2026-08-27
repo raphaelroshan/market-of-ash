@@ -49,7 +49,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 
 ## Open alpha blockers
 
-1. Large-text reflow and scrolling are implemented but still need rendered checks at minimum window and high OS scaling for clipping and comfortable line length.
+1. CI captures the packaged Web Main Menu at 960×540 and 1280×720 after confirming the loading overlay clears. Large-text gameplay reflow and high OS scaling still need human review for clipping and comfortable line length.
 2. Controller behavior is configured and headlessly asserted but has not been exercised on physical Windows hardware.
 3. Controller remapping and screen-reader semantics are not implemented; essential information and fixed controller bindings remain available as text. Interface cues are supplementary and can be disabled.
 
