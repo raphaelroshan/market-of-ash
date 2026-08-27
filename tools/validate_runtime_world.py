@@ -401,8 +401,8 @@ def validate_crisis(value: Any, errors: list[str]) -> None:
             if stage.get("id") != index or not isinstance(stage.get("starts_day"), int) or stage["starts_day"] <= 0 or not isinstance(stage.get("label"), str) or not stage["label"] or not isinstance(stage.get("objective"), str) or not stage["objective"]:
                 fail(errors, f"crisis stage {index} is invalid")
     endings = rules.get("endings")
-    if not isinstance(endings, list) or len(endings) < 3:
-        fail(errors, "crisis.endings must contain at least three endings")
+    if not isinstance(endings, list) or len(endings) < 4:
+        fail(errors, "crisis.endings must contain at least four endings")
         return
     seen_ids: set[str] = set()
     for index, raw_ending in enumerate(endings):
@@ -430,6 +430,10 @@ def validate_crisis(value: Any, errors: list[str]) -> None:
             for field in ("minimum_caravan_reputation", "maximum_warden_reputation"):
                 if not isinstance(ending.get(field), int) or ending[field] < 0:
                     fail(errors, f"ending_free_caravan_routes must declare a non-negative {field}")
+        elif ending_id == "ending_ash_merchant":
+            for field in ("minimum_money", "maximum_reedwatch_resilience"):
+                if not isinstance(ending.get(field), int) or ending[field] < 0:
+                    fail(errors, f"ending_ash_merchant must declare a non-negative {field}")
         elif isinstance(ending_id, str):
             fail(errors, f"unsupported crisis ending id: {ending_id}")
 

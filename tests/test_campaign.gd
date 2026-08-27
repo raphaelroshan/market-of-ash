@@ -87,6 +87,32 @@ func _init() -> void:
 	_expect(caravan_world.ending_id != world.ending_id and caravan_world.ending_id != warden_world.ending_id, "all three fresh campaign strategies should produce distinct conclusions")
 	_expect(caravan_world.ending_summary.contains("volatile margins") and caravan_world.ending_summary.contains("public information"), "the independent ending should explain access and trade-style consequences")
 
+	var merchant_world := AshWorldState.new(1)
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.BUY_GOODS, {"good_id": "medicine", "quantity": 3}), "buy the first merchant medicine load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "reedwatch"}), "take the first merchant run")
+	_expect(merchant_world.pending_event.is_empty(), "the seeded first merchant run should arrive without a route decision")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.SELL_GOODS, {"good_id": "medicine", "quantity": 3}), "sell the first medicine load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "ashgate"}), "return for the second merchant load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.BUY_GOODS, {"good_id": "medicine", "quantity": 3}), "buy the second merchant medicine load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "reedwatch"}), "take the second merchant run")
+	_expect(merchant_world.pending_event.get("id", "") == "three_riders_no_banner", "the second merchant run should encounter the unmarked riders")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "three_riders_no_banner", "choice_id": "pay_for_escort"}), "protect the second merchant load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.SELL_GOODS, {"good_id": "medicine", "quantity": 3}), "sell the second medicine load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "ashgate"}), "return for the scarcity trade")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.BUY_GOODS, {"good_id": "water", "quantity": 3}), "buy the merchant water load")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "reedwatch"}), "take water into the shortage")
+	_expect(merchant_world.pending_event.get("id", "") == "last_clean_barrel", "the merchant water run should reach The Last Clean Barrel")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "last_clean_barrel", "choice_id": "sell_barrels_at_peak"}), "take the emergency water premium")
+	_expect_ok(_command(merchant_world, MarketCommandProcessor.SELL_GOODS, {"good_id": "water", "quantity": 1}), "sell the remaining water through the ordinary market")
+	_expect(merchant_world.money >= 220 and merchant_world.resilience_for("reedwatch") == 0, "the profit-first strategy should establish its distinct ending state")
+	var merchant_targets := ["ashgate", "brine_cross", "ashgate", "reedwatch"]
+	var merchant_routes := ["old_road", "toll_road", "toll_road", "old_road"]
+	for index in range(merchant_targets.size()):
+		_expect_ok(_command(merchant_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": merchant_routes[index], "destination_id": merchant_targets[index]}), "advance the merchant campaign toward day ten")
+	_expect(merchant_world.day == 10 and merchant_world.crisis_stage == 3, "the merchant campaign should reach the settlement-decision stage")
+	_expect(merchant_world.ending_id == "ending_ash_merchant", "the profit-first strategy should reach The Best Margin")
+	_expect(merchant_world.ending_summary.contains("concentrated profit") and merchant_world.ending_summary.contains("public reserve remains fragile"), "the merchant ending should explain its supply and trade-style consequences")
+
 	if failures.is_empty():
 		print("Campaign smoke: PASS")
 	else:

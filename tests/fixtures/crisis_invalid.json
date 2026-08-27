@@ -24,6 +24,14 @@
       "maximum_warden_reputation": 1,
       "maximum_arms_escalation": 1,
       "summary": "Valid control record"
+    },
+    {
+      "id": "ending_ash_merchant",
+      "title": "The Best Margin",
+      "minimum_money": 220,
+      "maximum_reedwatch_resilience": 1,
+      "maximum_arms_escalation": 1,
+      "summary": "Valid control record"
     }
   ]
 }

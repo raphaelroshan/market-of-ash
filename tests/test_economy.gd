@@ -51,8 +51,8 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.10.0", "runtime content should expose content version")
-	_expect(MarketContent.ending_records().size() == 3 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky", "runtime content should expose all stable ending records")
+	_expect(MarketContent.content_version() == "1.11.0", "runtime content should expose content version")
+	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -1184,6 +1184,11 @@ func _test_crisis_progression_and_ending() -> void:
 	caravan_world.advance_day(9)
 	_expect(caravan_world.ending_id == "ending_free_caravan_routes", "a high-Caravan low-Warden state should reach the open-road ending")
 	_expect(caravan_world.ending_summary.contains("public information"), "Free Caravan ending should explain its supply, access, escalation, and trade-style result")
+	var merchant_world := AshWorldState.new(1)
+	merchant_world.money = 220
+	merchant_world.advance_day(9)
+	_expect(merchant_world.ending_id == "ending_ash_merchant", "a wealthy low-resilience state should reach the profit-first ending")
+	_expect(merchant_world.ending_summary.contains("concentrated profit"), "merchant ending should explain its supply, access, escalation, and trade-style result")
 	var restored := AshWorldState.new(0)
 	var restore_result := restored.load_serialized(ending_world.serialize())
 	_expect(restore_result.ok and restored.ending_id == ending_world.ending_id and restored.ending_summary == ending_world.ending_summary, "save/load should preserve the reached ending")
@@ -1256,7 +1261,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.10.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.11.0", "serialized state should declare the content version")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)

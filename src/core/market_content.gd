@@ -723,8 +723,8 @@ static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
 		if int(stage.get("id", -1)) != index or int(stage.get("starts_day", 0)) <= 0 or String(stage.get("label", "")).is_empty() or String(stage.get("objective", "")).is_empty():
 			errors.append("crisis stage %d is invalid" % index)
 	var endings: Array = rules.get("endings", [])
-	if endings.size() < 3:
-		errors.append("crisis must declare at least three endings")
+	if endings.size() < 4:
+		errors.append("crisis must declare at least four endings")
 	var ending_ids: Dictionary = {}
 	for raw_ending in endings:
 		if typeof(raw_ending) != TYPE_DICTIONARY:
@@ -750,6 +750,9 @@ static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
 			"ending_free_caravan_routes":
 				if int(ending.get("minimum_caravan_reputation", -1)) < 0 or int(ending.get("maximum_warden_reputation", -1)) < 0:
 					errors.append("ending_free_caravan_routes must declare faction bounds")
+			"ending_ash_merchant":
+				if int(ending.get("minimum_money", -1)) < 0 or int(ending.get("maximum_reedwatch_resilience", -1)) < 0:
+					errors.append("ending_ash_merchant must declare money and resilience bounds")
 			_:
 				errors.append("unsupported crisis ending id: %s" % ending_id)
 

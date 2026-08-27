@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has three distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards are configured; the documented hardware/rendered audit remains.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards are configured; the documented hardware/rendered audit remains.
 
 ## Implemented player-facing spine
 
@@ -14,7 +14,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 11 and runtime content version `1.10.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and unrecoverable malformed or future saves leave the active run untouched.
+- Saves declare save version 11 and runtime content version `1.11.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and unrecoverable malformed or future saves leave the active run untouched.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -257,10 +257,11 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
 - `Order at the Cistern` requires Warden standing 3+, Free Caravan standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes the resulting permit-controlled access and regulated trade style.
 - `No Road Owns the Sky` requires Free Caravan standing 2+, Warden standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes independent access, volatile margins, and shared route information.
+- `The Best Margin` requires at least 220 ashmarks, Reedwatch resilience 1 or lower, and arms escalation 1 or lower at stage 3. It describes profitable but uneven crisis recovery.
 - Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
 - Ending rules are ordered: when a state qualifies for both, completed shared relief takes precedence over regulated reserve control.
 - Save version 11 preserves either ending. Tests cover every stage boundary, unmet predicates, both successful resolutions, precedence, save/load, migration, and UI presentation.
-- Three fresh command campaigns reach different endings: relief plus public resilience, regulated medicine trade plus Warden recognition, and exposed-route information plus publicly shared water for Free Caravan standing.
+- Four fresh command campaigns reach different endings: relief plus public resilience, regulated medicine trade plus Warden recognition, exposed-route information plus publicly shared water for Free Caravan standing, and repeated arbitrage plus a scarcity-premium sale for concentrated merchant profit.
 
 ## B10 build-operations result
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.10.0",
+  "content_version": "1.11.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -617,6 +617,14 @@
         "maximum_warden_reputation": 1,
         "maximum_arms_escalation": 1,
         "summary": "Shared water reaches exposed settlements through independent caravans, keeping access open without Warden permits. Arms traffic stays contained; the caravan chose volatile margins, public information, and risk shared across the road network."
+      },
+      {
+        "id": "ending_ash_merchant",
+        "title": "The Best Margin",
+        "minimum_money": 220,
+        "maximum_reedwatch_resilience": 1,
+        "maximum_arms_escalation": 1,
+        "summary": "The caravan becomes the basin's indispensable broker while Reedwatch's public reserve remains fragile. Access follows purchasing power, arms traffic stays contained, and the player chose concentrated profit over shared recovery."
       }
     ]
   },
