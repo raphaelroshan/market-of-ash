@@ -856,6 +856,13 @@ func _labeled_control(label_text: String, control: Control) -> VBoxContainer:
 	group.add_child(control)
 	return group
 
+func _wrapped_action_button(minimum_height: float = 42.0) -> Button:
+	var button := Button.new()
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.custom_minimum_size = Vector2(0, minimum_height)
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return button
+
 func _populate_destination_options() -> void:
 	if destination_option == null:
 		return
@@ -1453,7 +1460,7 @@ func _refresh_opportunities() -> void:
 	for contract_record in MarketContent.contracts_from(world.current_settlement):
 		var contract_id := String(contract_record.get("id", ""))
 		var active := world.active_contract(contract_id)
-		var contract_button := Button.new()
+		var contract_button := _wrapped_action_button()
 		contract_button.text = "Accept %s" % String(contract_record.get("name", "Contract"))
 		var contract_reason := ""
 		if not active.is_empty():
@@ -1491,7 +1498,7 @@ func _refresh_opportunities() -> void:
 		var active := world.active_contract(active_id)
 		if world.current_settlement != String(active.get("destination_id", "")):
 			continue
-		var resolve_button := Button.new()
+		var resolve_button := _wrapped_action_button()
 		var remaining := maxi(0, int(active.get("quantity", 0)) - int(world.cargo.get(String(active.get("good_id", "")), 0)))
 		resolve_button.text = "Deliver %s" % String(active.get("name", "contract"))
 		if world.day <= int(active.get("deadline_day", 0)) and remaining > 0:
@@ -1504,7 +1511,7 @@ func _refresh_opportunities() -> void:
 		contract_buttons.append(resolve_button)
 	var actions := MarketContent.settlement_actions_for(world.current_settlement)
 	for action in actions:
-		var action_button := Button.new()
+		var action_button := _wrapped_action_button()
 		var cost := int(action.get("cost", 0))
 		var slots := int(action.get("service_slots", 1))
 		var time_cost := int(action.get("time_cost", 0))
@@ -1566,7 +1573,7 @@ func _append_crew_opportunity() -> void:
 		var recruited := world.is_crew_recruited(crew_id)
 		if not recruited and world.current_settlement != String(crew.get("recruit_settlement_id", "")):
 			continue
-		var button := Button.new()
+		var button := _wrapped_action_button()
 		var reason := ""
 		if not recruited:
 			button.text = "Recruit %s — %d ashmarks, %d slot" % [String(crew.get("name", "Crew")), int(crew.get("recruit_cost", 0)), int(crew.get("recruit_service_slots", 1))]
@@ -1651,7 +1658,7 @@ func _refresh_event_card() -> void:
 		if typeof(raw_choice) != TYPE_DICTIONARY:
 			continue
 		var choice: Dictionary = raw_choice
-		var button := Button.new()
+		var button := _wrapped_action_button(58.0)
 		var money_cost := int(choice.get("money_cost", 0))
 		var money_reward := int(choice.get("money_reward", 0))
 		var trade_mode := String(choice.get("trade_mode", "none"))

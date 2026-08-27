@@ -349,6 +349,7 @@ func _initialize() -> void:
 	_expect(ui.event_title_label.text == "The Gatekeeper's Chalk", "event card did not render the authored title")
 	_expect(ui.event_stakes_label.text.contains("Toll Road") and ui.event_stakes_label.text.contains("1 Medicine unit valued at 44"), "event card did not expose route and cargo context")
 	_expect(ui.event_choice_buttons.size() == 4, "Gatekeeper's Chalk should expose its three base choices and Tess's visible negotiation option")
+	_expect(ui.event_choice_buttons[0].autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.event_choice_buttons[0].custom_minimum_size.y >= 58.0, "long event choices should wrap instead of clipping their costs and consequences")
 	_expect(ui.event_choice_buttons[3].disabled and ui.event_choice_buttons[3].tooltip_text.contains("Tess Oryn"), "Tess's Gatekeeper option should remain visible with its assignment prerequisite")
 	_expect(ui.event_choice_reason_labels.size() == 1 and ui.event_choice_reason_labels[0].text.contains("Tess Oryn"), "disabled event prerequisites should remain readable without hovering or focusing the unavailable control")
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
