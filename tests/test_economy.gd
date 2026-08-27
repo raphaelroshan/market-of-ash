@@ -1395,6 +1395,12 @@ func _test_disk_save_sanitization() -> void:
 	invalid_contract["active_contracts"] = {"invented_contract": {"id": "invented_contract", "status": "active"}}
 	var rejected_contract := AshWorldState.new(0).load_serialized(invalid_contract)
 	_expect(not rejected_contract.ok and rejected_contract.reason.contains("invalid active contract"), "load should reject unknown active-contract references")
+	var accepted_contract_world := AshWorldState.new(1107)
+	_expect(MarketCommandProcessor.execute(accepted_contract_world, {"id": MarketCommandProcessor.ACCEPT_CONTRACT, "inputs": {"contract_id": "reedwatch_water_relief_01"}}).ok, "contract-integrity fixture should accept authored terms")
+	var forged_contract_save: Dictionary = accepted_contract_world.serialize()
+	forged_contract_save["active_contracts"]["reedwatch_water_relief_01"]["reward"] = 999999
+	var rejected_forged_contract := AshWorldState.new(0).load_serialized(forged_contract_save)
+	_expect(not rejected_forged_contract.ok and rejected_forged_contract.reason.contains("authored reward"), "load should reject a current-content contract with a forged reward")
 	var invalid_pending: Dictionary = source.serialize()
 	invalid_pending["pending_event"] = {"id": "invented_event", "choices": []}
 	invalid_pending["journey_context"] = {"origin_id": "ashgate", "destination_id": "reedwatch", "route_id": "old_road"}

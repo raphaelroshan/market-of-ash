@@ -572,11 +572,27 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 	if not saved_ending_id.is_empty() and MarketContent.ending(saved_ending_id).is_empty():
 		return {"ok": false, "reason": "save references an unknown ending"}
 	var contracts: Dictionary = data.get("active_contracts", {})
+	var same_content_version := String(data.get("content_version", "")) == MarketContent.content_version()
 	for contract_id_value in contracts.keys():
 		var contract_id := String(contract_id_value)
 		var snapshot: Variant = contracts.get(contract_id_value, {})
-		if MarketContent.contract(contract_id).is_empty() or typeof(snapshot) != TYPE_DICTIONARY or String(snapshot.get("id", contract_id)) != contract_id:
+		var authored_contract := MarketContent.contract(contract_id)
+		if authored_contract.is_empty() or typeof(snapshot) != TYPE_DICTIONARY or String(snapshot.get("id", contract_id)) != contract_id:
 			return {"ok": false, "reason": "save references an invalid active contract"}
+		if String(snapshot.get("status", "")) != "active" or not has_settlement(String(snapshot.get("origin_id", ""))) or not has_settlement(String(snapshot.get("destination_id", ""))) or MarketContent.good(String(snapshot.get("good_id", ""))).is_empty():
+			return {"ok": false, "reason": "save active contract has invalid references or status"}
+		for numeric_field in ["quantity", "deadline_days", "reward", "failure_penalty", "service_slots", "accepted_day", "deadline_day"]:
+			var numeric_value: Variant = snapshot.get(numeric_field, -1)
+			if typeof(numeric_value) != TYPE_INT and typeof(numeric_value) != TYPE_FLOAT:
+				return {"ok": false, "reason": "save active contract field %s must be numeric" % numeric_field}
+		var accepted_day := int(snapshot.get("accepted_day", 0))
+		var deadline_day := int(snapshot.get("deadline_day", 0))
+		if int(snapshot.get("quantity", 0)) <= 0 or int(snapshot.get("quantity", 0)) > int(data.get("cargo_capacity", 12)) or int(snapshot.get("reward", -1)) < 0 or int(snapshot.get("failure_penalty", -1)) < 0 or accepted_day < 1 or accepted_day > int(data.get("day", 1)) or deadline_day != accepted_day + int(snapshot.get("deadline_days", 0)):
+			return {"ok": false, "reason": "save active contract has invalid frozen terms"}
+		if same_content_version:
+			for field in authored_contract.keys():
+				if snapshot.get(field) != authored_contract.get(field):
+					return {"ok": false, "reason": "save active contract does not match authored %s" % field}
 	var pending: Dictionary = data.get("pending_event", {})
 	var journey: Dictionary = data.get("journey_context", {})
 	if pending.is_empty() != journey.is_empty():
@@ -591,18 +607,20 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "save references an invalid pending event"}
 		if not MarketContent.route_connects(route_id, origin_id, destination_id) or settlement_id != origin_id:
 			return {"ok": false, "reason": "save references an invalid pending journey"}
-		for field in ["id", "title", "setup", "stakes", "choices"]:
-			if pending.get(field) != authored_event.get(field):
-				return {"ok": false, "reason": "save pending event does not match authored %s" % field}
+		if same_content_version:
+			for field in ["id", "title", "setup", "stakes", "choices"]:
+				if pending.get(field) != authored_event.get(field):
+					return {"ok": false, "reason": "save pending event does not match authored %s" % field}
 		if String(pending.get("origin_id", "")) != origin_id or String(pending.get("destination_id", "")) != destination_id or String(pending.get("route_id", "")) != route_id:
 			return {"ok": false, "reason": "save pending event does not match its journey"}
 		for roll_field in ["trigger_roll", "resolution_roll"]:
 			var roll_value: Variant = pending.get(roll_field, -1.0)
 			if (typeof(roll_value) != TYPE_INT and typeof(roll_value) != TYPE_FLOAT) or float(roll_value) < 0.0 or float(roll_value) > 1.0:
 				return {"ok": false, "reason": "save pending event has an invalid %s" % roll_field}
-		var basis_validation := _validate_pending_event_bases(pending, authored_event)
-		if not basis_validation.ok:
-			return basis_validation
+		if same_content_version:
+			var basis_validation := _validate_pending_event_bases(pending, authored_event)
+			if not basis_validation.ok:
+				return basis_validation
 	return {"ok": true, "reason": ""}
 
 func _validate_pending_event_bases(pending: Dictionary, authored_event: Dictionary) -> Dictionary:
