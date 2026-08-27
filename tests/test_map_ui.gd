@@ -172,6 +172,16 @@ func _initialize() -> void:
 	var state_before_invalid_shape := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_invalid_shape and ui.save_status_label.text.contains("command_history must be a list"), "valid JSON with an invalid save shape should be rejected without replacing the active run")
+	for oversized_path in [test_save_path, test_backup_path]:
+		var oversized_file := FileAccess.open(oversized_path, FileAccess.WRITE)
+		oversized_file.seek(ui.MAX_SAVE_BYTES)
+		oversized_file.store_8(0)
+		oversized_file = null
+	var state_before_oversized_load := JSON.stringify(ui.world.serialize())
+	ui._refresh_continue_availability()
+	_expect(ui.continue_game_button.disabled and ui.menu_save_status_label.text.contains("could not be validated"), "Continue should reject oversized primary and backup files before parsing")
+	ui._on_load_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_oversized_load and ui.save_status_label.text.contains("larger than the supported 5 MB limit"), "loading an oversized save should fail without reading or replacing the active run")
 	ui._on_save_pressed()
 	ui.autosave_enabled = true
 	var action_money_before: int = ui.world.money

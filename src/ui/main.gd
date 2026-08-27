@@ -13,6 +13,7 @@ const PLAYTEST_ROUTE := "old_road"
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
+const MAX_SAVE_BYTES := 5 * 1024 * 1024
 const REMAPPABLE_ACTIONS := ["ui_accept", "ui_cancel", "ui_pause"]
 const ACTION_LABELS := {"ui_accept": "Accept", "ui_cancel": "Back", "ui_pause": "Pause"}
 const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel": [KEY_ESCAPE], "ui_pause": [KEY_P]}
@@ -1390,6 +1391,8 @@ func _load_candidate(candidate_path: String) -> Dictionary:
 	var file := FileAccess.open(candidate_path, FileAccess.READ)
 	if file == null:
 		return {"ok": false, "reason": "The save could not be opened"}
+	if file.get_length() > MAX_SAVE_BYTES:
+		return {"ok": false, "reason": "The save is larger than the supported 5 MB limit"}
 	var parser := JSON.new()
 	var parse_error := parser.parse(file.get_as_text())
 	var parsed: Variant = parser.data
