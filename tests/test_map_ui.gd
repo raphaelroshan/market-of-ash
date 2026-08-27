@@ -38,6 +38,7 @@ func _initialize() -> void:
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")
 	_expect(_has_scroll_ancestor(ui.start_game_button), "the expanded Main Menu settings and launch controls should remain reachable through a scroll container")
+	_expect(ui.start_game_button.get_global_rect().end.y <= ui.menu_layer.get_global_rect().end.y, "Start Game should remain visible before scrolling the expanded Main Menu")
 	_expect(ui.continue_game_button != null and ui.continue_game_button.text == "Continue saved game", "main menu should expose a separate validated continue action")
 	_expect(ui.reduce_motion_checkbox != null and ui.reduce_motion_checkbox.text == "Reduce travel motion", "main menu should expose a reduced-motion option")
 	_expect(ui.large_text_checkbox != null and ui.large_text_checkbox.text == "Large text", "main menu should expose a large-text option")

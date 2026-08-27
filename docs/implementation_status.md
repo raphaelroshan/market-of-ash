@@ -11,7 +11,7 @@
 - Departure Desk owns the regional map, legal destination/route selection, route forecast, return-to-shop navigation, and travel commitment.
 - Successful travel presents an arrival report before the player enters the destination shop.
 - The regional map is a real planning surface rather than a placeholder grid: settlement markers select direct destinations, explain unreachable stops, label the current crisis stage/location and local resilience without relying on color, and visually highlight the caravan's position. Once travel is committed, map clicks and planning selectors lock until the route decision and arrival report are complete.
-- The Main Menu exposes separate fresh-start and validated-continue actions plus a reduced-motion option.
+- The scroll-safe Main Menu keeps fresh-start and validated-continue actions above optional accessibility/input settings, and exposes reduced motion, large text, keyboard remapping, and default restoration.
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.

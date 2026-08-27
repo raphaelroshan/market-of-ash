@@ -212,6 +212,9 @@ func _build_main_menu() -> void:
 	menu_save_status_label.add_theme_font_size_override("font_size", 11)
 	menu_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(menu_save_status_label)
+	content.move_child(start_game_button, 4)
+	content.move_child(continue_game_button, 5)
+	content.move_child(menu_save_status_label, 6)
 	_refresh_binding_labels()
 
 func _build_pause_menu() -> void:
@@ -521,6 +524,7 @@ func _build_shop() -> void:
 	market.add_child(shop_cargo_label)
 	var ledger_label := Label.new()
 	ledger_label.text = "MARKET LEDGER — Select a good to see its local price, reason, and regional comparison."
+	ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ledger_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	market.add_child(ledger_label)
 	shop_good_option = OptionButton.new()
