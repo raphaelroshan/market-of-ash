@@ -574,11 +574,14 @@ func _build_shop() -> void:
 	var market_card := PanelContainer.new()
 	market_card.custom_minimum_size = Vector2(690, 0)
 	columns.add_child(market_card)
+	var market_shell := VBoxContainer.new()
+	market_shell.add_theme_constant_override("separation", 10)
+	market_card.add_child(market_shell)
 	var market_scroll := ScrollContainer.new()
 	market_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	market_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	market_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	market_card.add_child(market_scroll)
+	market_shell.add_child(market_scroll)
 	var market := VBoxContainer.new()
 	market.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	market.add_theme_constant_override("separation", 14)
@@ -611,9 +614,12 @@ func _build_shop() -> void:
 	shop_quantity.max_value = 12
 	shop_quantity.value = PLAYTEST_QUANTITY
 	market.add_child(_labeled_control("Quantity", shop_quantity))
+	shop_market_preview_label = _forecast_label()
+	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
+	market.add_child(shop_market_preview_label)
 	var purchase_row := HBoxContainer.new()
 	purchase_row.add_theme_constant_override("separation", 12)
-	market.add_child(purchase_row)
+	market_shell.add_child(purchase_row)
 	var buy_button := Button.new()
 	buy_button.name = "BuyCargoButton"
 	buy_button.text = "Buy cargo"
@@ -630,10 +636,7 @@ func _build_shop() -> void:
 	guided_test_button.text = "Optional: Buy 2 water"
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	guided_test_button.pressed.connect(_on_guided_test_action)
-	market.add_child(guided_test_button)
-	shop_market_preview_label = _forecast_label()
-	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
-	market.add_child(shop_market_preview_label)
+	market_shell.add_child(guided_test_button)
 	shop_good_option.item_selected.connect(_on_shop_plan_changed)
 	shop_quantity.value_changed.connect(_on_shop_quantity_changed)
 

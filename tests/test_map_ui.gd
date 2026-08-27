@@ -116,7 +116,7 @@ func _initialize() -> void:
 	_expect(not _has_scroll_ancestor(ui.plan_departure_button) and ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "Plan departure should remain pinned outside the long action rail and visible without scrolling")
 	var buy_cargo_button: Button = ui.find_child("BuyCargoButton", true, false)
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
-	_expect(buy_cargo_button != null and sell_cargo_button != null and buy_cargo_button.get_parent().get_index() < ui.shop_market_preview_label.get_index() and sell_cargo_button.get_parent().get_index() < ui.shop_market_preview_label.get_index(), "primary trade actions should appear before the longer price explanation")
+	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(_has_scroll_ancestor(ui.shop_good_option), "the primary Shop trade workflow should remain reachable through a scroll container")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
@@ -615,8 +615,11 @@ func _initialize() -> void:
 
 	var state_before_text_scale := JSON.stringify(ui.world.serialize())
 	ui.large_text_checkbox.button_pressed = true
+	await process_frame
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
+	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the pinned departure action visible")
+	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the primary Buy action visible before scrolling")
 	ui.reduce_motion_checkbox.button_pressed = true
 	ui.interface_sounds_checkbox.button_pressed = false
 	var saved_settings := ConfigFile.new()
