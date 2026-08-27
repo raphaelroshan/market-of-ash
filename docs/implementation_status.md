@@ -15,6 +15,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - The optional first-run Water delivery has a positive risk-adjusted forecast, and pre-purchase route forecasts include the proposed load in the same one-exposed-unit risk model used after purchase.
+- Forecasts label selected quantities as trade scenarios, show the matching quantity actually held, and warn that departure carries only the real hold when a proposed load has not been purchased.
 - First-run objective progress is reconstructed from saved command evidence, so loading after the guided purchase or completed sale cannot reset the prompt or repeat its one-use action; missing cargo produces a specific recovery prompt instead of silently returning to step one.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.

@@ -115,6 +115,7 @@ func _initialize() -> void:
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	_expect(ui.route_preview_label.text.contains("1 Water unit at risk") and ui.route_preview_label.text.contains("EXPECTED NET PROFIT +14"), "the opening forecast should price the proposed water load and present a profitable but exposed teaching trade")
+	_expect(ui.route_preview_label.text.contains("Held 0/2 selected Water") and ui.route_preview_label.text.contains("Buy 2 before departure") and ui.route_preview_label.text.contains("travel uses the actual hold"), "the pre-purchase forecast should distinguish its scenario from the empty caravan")
 	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.15.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
@@ -265,6 +266,7 @@ func _initialize() -> void:
 	ui._on_start_game_pressed()
 	ui._on_load_pressed()
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3") and ui.guided_test_button.disabled, "loading a purchased teaching load should preserve objective progress and keep the one-use action disabled")
+	_expect(ui.route_preview_label.text.contains("Held 2/2 selected Water") and ui.route_preview_label.text.contains("scenario is covered"), "the route forecast should confirm when the selected scenario is present in the actual hold")
 	ui.world.current_settlement = "reedwatch"
 	ui.world.cargo["water"] = 1
 	ui.world.cargo["weight"] = 1
@@ -299,7 +301,7 @@ func _initialize() -> void:
 	_expect(not ui.shop_layer.visible and ui.game_layer.visible, "Plan departure should open the dedicated departure map")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "opening departure planning should focus the destination control")
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
-	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("Water x2"), "departure desk did not carry the planned load forward")
+	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("FORECAST SCENARIO") and ui.departure_load_label.text.contains("Water x2") and ui.departure_load_label.text.contains("actually held 2"), "departure desk did not distinguish its forecast scenario from actual cargo")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
 	_expect(_has_scroll_ancestor(ui.commit_departure_button), "the departure control rail should remain reachable through a scroll container")
 	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 2/4"), "departure desk did not pin the active contract and cargo shortfall")

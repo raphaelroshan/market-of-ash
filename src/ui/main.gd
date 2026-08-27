@@ -1179,7 +1179,7 @@ func _refresh_forecasts() -> void:
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
 	if departure_load_label:
-		departure_load_label.text = "PLANNED LOAD\n%s x%d · hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
+		departure_load_label.text = "FORECAST SCENARIO\n%s x%d · actually held %d · total hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get(good_id, 0)), int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		route_preview_label.text = "ROUTE FORECAST\nChoose a directly connected destination and route."
 		return
@@ -1222,6 +1222,12 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 		cargo_risk_text = "Cargo risk: 1 %s unit at risk, valued at %d at %s; expected loss %d at %d%% risk." % [String(preview.loss_good_id).capitalize(), int(preview.loss_unit_value), destination.get("name", "the destination"), int(preview.expected_loss), int(round(float(preview.risk) * 100.0))]
 	var intelligence: Dictionary = world_context.get("route_intelligence", {})
 	var intelligence_text := "%s — %s" % [String(intelligence.get("label", "Scout unavailable")), String(intelligence.get("detail", "No current field report."))]
+	var held_quantity := int(world.cargo.get(good_id, 0))
+	var load_check: String
+	if held_quantity < quantity:
+		load_check = "LOAD CHECK — Held %d/%d selected %s. Buy %d before departure to carry this full scenario; travel uses the actual hold." % [held_quantity, quantity, good_id.capitalize(), quantity - held_quantity]
+	else:
+		load_check = "LOAD CHECK — Held %d/%d selected %s. This scenario is covered; departure still carries the full actual hold." % [held_quantity, quantity, good_id.capitalize()]
 	var faction_text := ""
 	if route.has("faction_effect"):
 		faction_text = "\n%s standing: %s Trade-off: %s" % [String(route.get("faction_name", "Faction")), String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
@@ -1229,7 +1235,7 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 		faction_text += "\nEscalation warning: %s" % String(route.get("arms_effect", ""))
 	if route.has("crisis_effect"):
 		faction_text += "\nCrisis route change: %s" % String(route.get("crisis_effect", ""))
-	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
+	return "ROUTE FORECAST — %s to %s via %s\nScenario buy %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), load_check, cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
 
 func _on_buy_pressed() -> void:
 	_sync_shop_plan_to_departure()
