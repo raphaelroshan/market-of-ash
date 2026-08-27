@@ -25,7 +25,7 @@ func _initialize() -> void:
 	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled, "Ashgate should expose one usable local opportunity")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
-	_expect(ui.crew_buttons.size() == 1 and ui.crew_buttons[0].text.contains("Recruit Nara Vey"), "Ashgate should expose Nara's recruit action")
+	_expect(ui.crew_buttons.size() == 2 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale"), "Ashgate should expose both authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	var action_money_before: int = ui.world.money
 	var action_provisions_before: int = ui.world.provisions
@@ -188,7 +188,7 @@ func _initialize() -> void:
 	ui._on_start_game_pressed()
 	ui._on_recruit_crew_pressed("nara_vey")
 	_expect(ui.world.is_crew_recruited("nara_vey") and ui.world.money == 100 and ui.world.visit_slots_remaining == 1, "Nara recruitment UI did not apply its visible cost and slot")
-	_expect(ui.crew_buttons.size() == 1 and ui.crew_buttons[0].text.contains("Refresh Nara's route notes"), "recruited Nara should expose the assignment action")
+	_expect(ui.crew_buttons.size() == 2 and ui.crew_buttons[0].text.contains("Refresh Nara Vey's route plan"), "recruited Nara should expose the assignment action alongside Jorun")
 	ui._on_assign_crew_pressed("nara_vey")
 	_expect(ui.world.assigned_crew == "nara_vey" and ui.world.visit_slots_remaining == 0, "Nara assignment UI did not consume its visit slot")
 	ui._on_plan_departure_pressed()

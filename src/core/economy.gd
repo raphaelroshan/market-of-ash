@@ -121,7 +121,7 @@ static func route_profit_preview(good: String, quantity: int, origin: Dictionary
 	var purchase_total := buy_price * quantity
 	var sale_total := sell_price * quantity
 	var route_cost := int(route.get("cost", 0))
-	var provisions := int(route.get("days", 0))
+	var provisions := int(route.get("provisions", route.get("days", 0)))
 	var provision_value := int(assumptions.get("provision_value", 0))
 	var provision_cost := provisions * provision_value
 	var risk := float(route.get("risk", 0.0))

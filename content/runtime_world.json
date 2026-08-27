@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.2.0",
+  "content_version": "1.3.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -129,12 +129,32 @@
         "recruit_service_slots": 1,
         "assignment_service_slots": 1,
         "report_valid_days": 0,
+        "provision_discount": 0,
         "limitation": "Nara's report covers routes leaving the current settlement and becomes stale after the day advances.",
         "hook": "A same-day assignment adds scout confidence and a route-specific warning without removing uncertainty.",
         "route_notes": {
           "old_road": "Fresh wheel cuts leave room for improvised blocks and unmarked riders.",
           "toll_road": "The road surface is sound; queues, chalk marks, and inspections remain the uncertainty.",
           "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours."
+        }
+      },
+      {
+        "id": "jorun_pale",
+        "name": "Jorun Pale",
+        "role": "Quartermaster",
+        "personality": "Dry, exacting, and unwilling to call an overloaded wagon brave.",
+        "recruit_settlement_id": "ashgate",
+        "recruit_cost": 18,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "provision_discount": 1,
+        "limitation": "Jorun's packing plan covers routes leaving the current settlement and expires after the day advances.",
+        "hook": "A same-day assignment reduces the selected route's provision use by one, never below one, and states the saving before departure.",
+        "route_notes": {
+          "old_road": "Jorun shifts the dense crates over the rear axle and seals one ration pack for later.",
+          "toll_road": "Jorun matches the manifest order to the gate queue and avoids opening a second ration pack.",
+          "dry_cut": "Jorun portions the water stops precisely; the cut still consumes at least one provision."
         }
       }
     ]

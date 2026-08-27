@@ -329,6 +329,8 @@ def validate_crew(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
                 fail(errors, f"crew {crew_id}.{field} must be between 1 and the visit limit")
         if not isinstance(crew.get("report_valid_days"), int) or crew["report_valid_days"] < 0:
             fail(errors, f"crew {crew_id}.report_valid_days must be a non-negative integer")
+        if not isinstance(crew.get("provision_discount"), int) or not 0 <= crew["provision_discount"] <= 3:
+            fail(errors, f"crew {crew_id}.provision_discount must be an integer from 0 through 3")
         route_notes = as_object(crew.get("route_notes"), f"crew {crew_id}.route_notes", errors)
         for route_id in REQUIRED_ROUTES:
             if not isinstance(route_notes.get(route_id), str) or not route_notes[route_id]:

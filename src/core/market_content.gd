@@ -143,6 +143,13 @@ static func crew_member(crew_id: String) -> Dictionary:
 			return raw_crew.duplicate(true)
 	return {}
 
+static func crew_records() -> Array[Dictionary]:
+	var records: Array[Dictionary] = []
+	for raw_crew in crew_rules().get("records", []):
+		if typeof(raw_crew) == TYPE_DICTIONARY:
+			records.append(raw_crew.duplicate(true))
+	return records
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -591,6 +598,8 @@ static func _validate_crew(value: Variant, visit_slot_limit: int, errors: Array[
 				errors.append("crew %s %s must be between 1 and the visit limit" % [crew_id, field])
 		if int(crew.get("report_valid_days", -1)) < 0:
 			errors.append("crew %s report_valid_days must be non-negative" % crew_id)
+		if int(crew.get("provision_discount", -1)) < 0 or int(crew.get("provision_discount", -1)) > 3:
+			errors.append("crew %s provision_discount must be between 0 and 3" % crew_id)
 		var route_notes: Dictionary = crew.get("route_notes", {})
 		for route_id in REQUIRED_ROUTE_IDS:
 			if String(route_notes.get(route_id, "")).is_empty():

@@ -185,7 +185,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 	var risk: float = float(travel_result.risk)
 	var state_delta := {
 		"money": -int(travel_result.cost),
-		"provisions": -int(travel_result.days),
+		"provisions": -int(travel_result.provisions),
 		"day": int(travel_result.days),
 		"route_id": route_id,
 		"risk": risk,

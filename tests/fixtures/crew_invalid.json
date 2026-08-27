@@ -10,6 +10,7 @@
       "recruit_service_slots": 0,
       "assignment_service_slots": 9,
       "report_valid_days": -1,
+      "provision_discount": 4,
       "limitation": "",
       "hook": "",
       "route_notes": {}

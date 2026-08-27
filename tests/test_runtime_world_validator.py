@@ -151,6 +151,7 @@ def main() -> int:
         "recruit_service_slots must be between 1 and the visit limit",
         "assignment_service_slots must be between 1 and the visit limit",
         "report_valid_days must be a non-negative integer",
+        "provision_discount must be an integer from 0 through 3",
         "route_notes must describe old_road",
     )
     missing_crew = [fragment for fragment in expected_crew_fragments if not any(fragment in error for error in crew_errors)]

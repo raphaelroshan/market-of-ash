@@ -108,17 +108,29 @@ func is_crew_recruited(crew_id: String) -> bool:
 func route_intelligence(route_id: String) -> Dictionary:
 	if route(route_id).is_empty():
 		return {"status": "unavailable", "label": "No route", "detail": "No authored route is selected."}
-	var nara := MarketContent.crew_member("nara_vey")
-	if not is_crew_recruited("nara_vey"):
+	if recruited_crew.is_empty():
 		return {"status": "unavailable", "label": "Scout unavailable", "detail": "Recruit Nara Vey in Ashgate for route-specific field notes."}
 	var report_value: Variant = crew_reports.get(route_id, {})
-	if assigned_crew != "nara_vey" or typeof(report_value) != TYPE_DICTIONARY:
-		return {"status": "stale", "label": "Scout report stale", "detail": "Assign Nara during this settlement visit to refresh nearby route notes."}
+	if assigned_crew.is_empty() or typeof(report_value) != TYPE_DICTIONARY:
+		return {"status": "stale", "label": "Crew report stale", "detail": "Assign a recruited route specialist during this settlement visit to refresh nearby notes."}
+	var assigned := MarketContent.crew_member(assigned_crew)
 	var report: Dictionary = report_value
 	var age := day - int(report.get("observed_day", day))
-	if age > int(nara.get("report_valid_days", 0)):
-		return {"status": "stale", "label": "Scout report stale", "detail": "Nara's note is %d day old; refresh it before relying on current signs." % age}
-	return {"status": "scout_informed", "label": "Nara-informed", "detail": String(report.get("note", "Nara confirms the route remains uncertain.")), "observed_day": int(report.get("observed_day", day))}
+	if age > int(assigned.get("report_valid_days", 0)):
+		return {"status": "stale", "label": "%s report stale" % String(assigned.get("name", "Crew")), "detail": "The note is %d day old; refresh it before relying on current conditions." % age}
+	var status := "scout_informed" if assigned_crew == "nara_vey" else "logistics_informed"
+	return {"status": status, "label": "%s-informed" % String(assigned.get("name", "Crew")).trim_suffix(" Vey").trim_suffix(" Pale"), "detail": String(report.get("note", "The route remains uncertain.")), "observed_day": int(report.get("observed_day", day))}
+
+func route_provision_cost(route_id: String) -> int:
+	var selected := route(route_id)
+	if selected.is_empty():
+		return 0
+	var base_cost := int(selected.get("days", 0))
+	var intelligence := route_intelligence(route_id)
+	if String(intelligence.get("status", "")) != "logistics_informed":
+		return base_cost
+	var assigned := MarketContent.crew_member(assigned_crew)
+	return maxi(1, base_cost - int(assigned.get("provision_discount", 0)))
 
 func has_settlement(id: String) -> bool:
 	return settlements.has(id)
@@ -292,12 +304,13 @@ func travel(route_id: String) -> Dictionary:
 		return {"ok": false, "reason": "unknown route"}
 	if money < int(selected.cost):
 		return {"ok": false, "reason": "not enough money for route cost"}
-	if provisions < int(selected.days):
+	var provision_cost := route_provision_cost(route_id)
+	if provisions < provision_cost:
 		return {"ok": false, "reason": "not enough provisions"}
 	money -= int(selected.cost)
-	provisions -= int(selected.days)
+	provisions -= provision_cost
 	advance_day(int(selected.days))
-	return {"ok": true, "risk": float(selected.risk), "days": int(selected.days), "cost": int(selected.cost)}
+	return {"ok": true, "risk": float(selected.risk), "days": int(selected.days), "provisions": provision_cost, "cost": int(selected.cost)}
 
 func record_command(command: Dictionary, result: Dictionary) -> void:
 	var entry := {

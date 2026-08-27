@@ -24,6 +24,7 @@ func _init() -> void:
 	_test_last_clean_barrel_event()
 	_test_three_riders_no_banner_event()
 	_test_nara_vey_crew()
+	_test_jorun_pale_crew()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -45,7 +46,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.2.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.3.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -57,6 +58,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.event("last_clean_barrel").get("destination_ids", []).has("reedwatch"), "runtime content should expose the shortage settlement event")
 	_expect(MarketContent.event("three_riders_no_banner").get("route_ids", []).has("old_road"), "runtime content should expose the suspicious escort event")
 	_expect(MarketContent.crew_member("nara_vey").get("role", "") == "Scout", "runtime content should expose Nara Vey's stable crew record")
+	_expect(MarketContent.crew_member("jorun_pale").get("role", "") == "Quartermaster", "runtime content should expose Jorun Pale's stable crew record")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -1024,6 +1026,34 @@ func _test_nara_vey_crew() -> void:
 	_expect(not no_route.ok and no_route_world.visit_slots_remaining == 2, "Nara assignment should block without mutation where no authored route leaves")
 	_expect(world.route_intelligence("missing").status == "unavailable", "route intelligence should handle a missing route safely")
 
+func _test_jorun_pale_crew() -> void:
+	var world := AshWorldState.new(1)
+	var recruit := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RECRUIT_CREW,
+		"inputs": {"crew_id": "jorun_pale"},
+	})
+	_expect(recruit.ok and world.money == 102 and world.visit_slots_remaining == 1, "recruiting Jorun should charge eighteen ashmarks and one visit slot")
+	var move_to_reedwatch := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(move_to_reedwatch.ok and world.current_settlement == "reedwatch" and world.visit_slots_remaining == 2, "Jorun fixture should reach Reedwatch with a refreshed visit budget")
+	_expect(world.route_provision_cost("dry_cut") == 2, "unassigned Jorun should not change Dry Cut provisions")
+	var assign := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ASSIGN_CREW,
+		"inputs": {"crew_id": "jorun_pale"},
+	})
+	_expect(assign.ok and world.route_intelligence("dry_cut").status == "logistics_informed", "same-day Jorun assignment should produce a logistics-informed Dry Cut plan")
+	_expect(world.route_provision_cost("dry_cut") == 1, "Jorun should reduce a two-provision route by one without reaching zero")
+	_expect(world.route_provision_cost("old_road") == 1, "Jorun should never reduce a route below one provision")
+	var provisions_before := world.provisions
+	var dry_cut := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "dry_cut", "destination_id": "hollow_market"},
+	})
+	_expect(dry_cut.ok and int(dry_cut.state_delta.provisions) == -1 and world.provisions == provisions_before - 1, "Jorun's forecasted provision saving should match travel resolution")
+	_expect(world.day == 4 and world.route_intelligence("dry_cut").status == "stale", "Jorun should save provisions without shortening travel time, and the report should then become stale")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -1092,7 +1122,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.2.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.3.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

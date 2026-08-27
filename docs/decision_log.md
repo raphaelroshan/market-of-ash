@@ -199,3 +199,11 @@
 **Reason:** The first crew member must visibly change planning while preserving honest uncertainty. A dated report gives Nara a concrete, testable job and a real visit-budget cost without introducing hidden modifiers, morale, a skill tree, or a second travel resolver.
 
 **Trade-off:** Nara does not lower risk and her reports expire as soon as the day advances. This makes assignment a recurring opportunity-cost decision; later crew or relationship work may extend report life or add event choices only through explicit content and commands.
+
+## ADR-026: Jorun's logistics plan changes provisions, not travel time
+
+**Decision:** Jorun Pale uses the existing recruit/assign/report lifecycle. A same-day Jorun report reduces provision consumption for a covered route by one, with a hard minimum of one provision, while route duration, fee, risk, incidents, and event selection remain unchanged. Forecast and travel resolution call the same `route_provision_cost` helper.
+
+**Reason:** The quartermaster needs an observed logistics effect that changes route viability and competes with Nara's information role. Separating provisions from elapsed days makes the benefit legible without silently accelerating the crisis clock or weakening route danger.
+
+**Trade-off:** The current Ashgate routes already cost one provision, so Jorun's saving becomes material after reaching Reedwatch and planning the two-day Dry Cut. Reports remain same-day and only one crew member can be assigned at a time.

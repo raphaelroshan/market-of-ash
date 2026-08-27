@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B5 are implemented. B6 crew work has begun with Nara Vey.
+**Roadmap status:** A0–A1 foundations and B0–B5 are implemented. B6 includes Nara Vey and Jorun Pale; Tess Oryn is next.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 9 and runtime content version `1.2.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 9 and runtime content version `1.3.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -24,6 +24,7 @@
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
 - High-value Old Road or Dry Cut loads can meet `Three Riders, No Banner`; money, medicine, disclosed one-unit risk, and a time-for-information recovery create distinct responses without combat.
 - Nara Vey can be recruited and assigned through the visit budget; departure forecasts distinguish unavailable, stale, and same-day scout-informed route notes without changing the authored risk.
+- Jorun Pale shares the same recruit/assign lifecycle; a current logistics plan reduces provision use by one, never below one, while leaving route time and risk intact.
 
 ## Current command IDs
 
@@ -202,6 +203,12 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Forecasts show `Scout unavailable`, `Scout report stale`, or `Nara-informed` and include a route-specific field note. The underlying risk remains unchanged and visible.
 - Save version 9 preserves recruitment, assignment, report text, and report age.
 
+## B6 second-crew result
+
+- Ashgate exposes Jorun Pale as an 18-ashmark quartermaster recruit. Assignment competes for the same visit budget and active crew slot as Nara.
+- His current report changes both the displayed and resolved provision cost through one helper; a two-provision Dry Cut becomes one provision, while one-provision routes remain at one.
+- The same trip still advances its full authored days and uses its unchanged risk/event rules. Reports become stale after travel.
+
 ## Next permitted task
 
-Continue Card B5/B6 crew breadth one member at a time; Jorun Pale's logistics hook is the next smallest slice.
+Continue B6 crew breadth one member at a time; Tess Oryn's negotiation hook is the next smallest slice.

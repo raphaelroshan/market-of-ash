@@ -653,7 +653,9 @@ func _refresh_forecasts() -> void:
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		route_preview_label.text = "ROUTE FORECAST\nChoose a directly connected destination and route."
 		return
-	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, world.route(route_id), world_context)
+	var selected_route := world.route(route_id)
+	selected_route["provisions"] = world.route_provision_cost(route_id)
+	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 
 func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:
 	var details := MarketEconomy.price_details(good_id, settlement, world_context)
@@ -876,41 +878,40 @@ func _refresh_opportunities() -> void:
 	_append_crew_opportunity()
 
 func _append_crew_opportunity() -> void:
-	var crew := MarketContent.crew_member("nara_vey")
-	if crew.is_empty():
-		return
-	var recruited := world.is_crew_recruited("nara_vey")
-	if not recruited and world.current_settlement != String(crew.get("recruit_settlement_id", "")):
-		return
-	var button := Button.new()
-	var reason := ""
-	if not recruited:
-		button.text = "Recruit Nara Vey — %d ashmarks, %d slot" % [int(crew.get("recruit_cost", 0)), int(crew.get("recruit_service_slots", 1))]
-		if world.money < int(crew.get("recruit_cost", 0)):
-			button.disabled = true
-			reason = "Needs %d ashmarks; you have %d." % [int(crew.get("recruit_cost", 0)), world.money]
-		elif world.visit_slots_remaining < int(crew.get("recruit_service_slots", 1)):
-			button.disabled = true
-			reason = "No visit slots remain."
-		button.pressed.connect(_on_recruit_crew_pressed.bind("nara_vey"))
-	else:
-		button.text = "Refresh Nara's route notes — %d slot" % int(crew.get("assignment_service_slots", 1))
-		if MarketContent.routes_from(world.current_settlement).is_empty():
-			button.disabled = true
-			reason = "No authored routes leave this settlement."
-		elif world.visit_slots_remaining < int(crew.get("assignment_service_slots", 1)):
-			button.disabled = true
-			reason = "No visit slots remain."
-		button.pressed.connect(_on_assign_crew_pressed.bind("nara_vey"))
-	button.tooltip_text = reason if button.disabled else String(crew.get("hook", ""))
-	opportunity_list.add_child(button)
-	crew_buttons.append(button)
-	var details := Label.new()
-	details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	details.add_theme_font_size_override("font_size", 12)
-	details.add_theme_color_override("font_color", Color("#aa9a87"))
-	details.text = reason if button.disabled else "%s — %s %s" % [String(crew.get("role", "Crew")), String(crew.get("personality", "")), String(crew.get("limitation", ""))]
-	opportunity_list.add_child(details)
+	for crew in MarketContent.crew_records():
+		var crew_id := String(crew.get("id", ""))
+		var recruited := world.is_crew_recruited(crew_id)
+		if not recruited and world.current_settlement != String(crew.get("recruit_settlement_id", "")):
+			continue
+		var button := Button.new()
+		var reason := ""
+		if not recruited:
+			button.text = "Recruit %s — %d ashmarks, %d slot" % [String(crew.get("name", "Crew")), int(crew.get("recruit_cost", 0)), int(crew.get("recruit_service_slots", 1))]
+			if world.money < int(crew.get("recruit_cost", 0)):
+				button.disabled = true
+				reason = "Needs %d ashmarks; you have %d." % [int(crew.get("recruit_cost", 0)), world.money]
+			elif world.visit_slots_remaining < int(crew.get("recruit_service_slots", 1)):
+				button.disabled = true
+				reason = "No visit slots remain."
+			button.pressed.connect(_on_recruit_crew_pressed.bind(crew_id))
+		else:
+			button.text = "Refresh %s's route plan — %d slot" % [String(crew.get("name", "Crew")), int(crew.get("assignment_service_slots", 1))]
+			if MarketContent.routes_from(world.current_settlement).is_empty():
+				button.disabled = true
+				reason = "No authored routes leave this settlement."
+			elif world.visit_slots_remaining < int(crew.get("assignment_service_slots", 1)):
+				button.disabled = true
+				reason = "No visit slots remain."
+			button.pressed.connect(_on_assign_crew_pressed.bind(crew_id))
+		button.tooltip_text = reason if button.disabled else String(crew.get("hook", ""))
+		opportunity_list.add_child(button)
+		crew_buttons.append(button)
+		var details := Label.new()
+		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		details.add_theme_font_size_override("font_size", 12)
+		details.add_theme_color_override("font_color", Color("#aa9a87"))
+		details.text = reason if button.disabled else "%s — %s %s" % [String(crew.get("role", "Crew")), String(crew.get("personality", "")), String(crew.get("limitation", ""))]
+		opportunity_list.add_child(details)
 
 func _refresh_contract_summary() -> void:
 	if active_contract_label == null or departure_contract_label == null:
