@@ -13,11 +13,20 @@ func _initialize() -> void:
 	var absolute_test_backup_path := ProjectSettings.globalize_path(test_backup_path)
 	var test_temporary_path := test_save_path + ".tmp"
 	var absolute_test_temporary_path := ProjectSettings.globalize_path(test_temporary_path)
+	var test_settings_path := "user://market_of_ash_map_ui_settings_test.cfg"
+	var absolute_test_settings_path := ProjectSettings.globalize_path(test_settings_path)
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):
 			DirAccess.remove_absolute(test_path)
+	if FileAccess.file_exists(test_settings_path):
+		DirAccess.remove_absolute(absolute_test_settings_path)
 	ui.save_path = test_save_path
 	ui.autosave_enabled = false
+	ui.settings_persistence_enabled = false
+	ui.large_text_checkbox.button_pressed = false
+	ui.reduce_motion_checkbox.button_pressed = false
+	ui.settings_path = test_settings_path
+	ui.settings_persistence_enabled = true
 	ui.continue_game_button.disabled = true
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
@@ -384,6 +393,12 @@ func _initialize() -> void:
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	ui.reduce_motion_checkbox.button_pressed = true
+	var saved_settings := ConfigFile.new()
+	_expect(saved_settings.load(test_settings_path) == OK and bool(saved_settings.get_value("accessibility", "large_text", false)) and bool(saved_settings.get_value("accessibility", "reduce_motion", false)), "accessibility preferences should persist outside the campaign save")
+	ui.large_text_enabled = false
+	ui.reduce_motion_enabled = false
+	ui._load_presentation_settings()
+	_expect(ui.large_text_enabled and ui.reduce_motion_enabled, "saved accessibility preferences should load with safe defaults")
 	ui._on_start_game_pressed()
 	ui._on_guided_test_action()
 	ui._on_plan_departure_pressed()
@@ -393,6 +408,8 @@ func _initialize() -> void:
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):
 			DirAccess.remove_absolute(test_path)
+	if FileAccess.file_exists(test_settings_path):
+		DirAccess.remove_absolute(absolute_test_settings_path)
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

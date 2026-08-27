@@ -282,11 +282,11 @@
 
 ## ADR-036: Accessibility options change presentation, never simulation
 
-**Decision:** Restore controller A/B bindings alongside keyboard Accept/Cancel, expose a 25% large-text option, place long Shop and Departure rails in vertical scroll containers, and offer reduced travel motion. Large text and reduced motion are session presentation preferences and do not enter campaign state or command history.
+**Decision:** Restore controller A/B bindings alongside keyboard Accept/Cancel, expose a 25% large-text option, place long Shop and Departure rails in vertical scroll containers, and offer reduced travel motion. Large text and reduced motion persist in a separate user settings file and do not enter campaign state or command history.
 
 **Reason:** The alpha's core route can be made substantially more usable without introducing a settings framework into the deterministic simulation. Scrollable rails let text reflow instead of clipping, while reduced motion preserves immediate access to the same resolved outcome.
 
-**Trade-off:** Preferences are not persisted yet, directional focus still relies on Godot's default traversal, and physical-controller/high-DPI verification remains a manual release gate.
+**Trade-off:** Directional focus still relies on Godot's default traversal, only the two implemented accessibility preferences are persisted, and physical-controller/high-DPI verification remains a manual release gate.
 
 ## ADR-037: Ending selection is ordered and supports faction-specific conclusions
 

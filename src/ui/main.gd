@@ -11,6 +11,7 @@ const PLAYTEST_QUANTITY := 2
 const PLAYTEST_DESTINATION := "reedwatch"
 const PLAYTEST_ROUTE := "old_road"
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
+const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 
 var world: AshWorldState
 var game_layer: Control
@@ -72,14 +73,19 @@ var departure_save_status_label: Label
 var save_status_text := "SAVE — No save written this session."
 var save_path := DEFAULT_SAVE_PATH
 var autosave_enabled := true
+var settings_path := DEFAULT_SETTINGS_PATH
+var settings_persistence_enabled := true
+var reduce_motion_enabled := false
+var large_text_enabled := false
 var map_panel
 var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	world = AshWorldState.new(PLAYTEST_SEED)
+	_load_presentation_settings()
 	theme = Theme.new()
-	theme.default_font_size = 16
+	theme.default_font_size = 20 if large_text_enabled else 16
 	if FileAccess.file_exists(save_path):
 		save_status_text = "SAVE — Existing save available. Load validates it before replacing this run."
 	game_layer = Control.new()
@@ -89,6 +95,8 @@ func _ready() -> void:
 	_build_shop()
 	_build_main_menu()
 	_build_pause_menu()
+	if large_text_enabled:
+		_apply_text_scale(self, 1.25)
 	_show_main_menu()
 
 func _build_main_menu() -> void:
@@ -137,10 +145,13 @@ func _build_main_menu() -> void:
 	reduce_motion_checkbox = CheckBox.new()
 	reduce_motion_checkbox.text = "Reduce travel motion"
 	reduce_motion_checkbox.tooltip_text = "Show the caravan at its destination immediately; route outcomes and timing are unchanged."
+	reduce_motion_checkbox.button_pressed = reduce_motion_enabled
+	reduce_motion_checkbox.toggled.connect(_on_reduce_motion_toggled)
 	content.add_child(reduce_motion_checkbox)
 	large_text_checkbox = CheckBox.new()
 	large_text_checkbox.text = "Large text"
 	large_text_checkbox.tooltip_text = "Increase interface text by 25%. Long shop and route panels remain scrollable."
+	large_text_checkbox.button_pressed = large_text_enabled
 	large_text_checkbox.toggled.connect(_on_large_text_toggled)
 	content.add_child(large_text_checkbox)
 	start_game_button = Button.new()
@@ -266,8 +277,31 @@ func _grab_first_enabled(controls: Array[Button]) -> bool:
 	return false
 
 func _on_large_text_toggled(enabled: bool) -> void:
+	large_text_enabled = enabled
 	theme.default_font_size = 20 if enabled else 16
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
+	_save_presentation_settings()
+
+func _on_reduce_motion_toggled(enabled: bool) -> void:
+	reduce_motion_enabled = enabled
+	if map_panel:
+		map_panel.reduce_motion = enabled
+	_save_presentation_settings()
+
+func _load_presentation_settings() -> void:
+	var config := ConfigFile.new()
+	if config.load(settings_path) != OK:
+		return
+	large_text_enabled = bool(config.get_value("accessibility", "large_text", false))
+	reduce_motion_enabled = bool(config.get_value("accessibility", "reduce_motion", false))
+
+func _save_presentation_settings() -> void:
+	if not settings_persistence_enabled:
+		return
+	var config := ConfigFile.new()
+	config.set_value("accessibility", "large_text", large_text_enabled)
+	config.set_value("accessibility", "reduce_motion", reduce_motion_enabled)
+	config.save(settings_path)
 
 func _apply_text_scale(node: Node, scale: float) -> void:
 	if node is Control and node.has_theme_font_size_override("font_size"):

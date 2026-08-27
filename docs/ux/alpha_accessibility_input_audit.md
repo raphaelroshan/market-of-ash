@@ -11,8 +11,8 @@
 | Keyboard | Tab/directional navigation uses Godot focus traversal; Enter and Space activate the focused control; Escape returns from uncommitted departure planning or pauses elsewhere; P always pauses during play. | `tests/test_map_ui.gd` and `project.godot` input-map assertions. |
 | Controller | D-pad/stick focus traversal uses Godot UI actions; A accepts, B goes back/pauses, and Menu pauses during play. | Controller bindings are source controlled and asserted by the UI smoke test. |
 | Focus continuity | Shop, Departure Desk, route decisions, and arrival each establish a predictable enabled focus target. | UI smoke assertions cover every transition. |
-| Reduced motion | A Main Menu option skips caravan interpolation and presents the completed route immediately without changing simulation time or outcome. | UI smoke test checks completed progress and no active animation. |
-| Text size/reflow | A Main Menu option increases inherited and explicit interface text by 25%; the long Shop and Departure rails use vertical scrolling. | UI smoke test checks scaling without campaign mutation and verifies both rails have scroll ancestors. |
+| Reduced motion | A persisted Main Menu option skips caravan interpolation and presents the completed route immediately without changing simulation time or outcome. | UI smoke test checks completed progress, no active animation, and settings-file round trip. |
+| Text size/reflow | A persisted Main Menu option increases inherited and explicit interface text by 25%; the long Shop and Departure rails use vertical scrolling. | UI smoke test checks scaling without campaign mutation, settings-file round trip, and both rails' scroll ancestors. |
 | Color independence | Money, provisions, risk, crisis, standing, escalation, disabled reasons, and outcomes are always written as text; color is supplementary. | Static UI inspection and UI text assertions. |
 | Timing | No choice has a real-time deadline. Travel motion never blocks `Enter settlement`, and reduced motion can remove it. | Command/UI architecture and reduced-motion test. |
 | Save recovery | Successful commands autosave through a temporary file and keep one backup generation; manual Save and Load expose day, settlement, save version, and content version. Invalid or newer files are validated in a candidate world and cannot replace the active run. | UI smoke tests missing, valid, corrupt-primary recovery, future-version rejection, and autosave paths; core save normalization tests. |
@@ -47,7 +47,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 
 1. Large-text reflow and scrolling are implemented but still need rendered checks at minimum window and high OS scaling for clipping and comfortable line length.
 2. Controller behavior is configured and headlessly asserted but has not been exercised on physical Windows hardware.
-3. Runtime input remapping is not implemented yet; the pause layer currently exposes the fixed bindings.
+3. Runtime input remapping is not implemented yet; the pause layer currently exposes the fixed bindings. Accessibility preferences persist in a separate settings file.
 4. Audio cues and screen-reader semantics are not implemented; essential information remains available as text.
 
 ## Remapping plan
