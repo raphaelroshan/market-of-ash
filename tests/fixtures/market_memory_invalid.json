@@ -1,0 +1,11 @@
+{
+  "pressure_min": 0.2,
+  "pressure_max": 0.2,
+  "sale_impact_per_unit": 0.0,
+  "daily_decay_per_day": -0.01,
+  "crisis_effectiveness": {
+    "0": 1.2,
+    "2": 0.0
+  },
+  "max_delivery_history": 0
+}

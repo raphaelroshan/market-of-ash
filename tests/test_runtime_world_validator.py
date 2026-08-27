@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Focused fixtures for runtime-world schema validation."""
+
+from __future__ import annotations
+
+import copy
+import json
+from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from tools.validate_runtime_world import validate  # noqa: E402
+
+
+def main() -> int:
+    runtime = json.loads((ROOT / "content/runtime_world.json").read_text(encoding="utf-8"))
+    valid_errors = validate(runtime)
+    if valid_errors:
+        print("FAIL: valid runtime world was rejected")
+        for error in valid_errors:
+            print(f"- {error}")
+        return 1
+
+    invalid = copy.deepcopy(runtime)
+    invalid["market_memory"] = json.loads(
+        (ROOT / "tests/fixtures/market_memory_invalid.json").read_text(encoding="utf-8")
+    )
+    invalid_errors = validate(invalid)
+    expected_fragments = (
+        "pressure_min must equal 0",
+        "pressure_max must be greater than pressure_min and less than 1",
+        "sale_impact_per_unit must be greater than 0",
+        "daily_decay_per_day must be greater than 0",
+        "crisis_effectiveness must contain stages 0, 1, 2, and 3",
+        "crisis_effectiveness.0 must be greater than 0 and no greater than 1",
+        "max_delivery_history must be an integer from 1 through 100",
+    )
+    missing = [fragment for fragment in expected_fragments if not any(fragment in error for error in invalid_errors)]
+    if missing:
+        print("FAIL: invalid market-memory fixture did not produce expected errors")
+        for fragment in missing:
+            print(f"- missing: {fragment}")
+        return 1
+
+    print("PASS: runtime world validator fixtures")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

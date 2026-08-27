@@ -57,6 +57,12 @@ static func planning_assumptions() -> Dictionary:
 		return {}
 	return assumptions.duplicate(true)
 
+static func market_memory_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("market_memory", {})
+	if typeof(rules) != TYPE_DICTIONARY:
+		return {}
+	return rules.duplicate(true)
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -140,6 +146,8 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 		if int(planning.get("time_opportunity_cost_per_day", 0)) < 0:
 			errors.append("planning_assumptions must declare a non-negative time_opportunity_cost_per_day")
 
+	_validate_market_memory(data.get("market_memory", {}), errors)
+
 	var goods: Array = data.get("goods", [])
 	var seen_goods: Dictionary = {}
 	for raw_good in goods:
@@ -221,6 +229,40 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 				errors.append("route %s risk must be between 0 and 1" % route_id)
 
 	return {"ok": errors.is_empty(), "errors": errors}
+
+static func _validate_market_memory(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("market_memory must be an object")
+		return
+	var rules: Dictionary = value
+	var pressure_min := float(rules.get("pressure_min", -1.0))
+	var pressure_max := float(rules.get("pressure_max", -1.0))
+	if not is_equal_approx(pressure_min, 0.0):
+		errors.append("market_memory pressure_min must equal 0")
+	if pressure_max <= pressure_min or pressure_max >= 1.0:
+		errors.append("market_memory pressure_max must be greater than pressure_min and less than 1")
+	var sale_impact := float(rules.get("sale_impact_per_unit", 0.0))
+	if sale_impact <= 0.0 or sale_impact > pressure_max:
+		errors.append("market_memory sale_impact_per_unit must be greater than 0 and no greater than pressure_max")
+	var daily_decay := float(rules.get("daily_decay_per_day", 0.0))
+	if daily_decay <= 0.0 or daily_decay > pressure_max:
+		errors.append("market_memory daily_decay_per_day must be greater than 0 and no greater than pressure_max")
+	var effectiveness_value: Variant = rules.get("crisis_effectiveness", {})
+	if typeof(effectiveness_value) != TYPE_DICTIONARY:
+		errors.append("market_memory crisis_effectiveness must be an object")
+	else:
+		var effectiveness: Dictionary = effectiveness_value
+		for stage in ["0", "1", "2", "3"]:
+			if not effectiveness.has(stage):
+				errors.append("market_memory crisis_effectiveness must contain stages 0, 1, 2, and 3")
+				break
+		for stage in effectiveness.keys():
+			var multiplier := float(effectiveness.get(stage, 0.0))
+			if multiplier <= 0.0 or multiplier > 1.0:
+				errors.append("market_memory crisis_effectiveness.%s must be greater than 0 and no greater than 1" % stage)
+	var history_limit := int(rules.get("max_delivery_history", 0))
+	if history_limit < 1 or history_limit > 100:
+		errors.append("market_memory max_delivery_history must be an integer from 1 through 100")
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

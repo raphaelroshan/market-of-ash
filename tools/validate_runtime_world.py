@@ -37,6 +37,54 @@ def validate_modifier_table(
             fail(errors, f"{label}.{good_id} must be a positive number")
 
 
+def validate_market_memory(value: Any, errors: list[str]) -> None:
+    rules = as_object(value, "market_memory", errors)
+    pressure_min = rules.get("pressure_min")
+    pressure_max = rules.get("pressure_max")
+    if not isinstance(pressure_min, (int, float)) or pressure_min != 0:
+        fail(errors, "market_memory.pressure_min must equal 0")
+    if (
+        not isinstance(pressure_max, (int, float))
+        or not isinstance(pressure_min, (int, float))
+        or pressure_max <= pressure_min
+        or pressure_max >= 1
+    ):
+        fail(errors, "market_memory.pressure_max must be greater than pressure_min and less than 1")
+
+    sale_impact = rules.get("sale_impact_per_unit")
+    if (
+        not isinstance(sale_impact, (int, float))
+        or sale_impact <= 0
+        or not isinstance(pressure_max, (int, float))
+        or sale_impact > pressure_max
+    ):
+        fail(errors, "market_memory.sale_impact_per_unit must be greater than 0 and no greater than pressure_max")
+
+    daily_decay = rules.get("daily_decay_per_day")
+    if (
+        not isinstance(daily_decay, (int, float))
+        or daily_decay <= 0
+        or not isinstance(pressure_max, (int, float))
+        or daily_decay > pressure_max
+    ):
+        fail(errors, "market_memory.daily_decay_per_day must be greater than 0 and no greater than pressure_max")
+
+    effectiveness = as_object(
+        rules.get("crisis_effectiveness"),
+        "market_memory.crisis_effectiveness",
+        errors,
+    )
+    if set(effectiveness) != {"0", "1", "2", "3"}:
+        fail(errors, "market_memory.crisis_effectiveness must contain stages 0, 1, 2, and 3")
+    for stage, multiplier in effectiveness.items():
+        if not isinstance(multiplier, (int, float)) or not 0 < multiplier <= 1:
+            fail(errors, f"market_memory.crisis_effectiveness.{stage} must be greater than 0 and no greater than 1")
+
+    history_limit = rules.get("max_delivery_history")
+    if not isinstance(history_limit, int) or not 1 <= history_limit <= 100:
+        fail(errors, "market_memory.max_delivery_history must be an integer from 1 through 100")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -53,6 +101,8 @@ def validate(data: Any) -> list[str]:
         or planning["time_opportunity_cost_per_day"] < 0
     ):
         fail(errors, "planning_assumptions.time_opportunity_cost_per_day must be a non-negative integer")
+
+    validate_market_memory(root.get("market_memory"), errors)
 
     goods = root.get("goods")
     if not isinstance(goods, list):

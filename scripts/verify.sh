@@ -4,6 +4,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+python3 tests/test_runtime_world_validator.py
+
 if command -v godot >/dev/null 2>&1; then
   godot --headless --path . --script res://tests/test_economy.gd
   godot --headless --path . --script res://tests/test_map_ui.gd

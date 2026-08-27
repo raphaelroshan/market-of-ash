@@ -135,3 +135,11 @@
 **Reason:** The game needs an inhabited region and Frontier-style consequential travel, but generic random encounters would interrupt commerce, obscure risk, and create content breadth without memory. A small number of authored scenes with state-sensitive variants makes route choice, cargo, people, and regional projects feel connected.
 
 **Trade-off:** Authoring truth tables and tests per scene is more disciplined than prose-first content generation. It prevents opaque procedural content and allows the initial four canonical events to establish a reliable resolver/UI/content seam before additional variants are activated.
+
+## ADR-018: Market memory is bounded supply pressure with deterministic decay
+
+**Decision:** Represent delivery memory as a per-settlement, per-good supply-pressure value from `0.0` through an authored maximum below `1.0`. Successful sales add pressure after paying the pre-delivery price; elapsed days decay pressure toward zero. The price pipeline applies the resulting `1 - pressure` multiplier after base, settlement, demand, crisis, and faction modifiers. Crisis stages reduce how much new pressure a delivery creates without hiding or replacing the separate crisis modifier.
+
+**Reason:** Repeating the same profitable delivery must change the next trade decision, but a town must recover and retain its authored economic identity. Separate bounded pressure, crisis effectiveness, and decay provide predictable causes that can be shown directly in the market UI and replayed exactly.
+
+**Trade-off:** This is a deliberately compact market response rather than a production/consumption simulation. It models recent local supply relief, not inventories, factories, autonomous traders, or globally coupled prices.
