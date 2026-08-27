@@ -5,7 +5,18 @@ const MarketEconomy = preload("res://src/core/economy.gd")
 const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
+const PLAYTEST_SEED := 1107
+const PLAYTEST_GOOD := "grain"
+const PLAYTEST_QUANTITY := 2
+const PLAYTEST_DESTINATION := "reedwatch"
+const PLAYTEST_ROUTE := "old_road"
+
 var world: AshWorldState
+var game_layer: Control
+var menu_layer: Control
+var start_game_button: Button
+var guided_test_button: Button
+var playtest_banner: Label
 var status_label: Label
 var event_label: Label
 var destination_option: OptionButton
@@ -19,22 +30,73 @@ var map_panel
 var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
-	world = AshWorldState.new(1107)
+	world = AshWorldState.new(PLAYTEST_SEED)
+	game_layer = Control.new()
+	game_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(game_layer)
 	_build_ui()
-	_refresh_ui()
+	_build_main_menu()
+	_show_main_menu()
+
+func _build_main_menu() -> void:
+	menu_layer = Control.new()
+	menu_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(menu_layer)
+
+	var backdrop := ColorRect.new()
+	backdrop.color = Color("#17130f")
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(backdrop)
+
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	menu_layer.add_child(center)
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(560, 0)
+	center.add_child(card)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 16)
+	card.add_child(content)
+
+	var title := Label.new()
+	title.text = "MARKET OF ASH"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 38)
+	title.add_theme_color_override("font_color", Color("#e6c58d"))
+	content.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text = "A trade route is a promise you make to the road."
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_color_override("font_color", Color("#b5a18b"))
+	content.add_child(subtitle)
+	var preset := Label.new()
+	preset.text = "QUICK PLAYTEST\nAshgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo\nSuggested first move: buy 2 grain, then compare the Old Road to Reedwatch."
+	preset.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	preset.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
+	content.add_child(preset)
+	start_game_button = Button.new()
+	start_game_button.text = "Start Game"
+	start_game_button.custom_minimum_size = Vector2(0, 48)
+	start_game_button.pressed.connect(_on_start_game_pressed)
+	content.add_child(start_game_button)
+
+func _show_main_menu() -> void:
+	game_layer.visible = false
+	menu_layer.visible = true
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
 	background.color = Color("#17130f")
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(background)
+	game_layer.add_child(background)
 
 	map_panel = MapPanel.new()
 	map_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	map_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	map_panel.world = world
 	map_panel.grid_cell_selected.connect(_on_map_cell_selected)
-	add_child(map_panel)
+	game_layer.add_child(map_panel)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -42,7 +104,7 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_top", 24)
 	margin.add_theme_constant_override("margin_right", 32)
 	margin.add_theme_constant_override("margin_bottom", 24)
-	add_child(margin)
+	game_layer.add_child(margin)
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 24)
@@ -63,6 +125,11 @@ func _build_ui() -> void:
 	subtitle.text = "A trade route is a promise you make to the road."
 	subtitle.add_theme_color_override("font_color", Color("#b5a18b"))
 	left.add_child(subtitle)
+
+	playtest_banner = Label.new()
+	playtest_banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	playtest_banner.add_theme_color_override("font_color", Color("#f0d2a0"))
+	left.add_child(playtest_banner)
 
 	status_label = Label.new()
 	status_label.add_theme_font_size_override("font_size", 18)
@@ -121,8 +188,14 @@ func _build_ui() -> void:
 	cargo_quantity = SpinBox.new()
 	cargo_quantity.min_value = 1
 	cargo_quantity.max_value = 12
-	cargo_quantity.value = 2
+	cargo_quantity.value = PLAYTEST_QUANTITY
 	controls.add_child(_labeled_control("Quantity", cargo_quantity))
+
+	guided_test_button = Button.new()
+	guided_test_button.text = "Test action: Buy 2 grain"
+	guided_test_button.tooltip_text = "Executes one explicit Buy Goods command from the preset state, then leaves departure to you."
+	guided_test_button.pressed.connect(_on_guided_test_action)
+	controls.add_child(guided_test_button)
 
 	market_preview_label = _forecast_label()
 	controls.add_child(market_preview_label)
@@ -196,6 +269,43 @@ func _selected_id(option: OptionButton) -> String:
 	if option.selected < 0:
 		return ""
 	return String(option.get_item_metadata(option.selected))
+
+func _on_start_game_pressed() -> void:
+	world = AshWorldState.new(PLAYTEST_SEED)
+	selected_map_cell = Vector2i(-1, -1)
+	if map_panel:
+		map_panel.world = world
+		map_panel.reset_travel(world.current_settlement)
+	_populate_destination_options()
+	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
+	_select_option_by_id(route_option, PLAYTEST_ROUTE)
+	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
+	cargo_quantity.value = PLAYTEST_QUANTITY
+	guided_test_button.disabled = false
+	playtest_banner.text = "PLAYTEST PRESET — Ashgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo\nRecommended test: buy 2 grain, then read the Old Road forecast to Reedwatch before choosing whether to depart."
+	menu_layer.visible = false
+	game_layer.visible = true
+	_set_event("Playtest started. The guided action performs one buy; departure remains your decision.")
+	_refresh_ui()
+
+func _select_option_by_id(option: OptionButton, target_id: String) -> void:
+	for index in range(option.item_count):
+		if String(option.get_item_metadata(index)) == target_id:
+			option.select(index)
+			return
+
+func _on_guided_test_action() -> void:
+	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
+	_select_option_by_id(route_option, PLAYTEST_ROUTE)
+	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
+	cargo_quantity.value = PLAYTEST_QUANTITY
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": PLAYTEST_GOOD, "quantity": PLAYTEST_QUANTITY},
+	})
+	if result.ok:
+		guided_test_button.disabled = true
+	_show_command_result(result, "Test action")
 
 func _on_forecast_input_changed(_index: int) -> void:
 	_refresh_forecasts()
@@ -306,6 +416,8 @@ func _set_event(text: String) -> void:
 
 func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
+	if playtest_banner and playtest_banner.text.is_empty():
+		playtest_banner.text = "PLAYTEST PRESET — Ashgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo"
 	var cargo_lines: Array[String] = []
 	for good in MarketContent.good_ids():
 		var count := int(world.cargo.get(good, 0))

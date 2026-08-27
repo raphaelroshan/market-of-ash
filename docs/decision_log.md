@@ -79,3 +79,11 @@
 **Reason:** The core Frontier-inspired decision requires a player to understand why a price spread exists and whether margin justifies risk before buying cargo or departing. The explanation and forecast make the existing deterministic economy legible without changing actual transaction or route-resolution behavior.
 
 **Trade-off:** Expected loss and time opportunity cost are estimates rather than guarantees. The displayed planning model must remain simple and transparent until later work adds information quality, guards, events, contracts, market memory, and other factors as explicit forecast inputs.
+
+## ADR-011: Thin main menu and deterministic quick-playtest preset
+
+**Decision:** Launch to a minimal main menu with one `Start Game` action. Starting a game creates a fresh, deterministic Ashgate day-one state with 120 ashmarks, twelve provisions, empty cargo, and the initial Grain-to-Reedwatch/Old Road forecast selected. The market screen exposes one optional, single-use `Test action: Buy 2 grain` control that executes the normal explicit buy command; departure remains the player’s decision.
+
+**Reason:** The project needs a frictionless external-playtest entry point that demonstrates the game’s core trade decision without introducing a tutorial contract, scenario system, or parallel simulation path. The preset makes the intended first decision reproducible for observation and regression testing.
+
+**Trade-off:** This is an intentionally narrow test loop rather than a complete campaign start, save/load menu, or onboarding flow. The guided button is a temporary playtest affordance and must remain an ordinary command invocation rather than a special reward or hidden state mutation.

@@ -8,6 +8,25 @@ func _initialize() -> void:
 	root.add_child(ui)
 	await process_frame
 
+	if ui.menu_layer == null or not ui.menu_layer.visible:
+		failures.append("main menu should be visible on first launch")
+	if ui.game_layer == null or ui.game_layer.visible:
+		failures.append("playtest screen should remain hidden until Start Game")
+	if ui.start_game_button == null or ui.start_game_button.text != "Start Game":
+		failures.append("main menu should expose a Start Game button")
+
+	ui._on_start_game_pressed()
+	if ui.menu_layer.visible or not ui.game_layer.visible:
+		failures.append("Start Game should transition from menu to playtest screen")
+	if ui.world.current_settlement != "ashgate" or ui.world.day != 1:
+		failures.append("Start Game did not load the authored Ashgate day-one preset")
+	if ui.world.money != 120 or ui.world.provisions != 12 or int(ui.world.cargo.get("weight", 0)) != 0:
+		failures.append("Start Game did not restore the authored resource preset")
+	if ui._selected_id(ui.destination_option) != "reedwatch" or ui._selected_id(ui.route_option) != "old_road":
+		failures.append("playtest preset did not select the authored first route forecast")
+	if ui.guided_test_button == null or ui.guided_test_button.disabled:
+		failures.append("playtest screen did not expose the guided test action")
+
 	if ui.map_panel == null:
 		failures.append("main UI did not create the map panel")
 	else:
@@ -26,6 +45,15 @@ func _initialize() -> void:
 			failures.append("forecast refresh mutated authoritative world state")
 		if ui.market_preview_label.text.find("load total") < 0:
 			failures.append("market preview did not refresh selected load total")
+
+		ui._on_guided_test_action()
+		if int(ui.world.cargo.get("grain", 0)) != 2 or int(ui.world.cargo.get("weight", 0)) != 2:
+			failures.append("guided test action did not execute the promised grain purchase")
+		if ui.world.command_history.size() != 1:
+			failures.append("guided test action did not use the explicit command boundary")
+		if not ui.guided_test_button.disabled:
+			failures.append("guided test action should be unavailable after its one preset execution")
+
 		if ui.map_panel.GRID_SIZE != Vector2i(17, 11):
 			failures.append("map grid size is not the stable 17x11 contract")
 		if ui.map_panel._route_points("old_road").size() != 3:
