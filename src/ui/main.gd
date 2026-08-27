@@ -390,7 +390,8 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	theme.default_font_size = 20 if enabled else 16
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
 	_save_presentation_settings()
-	get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
+	if not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
+		get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
 
 func _ensure_focused_control_visible() -> void:
 	var focused := get_viewport().gui_get_focus_owner()
@@ -794,13 +795,9 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", Color("#e6c58d"))
 	left.add_child(title)
 
-	var subtitle := Label.new()
-	subtitle.text = "A trade route is a promise you make to the road."
-	subtitle.add_theme_color_override("font_color", Color("#b5a18b"))
-	left.add_child(subtitle)
-
 	playtest_banner = Label.new()
 	playtest_banner.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	playtest_banner.add_theme_font_size_override("font_size", 12)
 	playtest_banner.add_theme_color_override("font_color", Color("#f0d2a0"))
 	left.add_child(playtest_banner)
 	playtest_status_label = Label.new()
@@ -809,17 +806,19 @@ func _build_ui() -> void:
 	left.add_child(playtest_status_label)
 
 	status_label = Label.new()
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status_label.add_theme_font_size_override("font_size", 18)
 	status_label.add_theme_color_override("font_color", Color("#f4e6c7"))
 	left.add_child(status_label)
 
 	var map_hint := Label.new()
 	map_hint.text = "Click a settlement marker to plan a direct journey; route lanes show the available regional corridors."
+	map_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	map_hint.add_theme_color_override("font_color", Color("#c7b49a"))
 	left.add_child(map_hint)
 
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 220)
+	spacer.custom_minimum_size = Vector2(0, 190)
 	left.add_child(spacer)
 
 	event_label = Label.new()
@@ -1070,7 +1069,7 @@ func _on_start_game_pressed() -> void:
 	enter_settlement_button.visible = false
 	commit_departure_button.disabled = false
 	return_to_shop_button.disabled = false
-	playtest_banner.text = "QUICK PLAYTEST — A compact trade run through the Five-Well Basin. The recommendation is optional; every normal trade and route choice remains available."
+	playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
 	_set_event("Ashgate market is open. Inspect local prices, load cargo, then plan a route when you are ready.")
 	_show_shop()
 
@@ -2126,7 +2125,7 @@ func _refresh_ui() -> void:
 		else:
 			departure_status_label.text = "COMMITMENT CHECK — The map only shows legal corridors. Returning to the shop preserves this plan and spends nothing."
 	if playtest_banner and playtest_banner.text.is_empty():
-		playtest_banner.text = "QUICK PLAYTEST — A compact trade run through the Five-Well Basin."
+		playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
 	_refresh_playtest_status()
 	var cargo_lines: Array[String] = []
 	for good in MarketContent.good_ids():

@@ -364,6 +364,7 @@ func _initialize() -> void:
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("FORECAST SCENARIO") and ui.departure_load_label.text.contains("Water x2") and ui.departure_load_label.text.contains("actually held 2"), "departure desk did not distinguish its forecast scenario from actual cargo")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
+	_expect(ui.status_label.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, "the departure resource summary should wrap instead of clipping at large text")
 	_expect(ui.commit_departure_button.text.contains("4 ashmarks") and ui.commit_departure_button.text.contains("1 provision"), "the pinned Commit action should repeat the current route cost, got %s" % ui.commit_departure_button.text)
 	_expect(ui.cargo_quantity.get_line_edit().find_next_valid_focus() == ui.commit_departure_button and ui.commit_departure_button.find_next_valid_focus() == ui.return_to_shop_button, "Departure Tab order should reach Commit and Return before utility actions")
 	_expect(not _has_scroll_ancestor(ui.commit_departure_button) and not _has_scroll_ancestor(ui.return_to_shop_button), "the primary departure actions should remain pinned outside the long planning rail")
