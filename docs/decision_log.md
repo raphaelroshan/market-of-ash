@@ -350,4 +350,12 @@
 
 **Reason:** A consistent pause path is required for external testing, but Cancel must not silently escape a paid route event or mutate the campaign. Separating navigation Back from modal Pause preserves both expectations.
 
-**Trade-off:** Runtime remapping and persisted accessibility preferences remain future work. Returning to the main menu relies on the current autosave/manual-save system rather than an unsaved-changes confirmation dialog.
+**Trade-off:** Runtime remapping remains future work. Returning to the main menu relies on the current autosave/manual-save system rather than an unsaved-changes confirmation dialog.
+
+## ADR-045: Playtest reports export deterministic evidence without identity data
+
+**Decision:** Add an `Export playtest report` action to the Shop and Pause menu. It writes one JSON report containing the app/content/save versions, seed, day, location, resources, crisis/faction/escalation/resilience state, ending ID, bounded command history, and game log. It contains no player name, account, hardware identifier, or network data and does not mutate campaign state.
+
+**Reason:** External alpha reports need enough context to reproduce a problem or understand a run without asking testers to transcribe diagnostics or surrender unnecessary personal data.
+
+**Trade-off:** The prototype writes to the Godot user-data directory and does not yet open a native share dialog or automatically submit anything. Testers must attach the file deliberately.

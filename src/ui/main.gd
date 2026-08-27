@@ -12,6 +12,7 @@ const PLAYTEST_DESTINATION := "reedwatch"
 const PLAYTEST_ROUTE := "old_road"
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
+const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
 
 var world: AshWorldState
 var game_layer: Control
@@ -75,6 +76,7 @@ var save_path := DEFAULT_SAVE_PATH
 var autosave_enabled := true
 var settings_path := DEFAULT_SETTINGS_PATH
 var settings_persistence_enabled := true
+var report_path := DEFAULT_REPORT_PATH
 var reduce_motion_enabled := false
 var large_text_enabled := false
 var map_panel
@@ -218,6 +220,11 @@ func _build_pause_menu() -> void:
 	load_button.text = "Load saved campaign"
 	load_button.pressed.connect(_on_pause_load_pressed)
 	content.add_child(load_button)
+	var report_button := Button.new()
+	report_button.text = "Export playtest report"
+	report_button.tooltip_text = "Write build, seed, campaign summary, command history, and game log without personal data."
+	report_button.pressed.connect(_on_export_report_pressed)
+	content.add_child(report_button)
 	var menu_button := Button.new()
 	menu_button.text = "Return to main menu"
 	menu_button.pressed.connect(_on_pause_main_menu_pressed)
@@ -463,6 +470,11 @@ func _build_shop() -> void:
 	reset_button.text = "Reset run"
 	reset_button.pressed.connect(_on_reset_pressed)
 	actions.add_child(reset_button)
+	var report_button := Button.new()
+	report_button.text = "Export playtest report"
+	report_button.tooltip_text = "Write build, seed, campaign summary, command history, and game log without personal data."
+	report_button.pressed.connect(_on_export_report_pressed)
+	actions.add_child(report_button)
 	diagnostics_label = Label.new()
 	diagnostics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	diagnostics_label.add_theme_font_size_override("font_size", 11)
@@ -820,6 +832,38 @@ func _on_pause_main_menu_pressed() -> void:
 		_write_save("AUTOSAVED")
 	_close_pause()
 	_show_main_menu()
+
+func _on_export_report_pressed() -> void:
+	var report := {
+		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
+		"content_version": MarketContent.content_version(),
+		"save_version": AshWorldState.SAVE_VERSION,
+		"seed": world.seed,
+		"day": world.day,
+		"settlement_id": world.current_settlement,
+		"money": world.money,
+		"provisions": world.provisions,
+		"cargo": world.cargo.duplicate(true),
+		"crisis_stage": world.crisis_stage,
+		"reputation": world.reputation.duplicate(true),
+		"arms_escalation": world.arms_escalation,
+		"settlement_resilience": world.settlement_resilience.duplicate(true),
+		"ending_id": world.ending_id,
+		"command_history": world.command_history.duplicate(true),
+		"game_log": world.log.duplicate(),
+	}
+	var file := FileAccess.open(report_path, FileAccess.WRITE)
+	if file == null:
+		_set_event("Report export failed. The campaign remains unchanged.")
+		_refresh_ui()
+		return
+	file.store_string(JSON.stringify(report, "\t"))
+	file.flush()
+	if file.get_error() != OK:
+		_set_event("Report export failed. The campaign remains unchanged.")
+	else:
+		_set_event("Playtest report exported with build, seed, command history, and outcome context. No personal data is included.")
+	_refresh_ui()
 
 func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))

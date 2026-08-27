@@ -15,6 +15,8 @@ func _initialize() -> void:
 	var absolute_test_temporary_path := ProjectSettings.globalize_path(test_temporary_path)
 	var test_settings_path := "user://market_of_ash_map_ui_settings_test.cfg"
 	var absolute_test_settings_path := ProjectSettings.globalize_path(test_settings_path)
+	var test_report_path := "user://market_of_ash_map_ui_report_test.json"
+	var absolute_test_report_path := ProjectSettings.globalize_path(test_report_path)
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):
 			DirAccess.remove_absolute(test_path)
@@ -26,6 +28,7 @@ func _initialize() -> void:
 	ui.large_text_checkbox.button_pressed = false
 	ui.reduce_motion_checkbox.button_pressed = false
 	ui.settings_path = test_settings_path
+	ui.report_path = test_report_path
 	ui.settings_persistence_enabled = true
 	ui.continue_game_button.disabled = true
 
@@ -160,6 +163,16 @@ func _initialize() -> void:
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")
 	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v11"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3"), "grain purchase did not advance the playtest objective")
+	var state_before_report := JSON.stringify(ui.world.serialize())
+	ui._on_export_report_pressed()
+	_expect(FileAccess.file_exists(test_report_path) and JSON.stringify(ui.world.serialize()) == state_before_report, "playtest report export should write diagnostics without mutating campaign state")
+	var report_parser := JSON.new()
+	var report_file := FileAccess.open(test_report_path, FileAccess.READ)
+	var report_error := report_parser.parse(report_file.get_as_text())
+	report_file = null
+	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
+	_expect(report.get("game_version", "") == "0.9.0-alpha-roadmap" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include build, seed, and command evidence")
+	_expect(ui.event_label.text.contains("No personal data is included"), "report export should explain its privacy boundary")
 
 	var shop_state: String = JSON.stringify(ui.world.serialize())
 	ui._on_plan_departure_pressed()
@@ -416,6 +429,8 @@ func _initialize() -> void:
 			DirAccess.remove_absolute(test_path)
 	if FileAccess.file_exists(test_settings_path):
 		DirAccess.remove_absolute(absolute_test_settings_path)
+	if FileAccess.file_exists(test_report_path):
+		DirAccess.remove_absolute(absolute_test_report_path)
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

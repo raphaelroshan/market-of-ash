@@ -4,6 +4,8 @@ Do not collect names, email addresses, account IDs, or other unnecessary persona
 
 ## Build context
 
+Use **Export playtest report** from the Shop or Pause menu and attach the resulting JSON when practical; it contains no personal identifiers.
+
 - Build commit/version:
 - Platform and OS version:
 - Input device: mouse / keyboard / controller (model optional):

@@ -17,6 +17,7 @@
 | Timing | No choice has a real-time deadline. Travel motion never blocks `Enter settlement`, and reduced motion can remove it. | Command/UI architecture and reduced-motion test. |
 | Save recovery | Successful commands autosave through a temporary file and keep one backup generation; manual Save and Load expose day, settlement, save version, and content version. Invalid or newer files are validated in a candidate world and cannot replace the active run. | UI smoke tests missing, valid, corrupt-primary recovery, future-version rejection, and autosave paths; core save normalization tests. |
 | Pause | A modal layer stops the scene tree, reports current run/save context, and offers Resume, Save, Load, and Return to main menu. Event decisions remain pending underneath it. | UI smoke checks paused state, Resume focus, focus restoration, and event preservation. |
+| Feedback capture | Shop and Pause export a JSON report with build, seed, state summary, commands, and game log; no personal identifiers are collected. | UI smoke parses the report and verifies build/seed/history while asserting no campaign mutation. |
 
 ## Manual input matrix
 
