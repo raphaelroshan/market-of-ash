@@ -25,6 +25,7 @@ func _initialize() -> void:
 	ui.save_path = test_save_path
 	ui.autosave_enabled = false
 	ui.settings_persistence_enabled = false
+	ui._on_restore_default_bindings()
 	ui.large_text_checkbox.button_pressed = false
 	ui.reduce_motion_checkbox.button_pressed = false
 	ui.settings_path = test_settings_path
@@ -36,12 +37,39 @@ func _initialize() -> void:
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")
+	_expect(_has_scroll_ancestor(ui.start_game_button), "the expanded Main Menu settings and launch controls should remain reachable through a scroll container")
 	_expect(ui.continue_game_button != null and ui.continue_game_button.text == "Continue saved game", "main menu should expose a separate validated continue action")
 	_expect(ui.reduce_motion_checkbox != null and ui.reduce_motion_checkbox.text == "Reduce travel motion", "main menu should expose a reduced-motion option")
 	_expect(ui.large_text_checkbox != null and ui.large_text_checkbox.text == "Large text", "main menu should expose a large-text option")
 	_expect(_action_has_joypad_button("ui_accept", 0), "ui_accept should retain the primary controller button")
 	_expect(_action_has_joypad_button("ui_cancel", 1), "ui_cancel should retain the secondary controller button")
 	_expect(_action_has_joypad_button("ui_pause", 6), "ui_pause should expose the controller menu button")
+	_expect(ui.binding_buttons.size() == 3 and ui.controls_hint_label.text.contains("Enter / Space") and ui.controls_hint_label.text.contains("Escape/B"), "main menu should expose the current keyboard bindings alongside the controller scheme")
+	ui._on_rebind_pressed("ui_pause")
+	var rebind_pause := InputEventKey.new()
+	rebind_pause.physical_keycode = KEY_R
+	rebind_pause.pressed = true
+	ui._unhandled_input(rebind_pause)
+	_expect(_action_has_key("ui_pause", KEY_R) and _action_has_joypad_button("ui_pause", 6), "rebinding Pause should replace its keyboard key without removing controller Menu")
+	var rebound_settings := ConfigFile.new()
+	_expect(rebound_settings.load(test_settings_path) == OK and rebound_settings.get_value("input", "ui_pause", []).has(KEY_R), "keyboard remapping should persist outside the campaign save")
+	ui._on_rebind_pressed("ui_cancel")
+	ui._unhandled_input(rebind_pause)
+	_expect(ui.remapping_action == "ui_cancel" and ui.binding_status_label.text.contains("already assigned to Pause"), "keyboard remapping should reject a key already owned by another required action")
+	var cancel_rebind := InputEventKey.new()
+	cancel_rebind.physical_keycode = KEY_ESCAPE
+	cancel_rebind.pressed = true
+	ui._unhandled_input(cancel_rebind)
+	_expect(ui.remapping_action.is_empty() and ui.binding_status_label.text.contains("cancelled"), "Escape should cancel key capture without changing bindings")
+	ui._on_restore_default_bindings()
+	_expect(_action_has_key("ui_pause", KEY_P) and _action_has_key("ui_cancel", KEY_ESCAPE) and _action_has_key("ui_accept", KEY_ENTER), "Restore default keys should recover the complete keyboard control scheme")
+	var invalid_bindings := ConfigFile.new()
+	invalid_bindings.set_value("input", "ui_accept", [KEY_R])
+	invalid_bindings.set_value("input", "ui_cancel", [KEY_R])
+	invalid_bindings.set_value("input", "ui_pause", [KEY_P])
+	invalid_bindings.save(test_settings_path)
+	ui._load_presentation_settings()
+	_expect(_action_has_key("ui_accept", KEY_ENTER) and _action_has_key("ui_cancel", KEY_ESCAPE) and _action_has_key("ui_pause", KEY_P), "invalid persisted key conflicts should fall back to the complete default scheme")
 
 	ui._on_start_game_pressed()
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
@@ -511,6 +539,12 @@ func _expect(condition: bool, message: String) -> void:
 func _action_has_joypad_button(action: StringName, button_index: int) -> bool:
 	for input_event in InputMap.action_get_events(action):
 		if input_event is InputEventJoypadButton and input_event.button_index == button_index:
+			return true
+	return false
+
+func _action_has_key(action: StringName, keycode: int) -> bool:
+	for input_event in InputMap.action_get_events(action):
+		if input_event is InputEventKey and (input_event.physical_keycode == keycode or input_event.keycode == keycode):
 			return true
 	return false
 

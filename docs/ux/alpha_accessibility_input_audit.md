@@ -8,7 +8,7 @@
 
 | Area | Current behavior | Evidence |
 | --- | --- | --- |
-| Keyboard | Tab/directional navigation uses Godot focus traversal; Enter and Space activate the focused control; Escape returns from uncommitted departure planning or pauses elsewhere; P always pauses during play. | `tests/test_map_ui.gd` and `project.godot` input-map assertions. |
+| Keyboard | Tab/directional navigation uses Godot focus traversal. Accept, Back, and Pause keys can be rebound from the Main Menu; conflicting or modified shortcuts are rejected and defaults can be restored. | UI smoke exercises remapping, conflict rejection, persistence, and default restoration. |
 | Controller | D-pad/stick focus traversal uses Godot UI actions; A accepts, B goes back/pauses, and Menu pauses during play. | Controller bindings are source controlled and asserted by the UI smoke test. |
 | Focus continuity | Shop, Departure Desk, route decisions, and arrival each establish a predictable enabled focus target. | UI smoke assertions cover every transition. |
 | Reduced motion | A persisted Main Menu option skips caravan interpolation and presents the completed route immediately without changing simulation time or outcome. | UI smoke test checks completed progress, no active animation, and settings-file round trip. |
@@ -48,12 +48,11 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 
 1. Large-text reflow and scrolling are implemented but still need rendered checks at minimum window and high OS scaling for clipping and comfortable line length.
 2. Controller behavior is configured and headlessly asserted but has not been exercised on physical Windows hardware.
-3. Runtime input remapping is not implemented yet; the pause layer currently exposes the fixed bindings. Accessibility preferences persist in a separate settings file.
-4. Audio cues and screen-reader semantics are not implemented; essential information remains available as text.
+3. Audio cues and screen-reader semantics are not implemented; essential information remains available as text.
 
 ## Remapping plan
 
-Keep gameplay code bound only to named actions. Add a Settings screen that listens for a replacement input, rejects reserved OS shortcuts, preserves at least one binding for Accept and Cancel, writes mappings to a separate user settings file, and offers Restore Defaults. Never serialize device-specific mappings into campaign saves.
+Gameplay code remains bound only to named actions. The current Main Menu remapper changes keyboard bindings, rejects modifier/reserved/conflicting shortcuts, preserves controller mappings and at least one key for every required action, writes mappings to the separate user settings file, and offers Restore Defaults. Campaign saves never contain device-specific mappings. A later settings screen can expand this to controller rebinding without changing gameplay code.
 
 ## Release-candidate record
 

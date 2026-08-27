@@ -13,6 +13,9 @@ const PLAYTEST_ROUTE := "old_road"
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
+const REMAPPABLE_ACTIONS := ["ui_accept", "ui_cancel", "ui_pause"]
+const ACTION_LABELS := {"ui_accept": "Accept", "ui_cancel": "Back", "ui_pause": "Pause"}
+const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel": [KEY_ESCAPE], "ui_pause": [KEY_P]}
 
 var world: AshWorldState
 var game_layer: Control
@@ -25,6 +28,10 @@ var focus_before_pause: Control
 var start_game_button: Button
 var continue_game_button: Button
 var menu_save_status_label: Label
+var controls_hint_label: Label
+var binding_status_label: Label
+var binding_buttons: Dictionary = {}
+var remapping_action: String = ""
 var reduce_motion_checkbox: CheckBox
 var large_text_checkbox: CheckBox
 var shop_good_option: OptionButton
@@ -114,11 +121,17 @@ func _build_main_menu() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu_layer.add_child(center)
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(560, 0)
+	card.custom_minimum_size = Vector2(600, 640)
 	center.add_child(card)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card.add_child(scroll)
 	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 16)
-	card.add_child(content)
+	scroll.add_child(content)
 
 	var title := Label.new()
 	title.text = "MARKET OF ASH"
@@ -137,12 +150,11 @@ func _build_main_menu() -> void:
 	preset.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
 	content.add_child(preset)
-	var controls_hint := Label.new()
-	controls_hint.text = "Controls: mouse, keyboard arrows/Tab + Enter/Space, or controller D-pad/stick + A. Escape/B goes back or pauses; P/Menu always pauses during play."
-	controls_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	controls_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	controls_hint.add_theme_color_override("font_color", Color("#c7b49a"))
-	content.add_child(controls_hint)
+	controls_hint_label = Label.new()
+	controls_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	controls_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	controls_hint_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	content.add_child(controls_hint_label)
 	reduce_motion_checkbox = CheckBox.new()
 	reduce_motion_checkbox.text = "Reduce travel motion"
 	reduce_motion_checkbox.tooltip_text = "Show the caravan at its destination immediately; route outcomes and timing are unchanged."
@@ -155,6 +167,30 @@ func _build_main_menu() -> void:
 	large_text_checkbox.button_pressed = large_text_enabled
 	large_text_checkbox.toggled.connect(_on_large_text_toggled)
 	content.add_child(large_text_checkbox)
+	var bindings_title := Label.new()
+	bindings_title.text = "KEYBOARD BINDINGS"
+	bindings_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bindings_title.add_theme_color_override("font_color", Color("#e6c58d"))
+	content.add_child(bindings_title)
+	var binding_row := HBoxContainer.new()
+	binding_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	binding_row.add_theme_constant_override("separation", 8)
+	content.add_child(binding_row)
+	for action_name in REMAPPABLE_ACTIONS:
+		var binding_button := Button.new()
+		binding_button.pressed.connect(_on_rebind_pressed.bind(action_name))
+		binding_row.add_child(binding_button)
+		binding_buttons[action_name] = binding_button
+	var restore_bindings_button := Button.new()
+	restore_bindings_button.text = "Restore default keys"
+	restore_bindings_button.pressed.connect(_on_restore_default_bindings)
+	content.add_child(restore_bindings_button)
+	binding_status_label = Label.new()
+	binding_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	binding_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	binding_status_label.add_theme_font_size_override("font_size", 11)
+	binding_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
+	content.add_child(binding_status_label)
 	start_game_button = Button.new()
 	start_game_button.text = "Start Game"
 	start_game_button.custom_minimum_size = Vector2(0, 48)
@@ -174,6 +210,7 @@ func _build_main_menu() -> void:
 	menu_save_status_label.add_theme_font_size_override("font_size", 11)
 	menu_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(menu_save_status_label)
+	_refresh_binding_labels()
 
 func _build_pause_menu() -> void:
 	pause_layer = Control.new()
@@ -318,12 +355,101 @@ func _on_reduce_motion_toggled(enabled: bool) -> void:
 		map_panel.reduce_motion = enabled
 	_save_presentation_settings()
 
+func _on_rebind_pressed(action_name: String) -> void:
+	remapping_action = action_name
+	binding_status_label.text = "Press one unmodified key for %s. Escape cancels." % String(ACTION_LABELS.get(action_name, action_name))
+	_refresh_binding_labels()
+
+func _on_restore_default_bindings() -> void:
+	for action_name in REMAPPABLE_ACTIONS:
+		_replace_keyboard_bindings(action_name, DEFAULT_KEY_BINDINGS[action_name])
+	remapping_action = ""
+	if binding_status_label:
+		binding_status_label.text = "Default keyboard bindings restored."
+	_refresh_binding_labels()
+	_save_presentation_settings()
+
+func _capture_keyboard_binding(event: InputEventKey) -> void:
+	if event.physical_keycode == KEY_ESCAPE:
+		remapping_action = ""
+		binding_status_label.text = "Key change cancelled."
+		_refresh_binding_labels()
+		return
+	if event.physical_keycode == KEY_NONE or event.physical_keycode == KEY_TAB or event.alt_pressed or event.ctrl_pressed or event.meta_pressed or event.shift_pressed:
+		binding_status_label.text = "That shortcut is reserved. Press one unmodified key, or Escape to cancel."
+		return
+	for action_name in REMAPPABLE_ACTIONS:
+		if action_name == remapping_action:
+			continue
+		if _keyboard_binding_codes(action_name).has(event.physical_keycode):
+			binding_status_label.text = "%s is already assigned to %s. Choose a different key." % [OS.get_keycode_string(event.physical_keycode), String(ACTION_LABELS.get(action_name, action_name))]
+			return
+	_replace_keyboard_bindings(remapping_action, [event.physical_keycode])
+	var updated_action := remapping_action
+	remapping_action = ""
+	binding_status_label.text = "%s now uses %s. Controller bindings are unchanged." % [String(ACTION_LABELS.get(updated_action, updated_action)), _keyboard_binding_text(updated_action)]
+	_refresh_binding_labels()
+	_save_presentation_settings()
+
+func _replace_keyboard_bindings(action_name: String, keycodes: Array) -> void:
+	for input_event in InputMap.action_get_events(action_name):
+		if input_event is InputEventKey:
+			InputMap.action_erase_event(action_name, input_event)
+	for keycode_value in keycodes:
+		var key_event := InputEventKey.new()
+		key_event.physical_keycode = int(keycode_value)
+		InputMap.action_add_event(action_name, key_event)
+
+func _keyboard_binding_codes(action_name: String) -> Array:
+	var keycodes: Array = []
+	for input_event in InputMap.action_get_events(action_name):
+		if input_event is InputEventKey:
+			var keycode: int = int(input_event.physical_keycode if input_event.physical_keycode != KEY_NONE else input_event.keycode)
+			if keycode != KEY_NONE and not keycodes.has(keycode):
+				keycodes.append(keycode)
+	return keycodes
+
+func _keyboard_binding_text(action_name: String) -> String:
+	var labels: Array[String] = []
+	for keycode in _keyboard_binding_codes(action_name):
+		labels.append(OS.get_keycode_string(int(keycode)))
+	return " / ".join(labels) if not labels.is_empty() else "Unbound"
+
+func _refresh_binding_labels() -> void:
+	for action_name in REMAPPABLE_ACTIONS:
+		var button: Button = binding_buttons.get(action_name)
+		if button:
+			button.text = "Press a key…" if remapping_action == action_name else "%s: %s" % [String(ACTION_LABELS.get(action_name, action_name)), _keyboard_binding_text(action_name)]
+	if controls_hint_label:
+		controls_hint_label.text = "Controls: mouse, keyboard arrows/Tab + %s to accept, or controller D-pad/stick + A. %s/B goes back or pauses; %s/Menu always pauses during play." % [_keyboard_binding_text("ui_accept"), _keyboard_binding_text("ui_cancel"), _keyboard_binding_text("ui_pause")]
+
 func _load_presentation_settings() -> void:
 	var config := ConfigFile.new()
 	if config.load(settings_path) != OK:
 		return
 	large_text_enabled = bool(config.get_value("accessibility", "large_text", false))
 	reduce_motion_enabled = bool(config.get_value("accessibility", "reduce_motion", false))
+	var requested_bindings: Dictionary = {}
+	var claimed_keys: Array = []
+	var bindings_valid := true
+	for action_name in REMAPPABLE_ACTIONS:
+		var saved_codes: Variant = config.get_value("input", action_name, DEFAULT_KEY_BINDINGS[action_name])
+		if typeof(saved_codes) != TYPE_ARRAY or saved_codes.is_empty():
+			bindings_valid = false
+			break
+		var validated_codes: Array = []
+		for code_value in saved_codes:
+			if (typeof(code_value) != TYPE_INT and typeof(code_value) != TYPE_FLOAT) or int(code_value) == KEY_NONE or int(code_value) == KEY_TAB or claimed_keys.has(int(code_value)):
+				bindings_valid = false
+				break
+			validated_codes.append(int(code_value))
+			claimed_keys.append(int(code_value))
+		if not bindings_valid:
+			break
+		requested_bindings[action_name] = validated_codes
+	for action_name in REMAPPABLE_ACTIONS:
+		var keycodes: Array = requested_bindings.get(action_name, DEFAULT_KEY_BINDINGS[action_name]) if bindings_valid else DEFAULT_KEY_BINDINGS[action_name]
+		_replace_keyboard_bindings(action_name, keycodes)
 
 func _save_presentation_settings() -> void:
 	if not settings_persistence_enabled:
@@ -331,6 +457,8 @@ func _save_presentation_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value("accessibility", "large_text", large_text_enabled)
 	config.set_value("accessibility", "reduce_motion", reduce_motion_enabled)
+	for action_name in REMAPPABLE_ACTIONS:
+		config.set_value("input", action_name, _keyboard_binding_codes(action_name))
 	config.save(settings_path)
 
 func _apply_text_scale(node: Node, scale: float) -> void:
@@ -761,6 +889,10 @@ func _selected_id(option: OptionButton) -> String:
 	return String(option.get_item_metadata(option.selected))
 
 func _on_start_game_pressed() -> void:
+	remapping_action = ""
+	if binding_status_label:
+		binding_status_label.text = ""
+	_refresh_binding_labels()
 	world = AshWorldState.new(PLAYTEST_SEED)
 	playtest_grain_sold = 0
 	if map_panel:
@@ -817,6 +949,11 @@ func _on_return_to_shop_pressed() -> void:
 	_show_shop()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not remapping_action.is_empty():
+		if event is InputEventKey and event.pressed and not event.echo:
+			_capture_keyboard_binding(event)
+			get_viewport().set_input_as_handled()
+		return
 	if pause_layer != null and pause_layer.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_pause")):
 		_close_pause()
 		get_viewport().set_input_as_handled()
@@ -1213,6 +1350,10 @@ func _on_load_pressed() -> bool:
 		return false
 	var candidate: AshWorldState = load_attempt.world
 	var load_result: Dictionary = load_attempt.result
+	remapping_action = ""
+	if binding_status_label:
+		binding_status_label.text = ""
+	_refresh_binding_labels()
 	world = candidate
 	arrival_pending = false
 	if map_panel:
