@@ -117,6 +117,12 @@ def main() -> int:
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
             if shop_output.read_bytes() == output.read_bytes():
                 raise AssertionError(f"{shop_output.name}: Start did not change the rendered frame")
+            size_ratio = shop_bytes / main_bytes
+            if shop_bytes - main_bytes < 20_000 or size_ratio < 1.2:
+                raise AssertionError(
+                    f"{shop_output.name}: navigation changed too little to prove the Shop rendered "
+                    f"({main_bytes} -> {shop_bytes} bytes, ratio {size_ratio:.2f})"
+                )
             captures.append(
                 {
                     "screen": "settlement_shop",
@@ -124,6 +130,7 @@ def main() -> int:
                     "captured_viewport": {"width": actual_width, "height": actual_height},
                     "file": shop_output.name,
                     "bytes": shop_bytes,
+                    "main_menu_size_ratio": round(size_ratio, 3),
                 }
             )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
