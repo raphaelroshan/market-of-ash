@@ -1,0 +1,221 @@
+{
+  "schema_version": 1,
+  "game_id": "market-of-ash",
+  "framework_version": "0.4.0",
+  "design_promise": "A settlement visit should make the player feel like a caravan master choosing how to spend limited time and attention, not a player opening an inventory of unrelated menus.",
+  "visit_model": {
+    "arrival_sequence": ["regional_report", "settlement_snapshot", "cargo_and_price_view", "available_services"],
+    "trade_is_always_available": true,
+    "service_slots_per_visit": 2,
+    "service_slot_rule": "Buying and selling spot goods do not consume service slots; contracts, recruitment, information, guards, repairs, storage, diplomacy, and aid consume one or two slots.",
+    "time_pressure": "A service may consume a day or advance a deadline, but browsing, comparing prices, and cancelling before confirmation do not consume time.",
+    "departure_confirmation": ["cargo_summary", "money_after_costs", "provisions_after_costs", "active_contracts", "route_risk", "known_obstacles", "next_market_trend"],
+    "no_hidden_menu_actions": "Every action that changes money, time, cargo, relationship, route access, or settlement resilience must show its effect before confirmation."
+  },
+  "action_categories": [
+    {"id": "trade", "name": "Trade", "purpose": "Buy and sell goods, compare markets, and reserve contracts."},
+    {"id": "people", "name": "People", "purpose": "Recruit companions, hire guards, and meet specialists."},
+    {"id": "information", "name": "Information", "purpose": "Improve confidence about prices, routes, demand, and factions."},
+    {"id": "logistics", "name": "Logistics", "purpose": "Repair the caravan, store cargo, prepare provisions, or improve capacity."},
+    {"id": "diplomacy", "name": "Diplomacy", "purpose": "Negotiate with local coalitions and political factions."},
+    {"id": "relief", "name": "Relief", "purpose": "Spend margin to improve resilience and preserve future markets."}
+  ],
+  "global_actions": [
+    {
+      "id": "buy_spot_goods",
+      "category": "trade",
+      "name": "Buy Goods",
+      "time_cost": 0,
+      "service_slots": 0,
+      "requirements": ["money >= purchase_total", "cargo_capacity_available"],
+      "effects": ["money:-purchase_total", "cargo:+selected_goods", "local_supply_pressure:+selected_goods"],
+      "visible_preview": ["unit_price", "quantity", "total_cost", "remaining_capacity", "price_reason"],
+      "tradeoff": "Immediate stock and a possible future margin in exchange for tied-up capital and cargo space."
+    },
+    {
+      "id": "sell_spot_goods",
+      "category": "trade",
+      "name": "Sell Goods",
+      "time_cost": 0,
+      "service_slots": 0,
+      "requirements": ["cargo >= selected_goods"],
+      "effects": ["money:+sale_total", "cargo:-selected_goods", "local_supply_pressure:-selected_goods", "settlement_memory:+delivery"],
+      "visible_preview": ["unit_price", "quantity", "gross_revenue", "price_reason", "saturation_warning"],
+      "tradeoff": "Locks in a known margin and improves local supply, but removes the cargo from any higher-price or contract opportunity."
+    },
+    {
+      "id": "accept_delivery_contract",
+      "category": "trade",
+      "name": "Accept Delivery Contract",
+      "time_cost": 0,
+      "service_slots": 1,
+      "requirements": ["contract_available", "cargo_capacity_available"],
+      "effects": ["contract:+selected_contract", "market_forecast:+contract_target", "deadline:+contract_deadline"],
+      "visible_preview": ["required_good", "required_quantity", "guaranteed_price", "deadline", "failure_cost", "destination_risk"],
+      "tradeoff": "Creates a reliable buyer and often a relationship benefit, but ties up capacity and makes detours costly."
+    },
+    {
+      "id": "recruit_companion",
+      "category": "people",
+      "name": "Recruit Companion",
+      "time_cost": 1,
+      "service_slots": 1,
+      "requirements": ["companion_available", "money >= recruit_cost", "crew_capacity_available"],
+      "effects": ["money:-recruit_cost", "crew:+companion", "relationship:+companion"],
+      "visible_preview": ["role", "mechanical_hook", "upkeep", "personal_goal", "relationship_risk"],
+      "tradeoff": "Adds a permanent capability and voice to the caravan, but consumes capacity and can create obligations."
+    },
+    {
+      "id": "hire_route_guard",
+      "category": "people",
+      "name": "Hire Route Guards",
+      "time_cost": 0,
+      "service_slots": 1,
+      "requirements": ["guard_offer_available", "money >= guard_cost"],
+      "effects": ["money:-guard_cost", "next_route_risk:-guard_reduction", "faction_relation:+guard_sponsor"],
+      "visible_preview": ["route_risk_reduction", "route_coverage", "sponsor", "duration", "political_alignment"],
+      "tradeoff": "Reduces immediate travel risk without using cargo space, but may associate the caravan with the guard’s faction."
+    },
+    {
+      "id": "buy_market_report",
+      "category": "information",
+      "name": "Buy Market Report",
+      "time_cost": 0,
+      "service_slots": 1,
+      "requirements": ["money >= report_cost", "report_available"],
+      "effects": ["money:-report_cost", "information:price_trend", "information:demand_reason", "information:route_warning"],
+      "visible_preview": ["source", "confidence", "markets_covered", "forecast_window", "what_would_invalidate_it"],
+      "tradeoff": "Improves decision quality but spends money and never guarantees the final price."
+    },
+    {
+      "id": "ask_local_witness",
+      "category": "information",
+      "name": "Ask Local Witness",
+      "time_cost": 1,
+      "service_slots": 1,
+      "requirements": ["witness_available"],
+      "effects": ["information:local_obstacle", "information:faction_intent", "days:+1"],
+      "visible_preview": ["source_role", "specific_warning", "confidence", "time_cost"],
+      "tradeoff": "Produces a more local and often more human report, but costs a day that could have been used for another market."
+    },
+    {
+      "id": "repair_caravan",
+      "category": "logistics",
+      "name": "Repair Caravan",
+      "time_cost": 1,
+      "service_slots": 1,
+      "requirements": ["repair_service_available", "money >= repair_cost"],
+      "effects": ["money:-repair_cost", "caravan_condition:+repair_amount", "route_risk:-condition_reduction"],
+      "visible_preview": ["condition_before", "condition_after", "risk_reduction", "parts_used", "completion_time"],
+      "tradeoff": "Protects future cargo and reduces route risk, but spends money that could have bought a larger load."
+    },
+    {
+      "id": "store_cargo",
+      "category": "logistics",
+      "name": "Store Cargo",
+      "time_cost": 0,
+      "service_slots": 1,
+      "requirements": ["storage_available", "money >= storage_cost"],
+      "effects": ["money:-storage_cost", "stored_cargo:+selected_goods", "cargo_weight:-selected_weight", "storage_deadline:+deadline"],
+      "visible_preview": ["stored_goods", "storage_cost", "deadline", "spoilage_or_security_risk", "retrieval_condition"],
+      "tradeoff": "Frees caravan capacity and preserves a future position, but ties up goods and exposes them to local political or market change."
+    },
+    {
+      "id": "meet_faction_representative",
+      "category": "diplomacy",
+      "name": "Meet Faction Representative",
+      "time_cost": 1,
+      "service_slots": 1,
+      "requirements": ["representative_available"],
+      "effects": ["days:+1", "information:faction_intent", "contract:faction_offer", "relationship:faction_contact"],
+      "visible_preview": ["faction", "offer", "requested_commitment", "likely_rival_response", "settlement_risk"],
+      "tradeoff": "Opens profitable or protective contracts, but makes the caravan’s position more visible."
+    },
+    {
+      "id": "fund_settlement_relief",
+      "category": "relief",
+      "name": "Fund Settlement Relief",
+      "time_cost": 1,
+      "service_slots": 1,
+      "requirements": ["money >= relief_cost or cargo >= relief_goods"],
+      "effects": ["money:-relief_cost", "settlement_resilience:+1", "tribal_legitimacy:+1", "future_demand:stabilized"],
+      "visible_preview": ["households_reached", "resilience_change", "future_market_effect", "faction_reaction"],
+      "tradeoff": "Converts margin into a stronger future market and relationships, but does not produce an immediate sale price."
+    }
+  ],
+  "settlement_overrides": {
+    "ashgate": {
+      "arrival_report": "A regulated hub with official prices, permit queues, and better information than it admits.",
+      "available_actions": ["buy_spot_goods", "sell_spot_goods", "accept_delivery_contract", "recruit_companion", "hire_route_guard", "buy_market_report", "meet_faction_representative", "store_cargo"],
+      "special_actions": [
+        {"id": "apply_for_toll_road_permit", "category": "logistics", "time_cost": 1, "service_slots": 1, "requirements": ["money >= 10"], "effects": ["money:-10", "route_access:toll_road", "warden_relation:+1"], "tradeoff": "Makes the safe road available but places the caravan inside the Warden record system."},
+        {"id": "challenge_official_measure", "category": "diplomacy", "time_cost": 1, "service_slots": 1, "requirements": ["information:measure_dispute or crew:tess_oryn"], "effects": ["days:+1", "warden_relation:-1", "caravan_openness:+1", "information:official_shortage"], "tradeoff": "Improves public information and openness while risking official access."}
+      ]
+    },
+    "brine_cross": {
+      "arrival_report": "A water market under pressure: the wells are still producing, but clean measures and medicine are scarce.",
+      "available_actions": ["buy_spot_goods", "sell_spot_goods", "accept_delivery_contract", "hire_route_guard", "buy_market_report", "ask_local_witness", "repair_caravan", "meet_faction_representative", "fund_settlement_relief"],
+      "special_actions": [
+        {"id": "join_cistern_queue", "category": "information", "time_cost": 1, "service_slots": 1, "requirements": ["water_access:regulated or representative_available"], "effects": ["days:+1", "information:well_quality", "salt_crown_relation:+1"], "tradeoff": "Improves water forecasts and access, but signals comfort with cistern authority."},
+        {"id": "organize_fair_water_sale", "category": "relief", "time_cost": 1, "service_slots": 1, "requirements": ["cargo.water >= 1"], "effects": ["cargo.water:-1", "money:+9", "settlement_resilience:+1", "tribal_legitimacy:+1"], "tradeoff": "Earns less than a committee sale while stabilizing the settlement and future demand."
+        }
+      ]
+    },
+    "cinderford": {
+      "arrival_report": "An industrial hub where scrap and charcoal are cheap, but the furnaces compete with workers and caravans for every useful input.",
+      "available_actions": ["buy_spot_goods", "sell_spot_goods", "accept_delivery_contract", "recruit_companion", "hire_route_guard", "ask_local_witness", "repair_caravan", "store_cargo", "meet_faction_representative"],
+      "special_actions": [
+        {"id": "commission_repair_parts", "category": "logistics", "time_cost": 1, "service_slots": 1, "requirements": ["money >= 14", "cargo.scrap >= 1 or cargo.charcoal >= 1"], "effects": ["money:-14", "caravan_condition:+2", "future_repair_cost:-2"], "tradeoff": "Converts cheap industrial goods into durable caravan capability, but uses time that could have been spent on a larger trade."},
+        {"id": "hire_forge_hand", "category": "people", "time_cost": 1, "service_slots": 1, "requirements": ["money >= 20", "crew_capacity_available"], "effects": ["money:-20", "crew:+forge_hand", "weapon_craft_access:true", "charcoal_demand:+1"], "tradeoff": "Unlocks weapon-input and repair options but increases upkeep and future charcoal pressure."
+        }
+      ]
+    },
+    "hollow_market": {
+      "arrival_report": "The most flexible market and the least trustworthy one: a good rumor can be worth more than a good cargo load.",
+      "available_actions": ["buy_spot_goods", "sell_spot_goods", "accept_delivery_contract", "recruit_companion", "hire_route_guard", "buy_market_report", "ask_local_witness", "store_cargo", "meet_faction_representative"],
+      "special_actions": [
+        {"id": "buy_rumor", "category": "information", "time_cost": 0, "service_slots": 1, "requirements": ["money >= 6"], "effects": ["money:-6", "information:rumor", "forecast_confidence:+1"], "tradeoff": "Cheap information with uncertain reliability; a rumor can improve a decision or move the player toward a bad market."},
+        {"id": "fence_high_risk_goods", "category": "trade", "time_cost": 0, "service_slots": 1, "requirements": ["cargo_contains:high_risk_good", "fence_contact_available"], "effects": ["money:+fence_value", "cargo:-selected_goods", "caravan_openness:-1", "warden_control:+1"], "tradeoff": "Turns politically awkward cargo into cash, but adds suspicion and weakens open-market trust."}
+      ]
+    },
+    "reedwatch": {
+      "arrival_report": "A frontier settlement with cheap grain and expensive water, where every profitable decision is visible on the faces of people waiting for supplies.",
+      "available_actions": ["buy_spot_goods", "sell_spot_goods", "accept_delivery_contract", "recruit_companion", "hire_route_guard", "ask_local_witness", "repair_caravan", "meet_faction_representative", "fund_settlement_relief"],
+      "special_actions": [
+        {"id": "recruit_frontier_scout", "category": "people", "time_cost": 1, "service_slots": 1, "requirements": ["money >= 16", "crew_capacity_available"], "effects": ["money:-16", "crew:+frontier_scout", "old_road_forecast:+1", "raider_warning:+1"], "tradeoff": "Adds route knowledge and protection against surprise, but increases upkeep and creates a frontier obligation."},
+        {"id": "open_supply_shelter", "category": "relief", "time_cost": 1, "service_slots": 1, "requirements": ["cargo.grain >= 1 or cargo.water >= 1 or cargo.medicine >= 1"], "effects": ["cargo:-relief_goods", "settlement_resilience:+1", "caravan_openness:+1", "future_demand:fair"], "tradeoff": "Makes future trade more stable and trusted while sacrificing the highest immediate margin."
+        }
+      ]
+    }
+  },
+  "interface_structure": {
+    "primary_tabs": ["Market", "Contracts", "People", "Information", "Logistics", "Relations"],
+    "default_view": "Market",
+    "secondary_actions_hidden_until_requested": true,
+    "settlement_header": ["settlement_name", "role", "crisis_status", "current_day", "available_service_slots", "known_obstacles"],
+    "market_panel": ["local_prices", "regional_comparison", "demand_reason", "recent_delivery_effect", "projected_net_profit"],
+    "departure_panel": ["cargo", "money", "provisions", "active_contracts", "route_options", "expected_risk", "expected_arrival_day"],
+    "anti_menu_bloat_rules": [
+      "Trade is the default tab and requires no service slot.",
+      "Actions with similar purpose are grouped: information is not split into five rumor menus.",
+      "Unavailable actions remain visible with a reason so the player learns the settlement’s role.",
+      "Every service preview includes cost, time, benefit, and one meaningful downside.",
+      "A settlement visit should be completable in under two minutes for a routine trade and under five minutes for a major contract or political decision."
+    ]
+  },
+  "progression_hooks": [
+    {"id": "route_ledger", "unlocks": ["regional_comparison", "trend_direction", "expected_net_profit"], "does_not_unlock": "guaranteed_prices"},
+    {"id": "warehouse_lease", "unlocks": ["store_cargo", "speculative_hold"], "does_not_unlock": "risk_free_storage"},
+    {"id": "neutral_brokerage", "unlocks": ["mixed_escort", "mediation_contract", "fair_supply_shelter"], "does_not_unlock": "all_faction_access"},
+    {"id": "public_manifest", "unlocks": ["buyer_consequence_preview", "settlement_resilience_preview"], "does_not_unlock": "moral_correctness"}
+  ],
+  "design_guardrails": [
+    "Spot trading must remain satisfying even if the player never accepts a contract or speaks to a faction.",
+    "Services should make trading more informed or resilient, not become a parallel progression game.",
+    "Recruitment should be small and characterful; companions add capability and obligations rather than a roster-management spreadsheet.",
+    "Guards reduce route risk for a visible duration and sponsor, but do not erase obstacles or guarantee cargo safety.",
+    "Information improves confidence and reveals causes; it does not reveal a perfect future price.",
+    "Relief actions should improve future market stability and relationships without requiring the player to role-play a single moral answer.",
+    "The player can visit a settlement, trade, and leave quickly; deeper actions are optional commitments, not mandatory chores."
+  ]
+}

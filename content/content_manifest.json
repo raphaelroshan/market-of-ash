@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "game_id": "market-of-ash",
-  "content_version": "0.3.0",
+  "content_version": "0.4.0",
   "campaign": {
     "title": "The Wells Remember",
     "premise": "A caravan crosses a recovering ashland as a spreading water shortage turns ordinary trade into a contest over trust, access, and the future of the region.",
     "player_role": "A newly independent caravan master with enough capital to survive one bad season, but not enough to ignore the people who control the roads.",
     "regional_objective": "Keep the five-settlement water network alive long enough to decide who will control its future.",
-    "content_extensions": ["content/political_geography.json", "content/tribal_conflict.json"],
+    "content_extensions": ["content/political_geography.json", "content/tribal_conflict.json", "content/economy_framework.json", "content/settlement_actions.json"],
     "chapters": [
       {
         "id": "chapter_1_first_ledger",

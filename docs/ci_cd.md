@@ -14,6 +14,7 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | Content manifest | Stable IDs, chapter/location references, event choices, progression nodes, pack contents, and endings | Blocks on malformed content. |
 | Market political geography | Factions, resource distribution, tensions, map nodes, corridors, obstacles, and crisis-stage map changes | Blocks on malformed map or faction data. |
 | Market tribal conflict | Rival tribes, weapon goods, armed-power escalation, conflict events, major-faction outcomes, and meta-progression | Blocks on malformed conflict data. |
+| Market economy and settlement actions | Frontier price trends, regional divergence, demand, distance profitability, settlement services, contracts, recruitment, guards, information, logistics, diplomacy, and relief | Blocks on incomplete or unreadable economy content. |
 | Godot headless tests | Deterministic game-state behavior and regression cases | Blocks on test failure. |
 | AI architecture review | Ownership, determinism, save boundaries, coupling, maintainability | Reports; blocks on critical findings. |
 | AI gameplay review | Player-facing behavior, fairness, onboarding, failure states, design fit | Reports; blocks on critical findings. |
@@ -56,6 +57,9 @@ python tools/policy_check.py --repo local
 python tools/validate_content.py --manifest content/content_manifest.json
 python tools/validate_political_geography.py --data content/political_geography.json
 python tools/validate_tribal_conflict.py --data content/tribal_conflict.json
+python tools/validate_economy_and_settlements.py \
+  --economy content/economy_framework.json \
+  --settlements content/settlement_actions.json
 bash scripts/verify.sh
 ```
 

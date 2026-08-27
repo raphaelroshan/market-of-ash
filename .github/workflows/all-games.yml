@@ -69,6 +69,9 @@ jobs:
             if [ "$repo" = "repos/market_of_ash" ]; then
               python "$repo/tools/validate_political_geography.py" --data "$repo/content/political_geography.json"
               python "$repo/tools/validate_tribal_conflict.py" --data "$repo/content/tribal_conflict.json"
+              python "$repo/tools/validate_economy_and_settlements.py" \
+                --economy "$repo/content/economy_framework.json" \
+                --settlements "$repo/content/settlement_actions.json"
             fi
             bash "$repo/scripts/verify.sh"
           done

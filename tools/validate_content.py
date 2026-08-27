@@ -56,6 +56,23 @@ def main() -> int:
     if not isinstance(campaign, dict):
         fail(errors, "campaign must be an object")
         campaign = {}
+    extensions = campaign.get("content_extensions", data.get("content_extensions", []))
+    if extensions is not None:
+        if not isinstance(extensions, list):
+            fail(errors, "content_extensions must be an array")
+        else:
+            for extension in extensions:
+                if not isinstance(extension, str) or not extension.strip():
+                    fail(errors, "content_extensions entries must be non-empty strings")
+                    continue
+                extension_path = path.parent.parent / extension
+                if not extension_path.is_file():
+                    fail(errors, f"registered content extension does not exist: {extension}")
+                    continue
+                try:
+                    json.loads(extension_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    fail(errors, f"registered content extension is not valid JSON ({extension}): {exc}")
     chapter_ids = ids(campaign.get("chapters", []), "campaign.chapters", errors)
     location_key = "rooms" if "rooms" in data else "locations"
     location_ids = ids(data.get(location_key, []), location_key, errors)

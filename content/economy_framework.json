@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "game_id": "market-of-ash",
+  "framework_version": "0.4.0",
+  "design_promise": "The player should constantly notice a profitable mismatch between places, goods, timing, and risk, while understanding why the mismatch exists.",
+  "frontier_pillars": [
+    {
+      "id": "regional_price_divergence",
+      "name": "Regional Price Divergence",
+      "rule": "The same good has different prices at different settlements because of local production, demand, crisis, faction access, and route conditions.",
+      "player_question": "Where is this cheap, where is it needed, and what will it cost to get there?"
+    },
+    {
+      "id": "distant_market_profit",
+      "name": "Distant Market Profit",
+      "rule": "Longer routes can offer greater gross margin, but require provisions, route fees, time, cargo commitment, and risk tolerance.",
+      "player_question": "Is the far price worth the days and exposure?"
+    },
+    {
+      "id": "demand_specialization",
+      "name": "Settlement Specialization",
+      "rule": "Every settlement produces some goods cheaply and consumes other goods at a premium, with the pattern changing under crisis.",
+      "player_question": "What does this place make, and what can it not afford to go without?"
+    },
+    {
+      "id": "market_memory",
+      "name": "Market Memory",
+      "rule": "Recent deliveries and shortages alter local stock and demand for a limited period, so the best route is not always the same route tomorrow.",
+      "player_question": "Will my own trade improve this market, saturate it, or make the next run harder?"
+    },
+    {
+      "id": "risk_adjusted_margin",
+      "name": "Risk-Adjusted Margin",
+      "rule": "A large quoted spread is not the same as a large expected profit after route cost, provisions, delays, loss risk, and opportunity cost.",
+      "player_question": "What will I actually keep if the route goes badly?"
+    }
+  ],
+  "market_signals": [
+    {
+      "id": "local_buy_price",
+      "name": "Local Buy Price",
+      "visibility": "always",
+      "meaning": "The current settlement price before faction, contract, or relationship modifiers."
+    },
+    {
+      "id": "local_sell_price",
+      "name": "Local Sell Price",
+      "visibility": "always",
+      "meaning": "The current settlement price offered for cargo."
+    },
+    {
+      "id": "demand_level",
+      "name": "Demand Level",
+      "visibility": "always",
+      "meaning": "Low, normal, high, or desperate demand, shown with a reason."
+    },
+    {
+      "id": "supply_pressure",
+      "name": "Supply Pressure",
+      "visibility": "always",
+      "meaning": "Whether recent deliveries have made the good easier or harder to sell."
+    },
+    {
+      "id": "trend_direction",
+      "name": "Trend Direction",
+      "visibility": "with_information",
+      "meaning": "A rising, falling, or uncertain trend based on reports, contracts, and crisis state."
+    },
+    {
+      "id": "route_cost",
+      "name": "Route Cost",
+      "visibility": "always",
+      "meaning": "Money, days, provisions, and expected exposure required to reach the destination."
+    },
+    {
+      "id": "expected_net_profit",
+      "name": "Expected Net Profit",
+      "visibility": "always",
+      "meaning": "Projected money after purchase, route cost, provisions, and the selected risk estimate."
+    }
+  ],
+  "settlement_profiles": [
+    {
+      "settlement_id": "ashgate",
+      "produces_cheaply": ["water", "grain", "charcoal"],
+      "demands_at_premium": ["cloth", "scrap"],
+      "special_demand": "Permit-backed contracts, official records, and regulated water.",
+      "typical_market_posture": "stable_but_controlled",
+      "trend_drivers": ["warden_policy", "ration_reports", "permit_shortage"]
+    },
+    {
+      "settlement_id": "brine_cross",
+      "produces_cheaply": ["water"],
+      "demands_at_premium": ["medicine", "grain", "scrap"],
+      "special_demand": "Clean water, medicine, cistern repair, and fair measures.",
+      "typical_market_posture": "water_surplus_before_crisis",
+      "trend_drivers": ["well_quality", "salt_crown_control", "refugee_arrivals"]
+    },
+    {
+      "settlement_id": "cinderford",
+      "produces_cheaply": ["scrap", "charcoal"],
+      "demands_at_premium": ["grain", "water", "cloth"],
+      "special_demand": "Fuel, food for workers, furnace parts, and weapon inputs.",
+      "typical_market_posture": "industrial_supply_hub",
+      "trend_drivers": ["foundry_orders", "worker_payroll", "bridge_repairs", "arms_contracts"]
+    },
+    {
+      "settlement_id": "hollow_market",
+      "produces_cheaply": ["cloth", "medicine"],
+      "demands_at_premium": ["water", "charcoal", "reliable_information"],
+      "special_demand": "Rare goods, rumors, neutral brokerage, and high-risk components.",
+      "typical_market_posture": "volatile_and_informed",
+      "trend_drivers": ["rumor_quality", "counterfeit_measures", "caravan_arrivals", "faction_competition"]
+    },
+    {
+      "settlement_id": "reedwatch",
+      "produces_cheaply": ["grain", "cloth"],
+      "demands_at_premium": ["water", "medicine", "scrap"],
+      "special_demand": "Water, medicine, defensive tools, and safe passage for families.",
+      "typical_market_posture": "frontier_shortage",
+      "trend_drivers": ["raids", "harvest", "refugee_flows", "settlement_aid"]
+    }
+  ],
+  "goods_profiles": [
+    {
+      "good_id": "grain",
+      "bulk_class": "medium",
+      "normal_spread": "medium",
+      "demand_pattern": "steady_with_crisis_spikes",
+      "best_origin_examples": ["reedwatch"],
+      "best_destination_examples": ["cinderford", "brine_cross"],
+      "why_it_moves": "Workers and settlements consume it consistently; shortages are visible and politically sensitive.",
+      "saturation_behavior": "Several large deliveries reduce the next settlement offer for a short period."
+    },
+    {
+      "good_id": "water",
+      "bulk_class": "high",
+      "normal_spread": "high",
+      "demand_pattern": "crisis_sensitive",
+      "best_origin_examples": ["brine_cross", "ashgate"],
+      "best_destination_examples": ["reedwatch", "hollow_market"],
+      "why_it_moves": "The margin is attractive, but bulk, spoilage, and moral pressure make the cargo commitment meaningful.",
+      "saturation_behavior": "A settlement can temporarily move from desperate to stable after a fair delivery."
+    },
+    {
+      "good_id": "scrap",
+      "bulk_class": "medium",
+      "normal_spread": "medium",
+      "demand_pattern": "project_driven",
+      "best_origin_examples": ["cinderford"],
+      "best_destination_examples": ["reedwatch", "ashgate"],
+      "why_it_moves": "Repair, bridge, and weapon-input contracts create bursts of demand.",
+      "saturation_behavior": "Without a project, distant buyers reduce offers quickly after a large shipment."
+    },
+    {
+      "good_id": "medicine",
+      "bulk_class": "low",
+      "normal_spread": "high",
+      "demand_pattern": "event_driven",
+      "best_origin_examples": ["hollow_market"],
+      "best_destination_examples": ["brine_cross", "reedwatch"],
+      "why_it_moves": "Low bulk makes it a good emergency cargo, but demand is tied to injuries and crisis events.",
+      "saturation_behavior": "A settlement remembers a successful relief delivery and offers less for immediate repeats."
+    },
+    {
+      "good_id": "charcoal",
+      "bulk_class": "medium",
+      "normal_spread": "low_to_medium",
+      "demand_pattern": "industrial_and_seasonal",
+      "best_origin_examples": ["cinderford"],
+      "best_destination_examples": ["hollow_market", "reedwatch"],
+      "why_it_moves": "It is cheap near the furnaces but valuable when a remote settlement needs heat, cooking, or metalwork.",
+      "saturation_behavior": "Stable demand, but its margin is eroded by long routes unless paired with another contract."
+    },
+    {
+      "good_id": "cloth",
+      "bulk_class": "low",
+      "normal_spread": "medium",
+      "demand_pattern": "steady_with_refugee_spikes",
+      "best_origin_examples": ["hollow_market", "reedwatch"],
+      "best_destination_examples": ["ashgate", "cinderford"],
+      "why_it_moves": "It supports clothing, bandages, tents, and trade presentation, making it useful even when not desperate.",
+      "saturation_behavior": "Large deliveries stabilize a settlement’s immediate need but reduce the peak price."
+    }
+  ],
+  "trend_rules": [
+    {
+      "id": "daily_consumption",
+      "timing": "advance_day",
+      "effect": "Settlement demand drifts upward for locally scarce goods and downward for locally produced goods.",
+      "player_visible_result": "The market report names the shortage or production reason."
+    },
+    {
+      "id": "delivery_saturation",
+      "timing": "complete_sale",
+      "effect": "The destination’s short-term supply pressure improves and its offer for that good falls within a bounded window.",
+      "player_visible_result": "The player sees the new offer and a note that the market has been supplied."
+    },
+    {
+      "id": "crisis_repricing",
+      "timing": "crisis_stage_change",
+      "effect": "Water, medicine, and grain demand increase according to the crisis stage; route access and faction modifiers may change.",
+      "player_visible_result": "A regional bulletin explains what changed and which settlements are affected."
+    },
+    {
+      "id": "event_shock",
+      "timing": "authored_event",
+      "effect": "A broken bridge, raid, harvest, or contract changes one or more local prices for a limited duration.",
+      "player_visible_result": "The event card names the affected settlement, good, duration, and recovery option."
+    },
+    {
+      "id": "rumor_uncertainty",
+      "timing": "information_action",
+      "effect": "An information action improves confidence about a trend but never guarantees a price outcome.",
+      "player_visible_result": "The forecast displays source, confidence, and what would invalidate it."
+    }
+  ],
+  "route_profitability": {
+    "formula": "expected_net_profit = gross_trade_margin - route_money_cost - provision_cost - expected_loss - time_opportunity_cost",
+    "risk_inputs": ["route_risk", "cargo_value", "crew_protection", "obstacle_state", "information_confidence"],
+    "distance_bands": [
+      {
+        "id": "nearby",
+        "days": [0, 1],
+        "intended_role": "Reliable small-margin trades and emergency repositioning.",
+        "recommended_net_margin": "5_to_20_percent"
+      },
+      {
+        "id": "regional",
+        "days": [1, 2],
+        "intended_role": "The default profitable run where cargo and route choice matter.",
+        "recommended_net_margin": "15_to_40_percent"
+      },
+      {
+        "id": "distant",
+        "days": [2, 4],
+        "intended_role": "High-margin commitments with changing crisis state and real recovery risk.",
+        "recommended_net_margin": "30_to_70_percent_before_risk"
+      }
+    ],
+    "display_breakdown": ["purchase_total", "sale_total", "route_cost", "provisions", "expected_loss", "time_cost", "expected_net_profit"],
+    "guardrail": "A distant route may be the best choice, but it must never dominate every nearby or regional choice after risk and time are shown."
+  },
+  "trade_decisions": [
+    {
+      "id": "spot_trade",
+      "name": "Spot Trade",
+      "purpose": "Buy or sell at the current visible market price.",
+      "benefit": "Fast and flexible.",
+      "cost": "No protection if the market changes after departure."
+    },
+    {
+      "id": "delivery_contract",
+      "name": "Delivery Contract",
+      "purpose": "Reserve a buyer and quantity before taking the route.",
+      "benefit": "More predictable sale value and settlement relationship.",
+      "cost": "Cargo space and deadline commitment."
+    },
+    {
+      "id": "speculative_hold",
+      "name": "Speculative Hold",
+      "purpose": "Carry goods without a buyer to wait for a better trend.",
+      "benefit": "Upside from timing and information.",
+      "cost": "Capital, capacity, spoilage, and opportunity cost."
+    },
+    {
+      "id": "fair_distribution",
+      "name": "Fair Distribution",
+      "purpose": "Sell a scarce good at a lower margin across more households or buyers.",
+      "benefit": "Settlement resilience, legitimacy, and future access.",
+      "cost": "Lower immediate money and sometimes more time."
+    },
+    {
+      "id": "faction_batch",
+      "name": "Faction Batch",
+      "purpose": "Sell a high-value shipment to a political group.",
+      "benefit": "Large immediate margin or protection.",
+      "cost": "Faction power, route consequences, and rival response."
+    }
+  ],
+  "frontier_guardrails": [
+    "Always show at least one current price comparison and one reason for the spread.",
+    "A high-demand settlement should not be a pure vending machine; its demand must have a visible cause and a bounded saturation response.",
+    "The best trade should change as crisis, route condition, and recent deliveries change.",
+    "Long routes should create stories and exposure, not only a larger arithmetic multiplier.",
+    "The player can make money through ordinary goods, relief trade, contracts, or weapons; no single commodity dominates the campaign.",
+    "Information improves confidence, not certainty. The player remains responsible for choosing whether the margin justifies the risk.",
+    "The interface should make a profitable route discoverable in seconds and its downside understandable before confirmation.",
+    "Do not hide the economy behind faction reputation or meta upgrades; upgrades may improve information and capacity, but price logic remains readable."
+  ]
+}

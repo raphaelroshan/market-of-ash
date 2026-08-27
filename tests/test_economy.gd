@@ -7,6 +7,7 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_base_prices()
+	_test_regional_price_spread()
 	_test_crisis_changes_water_price()
 	_test_capacity_validation()
 	_test_travel_consumes_resources()
@@ -27,6 +28,18 @@ func _test_base_prices() -> void:
 	_expect(MarketEconomy.base_price("water") == 18, "water base price should be 18")
 	_expect(MarketEconomy.base_price("medicine") == 32, "medicine base price should be 32")
 	_expect(MarketEconomy.base_price("missing") == 0, "unknown goods should have price 0")
+
+func _test_regional_price_spread() -> void:
+	var world := AshWorldState.new(1107)
+	var origin := world.settlement("cinderford")
+	var destination := world.settlement("reedwatch")
+	var origin_price := MarketEconomy.price_for("scrap", origin, {"crisis_modifiers": world.crisis_modifiers})
+	var destination_price := MarketEconomy.price_for("scrap", destination, {"crisis_modifiers": world.crisis_modifiers})
+	var projected := MarketEconomy.projected_profit("scrap", 2, origin, destination, world)
+	_expect(destination_price > origin_price, "regional price spread should reward moving scrap from Cinderford to Reedwatch")
+	_expect(projected > 0, "a useful distant-market cargo should have positive projected gross profit")
+	var explanation := MarketEconomy.explain_price("water", destination, {"crisis_modifiers": {"water": 1.5}})
+	_expect(explanation.find("high") >= 0, "price explanation should identify high demand or crisis pressure")
 
 func _test_crisis_changes_water_price() -> void:
 	var world := AshWorldState.new(1107)
