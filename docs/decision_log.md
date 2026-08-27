@@ -356,11 +356,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 
 ## ADR-045: Playtest reports export deterministic evidence without identity data
 
-**Decision:** Add an `Export playtest report` action to the Shop and Pause menu. It writes one JSON report containing the app/content/save versions, seed, day, location, resources, crisis/faction/escalation/resilience state, contracts, events, route conditions, information, crew, ending context, bounded command history, and game log. It contains no player name, account, hardware identifier, or network data and does not mutate campaign state. Pause-menu exports keep the overlay open and show both the result and local output path.
+**Decision:** Add an `Export playtest report` action to the Shop and Pause menu. It produces one JSON report containing the app/content/save versions, packaged build/run, platform, broad last-input type, actual desktop/browser window dimensions, presentation settings, session/first-trade timing, seed, location/resources, crisis/faction/escalation/resilience state, contracts, events, route conditions, information, crew, ending context, bounded command history, and game log. It contains no player name, account, hardware identifier, or network data and does not mutate campaign state. Desktop builds write the report to the Godot user-data directory; Web builds invoke a deliberate browser download. Pause-menu exports keep the overlay open and show the result.
 
 **Reason:** External alpha reports need enough context to reproduce a problem or understand a run without asking testers to transcribe diagnostics or surrender unnecessary personal data.
 
-**Trade-off:** The prototype writes to the Godot user-data directory and does not yet open a native share dialog or automatically submit anything. Testers must attach the file deliberately.
+**Trade-off:** Desktop builds do not yet open a native share dialog, and no build submits anything automatically. Testers must deliberately attach the locally written or browser-downloaded file.
 
 ## ADR-046: The regional map selects destinations instead of placeholder cells
 
