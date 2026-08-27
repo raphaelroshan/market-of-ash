@@ -71,6 +71,10 @@ func _initialize() -> void:
 	ui._on_save_pressed()
 	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
+	ui._open_pause()
+	ui._on_save_pressed()
+	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("SAVED — Day 1 · Ashgate"), "saving from Pause should keep the overlay open and show its result there")
+	ui._close_pause()
 	ui._refresh_continue_availability()
 	_expect(ui.menu_save_status_label.text.contains("CONTINUE — Day 1 · Ashgate · 120 ashmarks · hold 0/12 · primary save"), "main menu should preview a validated saved campaign before loading")
 	var manual_save_state := JSON.stringify(ui.world.serialize())
@@ -185,7 +189,12 @@ func _initialize() -> void:
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
 	_expect(report.get("game_version", "") == "0.9.0-alpha-roadmap" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include build, seed, and command evidence")
+	_expect(report.has("active_contracts") and report.has("contract_history") and report.has("event_history") and report.has("route_conditions") and report.has("known_information") and report.has("ending_summary"), "playtest report should include the campaign evidence needed to reconstruct decisions and outcomes")
 	_expect(ui.event_label.text.contains("No personal data is included"), "report export should explain its privacy boundary")
+	ui._open_pause()
+	ui._on_export_report_pressed()
+	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("REPORT EXPORTED") and ui.pause_summary_label.text.contains("market_of_ash_map_ui_report_test.json"), "report export from Pause should show a visible result and output path without closing the overlay")
+	ui._close_pause()
 
 	var shop_state: String = JSON.stringify(ui.world.serialize())
 	ui._on_plan_departure_pressed()

@@ -829,10 +829,16 @@ func _open_pause() -> void:
 	if pause_layer == null or menu_layer.visible:
 		return
 	focus_before_pause = get_viewport().gui_get_focus_owner()
-	pause_summary_label.text = "Day %d · %s · %d ashmarks · hold %d/%d\n%s" % [world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity, save_status_text]
+	_refresh_pause_summary()
 	pause_layer.visible = true
 	get_tree().paused = true
 	pause_resume_button.grab_focus()
+
+func _refresh_pause_summary(feedback_text: String = "") -> void:
+	if pause_summary_label == null:
+		return
+	var detail := feedback_text if not feedback_text.is_empty() else save_status_text
+	pause_summary_label.text = "Day %d · %s · %d ashmarks · hold %d/%d\n%s" % [world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity, detail]
 
 func _close_pause() -> void:
 	get_tree().paused = false
@@ -872,6 +878,15 @@ func _on_export_report_pressed() -> void:
 		"arms_escalation": world.arms_escalation,
 		"settlement_resilience": world.settlement_resilience.duplicate(true),
 		"ending_id": world.ending_id,
+		"ending_summary": world.ending_summary,
+		"active_contracts": world.active_contracts.duplicate(true),
+		"contract_history": world.contract_history.duplicate(true),
+		"pending_event": world.pending_event.duplicate(true),
+		"event_history": world.event_history.duplicate(true),
+		"route_conditions": world.route_conditions.duplicate(true),
+		"known_information": world.known_information.duplicate(),
+		"recruited_crew": world.recruited_crew.duplicate(),
+		"assigned_crew": world.assigned_crew,
 		"command_history": world.command_history.duplicate(true),
 		"game_log": world.log.duplicate(),
 	}
@@ -879,14 +894,18 @@ func _on_export_report_pressed() -> void:
 	if file == null:
 		_set_event("Report export failed. The campaign remains unchanged.")
 		_refresh_ui()
+		if pause_layer != null and pause_layer.visible:
+			_refresh_pause_summary(event_label.text)
 		return
 	file.store_string(JSON.stringify(report, "\t"))
 	file.flush()
 	if file.get_error() != OK:
 		_set_event("Report export failed. The campaign remains unchanged.")
 	else:
-		_set_event("Playtest report exported with build, seed, command history, and outcome context. No personal data is included.")
+		_set_event("REPORT EXPORTED — %s\nBuild, seed, campaign evidence, and outcome context are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
+	if pause_layer != null and pause_layer.visible:
+		_refresh_pause_summary(event_label.text)
 
 func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))
@@ -1103,6 +1122,8 @@ func _on_save_pressed() -> void:
 	else:
 		_set_event("Save failed. The current run remains active and unchanged.")
 	_refresh_ui()
+	if pause_layer != null and pause_layer.visible:
+		_refresh_pause_summary()
 
 func _write_save(status_prefix: String) -> bool:
 	var temporary_path := save_path + ".tmp"
