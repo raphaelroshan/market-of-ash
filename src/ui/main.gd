@@ -13,6 +13,7 @@ const PLAYTEST_ROUTE := "old_road"
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
+const WEB_REPORT_FILENAME := "market_of_ash_playtest_report.json"
 const MAX_SAVE_BYTES := 5 * 1024 * 1024
 const REMAPPABLE_ACTIONS := ["ui_accept", "ui_cancel", "ui_pause"]
 const ACTION_LABELS := {"ui_accept": "Accept", "ui_cancel": "Back", "ui_pause": "Pause"}
@@ -293,7 +294,7 @@ func _build_pause_menu() -> void:
 	content.add_child(load_button)
 	var report_button := Button.new()
 	report_button.text = "Export playtest report"
-	report_button.tooltip_text = "Write build, seed, campaign summary, command history, and game log without personal data."
+	report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
 	report_button.pressed.connect(_on_export_report_pressed)
 	content.add_child(report_button)
 	var menu_button := Button.new()
@@ -750,7 +751,7 @@ func _build_shop() -> void:
 	actions.add_child(reset_button)
 	var report_button := Button.new()
 	report_button.text = "Export playtest report"
-	report_button.tooltip_text = "Write build, seed, campaign summary, command history, and game log without personal data."
+	report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
 	report_button.pressed.connect(_on_export_report_pressed)
 	actions.add_child(report_button)
 	diagnostics_label = Label.new()
@@ -1236,19 +1237,25 @@ func _on_export_report_pressed() -> void:
 		"command_history": world.command_history.duplicate(true),
 		"game_log": world.log.duplicate(),
 	}
-	var file := FileAccess.open(report_path, FileAccess.WRITE)
-	if file == null:
-		_set_event("Report export failed. The campaign remains unchanged.")
-		_refresh_ui()
-		if pause_layer != null and pause_layer.visible:
-			_refresh_pause_summary(event_label.text)
-		return
-	file.store_string(JSON.stringify(report, "\t"))
-	file.flush()
-	if file.get_error() != OK:
-		_set_event("Report export failed. The campaign remains unchanged.")
+	var report_json := JSON.stringify(report, "\t")
+	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
+		var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+		bridge.call("download_buffer", report_json.to_utf8_buffer(), WEB_REPORT_FILENAME, "application/json")
+		_set_event("REPORT DOWNLOADED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
-		_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
+		var file := FileAccess.open(report_path, FileAccess.WRITE)
+		if file == null:
+			_set_event("Report export failed. The campaign remains unchanged.")
+			_refresh_ui()
+			if pause_layer != null and pause_layer.visible:
+				_refresh_pause_summary(event_label.text)
+			return
+		file.store_string(report_json)
+		file.flush()
+		if file.get_error() != OK:
+			_set_event("Report export failed. The campaign remains unchanged.")
+		else:
+			_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
