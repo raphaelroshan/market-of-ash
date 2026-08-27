@@ -1105,6 +1105,9 @@ func _refresh_opportunities() -> void:
 		elif effects.has("settlement_resilience"):
 			var resilience_effect: Dictionary = effects.get("settlement_resilience", {})
 			effect_summary = "+%d local resilience, information" % int(resilience_effect.get("delta", 0))
+		elif effects.has("route_condition"):
+			var route_effect: Dictionary = effects.get("route_condition", {})
+			effect_summary = "%+d%% %s risk, information" % [int(round(float(route_effect.get("risk_delta", 0.0)) * 100.0)), String(route_effect.get("route_id", "route")).replace("_", " ").capitalize()]
 		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
@@ -1115,6 +1118,9 @@ func _refresh_opportunities() -> void:
 		elif bool(action.get("once_per_campaign", false)) and world.known_information.has(String(effects.get("information_id", ""))):
 			action_button.disabled = true
 			unavailable_reason = "Already completed; its information remains in the caravan log."
+		elif not String(action.get("requires_completed_contract_id", "")).is_empty() and not _has_completed_contract(String(action.get("requires_completed_contract_id", ""))):
+			action_button.disabled = true
+			unavailable_reason = String(action.get("unavailable_reason", "Complete the required contract first."))
 		elif world.visit_slots_remaining < slots:
 			action_button.disabled = true
 			unavailable_reason = "No visit slots remain. Depart and arrive at a settlement to refresh them."
@@ -1287,6 +1293,12 @@ func _has_relevant_event_contract(destination_id: String, good_id: String) -> bo
 	for contract_id in world.active_contracts.keys():
 		var contract := world.active_contract(String(contract_id))
 		if String(contract.get("destination_id", "")) == destination_id and String(contract.get("good_id", "")) == good_id:
+			return true
+	return false
+
+func _has_completed_contract(contract_id: String) -> bool:
+	for contract in world.contract_history:
+		if String(contract.get("id", "")) == contract_id and String(contract.get("status", "")) == "completed":
 			return true
 	return false
 

@@ -319,3 +319,11 @@
 **Reason:** Crisis progression needs to change a settlement decision as well as prices and routes. Waiting at the queue trades time for public capacity and information, making Brine Cross more than a resale destination without creating a separate investigation system.
 
 **Trade-off:** The pump-failure lead is currently a visible campaign fact rather than a prerequisite for another contract. Cinderford, Hollow Market, and Reedwatch still need their own non-event settlement actions before all five locations meet the full identity target.
+
+## ADR-041: Hollow Market and Reedwatch opportunities change future travel and crisis state
+
+**Decision:** Activate two one-time settlement actions through the same explicit civic-action resolver. Hollow Market sells `dry_cut_water_cache` for six ashmarks and one visit slot, applying a saved five-point Dry Cut risk reduction. Reedwatch opens a supply shelter only after completed water relief and crisis stage one, spending one day/slot to add one resilience, one Free Caravan standing, and a durable information lead.
+
+**Reason:** Settlement identity must affect the next trade, route, or regional decision. Hollow Market now sells actionable uncertainty reduction, while Reedwatch lets completed relief become local infrastructure instead of ending at a payout message.
+
+**Trade-off:** Both actions are deliberately one-time and explicit. Their information IDs remain visible records rather than inputs to a generic quest graph, and Cinderford remains the final inaccessible/non-interactive settlement gap.

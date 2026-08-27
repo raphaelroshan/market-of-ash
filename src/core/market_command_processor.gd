@@ -646,6 +646,9 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	var information_id := String(action.get("effects", {}).get("information_id", ""))
 	if bool(action.get("once_per_campaign", false)) and not information_id.is_empty() and world.known_information.has(information_id):
 		return _failure("this opportunity is already complete; its information remains in the caravan log")
+	var required_contract_id := String(action.get("requires_completed_contract_id", ""))
+	if not required_contract_id.is_empty() and not _has_completed_contract(world, required_contract_id):
+		return _failure(String(action.get("unavailable_reason", "complete the required contract first")))
 	var slots_required := int(action.get("service_slots", 0))
 	if world.visit_slots_remaining < slots_required:
 		return _failure("no visit slots remain; depart and arrive at a settlement to refresh them")
@@ -656,8 +659,8 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	match action_id:
 		"ashgate_provision_bundle":
 			return _apply_provision_bundle(world, action)
-		"brine_cross_cistern_queue":
-			return _apply_cistern_queue(world, action)
+		"brine_cross_cistern_queue", "hollow_market_route_rumor", "reedwatch_supply_shelter":
+			return _apply_civic_action(world, action)
 		"ashgate_cinder_rider_arms_sale":
 			return _apply_arms_sale(world, action)
 		"ashgate_public_manifest_audit":
@@ -665,30 +668,52 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 		_:
 			return _failure(String(action.get("unavailable_reason", "this opportunity is not implemented yet")))
 
-static func _apply_cistern_queue(world: AshWorldState, action: Dictionary) -> Dictionary:
+static func _apply_civic_action(world: AshWorldState, action: Dictionary) -> Dictionary:
+	var cost := int(action.get("cost", 0))
 	var slots := int(action.get("service_slots", 1))
 	var days := int(action.get("time_cost", 0))
 	var effects: Dictionary = action.get("effects", {})
+	world.money -= cost
 	var information_id := String(effects.get("information_id", ""))
 	var information_added := world.record_information(information_id)
 	var resilience_effect: Dictionary = effects.get("settlement_resilience", {})
-	var resilience_result := world.adjust_settlement_resilience(
-		String(resilience_effect.get("settlement_id", world.current_settlement)),
-		int(resilience_effect.get("delta", 0)),
-	)
+	var resilience_result: Dictionary = {}
+	if not resilience_effect.is_empty():
+		resilience_result = world.adjust_settlement_resilience(
+			String(resilience_effect.get("settlement_id", world.current_settlement)),
+			int(resilience_effect.get("delta", 0)),
+		)
+	var route_condition: Dictionary = effects.get("route_condition", {})
+	var route_result: Dictionary = {}
+	if not route_condition.is_empty():
+		route_result = world.set_route_condition(String(route_condition.get("route_id", "")), route_condition)
+	var reputation_results: Dictionary = {}
+	var reputation_delta: Dictionary = effects.get("reputation", {})
+	for faction_id_value in reputation_delta.keys():
+		var faction_id := String(faction_id_value)
+		reputation_results[faction_id] = world.adjust_reputation(faction_id, int(reputation_delta.get(faction_id_value, 0)))
 	world.visit_slots_remaining -= slots
 	if days > 0:
 		world.advance_day(days, false)
-	var message := "Waited with the Brine Cross cistern queue for %d day. Local resilience is now %d/10; pump-failure information was recorded." % [days, int(resilience_result.get("after", 0))]
+	var message := String(action.get("result", "%s completed." % String(action.get("name", "Local action"))))
 	world.log.append(message)
 	return _success(message, {
 		"action_id": String(action.id),
+		"money": -cost,
 		"day": days,
 		"visit_slots": -slots,
 		"visit_slots_remaining": world.visit_slots_remaining,
 		"settlement_resilience": resilience_result,
 		"information_id": information_id if information_added else "",
+		"route_condition": route_result.get("condition", {}),
+		"reputation": reputation_results,
 	})
+
+static func _has_completed_contract(world: AshWorldState, contract_id: String) -> bool:
+	for contract in world.contract_history:
+		if String(contract.get("id", "")) == contract_id and String(contract.get("status", "")) == "completed":
+			return true
+	return false
 
 static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) -> Dictionary:
 	var cost := int(action.get("cost", 0))

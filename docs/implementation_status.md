@@ -167,7 +167,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 - Each fresh start and settlement arrival provides two auxiliary-action slots; normal buying and selling consume none.
 - Ashgate offers `Pack Warden rations`: six ashmarks for four provisions and one visit slot.
-- Brine Cross's cistern queue becomes actionable at Thin Wells; Cinderford, Hollow Market, and Reedwatch still show one disabled future opportunity each with a specific dependency reason.
+- Brine Cross's cistern queue becomes actionable at Thin Wells. Hollow Market sells one persistent Dry Cut report, and completed water relief unlocks Reedwatch's supply shelter during the crisis. Cinderford still shows one disabled future opportunity with a specific dependency reason.
 - A third auxiliary action is blocked without changing resources, and save version 3 preserves remaining slots.
 
 ## B3 first-contract result
@@ -256,6 +256,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Crisis stages transition deterministically at days 4, 7, and 10 and expose a current label plus practical objective in the settlement header.
 - Thin Wells, Empty Reservoir, and Settlement Decision add named route pressure to the same Old Road/Toll Road records used by forecasts and resolution; saved repairs, faction discounts, and arms inspections compose deterministically.
 - At Thin Wells, Brine Cross activates a one-time cistern queue action: spending one day and one visit slot records the pump-failure lead and adds one visible local resilience point.
+- Hollow Market's one-time route rumor costs six ashmarks and one visit slot, records a water-cache lead, and lowers Dry Cut risk by five points. Reedwatch's one-time shelter requires completed relief plus Thin Wells, spends one day/slot, and adds resilience and Free Caravan standing.
 - `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
 - `Order at the Cistern` requires Warden standing 3+, Free Caravan standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes the resulting permit-controlled access and regulated trade style.
 - `No Road Owns the Sky` requires Free Caravan standing 2+, Warden standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes independent access, volatile margins, and shared route information.

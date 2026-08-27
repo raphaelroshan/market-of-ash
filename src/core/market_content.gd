@@ -427,6 +427,8 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 		for required_text in ["name", "category", "description", "tradeoff"]:
 			if String(action.get(required_text, "")).is_empty():
 				errors.append("settlement action %s must declare %s" % [action_id, required_text])
+		if bool(action.get("available", false)) and ["information", "relief"].has(String(action.get("category", ""))) and String(action.get("result", "")).is_empty():
+			errors.append("available settlement action %s must declare result" % action_id)
 		if int(action.get("cost", -1)) < 0:
 			errors.append("settlement action %s cost must be non-negative" % action_id)
 		if int(action.get("service_slots", 0)) < 1 or int(action.get("service_slots", 0)) > visit_slots:
@@ -438,6 +440,8 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 			errors.append("settlement action %s minimum_crisis_stage must be between 0 and 3" % action_id)
 		if typeof(action.get("once_per_campaign", false)) != TYPE_BOOL:
 			errors.append("settlement action %s once_per_campaign must be boolean" % action_id)
+		if typeof(action.get("requires_completed_contract_id", "")) != TYPE_STRING:
+			errors.append("settlement action %s requires_completed_contract_id must be a string" % action_id)
 		var effects_value: Variant = action.get("effects", {})
 		if typeof(effects_value) != TYPE_DICTIONARY:
 			errors.append("settlement action %s effects must be an object" % action_id)
@@ -462,6 +466,20 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 				errors.append("settlement action brine_cross_cistern_queue must record information")
 			if String(resilience.get("settlement_id", "")) != "brine_cross" or int(resilience.get("delta", 0)) <= 0:
 				errors.append("settlement action brine_cross_cistern_queue must strengthen Brine Cross resilience")
+		elif bool(action.get("available", false)) and action_id == "hollow_market_route_rumor":
+			var condition: Dictionary = effects_value.get("route_condition", {})
+			if String(effects_value.get("information_id", "")).is_empty():
+				errors.append("settlement action hollow_market_route_rumor must record information")
+			if String(condition.get("route_id", "")) != "dry_cut" or float(condition.get("risk_delta", 0.0)) >= 0.0:
+				errors.append("settlement action hollow_market_route_rumor must reduce Dry Cut risk")
+		elif bool(action.get("available", false)) and action_id == "reedwatch_supply_shelter":
+			var resilience: Dictionary = effects_value.get("settlement_resilience", {})
+			if String(action.get("requires_completed_contract_id", "")) != "reedwatch_water_relief_01":
+				errors.append("settlement action reedwatch_supply_shelter must require completed water relief")
+			if String(effects_value.get("information_id", "")).is_empty():
+				errors.append("settlement action reedwatch_supply_shelter must record information")
+			if String(resilience.get("settlement_id", "")) != "reedwatch" or int(resilience.get("delta", 0)) <= 0:
+				errors.append("settlement action reedwatch_supply_shelter must strengthen Reedwatch resilience")
 		if not bool(action.get("available", false)) and String(action.get("unavailable_reason", "")).is_empty():
 			errors.append("unavailable settlement action %s must declare unavailable_reason" % action_id)
 

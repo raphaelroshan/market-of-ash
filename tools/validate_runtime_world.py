@@ -110,6 +110,8 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
         for field in ("name", "category", "description", "tradeoff"):
             if not isinstance(action.get(field), str) or not action[field]:
                 fail(errors, f"settlement action {action_id} must declare {field}")
+        if action.get("available") is True and action.get("category") in ("information", "relief") and (not isinstance(action.get("result"), str) or not action["result"]):
+            fail(errors, f"available settlement action {action_id} must declare result")
         if not isinstance(action.get("available"), bool):
             fail(errors, f"settlement action {action_id}.available must be boolean")
         if not isinstance(action.get("cost"), int) or action["cost"] < 0:
@@ -129,6 +131,9 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
             fail(errors, f"settlement action {action_id}.minimum_crisis_stage must be an integer from 0 through 3")
         if not isinstance(action.get("once_per_campaign", False), bool):
             fail(errors, f"settlement action {action_id}.once_per_campaign must be boolean")
+        required_contract_id = action.get("requires_completed_contract_id", "")
+        if not isinstance(required_contract_id, str):
+            fail(errors, f"settlement action {action_id}.requires_completed_contract_id must be a string")
         effects = action.get("effects")
         if not isinstance(effects, dict):
             fail(errors, f"settlement action {action_id}.effects must be an object")
@@ -153,6 +158,20 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
                 fail(errors, "settlement action brine_cross_cistern_queue must record information")
             if not isinstance(resilience, dict) or resilience.get("settlement_id") != "brine_cross" or not isinstance(resilience.get("delta"), int) or resilience["delta"] <= 0:
                 fail(errors, "settlement action brine_cross_cistern_queue must strengthen Brine Cross resilience")
+        elif action.get("available") is True and action_id == "hollow_market_route_rumor":
+            condition = effects.get("route_condition")
+            if not isinstance(effects.get("information_id"), str) or not effects["information_id"]:
+                fail(errors, "settlement action hollow_market_route_rumor must record information")
+            if not isinstance(condition, dict) or condition.get("route_id") != "dry_cut" or not isinstance(condition.get("risk_delta"), (int, float)) or not -1 <= condition["risk_delta"] < 0:
+                fail(errors, "settlement action hollow_market_route_rumor must reduce Dry Cut risk")
+        elif action.get("available") is True and action_id == "reedwatch_supply_shelter":
+            resilience = effects.get("settlement_resilience")
+            if required_contract_id != "reedwatch_water_relief_01":
+                fail(errors, "settlement action reedwatch_supply_shelter must require completed water relief")
+            if not isinstance(effects.get("information_id"), str) or not effects["information_id"]:
+                fail(errors, "settlement action reedwatch_supply_shelter must record information")
+            if not isinstance(resilience, dict) or resilience.get("settlement_id") != "reedwatch" or not isinstance(resilience.get("delta"), int) or resilience["delta"] <= 0:
+                fail(errors, "settlement action reedwatch_supply_shelter must strengthen Reedwatch resilience")
         if action.get("available") is False and not action.get("unavailable_reason"):
             fail(errors, f"unavailable settlement action {action_id} must declare unavailable_reason")
 

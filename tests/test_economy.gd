@@ -51,7 +51,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.13.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.14.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
@@ -353,7 +353,7 @@ func _test_settlement_actions() -> void:
 		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
 		"inputs": {"action_id": "reedwatch_supply_shelter"},
 	})
-	_expect(not unavailable.ok and unavailable.reason.contains("relief-contract system"), "unimplemented local opportunities should remain visible through a specific disabled reason")
+	_expect(not unavailable.ok and unavailable.reason.contains("completed Reedwatch Water Relief"), "gated Reedwatch shelter should explain its contract and crisis requirements")
 	var wrong_settlement := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
 		"inputs": {"action_id": "ashgate_provision_bundle"},
@@ -387,6 +387,37 @@ func _test_settlement_actions() -> void:
 		"inputs": {"action_id": "brine_cross_cistern_queue"},
 	})
 	_expect(not repeated_cistern.ok and repeated_cistern.reason.contains("already complete"), "the one-time cistern investigation should not be farmable")
+
+	var hollow_world := AshWorldState.new(1107)
+	hollow_world.current_settlement = "hollow_market"
+	var dry_cut_before := float(hollow_world.route("dry_cut").risk)
+	var rumor := MarketCommandProcessor.execute(hollow_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "hollow_market_route_rumor"},
+	})
+	_expect(rumor.ok and hollow_world.money == 114 and hollow_world.visit_slots_remaining == 1, "Hollow Market rumor should spend six ashmarks and one visit slot")
+	_expect(hollow_world.known_information.has("dry_cut_water_cache") and is_equal_approx(float(hollow_world.route("dry_cut").risk), dry_cut_before - 0.05), "Hollow Market rumor should preserve its lead and lower Dry Cut exposure")
+	var repeated_rumor := MarketCommandProcessor.execute(hollow_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "hollow_market_route_rumor"},
+	})
+	_expect(not repeated_rumor.ok and repeated_rumor.reason.contains("already complete"), "the one-time Hollow Market rumor should not be farmable")
+
+	var shelter_world := AshWorldState.new(1107)
+	shelter_world.current_settlement = "reedwatch"
+	shelter_world.advance_day(3)
+	var blocked_shelter := MarketCommandProcessor.execute(shelter_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "reedwatch_supply_shelter"},
+	})
+	_expect(not blocked_shelter.ok and blocked_shelter.reason.contains("completed Reedwatch Water Relief"), "Reedwatch shelter should require the completed relief delivery")
+	shelter_world.contract_history.append({"id": "reedwatch_water_relief_01", "status": "completed"})
+	var shelter := MarketCommandProcessor.execute(shelter_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "reedwatch_supply_shelter"},
+	})
+	_expect(shelter.ok and shelter_world.day == 5 and shelter_world.resilience_for("reedwatch") == 1, "Reedwatch shelter should spend a day and strengthen local resilience")
+	_expect(int(shelter_world.reputation.get("caravans", 0)) == 1 and shelter_world.known_information.has("reedwatch_supply_shelter_open"), "Reedwatch shelter should grant its named Caravan standing and durable lead")
 
 func _test_reedwatch_relief_contract() -> void:
 	var world := AshWorldState.new(1)
@@ -1311,7 +1342,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.13.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.14.0", "serialized state should declare the content version")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)

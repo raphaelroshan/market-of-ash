@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.13.0",
+  "content_version": "1.14.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -53,6 +53,7 @@
         "effects": {"information_id": "brine_pump_failures", "settlement_resilience": {"settlement_id": "brine_cross", "delta": 1}},
         "description": "Wait with the wellkeepers to learn which pumps are failing.",
         "tradeoff": "Gain a durable pump-failure lead and strengthen the local reserve by one, but spend a day.",
+        "result": "The queue maps the failing pumps and organizes a protected reserve. Brine Cross resilience rises by one and the pump-failure lead is recorded.",
         "unavailable_reason": "Available when Thin Wells begins at crisis stage 1."
       },
       {
@@ -104,28 +105,34 @@
         "settlement_id": "hollow_market",
         "name": "Buy a route rumor",
         "category": "information",
-        "available": false,
+        "available": true,
+        "once_per_campaign": true,
         "cost": 6,
         "service_slots": 1,
         "time_cost": 0,
-        "effects": {},
+        "effects": {"information_id": "dry_cut_water_cache", "route_condition": {"route_id": "dry_cut", "id": "water_cache_marked", "label": "Water cache marked", "risk_delta": -0.05, "cost_delta": 0, "description": "A paid Hollow Market report marks a dependable water cache and narrows the exposed crossing."}},
         "description": "Pay a broker for a recent route report of uncertain quality.",
-        "tradeoff": "Potentially useful information that never guarantees safety.",
-        "unavailable_reason": "Information confidence is not implemented yet."
+        "tradeoff": "Lower Dry Cut exposure by five points, but the report costs six ashmarks and never guarantees safety.",
+        "result": "The broker marks a dependable water cache. Dry Cut exposure falls by five points and the route lead is recorded.",
+        "unavailable_reason": ""
       },
       {
         "id": "reedwatch_supply_shelter",
         "settlement_id": "reedwatch",
         "name": "Open the supply shelter",
         "category": "relief",
-        "available": false,
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
+        "requires_completed_contract_id": "reedwatch_water_relief_01",
         "cost": 0,
         "service_slots": 1,
         "time_cost": 1,
-        "effects": {},
+        "effects": {"information_id": "reedwatch_supply_shelter_open", "settlement_resilience": {"settlement_id": "reedwatch", "delta": 1}, "reputation": {"caravans": 1}},
         "description": "Reserve delivered goods for a protected local supply point.",
-        "tradeoff": "Sacrifice immediate margin to strengthen a future market.",
-        "unavailable_reason": "The shelter requires the relief-contract system."
+        "tradeoff": "Spend one day to add one local resilience and one Free Caravan standing after completing water relief.",
+        "result": "The relief stores open as a protected public shelter. Reedwatch resilience and Free Caravan standing each rise by one.",
+        "unavailable_reason": "Requires completed Reedwatch Water Relief during crisis stage 1 or later."
       }
     ]
   },
