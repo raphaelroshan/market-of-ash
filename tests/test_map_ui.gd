@@ -138,7 +138,12 @@ func _initialize() -> void:
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	_expect(ui.route_preview_label.text.contains("1 Water unit at risk") and ui.route_preview_label.text.contains("EXPECTED NET PROFIT +14"), "the opening forecast should price the proposed water load and present a profitable but exposed teaching trade")
 	_expect(ui.route_preview_label.text.contains("Held 0/2 selected Water") and ui.route_preview_label.text.contains("Buy 2 before departure") and ui.route_preview_label.text.contains("travel uses the actual hold"), "the pre-purchase forecast should distinguish its scenario from the empty caravan")
-	_expect(ui.guided_test_button.visible and not ui.guided_test_button.disabled, "the optional one-use purchase helper should be available only at the opening Ashgate state")
+	_expect(ui.guided_test_button.visible and not ui.guided_test_button.disabled and ui.guided_test_button.text.contains("30 ashmarks"), "the optional one-use purchase helper should expose its current cost at the opening Ashgate state")
+	ui.world.money = 0
+	ui._refresh_ui()
+	_expect(ui.guided_test_button.disabled and ui.guided_test_button.tooltip_text.contains("needs 30 ashmarks") and ui.guided_test_button.tooltip_text.contains("has 0"), "the optional purchase helper should explain when earlier choices made it unaffordable")
+	ui.world.money = 120
+	ui._refresh_ui()
 	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.15.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()

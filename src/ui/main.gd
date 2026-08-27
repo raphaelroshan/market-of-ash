@@ -1673,7 +1673,20 @@ func _refresh_playtest_status() -> void:
 	var guided_cargo_sold := _guided_trade_quantity(MarketCommandProcessor.SELL_GOODS, PLAYTEST_DESTINATION)
 	if guided_test_button:
 		guided_test_button.visible = world.current_settlement == "ashgate" and world.day == 1 and guided_cargo_sold < PLAYTEST_QUANTITY
-		guided_test_button.disabled = guided_cargo_bought >= PLAYTEST_QUANTITY or guided_cargo_held >= PLAYTEST_QUANTITY or guided_cargo_sold >= PLAYTEST_QUANTITY
+		var origin := world.settlement(world.current_settlement)
+		var guided_total := MarketEconomy.price_for(PLAYTEST_GOOD, origin, world.pricing_context()) * PLAYTEST_QUANTITY
+		var guided_validation := MarketEconomy.validate_trade(world.cargo, PLAYTEST_GOOD, PLAYTEST_QUANTITY, world.cargo_capacity)
+		var guided_completed := guided_cargo_bought >= PLAYTEST_QUANTITY or guided_cargo_held >= PLAYTEST_QUANTITY or guided_cargo_sold >= PLAYTEST_QUANTITY
+		guided_test_button.text = "Optional: Buy 2 Water — %d ashmarks" % guided_total
+		guided_test_button.disabled = guided_completed or not bool(guided_validation.get("ok", false)) or world.money < guided_total
+		if guided_completed:
+			guided_test_button.tooltip_text = "The opening purchase has already been completed or superseded."
+		elif not bool(guided_validation.get("ok", false)):
+			guided_test_button.tooltip_text = "The opening purchase is unavailable: %s." % String(guided_validation.get("reason", "invalid cargo load"))
+		elif world.money < guided_total:
+			guided_test_button.tooltip_text = "The opening purchase needs %d ashmarks; the caravan has %d." % [guided_total, world.money]
+		else:
+			guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	if guided_cargo_sold >= PLAYTEST_QUANTITY:
 		playtest_status_label.text = "RUN COMPLETE — You moved water to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
 	elif world.current_settlement == PLAYTEST_DESTINATION and guided_cargo_held >= PLAYTEST_QUANTITY:
