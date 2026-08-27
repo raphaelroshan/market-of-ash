@@ -51,7 +51,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.11.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.12.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
@@ -1157,10 +1157,21 @@ func _test_crisis_progression_and_ending() -> void:
 	_expect(MarketContent.crisis_stage(0).get("label", "") == "Ordinary pressure", "crisis content should expose the opening stage")
 	progression.advance_day(3)
 	_expect(progression.day == 4 and progression.crisis_stage == 1, "day four should enter Thin wells")
+	_expect(is_equal_approx(float(progression.route("old_road").risk), 0.40), "Thin wells should visibly raise Old Road exposure by five points")
 	progression.advance_day(3)
 	_expect(progression.day == 7 and progression.crisis_stage == 2, "day seven should enter Empty reservoir")
+	_expect(is_equal_approx(float(progression.route("old_road").risk), 0.45) and int(progression.route("toll_road").cost) == 14, "Empty reservoir should alter both exposed and regulated route tradeoffs")
 	progression.advance_day(3)
 	_expect(progression.day == 10 and progression.crisis_stage == 3 and progression.ending_id.is_empty(), "day ten should enter Settlement decision without granting an unearned ending")
+	_expect(is_equal_approx(float(progression.route("old_road").risk), 0.50) and int(progression.route("toll_road").cost) == 16, "Settlement decision should expose the authored peak route pressure")
+	var composition_world := AshWorldState.new(1)
+	composition_world.advance_day(6)
+	composition_world.set_route_condition("old_road", {"id": "test_patch", "risk_delta": -0.10, "cost_delta": 0, "description": "Test repair."})
+	composition_world.adjust_reputation("wardens", 2)
+	composition_world.arms_escalation = 2
+	composition_world.cargo = {"sealed_arms_crate": 1, "weight": 2}
+	_expect(is_equal_approx(float(composition_world.route("old_road").risk), 0.35), "authored repairs and crisis exposure should compose on the same route")
+	_expect(int(composition_world.route("toll_road").cost) == 16, "crisis toll, Warden discount, and arms inspection surcharge should compose deterministically")
 	var ending_world := AshWorldState.new(1)
 	ending_world.contract_history.append({"id": "reedwatch_water_relief_01", "status": "completed"})
 	ending_world.settlement_resilience["reedwatch"] = 2
@@ -1278,7 +1289,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.11.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.12.0", "serialized state should declare the content version")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)

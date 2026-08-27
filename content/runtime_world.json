@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.11.0",
+  "content_version": "1.12.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -588,10 +588,10 @@
   },
   "crisis": {
     "stages": [
-      {"id": 0, "label": "Ordinary pressure", "starts_day": 1, "objective": "Compare markets and prepare a first route."},
-      {"id": 1, "label": "Thin wells", "starts_day": 4, "objective": "Move water or medicine before local reserves harden."},
-      {"id": 2, "label": "Empty reservoir", "starts_day": 7, "objective": "Build resilience while routes and factions compete for supply."},
-      {"id": 3, "label": "Settlement decision", "starts_day": 10, "objective": "Secure a durable relief outcome without letting arms pressure dominate the roads."}
+      {"id": 0, "label": "Ordinary pressure", "starts_day": 1, "objective": "Compare markets and prepare a first route.", "route_effects": {}},
+      {"id": 1, "label": "Thin wells", "starts_day": 4, "objective": "Move water or medicine before local reserves harden.", "route_effects": {"old_road": {"risk_delta": 0.05, "cost_delta": 0, "description": "Thin wells draw more opportunists to the unguarded crossings."}}},
+      {"id": 2, "label": "Empty reservoir", "starts_day": 7, "objective": "Build resilience while routes and factions compete for supply.", "route_effects": {"old_road": {"risk_delta": 0.10, "cost_delta": 0, "description": "Water convoys crowd the exposed road and make ambushes easier."}, "toll_road": {"risk_delta": 0.0, "cost_delta": 2, "description": "Emergency inspections add two ashmarks to the regulated corridor."}}},
+      {"id": 3, "label": "Settlement decision", "starts_day": 10, "objective": "Secure a durable relief outcome without letting arms pressure dominate the roads.", "route_effects": {"old_road": {"risk_delta": 0.15, "cost_delta": 0, "description": "The final water rush leaves the open road at its most exposed."}, "toll_road": {"risk_delta": 0.0, "cost_delta": 4, "description": "Cistern controls add four ashmarks to every official passage."}}}
     ],
     "endings": [
       {

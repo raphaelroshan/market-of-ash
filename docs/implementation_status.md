@@ -254,6 +254,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 ## B9 crisis and ending proof
 
 - Crisis stages transition deterministically at days 4, 7, and 10 and expose a current label plus practical objective in the settlement header.
+- Thin Wells, Empty Reservoir, and Settlement Decision add named route pressure to the same Old Road/Toll Road records used by forecasts and resolution; saved repairs, faction discounts, and arms inspections compose deterministically.
 - `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
 - `Order at the Cistern` requires Warden standing 3+, Free Caravan standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes the resulting permit-controlled access and regulated trade style.
 - `No Road Owns the Sky` requires Free Caravan standing 2+, Warden standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes independent access, volatile margins, and shared route information.

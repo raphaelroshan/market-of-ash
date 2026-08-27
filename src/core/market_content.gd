@@ -722,6 +722,21 @@ static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
 		var stage: Dictionary = stages[index]
 		if int(stage.get("id", -1)) != index or int(stage.get("starts_day", 0)) <= 0 or String(stage.get("label", "")).is_empty() or String(stage.get("objective", "")).is_empty():
 			errors.append("crisis stage %d is invalid" % index)
+		var route_effects: Variant = stage.get("route_effects", {})
+		if typeof(route_effects) != TYPE_DICTIONARY:
+			errors.append("crisis stage %d route_effects must be an object" % index)
+			continue
+		for route_id_value in route_effects.keys():
+			var route_id := String(route_id_value)
+			if not REQUIRED_ROUTE_IDS.has(route_id):
+				errors.append("crisis stage %d references unknown route %s" % [index, route_id])
+				continue
+			var effect: Dictionary = route_effects.get(route_id_value, {})
+			var risk_delta := float(effect.get("risk_delta", -2.0))
+			if risk_delta < -1.0 or risk_delta > 1.0:
+				errors.append("crisis stage %d route %s risk_delta is invalid" % [index, route_id])
+			if int(effect.get("cost_delta", -1)) < 0 or String(effect.get("description", "")).is_empty():
+				errors.append("crisis stage %d route %s cost or description is invalid" % [index, route_id])
 	var endings: Array = rules.get("endings", [])
 	if endings.size() < 4:
 		errors.append("crisis must declare at least four endings")

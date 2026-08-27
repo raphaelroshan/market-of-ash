@@ -72,6 +72,14 @@ func route(id: String) -> Dictionary:
 			result["cost"] = maxi(0, int(result.get("cost", 0)) + int(condition.get("cost_delta", 0)))
 			result["condition"] = condition.duplicate(true)
 			result["description"] = "%s Route condition: %s" % [String(result.get("description", "")), String(condition.get("description", ""))]
+	var stage := MarketContent.crisis_stage(crisis_stage)
+	var stage_effects: Dictionary = stage.get("route_effects", {})
+	var stage_effect: Dictionary = stage_effects.get(id, {})
+	if not stage_effect.is_empty():
+		result["risk"] = clampf(float(result.get("risk", 0.0)) + float(stage_effect.get("risk_delta", 0.0)), 0.0, 1.0)
+		result["cost"] = maxi(0, int(result.get("cost", 0)) + int(stage_effect.get("cost_delta", 0)))
+		result["crisis_effect"] = String(stage_effect.get("description", ""))
+		result["description"] = "%s Crisis pressure: %s" % [String(result.get("description", "")), String(stage_effect.get("description", ""))]
 	for faction_id_value in MarketContent.factions().keys():
 		var faction_id := String(faction_id_value)
 		var faction := MarketContent.faction(faction_id)

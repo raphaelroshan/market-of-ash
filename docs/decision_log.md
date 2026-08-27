@@ -303,3 +303,11 @@
 **Reason:** A day-ten route event can change the very values that select an ending. Recording an immutable result at the midpoint of travel would ignore the player's final choice and could produce a summary contradicted by the completed command.
 
 **Trade-off:** Callers that compose a state-changing action outside `MarketCommandProcessor` must explicitly decide whether to defer evaluation. Production mutation remains command-boundary only, and the regression suite covers a day-ten choice that changes the winning ending.
+
+## ADR-039: Crisis stages visibly alter route economics
+
+**Decision:** Each post-opening crisis stage carries authored route effects. Thin Wells adds five risk points to the Old Road; Empty Reservoir raises that to ten and adds two ashmarks to the Toll Road; Settlement Decision raises Old Road exposure by fifteen points and the official toll by four. These effects compose with saved repairs, faction discounts, and arms inspections in the single `world.route` projection used by forecasts and travel.
+
+**Reason:** Price inflation alone does not make the regional crisis legible at the travel decision. Named route pressure makes late-campaign margins and safety visibly different while preserving one authoritative calculation path.
+
+**Trade-off:** Crisis pressure currently changes only the Old Road and Toll Road. Dry Cut remains the authored high-provision alternative until its settlement links and late-crisis role receive a dedicated slice.

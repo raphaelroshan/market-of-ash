@@ -32,6 +32,8 @@ var opportunity_buttons: Array[Button] = []
 var contract_buttons: Array[Button] = []
 var crew_buttons: Array[Button] = []
 var active_contract_label: Label
+var ending_panel: PanelContainer
+var ending_label: Label
 var plan_departure_button: Button
 var return_to_shop_button: Button
 var commit_departure_button: Button
@@ -310,6 +312,14 @@ func _build_shop() -> void:
 	caravan_title.add_theme_font_size_override("font_size", 20)
 	caravan_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(caravan_title)
+	ending_panel = PanelContainer.new()
+	ending_panel.visible = false
+	actions.add_child(ending_panel)
+	ending_label = Label.new()
+	ending_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ending_label.add_theme_font_size_override("font_size", 16)
+	ending_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	ending_panel.add_child(ending_label)
 	var opportunity_title := Label.new()
 	opportunity_title.text = "LOCAL OPPORTUNITIES"
 	opportunity_title.add_theme_font_size_override("font_size", 18)
@@ -821,6 +831,8 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 		faction_text = "\n%s standing: %s Trade-off: %s" % [String(route.get("faction_name", "Faction")), String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
 	if route.has("arms_effect"):
 		faction_text += "\nEscalation warning: %s" % String(route.get("arms_effect", ""))
+	if route.has("crisis_effect"):
+		faction_text += "\nCrisis route change: %s" % String(route.get("crisis_effect", ""))
 	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
 
 func _on_buy_pressed() -> void:
@@ -1289,6 +1301,11 @@ func _refresh_ui() -> void:
 		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
+	if ending_panel and ending_label:
+		ending_panel.visible = not world.ending_id.is_empty()
+		if ending_panel.visible:
+			var ending := MarketContent.ending(world.ending_id)
+			ending_label.text = "CAMPAIGN CONCLUSION\n%s\n%s\n\nThis outcome is recorded in the save. You may continue trading to inspect the resulting region." % [String(ending.get("title", world.ending_id)), world.ending_summary]
 	if diagnostics_label:
 		var last_command := "none"
 		if not world.command_history.is_empty():

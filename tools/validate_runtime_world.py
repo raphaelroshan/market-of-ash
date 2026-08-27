@@ -400,6 +400,22 @@ def validate_crisis(value: Any, errors: list[str]) -> None:
             stage = as_object(raw_stage, f"crisis.stages[{index}]", errors)
             if stage.get("id") != index or not isinstance(stage.get("starts_day"), int) or stage["starts_day"] <= 0 or not isinstance(stage.get("label"), str) or not stage["label"] or not isinstance(stage.get("objective"), str) or not stage["objective"]:
                 fail(errors, f"crisis stage {index} is invalid")
+            route_effects = stage.get("route_effects")
+            if not isinstance(route_effects, dict):
+                fail(errors, f"crisis stage {index}.route_effects must be an object")
+                continue
+            for route_id, effect_value in route_effects.items():
+                if route_id not in REQUIRED_ROUTES:
+                    fail(errors, f"crisis stage {index} references unknown route {route_id}")
+                effect = as_object(effect_value, f"crisis stage {index}.route_effects.{route_id}", errors)
+                risk_delta = effect.get("risk_delta")
+                cost_delta = effect.get("cost_delta")
+                if not isinstance(risk_delta, (int, float)) or not -1 <= risk_delta <= 1:
+                    fail(errors, f"crisis stage {index} route {route_id} risk_delta must be between -1 and 1")
+                if not isinstance(cost_delta, int) or cost_delta < 0:
+                    fail(errors, f"crisis stage {index} route {route_id} cost_delta must be a non-negative integer")
+                if not isinstance(effect.get("description"), str) or not effect["description"]:
+                    fail(errors, f"crisis stage {index} route {route_id} must declare description")
     endings = rules.get("endings")
     if not isinstance(endings, list) or len(endings) < 4:
         fail(errors, "crisis.endings must contain at least four endings")
