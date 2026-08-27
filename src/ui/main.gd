@@ -1173,6 +1173,7 @@ func _on_settlement_action_pressed(action_id: String) -> void:
 		"inputs": {"action_id": action_id},
 	})
 	_show_command_result(result, "Opportunity")
+	_restore_shop_action_focus()
 
 func _on_accept_contract_pressed(contract_id: String) -> void:
 	var result := MarketCommandProcessor.execute(world, {
@@ -1180,6 +1181,7 @@ func _on_accept_contract_pressed(contract_id: String) -> void:
 		"inputs": {"contract_id": contract_id},
 	})
 	_show_command_result(result, "Contract")
+	_restore_shop_action_focus()
 
 func _on_resolve_contract_pressed(contract_id: String) -> void:
 	var result := MarketCommandProcessor.execute(world, {
@@ -1187,6 +1189,7 @@ func _on_resolve_contract_pressed(contract_id: String) -> void:
 		"inputs": {"contract_id": contract_id},
 	})
 	_show_command_result(result, "Contract")
+	_restore_shop_action_focus()
 
 func _on_recruit_crew_pressed(crew_id: String) -> void:
 	var result := MarketCommandProcessor.execute(world, {
@@ -1194,6 +1197,7 @@ func _on_recruit_crew_pressed(crew_id: String) -> void:
 		"inputs": {"crew_id": crew_id},
 	})
 	_show_command_result(result, "Recruitment")
+	_restore_shop_action_focus()
 
 func _on_assign_crew_pressed(crew_id: String) -> void:
 	var result := MarketCommandProcessor.execute(world, {
@@ -1201,6 +1205,15 @@ func _on_assign_crew_pressed(crew_id: String) -> void:
 		"inputs": {"crew_id": crew_id},
 	})
 	_show_command_result(result, "Crew assignment")
+	_restore_shop_action_focus()
+
+func _restore_shop_action_focus() -> void:
+	if not shop_layer.visible or (pause_layer != null and pause_layer.visible):
+		return
+	for controls in [contract_buttons, opportunity_buttons, crew_buttons]:
+		if _grab_first_enabled(controls):
+			return
+	_grab_focus_if_available(plan_departure_button)
 
 func _on_event_choice_pressed(event_id: String, choice_id: String) -> void:
 	var result := MarketCommandProcessor.execute(world, {

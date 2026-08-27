@@ -286,6 +286,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
 - The settlement shop exposes the packaged build commit, seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
 - Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
+- Rebuilding contract, local-opportunity, or crew controls after a result restores focus to the first remaining enabled Shop action, falling back to Plan departure when none remain.
 - Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. The Main Menu explains both schemes.
 - The Main Menu can remap the keyboard keys for Accept, Back, and Pause, rejects modifier/reserved/conflicting keys, preserves controller bindings, persists mappings outside campaign saves, and restores the defaults in one action.
 - P/controller Menu pauses from any gameplay state; Escape/B pauses where it cannot safely act as Back. The modal preserves pending events and restores the previous focus on Resume.

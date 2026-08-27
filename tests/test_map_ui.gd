@@ -228,6 +228,8 @@ func _initialize() -> void:
 	_expect(ui.world.money == action_money_before - 6 and ui.world.provisions == action_provisions_before + 4, "local opportunity UI did not execute the command's visible effects")
 	_expect(ui.world.reputation.wardens == 1 and ui.shop_status_label.text.contains("Wardens +1"), "Warden ration action did not expose its named standing gain")
 	_expect(ui.opportunity_status_label.text.contains("1 of 2 visit slots remain"), "local opportunity UI did not refresh the remaining visit budget")
+	var refreshed_action_focus := ui.get_viewport().gui_get_focus_owner()
+	_expect(refreshed_action_focus is BaseButton and refreshed_action_focus.is_visible_in_tree() and not refreshed_action_focus.disabled, "rebuilding local actions should restore focus to an enabled Shop decision")
 	ui.world.current_settlement = "brine_cross"
 	ui.world.reset_visit_slots()
 	ui._refresh_ui()
