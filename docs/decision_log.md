@@ -359,3 +359,11 @@
 **Reason:** External alpha reports need enough context to reproduce a problem or understand a run without asking testers to transcribe diagnostics or surrender unnecessary personal data.
 
 **Trade-off:** The prototype writes to the Godot user-data directory and does not yet open a native share dialog or automatically submit anything. Testers must attach the file deliberately.
+
+## ADR-046: The regional map selects destinations instead of placeholder cells
+
+**Decision:** Settlement markers on the route map are clickable planning controls. A directly connected marker selects the matching destination and legal route without committing resources; the current settlement and unreachable settlements explain why no journey was selected. Markers also identify the caravan's current location and each settlement's resilience.
+
+**Reason:** The alpha's primary map should support the trade-and-travel decision rather than expose a future-editor placeholder interaction. Reusing the authoritative destination list keeps map clicks equivalent to the Departure Desk selector.
+
+**Trade-off:** Keyboard and controller planning continues through the adjacent destination selector, which has clearer focus behavior than making every drawn marker a custom focus target. The grid remains a restrained visual scaffold rather than a free-movement system.

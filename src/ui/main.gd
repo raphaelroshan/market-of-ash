@@ -80,7 +80,6 @@ var report_path := DEFAULT_REPORT_PATH
 var reduce_motion_enabled := false
 var large_text_enabled := false
 var map_panel
-var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -520,7 +519,7 @@ func _build_ui() -> void:
 	map_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	map_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	map_panel.world = world
-	map_panel.grid_cell_selected.connect(_on_map_cell_selected)
+	map_panel.settlement_selected.connect(_on_map_settlement_selected)
 	game_layer.add_child(map_panel)
 
 	var margin := MarginContainer.new()
@@ -566,7 +565,7 @@ func _build_ui() -> void:
 	left.add_child(status_label)
 
 	var map_hint := Label.new()
-	map_hint.text = "Click the regional grid to select a future placement cell; route lanes show where the caravan can travel."
+	map_hint.text = "Click a settlement marker to plan a direct journey; route lanes show the available regional corridors."
 	map_hint.add_theme_color_override("font_color", Color("#c7b49a"))
 	left.add_child(map_hint)
 
@@ -763,7 +762,6 @@ func _selected_id(option: OptionButton) -> String:
 func _on_start_game_pressed() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
 	playtest_grain_sold = 0
-	selected_map_cell = Vector2i(-1, -1)
 	if map_panel:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
@@ -1197,7 +1195,6 @@ func _on_load_pressed() -> void:
 	var load_result: Dictionary = load_attempt.result
 	world = candidate
 	arrival_pending = false
-	selected_map_cell = Vector2i(-1, -1)
 	if map_panel:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
@@ -1236,15 +1233,26 @@ func _on_reset_pressed() -> void:
 	playtest_grain_sold = 0
 	_populate_destination_options()
 	_populate_route_options()
-	selected_map_cell = Vector2i(-1, -1)
 	map_panel.world = world
 	map_panel.reset_travel(world.current_settlement)
 	_set_event("The caravan has been reset to its first morning.")
 	_refresh_ui()
 
-func _on_map_cell_selected(cell: Vector2i) -> void:
-	selected_map_cell = cell
-	_set_event("Grid cell (%d, %d) selected. Future camp, service, obstacle, or route objects can occupy this stable placeholder cell." % [cell.x, cell.y])
+func _on_map_settlement_selected(settlement_id: String) -> void:
+	var settlement_name := String(world.settlement(settlement_id).get("name", settlement_id))
+	if settlement_id == world.current_settlement:
+		_set_event("You are already in %s. Choose another settlement to plan a journey." % settlement_name)
+		_refresh_ui()
+		return
+	for index in range(destination_option.item_count):
+		if String(destination_option.get_item_metadata(index)) != settlement_id:
+			continue
+		destination_option.select(index)
+		_on_destination_changed(index)
+		_set_event("Map destination selected: %s. Review the route cost, provisions, time, and exposed cargo before committing." % settlement_name)
+		_refresh_ui()
+		return
+	_set_event("No direct route reaches %s from %s. Travel through a connected settlement first." % [settlement_name, String(world.settlement(world.current_settlement).get("name", world.current_settlement))])
 	_refresh_ui()
 
 func _refresh_playtest_status() -> void:
@@ -1607,13 +1615,12 @@ func _refresh_ui() -> void:
 	_refresh_forecasts()
 	if map_panel:
 		map_panel.world = world
-		map_panel.selected_cell = selected_map_cell
 		map_panel.queue_redraw()
 	if large_text_checkbox and large_text_checkbox.button_pressed:
 		_apply_text_scale(self, 1.25)
 
 class MapPanel extends Control:
-	signal grid_cell_selected(cell: Vector2i)
+	signal settlement_selected(settlement_id: String)
 
 	const GRID_SIZE := Vector2i(17, 11)
 	const BOARD_ORIGIN := Vector2(34, 200)
@@ -1627,7 +1634,6 @@ class MapPanel extends Control:
 	}
 
 	var world
-	var selected_cell: Vector2i = Vector2i(-1, -1)
 	var travel_route_id: String = ""
 	var travel_points: Array[Vector2] = []
 	var travel_progress: float = 1.0
@@ -1656,6 +1662,10 @@ class MapPanel extends Control:
 
 	func _settlement_point(settlement_id: String) -> Vector2:
 		return _cell_center(SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO))
+
+	func _settlement_footprint(settlement_id: String) -> Rect2:
+		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 20, CELL_SIZE.y + 16))
 
 	func _route_points(route_id: String) -> Array[Vector2]:
 		match route_id:
@@ -1728,15 +1738,12 @@ class MapPanel extends Control:
 	func _gui_input(event: InputEvent) -> void:
 		if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
 			return
-		if not _board_rect().has_point(event.position):
-			return
-		var local: Vector2 = event.position - BOARD_ORIGIN
-		var cell := Vector2i(floori(local.x / CELL_SIZE.x), floori(local.y / CELL_SIZE.y))
-		if cell.x < 0 or cell.y < 0 or cell.x >= GRID_SIZE.x or cell.y >= GRID_SIZE.y:
-			return
-		selected_cell = cell
-		grid_cell_selected.emit(cell)
-		queue_redraw()
+		for settlement_id_value in SETTLEMENT_CELLS.keys():
+			var settlement_id := String(settlement_id_value)
+			if _settlement_footprint(settlement_id).has_point(event.position):
+				settlement_selected.emit(settlement_id)
+				accept_event()
+				return
 
 	func _draw() -> void:
 		var board := _board_rect()
@@ -1748,9 +1755,7 @@ class MapPanel extends Control:
 				var fill := Color("#332820") if (x + y) % 2 == 0 else Color("#382c23")
 				draw_rect(_cell_rect(cell), fill, true)
 				draw_rect(_cell_rect(cell), Color("#5c4838"), false, 1.0)
-		if selected_cell.x >= 0:
-			draw_rect(_cell_rect(selected_cell).grow(-2), Color("#f0d27d"), false, 3.0)
-		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), "FIVE-WELL BASIN — PLACEHOLDER TRAVERSAL GRID", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), "FIVE-WELL BASIN — SELECT A SETTLEMENT", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e6c58d"))
 		var route_ids := ["old_road", "toll_road", "dry_cut"]
 		for route_id in route_ids:
 			var route_points: Array[Vector2] = _route_points(route_id)
@@ -1769,18 +1774,20 @@ class MapPanel extends Control:
 		var route_footer_x := [8.0, 166.0, 344.0]
 		for route_index in range(route_ids.size()):
 			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(route_footer_x[route_index], board.size.y + 24), "%s: %s" % [_route_label(route_ids[route_index]), route_profiles[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _route_color(route_ids[route_index]))
-		for settlement_id in SETTLEMENT_CELLS.keys():
-			var cell: Vector2i = SETTLEMENT_CELLS[settlement_id]
-			var footprint := Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 20, CELL_SIZE.y + 16))
-			draw_rect(footprint, Color("#3b2b24"), true)
-			draw_rect(footprint, Color("#bd8553") if settlement_id != "brine_cross" else Color("#7d9ca4"), false, 3.0)
+		for settlement_id_value in SETTLEMENT_CELLS.keys():
+			var settlement_id := String(settlement_id_value)
+			var footprint := _settlement_footprint(settlement_id)
+			var is_current: bool = world != null and settlement_id == world.current_settlement
+			draw_rect(footprint, Color("#5a4027") if is_current else Color("#3b2b24"), true)
+			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#f4e6c7"))
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), String(world.settlement(settlement_id).get("role", "market")) if world != null else "settlement", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
+			var settlement_detail := "%s · resilience %d" % [String(world.settlement(settlement_id).get("role", "market")), world.resilience_for(settlement_id)] if world != null else "settlement"
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), settlement_detail, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
 		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
 		if traveling:
 			caravan_position = _polyline_position(travel_points, travel_progress)
 		draw_circle(caravan_position, 10.0, Color("#17130f"))
 		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
 		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f0d27d"))
-		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "GRID CELL = FUTURE PLACE / WALK SPACE", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c7b49a"))
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "GOLD MARKER = CURRENT LOCATION", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c7b49a"))

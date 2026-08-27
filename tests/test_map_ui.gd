@@ -243,10 +243,18 @@ func _initialize() -> void:
 		_expect(ui.map_panel.GRID_SIZE == Vector2i(17, 11), "map grid size is not the stable 17x11 contract")
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		var map_before: String = JSON.stringify(ui.world.serialize())
-		ui._on_map_cell_selected(Vector2i(6, 4))
-		_expect(ui.event_label.text.contains("Grid cell (6, 4) selected"), "grid selection did not produce a readable coordinate event")
+		var map_click := InputEventMouseButton.new()
+		map_click.button_index = MOUSE_BUTTON_LEFT
+		map_click.pressed = true
+		map_click.position = ui.map_panel._settlement_point("brine_cross")
+		ui.map_panel._gui_input(map_click)
+		_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "clicking a reachable settlement marker should select its legal destination and route")
+		ui._on_map_settlement_selected("hollow_market")
+		_expect(ui.event_label.text.contains("No direct route reaches Hollow Market"), "an unreachable settlement marker should explain the required intermediate journey")
+		ui._on_map_settlement_selected("reedwatch")
+		_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road" and ui.event_label.text.contains("Map destination selected: Reedwatch"), "map planning should restore a directly reachable destination with clear commitment guidance")
 		if JSON.stringify(ui.world.serialize()) != map_before:
-			failures.append("grid selection mutated authoritative world state")
+			failures.append("map destination selection mutated authoritative world state")
 		ui._on_depart_pressed()
 		_expect(ui.map_panel.traveling, "successful departure did not start presentation traversal")
 		_expect(ui.map_panel.travel_points.size() == 3, "travel traversal did not create origin, waypoint, destination")
