@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 4
+const SAVE_VERSION := 5
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -23,6 +23,10 @@ var market_delivery_history: Array[Dictionary] = []
 var visit_slots_remaining: int = 2
 var active_contracts: Dictionary = {}
 var contract_history: Array[Dictionary] = []
+var journey_context: Dictionary = {}
+var pending_event: Dictionary = {}
+var resolved_event_ids: Array[String] = []
+var event_history: Array[Dictionary] = []
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -107,6 +111,31 @@ func archive_contract(contract_id: String, status: String, extra: Dictionary = {
 	while contract_history.size() > history_limit:
 		contract_history.pop_front()
 	return snapshot.duplicate(true)
+
+func has_resolved_event(event_id: String) -> bool:
+	return resolved_event_ids.has(event_id)
+
+func begin_pending_event(event_snapshot: Dictionary, journey: Dictionary) -> void:
+	pending_event = event_snapshot.duplicate(true)
+	journey_context = journey.duplicate(true)
+
+func archive_pending_event(choice_id: String, outcome: Dictionary) -> Dictionary:
+	if pending_event.is_empty():
+		return {}
+	var record := pending_event.duplicate(true)
+	record["choice_id"] = choice_id
+	record["resolved_day"] = day
+	record["outcome"] = outcome.duplicate(true)
+	event_history.append(record)
+	var history_limit := int(MarketContent.event_rules().get("max_history", 1))
+	while event_history.size() > history_limit:
+		event_history.pop_front()
+	var event_id := String(pending_event.get("id", ""))
+	if not event_id.is_empty() and not resolved_event_ids.has(event_id):
+		resolved_event_ids.append(event_id)
+	pending_event.clear()
+	journey_context.clear()
+	return record.duplicate(true)
 
 func record_market_delivery(settlement_id: String, good_id: String, quantity: int) -> Dictionary:
 	if not has_settlement(settlement_id):
@@ -234,6 +263,10 @@ func serialize() -> Dictionary:
 		"visit_slots_remaining": visit_slots_remaining,
 		"active_contracts": active_contracts.duplicate(true),
 		"contract_history": contract_history.duplicate(true),
+		"journey_context": journey_context.duplicate(true),
+		"pending_event": pending_event.duplicate(true),
+		"resolved_event_ids": resolved_event_ids.duplicate(),
+		"event_history": event_history.duplicate(true),
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -275,6 +308,19 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	for raw_contract in saved_contract_history.slice(maxi(0, saved_contract_history.size() - contract_history_limit)):
 		if typeof(raw_contract) == TYPE_DICTIONARY and not String(raw_contract.get("id", "")).is_empty():
 			contract_history.append(raw_contract.duplicate(true))
+	journey_context = restored.get("journey_context", {}).duplicate(true)
+	pending_event = restored.get("pending_event", {}).duplicate(true)
+	resolved_event_ids.clear()
+	for event_id in restored.get("resolved_event_ids", []):
+		var normalized_event_id := String(event_id)
+		if not normalized_event_id.is_empty() and not resolved_event_ids.has(normalized_event_id):
+			resolved_event_ids.append(normalized_event_id)
+	event_history.clear()
+	var saved_event_history: Array = restored.get("event_history", [])
+	var event_history_limit := int(MarketContent.event_rules().get("max_history", 1))
+	for raw_event in saved_event_history.slice(maxi(0, saved_event_history.size() - event_history_limit)):
+		if typeof(raw_event) == TYPE_DICTIONARY:
+			event_history.append(raw_event.duplicate(true))
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -307,6 +353,12 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 		migrated["save_version"] = 4
 		migrated["active_contracts"] = migrated.get("active_contracts", {})
 		migrated["contract_history"] = migrated.get("contract_history", [])
+	if source_version < 5:
+		migrated["save_version"] = 5
+		migrated["journey_context"] = migrated.get("journey_context", {})
+		migrated["pending_event"] = migrated.get("pending_event", {})
+		migrated["resolved_event_ids"] = migrated.get("resolved_event_ids", [])
+		migrated["event_history"] = migrated.get("event_history", [])
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
 
 func _sanitize_active_contracts(value: Variant) -> Dictionary:

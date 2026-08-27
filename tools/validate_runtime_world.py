@@ -176,6 +176,69 @@ def validate_contracts(value: Any, visit_slot_limit: Any, errors: list[str]) -> 
             fail(errors, f"contract {contract_id}.failure_penalty must be a non-negative integer")
 
 
+def validate_events(value: Any, errors: list[str]) -> None:
+    rules = as_object(value, "events", errors)
+    history_limit = rules.get("max_history")
+    if not isinstance(history_limit, int) or not 1 <= history_limit <= 100:
+        fail(errors, "events.max_history must be an integer from 1 through 100")
+    records = rules.get("records")
+    if not isinstance(records, list):
+        fail(errors, "events.records must be a list")
+        return
+    seen_ids: set[str] = set()
+    for index, raw_event in enumerate(records):
+        event = as_object(raw_event, f"events.records[{index}]", errors)
+        event_id = event.get("id")
+        if not isinstance(event_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", event_id):
+            fail(errors, f"event at index {index} must use a lower_snake_case id")
+            event_id = f"index_{index}"
+        elif event_id in seen_ids:
+            fail(errors, f"duplicate event id: {event_id}")
+        seen_ids.add(event_id)
+        for field in ("title", "category", "setup", "stakes"):
+            if not isinstance(event.get(field), str) or not event[field]:
+                fail(errors, f"event {event_id} must declare {field}")
+        route_ids = event.get("route_ids")
+        if not isinstance(route_ids, list) or not route_ids:
+            fail(errors, f"event {event_id}.route_ids must be a non-empty list")
+        else:
+            for route_id in route_ids:
+                if route_id not in REQUIRED_ROUTES:
+                    fail(errors, f"event {event_id} references unknown route {route_id}")
+        trigger_chance = event.get("trigger_chance")
+        if not isinstance(trigger_chance, (int, float)) or not 0 <= trigger_chance <= 1:
+            fail(errors, f"event {event_id}.trigger_chance must be between 0 and 1")
+        if not isinstance(event.get("trigger_roll_salt"), int) or event["trigger_roll_salt"] < 0:
+            fail(errors, f"event {event_id}.trigger_roll_salt must be a non-negative integer")
+        if not isinstance(event.get("minimum_cargo_value"), int) or event["minimum_cargo_value"] < 0:
+            fail(errors, f"event {event_id}.minimum_cargo_value must be a non-negative integer")
+        if not isinstance(event.get("active_contract_relevant"), bool):
+            fail(errors, f"event {event_id}.active_contract_relevant must be boolean")
+        choices = event.get("choices")
+        if not isinstance(choices, list) or len(choices) < 2:
+            fail(errors, f"event {event_id}.choices must contain at least two choices")
+            continue
+        seen_choice_ids: set[str] = set()
+        for choice_index, raw_choice in enumerate(choices):
+            choice = as_object(raw_choice, f"event {event_id}.choices[{choice_index}]", errors)
+            choice_id = choice.get("id")
+            if not isinstance(choice_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", choice_id):
+                fail(errors, f"event {event_id} choice at index {choice_index} must use a lower_snake_case id")
+                choice_id = f"index_{choice_index}"
+            elif choice_id in seen_choice_ids:
+                fail(errors, f"event {event_id} has duplicate choice {choice_id}")
+            seen_choice_ids.add(choice_id)
+            for field in ("label", "outcome"):
+                if not isinstance(choice.get(field), str) or not choice[field]:
+                    fail(errors, f"event {event_id} choice {choice_id} must declare {field}")
+            for field in ("money_cost", "provision_cost", "days"):
+                if not isinstance(choice.get(field), int) or choice[field] < 0:
+                    fail(errors, f"event {event_id} choice {choice_id}.{field} must be a non-negative integer")
+            cargo_risk = choice.get("cargo_risk")
+            if not isinstance(cargo_risk, (int, float)) or not 0 <= cargo_risk <= 1:
+                fail(errors, f"event {event_id} choice {choice_id}.cargo_risk must be between 0 and 1")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -198,6 +261,7 @@ def validate(data: Any) -> list[str]:
     settlement_action_rules = root.get("settlement_actions")
     visit_slot_limit = settlement_action_rules.get("visit_slots_per_arrival") if isinstance(settlement_action_rules, dict) else None
     validate_contracts(root.get("contracts"), visit_slot_limit, errors)
+    validate_events(root.get("events"), errors)
 
     goods = root.get("goods")
     if not isinstance(goods, list):

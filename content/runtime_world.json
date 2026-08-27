@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "0.7.0",
+  "content_version": "0.8.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -114,6 +114,52 @@
         "description": "Carry four sealed water units from Ashgate to Reedwatch before the public reserve is rationed.",
         "tradeoff": "A guaranteed premium and visible relief, but four hold spaces and a short deadline are committed.",
         "failure_recovery": "Late cargo remains yours to sell, and the penalty never takes more ashmarks than you hold."
+      }
+    ]
+  },
+  "events": {
+    "max_history": 20,
+    "records": [
+      {
+        "id": "gatekeepers_chalk",
+        "title": "The Gatekeeper's Chalk",
+        "category": "travel_decision",
+        "route_ids": ["toll_road"],
+        "trigger_chance": 0.65,
+        "trigger_roll_salt": 17,
+        "minimum_cargo_value": 60,
+        "active_contract_relevant": true,
+        "setup": "An Ash Warden clerk marks the caravan wheels with fresh chalk and disputes the posted passage rate.",
+        "stakes": "Pay for certainty, spend time and provisions on an exposed detour, or wait for a stamped review.",
+        "choices": [
+          {
+            "id": "pay_posted_toll",
+            "label": "Pay 6 ashmarks",
+            "money_cost": 6,
+            "provision_cost": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "outcome": "The clerk clears the chalk and records the caravan's passage."
+          },
+          {
+            "id": "take_dust_detour",
+            "label": "Take the dust detour",
+            "money_cost": 0,
+            "provision_cost": 1,
+            "days": 1,
+            "cargo_risk": 0.25,
+            "outcome": "The caravan avoids the gate but spends another day and provision on exposed ground."
+          },
+          {
+            "id": "wait_for_stamped_review",
+            "label": "Wait for stamped review",
+            "money_cost": 0,
+            "provision_cost": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "outcome": "The office confirms the original fare after a full day of delay."
+          }
+        ]
       }
     ]
   },

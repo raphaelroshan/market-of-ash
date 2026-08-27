@@ -102,6 +102,27 @@ func _initialize() -> void:
 	_expect(ui.shop_market_preview_label.text.contains("Market memory: your last 2 grain delivered here softened this price by 8%"), "completed sale did not expose the local delivery-memory explanation")
 	_expect(ui.shop_market_preview_label.text.contains("memory 0.92"), "market preview did not show the post-delivery price multiplier")
 
+	ui._on_start_game_pressed()
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "brine_cross")
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._on_depart_pressed()
+	_expect(not ui.world.pending_event.is_empty() and ui.world.pending_event.id == "gatekeepers_chalk", "eligible Toll Road trip did not present Gatekeeper's Chalk")
+	_expect(ui.event_card.visible and not ui.enter_settlement_button.visible, "pending route event should block arrival and show the event card")
+	_expect(ui.event_title_label.text == "The Gatekeeper's Chalk", "event card did not render the authored title")
+	_expect(ui.event_stakes_label.text.contains("Toll Road") and ui.event_stakes_label.text.contains("1 Medicine unit valued at 44"), "event card did not expose route and cargo context")
+	_expect(ui.event_choice_buttons.size() == 3, "Gatekeeper's Chalk should expose all three authored choices")
+	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
+	_expect(ui.departure_status_label.text.contains("ROUTE DECISION"), "departure screen did not identify the paused route decision")
+	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
+	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "brine_cross", "paying the event toll did not complete arrival")
+	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
+	_expect(ui.world.event_history.size() == 1 and ui.world.event_history.back().choice_id == "pay_posted_toll", "event UI did not preserve the chosen outcome")
+
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

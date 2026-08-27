@@ -18,7 +18,7 @@ The run starts every simulated trader in the current quick-playtest state: Ashga
 | Toll-road-only | Chooses the best displayed net-profit trade while using the legal Toll Road corridor only. |
 | No trade baseline | Takes no action; baseline for resource preservation. |
 
-The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, or human learning.
+The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. When Gatekeeper's Chalk triggers, the synthetic policy pays if it can and otherwise waits for review. It does not model human event preference, crew, contracts, broader faction effects, or player learning.
 
 ## Results
 
@@ -27,10 +27,10 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 | Guided grain delivery | 100    | 100.0%      | 35.0%           | -20.0          | -19.8               | -17.0             | 100.0%      | +0.2             | 2.0          |
 | Forecast maximizer    | 100    | 100.0%      | 35.0%           | +99.0          | +98.8               | +110.0            | 0.0%        | -0.2             | 7.0          |
 | Gross-margin chaser   | 100    | 100.0%      | 35.0%           | +99.0          | +98.8               | +110.0            | 0.0%        | -0.2             | 7.0          |
-| Toll-road-only        | 100    | 100.0%      | 10.0%           | +9.0           | +8.6                | +13.0             | 10.0%       | -0.4             | 3.0          |
+| Toll-road-only        | 100    | 100.0%      | 3.0%            | +9.0           | +7.8                | +7.0              | 3.0%        | -1.2             | 3.0          |
 | No trade baseline     | 100    | 0.0%        | 0.0%            | +0.0           | +0.0                | +0.0              | 0.0%        | +0.0             | 0.0          |
 
-Under legal paths, the **forecast maximizer** selects **water → reedwatch / old_road** in every seed and averages **+98.8** realized economic profit. The **gross-margin chaser** selects **water → reedwatch / old_road** and averages **+98.8**. The **Toll-road-only** policy selects **medicine → brine_cross / toll_road** and averages **+8.6**. The guided Grain delivery remains a mechanically legible but deliberately lower-return teaching run at **-19.8**.
+Under legal paths, the **forecast maximizer** selects **water → reedwatch / old_road** in every seed and averages **+98.8** realized economic profit. The **gross-margin chaser** selects **water → reedwatch / old_road** and averages **+98.8**. The **Toll-road-only** policy selects **medicine → brine_cross / toll_road** and averages **+7.8**. The guided Grain delivery remains a mechanically legible but deliberately lower-return teaching run at **-19.8**.
 
 ![Policy outcome chart](policy_outcomes.png)
 
@@ -60,6 +60,14 @@ The adaptive policy re-evaluates the best legal forecast before each of three ou
 
 The fixed Reedwatch water probe starts at **32** ashmarks per unit. A four-unit delivery creates **16%** pressure and changes the immediate price to **27**. Pressure returns to zero after **6** elapsed days and repeated deliveries clamp at **35%**.
 
+## Travel Event Probe
+
+| Policy         | Event             | Choice          | Runs   | Share of policy runs   |
+|:---------------|:------------------|:----------------|:-------|:-----------------------|
+| Toll-road-only | gatekeepers_chalk | pay_posted_toll | 65     | 65.0%                  |
+
+Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it triggers. The automated policy always pays when affordable, so this table measures deterministic trigger coverage and execution stability rather than choice quality.
+
 ## Forecast Calibration
 
 | Policy                | Forecast net   | Realized economic   | Mean error   | Mean absolute error   |
@@ -67,7 +75,7 @@ The fixed Reedwatch water probe starts at **32** ashmarks per unit. A four-unit 
 | Guided grain delivery | -20.0          | -19.8               | +0.2         | +3.7                  |
 | Forecast maximizer    | +99.0          | +98.8               | -0.2         | +14.5                 |
 | Gross-margin chaser   | +99.0          | +98.8               | -0.2         | +14.5                 |
-| Toll-road-only        | +9.0           | +8.6                | -0.4         | +7.6                  |
+| Toll-road-only        | +9.0           | +7.8                | -1.2         | +3.8                  |
 
 The displayed forecast and resolver now share the **one exposed cargo unit** model. The forecast values the highest destination-value unit currently carried, multiplies that value by route risk, and the resolver removes that same unit when an incident occurs. Remaining error is bounded stochastic and integer-rounding variance rather than a structural whole-load-versus-one-unit mismatch.
 
@@ -78,7 +86,7 @@ The displayed forecast and resolver now share the **one exposed cargo unit** mod
 | Guided grain delivery | +3.2                | +0.2               | +4.6         | +3.7        |
 | Forecast maximizer    | +66.8               | -0.2               | +66.8        | +14.5       |
 | Gross-margin chaser   | +66.8               | -0.2               | +66.8        | +14.5       |
-| Toll-road-only        | +8.6                | -0.4               | +14.8        | +7.6        |
+| Toll-road-only        | +8.6                | -1.2               | +14.8        | +3.8        |
 
 The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashmarks-equivalent. Its mean absolute error fell from **66.8** to **14.5**; the remaining absolute error is the expected spread between a rounded expected value and binary one-unit outcomes across individual runs.
 
@@ -88,7 +96,7 @@ The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashm
 | --- | --- | --- | --- |
 | **Route topology is now authoritative** | All completed runs use content-declared endpoints, and invalid Old Road → Brine Cross departures are rejected in regression coverage. | Route fees, risk, map presentation, and forecast now describe the same corridor. | Keep endpoint validation in future route-content review; no balance action is indicated by this implementation fix alone. |
 | **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Use the repeated-delivery results above to judge whether current pressure/decay values create enough readable rotation before changing balance. |
-| **Forecast/resolution calibration** | Mean forecast error ranges from -0.4 to +0.2 ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
+| **Forecast/resolution calibration** | Mean forecast error ranges from -1.2 to +0.2 ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
 | **Capacity dominates the first decision** | The forecast policy loads an average of 7.0 units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
 | **Guided delivery is not an economic optimum** | The Grain teaching run averages -19.8 realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |
 

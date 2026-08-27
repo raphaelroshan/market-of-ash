@@ -97,6 +97,33 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_events = copy.deepcopy(runtime)
+    invalid_events["events"] = json.loads(
+        (ROOT / "tests/fixtures/events_invalid.json").read_text(encoding="utf-8")
+    )
+    event_errors = validate(invalid_events)
+    expected_event_fragments = (
+        "events.max_history must be an integer from 1 through 100",
+        "must use a lower_snake_case id",
+        "must declare title",
+        "references unknown route",
+        "trigger_chance must be between 0 and 1",
+        "trigger_roll_salt must be a non-negative integer",
+        "minimum_cargo_value must be a non-negative integer",
+        "active_contract_relevant must be boolean",
+        "choices must contain at least two choices",
+    )
+    missing_events = [
+        fragment
+        for fragment in expected_event_fragments
+        if not any(fragment in error for error in event_errors)
+    ]
+    if missing_events:
+        print("FAIL: invalid event fixture did not produce expected errors")
+        for fragment in missing_events:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

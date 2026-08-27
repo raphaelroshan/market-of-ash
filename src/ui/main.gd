@@ -33,6 +33,12 @@ var enter_settlement_button: Button
 var departure_load_label: Label
 var departure_contract_label: Label
 var departure_status_label: Label
+var event_card: PanelContainer
+var event_title_label: Label
+var event_setup_label: Label
+var event_stakes_label: Label
+var event_choice_list: VBoxContainer
+var event_choice_buttons: Array[Button] = []
 var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
@@ -375,6 +381,28 @@ func _build_ui() -> void:
 	route_preview_label = _forecast_label()
 	controls.add_child(route_preview_label)
 
+	event_card = PanelContainer.new()
+	event_card.visible = false
+	controls.add_child(event_card)
+	var event_content := VBoxContainer.new()
+	event_content.add_theme_constant_override("separation", 6)
+	event_card.add_child(event_content)
+	event_title_label = Label.new()
+	event_title_label.add_theme_font_size_override("font_size", 18)
+	event_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	event_content.add_child(event_title_label)
+	event_setup_label = Label.new()
+	event_setup_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_setup_label.add_theme_color_override("font_color", Color("#f4e6c7"))
+	event_content.add_child(event_setup_label)
+	event_stakes_label = Label.new()
+	event_stakes_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_stakes_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	event_content.add_child(event_stakes_label)
+	event_choice_list = VBoxContainer.new()
+	event_choice_list.add_theme_constant_override("separation", 6)
+	event_content.add_child(event_choice_list)
+
 	destination_option.item_selected.connect(_on_destination_changed)
 	route_option.item_selected.connect(_on_forecast_input_changed)
 	cargo_good_option.item_selected.connect(_on_forecast_input_changed)
@@ -545,6 +573,18 @@ func _on_resolve_contract_pressed(contract_id: String) -> void:
 	})
 	_show_command_result(result, "Contract")
 
+func _on_event_choice_pressed(event_id: String, choice_id: String) -> void:
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": event_id, "choice_id": choice_id},
+	})
+	if result.ok:
+		arrival_pending = true
+		enter_settlement_button.visible = true
+		_populate_destination_options()
+		_populate_route_options()
+	_show_command_result(result, "Route decision")
+
 func _on_shop_plan_changed(_index: int) -> void:
 	_sync_shop_plan_to_departure()
 	_refresh_ui()
@@ -672,10 +712,10 @@ func _on_depart_pressed() -> void:
 		},
 	})
 	if result.ok:
-		arrival_pending = true
+		arrival_pending = world.pending_event.is_empty()
 		commit_departure_button.disabled = true
 		return_to_shop_button.disabled = true
-		enter_settlement_button.visible = true
+		enter_settlement_button.visible = arrival_pending
 		if map_panel:
 			map_panel.begin_travel(route_id, previous_settlement, destination_id)
 		_populate_destination_options()
@@ -834,6 +874,47 @@ func _refresh_contract_summary() -> void:
 	active_contract_label.text = "ACTIVE CONTRACT\n" + summary
 	departure_contract_label.text = "CONTRACT PIN\n" + summary
 
+func _refresh_event_card() -> void:
+	if event_card == null or event_choice_list == null:
+		return
+	for child in event_choice_list.get_children():
+		event_choice_list.remove_child(child)
+		child.queue_free()
+	event_choice_buttons.clear()
+	var pending := world.pending_event
+	event_card.visible = not pending.is_empty()
+	if pending.is_empty():
+		return
+	event_title_label.text = String(pending.get("title", "Route decision"))
+	event_setup_label.text = String(pending.get("setup", ""))
+	var destination_name := String(world.settlement(String(pending.get("destination_id", ""))).get("name", "destination"))
+	var loss_basis: Dictionary = pending.get("loss_basis", {})
+	var cargo_context := "no carried cargo"
+	if int(loss_basis.get("loss_quantity", 0)) > 0:
+		cargo_context = "1 %s unit valued at %d" % [String(loss_basis.get("loss_good_id", "")).capitalize(), int(loss_basis.get("loss_unit_value", 0))]
+	event_stakes_label.text = "Route context: %s to %s via %s; exposed cargo: %s.\nWhat is at stake: %s" % [String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), cargo_context, String(pending.get("stakes", ""))]
+	for raw_choice in pending.get("choices", []):
+		if typeof(raw_choice) != TYPE_DICTIONARY:
+			continue
+		var choice: Dictionary = raw_choice
+		var button := Button.new()
+		var money_cost := int(choice.get("money_cost", 0))
+		var provision_cost := int(choice.get("provision_cost", 0))
+		var days := int(choice.get("days", 0))
+		var cargo_risk := int(round(float(choice.get("cargo_risk", 0.0)) * 100.0))
+		button.text = "%s — %d ashmarks · %d provisions · %d days · %d%% cargo risk" % [String(choice.get("label", "Choose")), money_cost, provision_cost, days, cargo_risk]
+		var blocked_reason := ""
+		if world.money < money_cost:
+			button.disabled = true
+			blocked_reason = "Needs %d ashmarks; you have %d." % [money_cost, world.money]
+		elif world.provisions < provision_cost:
+			button.disabled = true
+			blocked_reason = "Needs %d provision; you have %d." % [provision_cost, world.provisions]
+		button.tooltip_text = blocked_reason if button.disabled else String(choice.get("outcome", ""))
+		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
+		event_choice_list.add_child(button)
+		event_choice_buttons.append(button)
+
 func _set_event(text: String) -> void:
 	event_label.text = text
 
@@ -843,7 +924,9 @@ func _refresh_ui() -> void:
 		var settlement := world.settlement(world.current_settlement)
 		shop_status_label.text = "%s — %s\nDay %d · Crisis %d · %s" % [String(settlement.get("name", "Unknown settlement")), String(settlement.get("role", "market")), world.day, world.crisis_stage, String(event_label.text if event_label else "Inspect the local need, then load only what your plan can carry.")]
 	if departure_status_label:
-		if arrival_pending:
+		if not world.pending_event.is_empty():
+			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; every option leads to an arrival."
+		elif arrival_pending:
 			departure_status_label.text = "ARRIVAL REPORT — %s\n%s\nReview what changed, then enter the settlement to trade again." % [String(world.settlement(world.current_settlement).get("name", "Unknown settlement")), String(event_label.text)]
 		else:
 			departure_status_label.text = "COMMITMENT CHECK — The map only shows legal corridors. Returning to the shop preserves this plan and spends nothing."
@@ -861,6 +944,7 @@ func _refresh_ui() -> void:
 	if event_label.text.is_empty():
 		event_label.text = "Choose a destination, buy a small load, and compare the Old Road with the Toll Road."
 	_refresh_opportunities()
+	_refresh_event_card()
 	_refresh_forecasts()
 	if map_panel:
 		map_panel.world = world

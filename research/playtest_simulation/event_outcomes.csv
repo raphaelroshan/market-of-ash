@@ -1,0 +1,2 @@
+policy_label,event_id,event_choice_id,runs,share_of_policy_runs
+Toll-road-only,gatekeepers_chalk,pay_posted_toll,65,0.65

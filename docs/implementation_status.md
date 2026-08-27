@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B3 are implemented. B4's first state-sensitive travel event is next.
+**Roadmap status:** A0–A1 foundations and B0–B4 are implemented. The remaining canonical travel events are next.
 
 ## Implemented player-facing spine
 
@@ -13,12 +13,13 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 4 and runtime content version `0.7.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 5 and runtime content version `0.8.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
 - Settlement visits expose a two-slot auxiliary-action budget. Ashgate's live provision service competes with cargo spending; future settlement actions remain visible with dependency reasons.
 - Ashgate offers one fixed-term Reedwatch water-relief contract; accepted terms are pinned during departure and resolve deterministically on arrival.
+- Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
 
 ## Current command IDs
 
@@ -30,6 +31,7 @@
 | `use_settlement_action` | `MarketCommandProcessor` | Validates current settlement, availability, money, and visit slots; the first implementation packs Ashgate route provisions. |
 | `accept_contract` | `MarketCommandProcessor` | Freezes authored terms after validating origin, free cargo capacity, prior outcome, and visit-slot cost. |
 | `resolve_contract` | `MarketCommandProcessor` | Completes an on-time delivery or applies a bounded late penalty while preserving recoverable spot cargo. |
+| `resolve_event` | `MarketCommandProcessor` | Validates a pending event choice, applies explicit deterministic costs/outcomes, archives the result, and completes arrival. |
 
 Successful and failed commands append to `command_history`, bounded to 100 records.
 
@@ -51,6 +53,10 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `visit_slots_remaining`
 - `active_contracts`
 - `contract_history`
+- `journey_context`
+- `pending_event`
+- `resolved_event_ids`
+- `event_history`
 - `log`
 - `command_history`
 
@@ -143,6 +149,14 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Route incidents resolve before delivery. A complete load auto-delivers; a partial load remains active with the exact shortfall; late failure costs at most eight ashmarks and leaves cargo sellable.
 - Save version 4 preserves active and resolved contract state.
 
+## B4 first-event result
+
+- Valuable or contract-relevant Toll Road journeys have a deterministic 65% chance to pause at `The Gatekeeper's Chalk` until the player chooses.
+- Pay, detour, and wait choices state their money, provision, time, and cargo-risk costs before selection.
+- The detour uses a saved roll and the same one-exposed-unit cargo basis as route forecasting; waiting is always available.
+- Pending journeys and events survive save/load, resolved events do not repeat, and arrival then resumes contract checks and visit-slot refresh.
+- The 100-seed simulation triggered the event in 65 Toll Road runs and resolved each through its declared command path.
+
 ## Next permitted task
 
-Card B4a: define and implement the first Toll Dispute event using the canonical event catalogue and a narrow deterministic event seam.
+Card B4b: add `The Span at Cinderford` as the next canonical event using the same tested event seam.

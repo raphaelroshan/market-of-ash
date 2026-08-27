@@ -14,12 +14,15 @@ const DEPART_ROUTE := "depart_route"
 const USE_SETTLEMENT_ACTION := "use_settlement_action"
 const ACCEPT_CONTRACT := "accept_contract"
 const RESOLVE_CONTRACT := "resolve_contract"
+const RESOLVE_EVENT := "resolve_event"
 
 static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 	var command_id := String(command.get("id", ""))
 	var inputs_value: Variant = command.get("inputs", {})
 	if typeof(inputs_value) != TYPE_DICTIONARY:
 		return _record(world, command, _failure("command inputs must be an object"))
+	if not world.pending_event.is_empty() and command_id != RESOLVE_EVENT:
+		return _record(world, command, _failure("resolve the current route event before taking another action"))
 	var inputs: Dictionary = inputs_value
 	var result: Dictionary
 	match command_id:
@@ -35,6 +38,8 @@ static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 			result = _accept_contract(world, inputs)
 		RESOLVE_CONTRACT:
 			result = _resolve_contract(world, inputs)
+		RESOLVE_EVENT:
+			result = _resolve_event(world, inputs)
 		_:
 			result = _failure("unknown command: %s" % command_id)
 	return _record(world, command, result)
@@ -102,6 +107,7 @@ static func _sell_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var route_id := String(inputs.get("route_id", ""))
 	var destination_id := String(inputs.get("destination_id", ""))
+	var origin_id := world.current_settlement
 	if not world.has_settlement(destination_id):
 		return _failure("unknown destination")
 	if destination_id == world.current_settlement:
@@ -120,23 +126,19 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		world.pricing_context(),
 	)
 	var expected_loss := MarketEconomy.expected_incident_loss(selected_route, loss_basis)
+	var cargo_value := MarketEconomy.cargo_value(world.cargo, destination, world.pricing_context())
+	var departed_day := world.day
 	var travel_result := world.travel(route_id)
 	if not travel_result.ok:
 		return _failure(String(travel_result.reason))
 
-	world.current_settlement = destination_id
-	world.reset_visit_slots()
 	var risk: float = float(travel_result.risk)
-	var roll := fmod(float(world.seed * 17 + world.day * 31), 100.0) / 100.0
 	var state_delta := {
 		"money": -int(travel_result.cost),
 		"provisions": -int(travel_result.days),
 		"day": int(travel_result.days),
-		"current_settlement": destination_id,
-		"visit_slots_remaining": world.visit_slots_remaining,
 		"route_id": route_id,
 		"risk": risk,
-		"risk_roll": roll,
 		"risk_source": String(selected_route.get("description", "Route conditions are uncertain.")),
 		"loss_model": String(loss_basis.loss_model),
 		"loss_good_id": String(loss_basis.loss_good_id),
@@ -145,6 +147,28 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		"loss_value_basis": String(loss_basis.loss_value_basis),
 		"expected_loss": expected_loss,
 	}
+	var pending := _select_travel_event(world, origin_id, destination_id, route_id, cargo_value, loss_basis, departed_day)
+	if not pending.is_empty():
+		var journey := {
+			"origin_id": origin_id,
+			"destination_id": destination_id,
+			"route_id": route_id,
+			"departed_day": departed_day,
+			"base_arrival_day": world.day,
+		}
+		world.begin_pending_event(pending, journey)
+		state_delta["pending_event"] = pending.duplicate(true)
+		state_delta["journey_context"] = journey.duplicate(true)
+		var event_message := "%s — %s %s" % [String(pending.title), String(pending.setup), String(pending.stakes)]
+		world.log.append(event_message)
+		return _success(event_message, state_delta)
+
+	world.current_settlement = destination_id
+	world.reset_visit_slots()
+	state_delta["current_settlement"] = destination_id
+	state_delta["visit_slots_remaining"] = world.visit_slots_remaining
+	var roll := fmod(float(world.seed * 17 + world.day * 31), 100.0) / 100.0
+	state_delta["risk_roll"] = roll
 	var message: String
 	if roll < risk:
 		var lost := _remove_cargo_unit(world, String(loss_basis.loss_good_id))
@@ -167,6 +191,114 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 			resolution_messages.append(String(resolution.get("message", "")))
 		message += " " + " ".join(resolution_messages)
 	return _success(message, state_delta)
+
+static func _select_travel_event(world: AshWorldState, origin_id: String, destination_id: String, route_id: String, cargo_value: int, loss_basis: Dictionary, departed_day: int) -> Dictionary:
+	var records: Array = MarketContent.event_rules().get("records", [])
+	for raw_event in records:
+		if typeof(raw_event) != TYPE_DICTIONARY:
+			continue
+		var event_record: Dictionary = raw_event
+		var event_id := String(event_record.get("id", ""))
+		if world.has_resolved_event(event_id):
+			continue
+		var route_ids: Array = event_record.get("route_ids", [])
+		if not route_ids.has(route_id):
+			continue
+		var contract_relevant := bool(event_record.get("active_contract_relevant", false)) and not world.active_contracts.is_empty()
+		if cargo_value < int(event_record.get("minimum_cargo_value", 0)) and not contract_relevant:
+			continue
+		var salt := int(event_record.get("trigger_roll_salt", 0))
+		var trigger_roll := fmod(float(world.seed * 13 + world.day * 17 + salt), 100.0) / 100.0
+		if trigger_roll >= float(event_record.get("trigger_chance", 0.0)):
+			continue
+		var snapshot := event_record.duplicate(true)
+		snapshot["origin_id"] = origin_id
+		snapshot["destination_id"] = destination_id
+		snapshot["route_id"] = route_id
+		snapshot["departed_day"] = departed_day
+		snapshot["base_arrival_day"] = world.day
+		snapshot["trigger_roll"] = trigger_roll
+		snapshot["resolution_roll"] = fmod(float(world.seed * 31 + world.day * 41 + salt * 3), 100.0) / 100.0
+		snapshot["loss_basis"] = loss_basis.duplicate(true)
+		return snapshot
+	return {}
+
+static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictionary:
+	var event_id := String(inputs.get("event_id", ""))
+	var choice_id := String(inputs.get("choice_id", ""))
+	var pending := world.pending_event.duplicate(true)
+	if pending.is_empty():
+		return _failure("no route event is pending")
+	if String(pending.get("id", "")) != event_id:
+		return _failure("a different route event is pending")
+	var choice := _event_choice(pending, choice_id)
+	if choice.is_empty():
+		return _failure("unknown event choice")
+	var money_cost := int(choice.get("money_cost", 0))
+	var provision_cost := int(choice.get("provision_cost", 0))
+	if world.money < money_cost:
+		return _failure("this choice needs %d ashmarks, but you have %d; choose the detour or stamped review" % [money_cost, world.money])
+	if world.provisions < provision_cost:
+		return _failure("this choice needs %d provision, but you have %d; pay the toll or wait for stamped review" % [provision_cost, world.provisions])
+	var journey := world.journey_context.duplicate(true)
+	var destination_id := String(journey.get("destination_id", ""))
+	if not world.has_settlement(destination_id):
+		return _failure("pending journey destination is unavailable")
+
+	world.money -= money_cost
+	world.provisions -= provision_cost
+	var extra_days := int(choice.get("days", 0))
+	if extra_days > 0:
+		world.advance_day(extra_days)
+	var cargo_delta: Dictionary = {}
+	var cargo_loss_message := ""
+	var cargo_risk := float(choice.get("cargo_risk", 0.0))
+	var resolution_roll := float(pending.get("resolution_roll", 1.0))
+	var loss_basis: Dictionary = pending.get("loss_basis", {})
+	if cargo_risk > 0.0 and resolution_roll < cargo_risk:
+		var lost := _remove_cargo_unit(world, String(loss_basis.get("loss_good_id", "")))
+		cargo_delta = lost.delta
+		if not String(lost.good_id).is_empty():
+			cargo_loss_message = " The detour cost 1 %s worth %d ashmarks at the destination." % [String(lost.good_id), int(loss_basis.get("loss_unit_value", 0))]
+
+	world.current_settlement = destination_id
+	world.reset_visit_slots()
+	var outcome := {
+		"money": -money_cost,
+		"provisions": -provision_cost,
+		"day": extra_days,
+		"cargo": cargo_delta,
+		"cargo_risk": cargo_risk,
+		"resolution_roll": resolution_roll,
+		"current_settlement": destination_id,
+		"visit_slots_remaining": world.visit_slots_remaining,
+	}
+	var archived := world.archive_pending_event(choice_id, outcome)
+	var message := "%s %s%s You arrived at %s." % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), cargo_loss_message, String(world.settlement(destination_id).name)]
+	world.log.append(message)
+	var contract_resolutions := _resolve_arrival_contracts(world)
+	if not contract_resolutions.is_empty():
+		outcome["contract_resolutions"] = contract_resolutions
+		var contract_messages: Array[String] = []
+		for resolution in contract_resolutions:
+			contract_messages.append(String(resolution.get("message", "")))
+		message += " " + " ".join(contract_messages)
+	return _success(message, {
+		"event_id": event_id,
+		"choice_id": choice_id,
+		"event": archived,
+		"outcome": outcome,
+	})
+
+static func _event_choice(event_record: Dictionary, choice_id: String) -> Dictionary:
+	var choices: Array = event_record.get("choices", [])
+	for raw_choice in choices:
+		if typeof(raw_choice) != TYPE_DICTIONARY:
+			continue
+		var choice: Dictionary = raw_choice
+		if String(choice.get("id", "")) == choice_id:
+			return choice.duplicate(true)
+	return {}
 
 static func _accept_contract(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var contract_id := String(inputs.get("contract_id", ""))

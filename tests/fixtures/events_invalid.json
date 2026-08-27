@@ -1,0 +1,28 @@
+{
+  "max_history": 0,
+  "records": [
+    {
+      "id": "Bad Event ID",
+      "title": "",
+      "category": "",
+      "route_ids": ["missing"],
+      "trigger_chance": 2.0,
+      "trigger_roll_salt": -1,
+      "minimum_cargo_value": -1,
+      "active_contract_relevant": "yes",
+      "setup": "",
+      "stakes": "",
+      "choices": [
+        {
+          "id": "only_choice",
+          "label": "",
+          "money_cost": -1,
+          "provision_cost": -1,
+          "days": -1,
+          "cargo_risk": 2.0,
+          "outcome": ""
+        }
+      ]
+    }
+  ]
+}

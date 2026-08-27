@@ -117,6 +117,22 @@ static func contracts_from(settlement_id: String) -> Array[Dictionary]:
 			matches.append(contract_record.duplicate(true))
 	return matches
 
+static func event_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("events", {})
+	if typeof(rules) != TYPE_DICTIONARY:
+		return {}
+	return rules.duplicate(true)
+
+static func event(event_id: String) -> Dictionary:
+	var records: Array = event_rules().get("records", [])
+	for raw_event in records:
+		if typeof(raw_event) != TYPE_DICTIONARY:
+			continue
+		var event_record: Dictionary = raw_event
+		if String(event_record.get("id", "")) == event_id:
+			return event_record.duplicate(true)
+	return {}
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -248,6 +264,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
 	_validate_contracts(data.get("contracts", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
+	_validate_events(data.get("events", {}), errors)
 
 	var routes_data: Variant = data.get("routes", {})
 	if typeof(routes_data) != TYPE_DICTIONARY:
@@ -408,6 +425,75 @@ static func _validate_contracts(value: Variant, visit_slot_limit: int, errors: A
 			errors.append("contract %s service_slots must not exceed the visit limit" % contract_id)
 		if int(contract_record.get("failure_penalty", -1)) < 0:
 			errors.append("contract %s failure_penalty must be non-negative" % contract_id)
+
+static func _validate_events(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("events must be an object")
+		return
+	var rules: Dictionary = value
+	var history_limit := int(rules.get("max_history", 0))
+	if history_limit < 1 or history_limit > 100:
+		errors.append("events max_history must be between 1 and 100")
+	var records_value: Variant = rules.get("records", [])
+	if typeof(records_value) != TYPE_ARRAY:
+		errors.append("events records must be an array")
+		return
+	var seen_ids: Dictionary = {}
+	for raw_event in records_value:
+		if typeof(raw_event) != TYPE_DICTIONARY:
+			errors.append("each event must be an object")
+			continue
+		var event_record: Dictionary = raw_event
+		var event_id := String(event_record.get("id", ""))
+		if event_id.is_empty() or not event_id.is_valid_identifier() or event_id != event_id.to_lower():
+			errors.append("event ids must use lower_snake_case")
+		elif seen_ids.has(event_id):
+			errors.append("duplicate event id: %s" % event_id)
+		else:
+			seen_ids[event_id] = true
+		for required_text in ["title", "category", "setup", "stakes"]:
+			if String(event_record.get(required_text, "")).is_empty():
+				errors.append("event %s must declare %s" % [event_id, required_text])
+		var route_ids: Array = event_record.get("route_ids", [])
+		if route_ids.is_empty():
+			errors.append("event %s must declare at least one route" % event_id)
+		for route_id in route_ids:
+			if not REQUIRED_ROUTE_IDS.has(String(route_id)):
+				errors.append("event %s references unknown route %s" % [event_id, route_id])
+		var trigger_chance := float(event_record.get("trigger_chance", -1.0))
+		if trigger_chance < 0.0 or trigger_chance > 1.0:
+			errors.append("event %s trigger_chance must be between 0 and 1" % event_id)
+		if int(event_record.get("trigger_roll_salt", -1)) < 0:
+			errors.append("event %s trigger_roll_salt must be non-negative" % event_id)
+		if int(event_record.get("minimum_cargo_value", -1)) < 0:
+			errors.append("event %s minimum_cargo_value must be non-negative" % event_id)
+		if typeof(event_record.get("active_contract_relevant", false)) != TYPE_BOOL:
+			errors.append("event %s active_contract_relevant must be boolean" % event_id)
+		var choices: Array = event_record.get("choices", [])
+		if choices.size() < 2:
+			errors.append("event %s must declare at least two choices" % event_id)
+		var seen_choice_ids: Dictionary = {}
+		for raw_choice in choices:
+			if typeof(raw_choice) != TYPE_DICTIONARY:
+				errors.append("event %s choices must be objects" % event_id)
+				continue
+			var choice: Dictionary = raw_choice
+			var choice_id := String(choice.get("id", ""))
+			if choice_id.is_empty() or not choice_id.is_valid_identifier() or choice_id != choice_id.to_lower():
+				errors.append("event %s choice ids must use lower_snake_case" % event_id)
+			elif seen_choice_ids.has(choice_id):
+				errors.append("event %s has duplicate choice %s" % [event_id, choice_id])
+			else:
+				seen_choice_ids[choice_id] = true
+			for required_text in ["label", "outcome"]:
+				if String(choice.get(required_text, "")).is_empty():
+					errors.append("event %s choice %s must declare %s" % [event_id, choice_id, required_text])
+			for non_negative_field in ["money_cost", "provision_cost", "days"]:
+				if int(choice.get(non_negative_field, -1)) < 0:
+					errors.append("event %s choice %s %s must be non-negative" % [event_id, choice_id, non_negative_field])
+			var cargo_risk := float(choice.get("cargo_risk", -1.0))
+			if cargo_risk < 0.0 or cargo_risk > 1.0:
+				errors.append("event %s choice %s cargo_risk must be between 0 and 1" % [event_id, choice_id])
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

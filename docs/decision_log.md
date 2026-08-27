@@ -159,3 +159,11 @@
 **Reason:** A contract should change cargo and route planning without becoming a generic quest engine or invalidating normal market trade. Frozen terms protect active commitments from content changes, while command-driven completion and failure make every mutation testable and replayable.
 
 **Trade-off:** The alpha exposes one fixed contract and one active-contract summary rather than a broad contract board. Automatic arrival resolution is convenient, but it means route incidents are resolved before delivery and can force a visible local recovery purchase.
+
+## ADR-021: The first travel event pauses arrival with a bounded choice set
+
+**Decision:** Implement `gatekeepers_chalk` as the first deterministic travel decision on the Toll Road. Eligible journeys use a saved trigger roll and freeze the route, destination, exposed cargo basis, and three authored choices in `pending_event`. The caravan pays the normal route costs but remains at its origin until `resolve_event` applies one choice and completes arrival. Paying costs six ashmarks, detouring costs one provision and one day with a disclosed 25% one-unit cargo risk, and waiting costs one day but is always available.
+
+**Reason:** Travel needs a real decision rather than only a passive cargo-loss roll, but the first event seam must remain narrow, testable, and recoverable. A saved pending event supports exact replay and mid-event saves, while an always-available wait choice prevents low-money/low-provision soft locks.
+
+**Trade-off:** Eligible Toll Road journeys that trigger this event do not also roll the generic route incident. The first event is one-time per campaign and uses explicit core resolution rather than a generic effect interpreter; later events must reuse this seam unless an ADR justifies extending it.

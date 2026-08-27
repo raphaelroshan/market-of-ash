@@ -58,15 +58,15 @@
       "policy_label": "Toll-road-only",
       "runs": 100,
       "completion_rate": 1.0,
-      "incident_rate": 0.1,
+      "incident_rate": 0.03,
       "mean_forecast_net_profit": 9.0,
-      "mean_realized_cash_profit": 13.6,
-      "mean_realized_economic_profit": 8.6,
-      "median_realized_economic_profit": 13.0,
-      "p10_realized_economic_profit": 8.600000000000016,
+      "mean_realized_cash_profit": 12.78,
+      "mean_realized_economic_profit": 7.78,
+      "median_realized_economic_profit": 7.0,
+      "p10_realized_economic_profit": 7.0,
       "p90_realized_economic_profit": 13.0,
-      "loss_rate": 0.1,
-      "mean_forecast_error": -0.4,
+      "loss_rate": 0.03,
+      "mean_forecast_error": -1.22,
       "mean_quantity": 3.0,
       "mean_provisions_remaining": 11.0
     },
@@ -154,9 +154,9 @@
       "policy": "toll_road_only",
       "policy_label": "Toll-road-only",
       "forecast_net": 9.0,
-      "realized_economic": 8.6,
-      "mean_error": -0.4,
-      "mean_absolute_error": 7.6
+      "realized_economic": 7.78,
+      "mean_error": -1.22,
+      "mean_absolute_error": 3.78
     }
   ],
   "multi_trip_choice_mix": [
@@ -186,5 +186,14 @@
     "recovery_days": 6,
     "sale_ok": true,
     "saturated_pressure": 0.35
-  }
+  },
+  "event_summary": [
+    {
+      "policy_label": "Toll-road-only",
+      "event_id": "gatekeepers_chalk",
+      "event_choice_id": "pay_posted_toll",
+      "runs": 65,
+      "share_of_policy_runs": 0.65
+    }
+  ]
 }

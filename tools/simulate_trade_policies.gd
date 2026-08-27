@@ -68,6 +68,9 @@ func _run_policy(seed: int, policy: String) -> Dictionary:
 	})
 	if not depart.ok:
 		return _row(world, policy, candidate, preview, String(depart.reason), false, 0, String(depart.message))
+	var event_result := _resolve_pending_event_for_policy(world)
+	if not event_result.ok:
+		return _row(world, policy, candidate, preview, String(event_result.reason), false, 0, String(event_result.message))
 	var remaining := int(world.cargo.get(String(candidate.good_id), 0))
 	var sold_quantity := 0
 	var sell_message := "Cargo lost before sale"
@@ -81,7 +84,7 @@ func _run_policy(seed: int, policy: String) -> Dictionary:
 			sell_message = String(sell.message)
 		else:
 			sell_message = String(sell.reason)
-	var incident := bool(depart.state_delta.get("cargo", {}).get("weight", 0) < 0)
+	var incident := bool(depart.state_delta.get("cargo", {}).get("weight", 0) < 0) or bool(event_result.state_delta.get("outcome", {}).get("cargo", {}).get("weight", 0) < 0)
 	return _row(world, policy, candidate, preview, "completed", incident, sold_quantity, sell_message)
 
 func _run_multi_trip_policy(seed: int) -> Array[Dictionary]:
@@ -105,6 +108,10 @@ func _run_multi_trip_policy(seed: int) -> Array[Dictionary]:
 		})
 		if not depart.ok:
 			rows.append({"seed": seed, "delivery_index": delivery_index, "status": String(depart.reason)})
+			break
+		var event_result := _resolve_pending_event_for_policy(world)
+		if not event_result.ok:
+			rows.append({"seed": seed, "delivery_index": delivery_index, "status": String(event_result.reason)})
 			break
 		var sell_price_before := MarketEconomy.price_for(candidate.good_id, world.settlement(candidate.destination_id), world.pricing_context())
 		var remaining := int(world.cargo.get(String(candidate.good_id), 0))
@@ -140,7 +147,22 @@ func _run_multi_trip_policy(seed: int) -> Array[Dictionary]:
 		})
 		if not return_result.ok:
 			break
+		var return_event_result := _resolve_pending_event_for_policy(world)
+		if not return_event_result.ok:
+			break
 	return rows
+
+func _resolve_pending_event_for_policy(world: AshWorldState) -> Dictionary:
+	if world.pending_event.is_empty():
+		return {"ok": true, "reason": "", "message": "no event", "state_delta": {}}
+	var event_id := String(world.pending_event.get("id", ""))
+	var choice_id := "wait_for_stamped_review"
+	if event_id == "gatekeepers_chalk" and world.money >= 6:
+		choice_id = "pay_posted_toll"
+	return MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": event_id, "choice_id": choice_id},
+	})
 
 func _route_between(origin_id: String, destination_id: String) -> String:
 	for route_id in MarketContent.routes_from(origin_id):
@@ -264,6 +286,12 @@ func _row(world: AshWorldState, policy: String, candidate: Dictionary, preview: 
 	var days_used := world.day - 1
 	var assumptions := MarketContent.planning_assumptions()
 	var realized_economic_profit := cash_profit - provisions_used * int(assumptions.provision_value) - days_used * int(assumptions.time_opportunity_cost_per_day)
+	var event_id := ""
+	var event_choice_id := ""
+	if not world.event_history.is_empty():
+		var event_record: Dictionary = world.event_history.back()
+		event_id = String(event_record.get("id", ""))
+		event_choice_id = String(event_record.get("choice_id", ""))
 	return {
 		"seed": world.seed,
 		"policy": policy,
@@ -286,6 +314,8 @@ func _row(world: AshWorldState, policy: String, candidate: Dictionary, preview: 
 		"ending_provisions": world.provisions,
 		"ending_day": world.day,
 		"route_roll": _route_roll_from_history(world),
+		"event_id": event_id,
+		"event_choice_id": event_choice_id,
 		"note": note,
 	}
 
@@ -293,7 +323,9 @@ func _route_roll_from_history(world: AshWorldState) -> float:
 	for index in range(world.command_history.size() - 1, -1, -1):
 		var entry: Dictionary = world.command_history[index]
 		if String(entry.id) == MarketCommandProcessor.DEPART_ROUTE:
-			return float(entry.state_delta.get("risk_roll", -1.0))
+			if entry.state_delta.has("risk_roll"):
+				return float(entry.state_delta.risk_roll)
+			return float(entry.state_delta.get("pending_event", {}).get("trigger_roll", -1.0))
 	return -1.0
 
 func _world_context_with_cargo(world: AshWorldState, cargo: Dictionary) -> Dictionary:

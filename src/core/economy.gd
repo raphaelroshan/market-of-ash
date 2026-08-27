@@ -100,6 +100,12 @@ static func expected_incident_loss(route: Dictionary, loss_basis: Dictionary) ->
 	var exposed_value := int(loss_basis.get("loss_unit_value", 0)) * int(loss_basis.get("loss_quantity", 0))
 	return int(round(exposed_value * risk))
 
+static func cargo_value(cargo: Dictionary, settlement: Dictionary, world: Dictionary) -> int:
+	var total := 0
+	for good_id in MarketContent.good_ids():
+		total += int(cargo.get(good_id, 0)) * price_for(good_id, settlement, world)
+	return total
+
 static func route_profit_preview(good: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world: Dictionary) -> Dictionary:
 	if base_price(good) <= 0:
 		return {"ok": false, "reason": "unknown good"}

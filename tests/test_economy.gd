@@ -19,6 +19,7 @@ func _init() -> void:
 	_test_market_memory()
 	_test_settlement_actions()
 	_test_reedwatch_relief_contract()
+	_test_gatekeepers_chalk_event()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -40,13 +41,14 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "0.7.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "0.8.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
 	_expect(MarketContent.settlement_action("ashgate_provision_bundle").get("settlement_id", "") == "ashgate", "runtime content should expose the live Ashgate provision action")
 	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 1, "runtime content should expose a Reedwatch opportunity state")
 	_expect(MarketContent.contract("reedwatch_water_relief_01").get("destination_id", "") == "reedwatch", "runtime content should expose the first relief contract")
+	_expect(MarketContent.event("gatekeepers_chalk").get("route_ids", []).has("toll_road"), "runtime content should expose the first Toll Road event")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -434,6 +436,142 @@ func _test_reedwatch_relief_contract() -> void:
 	var restore_result := restored.load_serialized(saved_world.serialize())
 	_expect(restore_result.ok and restored.active_contract("reedwatch_water_relief_01") == saved_world.active_contract("reedwatch_water_relief_01"), "save/load should preserve frozen active-contract terms")
 
+func _test_gatekeepers_chalk_event() -> void:
+	var trigger_world := AshWorldState.new(1)
+	var buy := MarketCommandProcessor.execute(trigger_world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": "medicine", "quantity": 2},
+	})
+	_expect(buy.ok, "event trigger fixture should load valuable cargo")
+	var depart := MarketCommandProcessor.execute(trigger_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(depart.ok and not trigger_world.pending_event.is_empty(), "eligible deterministic Toll Road trip should pause at Gatekeeper's Chalk")
+	_expect(trigger_world.current_settlement == "ashgate", "pending event should keep the caravan at its origin until resolution")
+	_expect(depart.state_delta.pending_event.id == "gatekeepers_chalk", "departure result should expose the pending event snapshot")
+	_expect(int(trigger_world.money) == 40 and int(trigger_world.provisions) == 11 and trigger_world.day == 2, "base route costs should remain spent while the event is pending")
+	var blocked_during_event_money := trigger_world.money
+	var blocked_during_event := MarketCommandProcessor.execute(trigger_world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": "grain", "quantity": 1},
+	})
+	_expect(not blocked_during_event.ok and trigger_world.money == blocked_during_event_money, "pending event should block unrelated commands without mutation")
+	var pay := MarketCommandProcessor.execute(trigger_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "pay_posted_toll"},
+	})
+	_expect(pay.ok and trigger_world.current_settlement == "brine_cross", "paying the toll should complete arrival")
+	_expect(trigger_world.money == 34 and trigger_world.visit_slots_remaining == 2, "pay choice should charge six ashmarks and refresh destination visit slots")
+	_expect(trigger_world.pending_event.is_empty() and trigger_world.has_resolved_event("gatekeepers_chalk"), "resolved event should clear pending state and suppress repeats")
+	_expect(trigger_world.event_history.size() == 1 and trigger_world.event_history.back().choice_id == "pay_posted_toll", "event history should record the chosen outcome once")
+	var repeat := MarketCommandProcessor.execute(trigger_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "pay_posted_toll"},
+	})
+	_expect(not repeat.ok and trigger_world.event_history.size() == 1, "resolved events should reject duplicate resolution")
+	trigger_world.cargo = {"medicine": 2, "weight": 2}
+	var return_trip := MarketCommandProcessor.execute(trigger_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "ashgate"},
+	})
+	_expect(return_trip.ok and trigger_world.pending_event.is_empty(), "a resolved one-time event should not trigger again")
+
+	var no_trigger_world := AshWorldState.new(2)
+	no_trigger_world.cargo = {"medicine": 2, "weight": 2}
+	var no_trigger := MarketCommandProcessor.execute(no_trigger_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(no_trigger.ok and no_trigger_world.pending_event.is_empty() and no_trigger_world.current_settlement == "brine_cross", "eligible no-trigger seed should complete normal arrival")
+	var low_value_world := AshWorldState.new(1)
+	low_value_world.cargo = {"grain": 1, "weight": 1}
+	var low_value := MarketCommandProcessor.execute(low_value_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(low_value.ok and low_value_world.pending_event.is_empty(), "low-value cargo without a contract should not trigger the Toll Road event")
+	var contract_relevant_world := AshWorldState.new(1)
+	MarketCommandProcessor.execute(contract_relevant_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	var contract_relevant_departure := MarketCommandProcessor.execute(contract_relevant_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(contract_relevant_departure.ok and not contract_relevant_world.pending_event.is_empty(), "an active contract should make the Toll Road event relevant even without cargo")
+
+	var low_money_world := AshWorldState.new(1)
+	low_money_world.money = 12
+	low_money_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(low_money_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	var blocked_pay := MarketCommandProcessor.execute(low_money_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "pay_posted_toll"},
+	})
+	_expect(not blocked_pay.ok and not low_money_world.pending_event.is_empty(), "unaffordable toll choice should remain blocked without clearing the event")
+	var wait := MarketCommandProcessor.execute(low_money_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "wait_for_stamped_review"},
+	})
+	_expect(wait.ok and low_money_world.current_settlement == "brine_cross" and low_money_world.day == 3, "stamped review should remain an always-available recovery choice")
+
+	var detour_world := AshWorldState.new(6)
+	detour_world.money = 100
+	detour_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(detour_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	var detour := MarketCommandProcessor.execute(detour_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "take_dust_detour"},
+	})
+	_expect(detour.ok and detour_world.day == 3 and detour_world.provisions == 10, "detour should consume one extra day and provision")
+	_expect(int(detour_world.cargo.get("medicine", 0)) == 1, "detour loss seed should remove the disclosed exposed unit")
+	var low_provision_world := AshWorldState.new(1)
+	low_provision_world.money = 100
+	low_provision_world.provisions = 1
+	low_provision_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(low_provision_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	var blocked_detour := MarketCommandProcessor.execute(low_provision_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "take_dust_detour"},
+	})
+	_expect(not blocked_detour.ok and not low_provision_world.pending_event.is_empty(), "low provisions should block the detour while preserving the pending choice")
+
+	var saved_pending := detour_world.event_history[0].duplicate(true)
+	var pending_world := AshWorldState.new(1)
+	pending_world.cargo = {"medicine": 2, "weight": 2}
+	MarketCommandProcessor.execute(pending_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	var pending_save := pending_world.serialize()
+	var restored_pending := AshWorldState.new(0)
+	var pending_restore := restored_pending.load_serialized(pending_save)
+	_expect(pending_restore.ok and restored_pending.pending_event == pending_world.pending_event, "mid-event save/load should preserve the full pending choice")
+	var restored_wait := MarketCommandProcessor.execute(restored_pending, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "wait_for_stamped_review"},
+	})
+	_expect(restored_wait.ok and restored_pending.current_settlement == "brine_cross", "restored pending event should resolve to the saved destination")
+	var replay_pending := AshWorldState.new(0)
+	replay_pending.load_serialized(pending_save)
+	var replay_wait := MarketCommandProcessor.execute(replay_pending, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "gatekeepers_chalk", "choice_id": "wait_for_stamped_review"},
+	})
+	_expect(JSON.stringify(replay_wait) == JSON.stringify(restored_wait), "same saved event and choice should reproduce the same result")
+	_expect(saved_pending.choice_id == "take_dust_detour", "detour history fixture should preserve its selected choice")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -502,7 +640,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "0.7.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "0.8.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -542,6 +680,16 @@ func _test_legacy_save_migration() -> void:
 	var migration_v3_result := migrated_v3.load_serialized(version_three_save)
 	_expect(migration_v3_result.ok and int(migration_v3_result.migrated_from) == 3, "version-three saves should migrate to the contract schema")
 	_expect(migrated_v3.active_contracts.is_empty() and migrated_v3.contract_history.is_empty(), "version-three migration should initialize empty contract state")
+	var version_four_save := legacy_world.serialize()
+	version_four_save["save_version"] = 4
+	version_four_save.erase("journey_context")
+	version_four_save.erase("pending_event")
+	version_four_save.erase("resolved_event_ids")
+	version_four_save.erase("event_history")
+	var migrated_v4 := AshWorldState.new(0)
+	var migration_v4_result := migrated_v4.load_serialized(version_four_save)
+	_expect(migration_v4_result.ok and int(migration_v4_result.migrated_from) == 4, "version-four saves should migrate to the event schema")
+	_expect(migrated_v4.pending_event.is_empty() and migrated_v4.event_history.is_empty(), "version-four migration should initialize empty event state")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)
