@@ -15,7 +15,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 11 and runtime content version `1.15.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and malformed structure, invalid bounds/references, impossible pending journeys, or future versions cannot replace the active run.
+- Saves declare save version 11 and runtime content version `1.15.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and malformed structure, invalid bounds/references, impossible pending journeys, forged pending-event choices/values, or future versions cannot replace the active run.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.

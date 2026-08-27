@@ -586,11 +586,71 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 		var route_id := String(journey.get("route_id", ""))
 		var origin_id := String(journey.get("origin_id", ""))
 		var destination_id := String(journey.get("destination_id", ""))
-		if MarketContent.event(event_id).is_empty() or typeof(pending.get("choices", [])) != TYPE_ARRAY:
+		var authored_event := MarketContent.event(event_id)
+		if authored_event.is_empty() or typeof(pending.get("choices", [])) != TYPE_ARRAY:
 			return {"ok": false, "reason": "save references an invalid pending event"}
 		if not MarketContent.route_connects(route_id, origin_id, destination_id) or settlement_id != origin_id:
 			return {"ok": false, "reason": "save references an invalid pending journey"}
+		for field in ["id", "title", "setup", "stakes", "choices"]:
+			if pending.get(field) != authored_event.get(field):
+				return {"ok": false, "reason": "save pending event does not match authored %s" % field}
+		if String(pending.get("origin_id", "")) != origin_id or String(pending.get("destination_id", "")) != destination_id or String(pending.get("route_id", "")) != route_id:
+			return {"ok": false, "reason": "save pending event does not match its journey"}
+		for roll_field in ["trigger_roll", "resolution_roll"]:
+			var roll_value: Variant = pending.get(roll_field, -1.0)
+			if (typeof(roll_value) != TYPE_INT and typeof(roll_value) != TYPE_FLOAT) or float(roll_value) < 0.0 or float(roll_value) > 1.0:
+				return {"ok": false, "reason": "save pending event has an invalid %s" % roll_field}
+		var basis_validation := _validate_pending_event_bases(pending, authored_event)
+		if not basis_validation.ok:
+			return basis_validation
 	return {"ok": true, "reason": ""}
+
+func _validate_pending_event_bases(pending: Dictionary, authored_event: Dictionary) -> Dictionary:
+	for field in ["loss_basis", "material_basis", "trade_basis"]:
+		if typeof(pending.get(field, {})) != TYPE_DICTIONARY:
+			return {"ok": false, "reason": "save pending event %s must be an object" % field}
+	var trigger_good_ids: Array = authored_event.get("trigger_good_ids_any", [])
+	var material_basis: Dictionary = pending.get("material_basis", {})
+	var material_quantity := int(material_basis.get("quantity", 0))
+	var expected_material_quantity := int(authored_event.get("minimum_trigger_good_quantity", 0))
+	if material_quantity != expected_material_quantity or not _event_basis_goods_are_valid(material_basis.get("goods", {}), trigger_good_ids, material_quantity):
+		return {"ok": false, "reason": "save pending event has an invalid material basis"}
+	var trade_basis: Dictionary = pending.get("trade_basis", {})
+	var expected_trade_quantity := int(authored_event.get("trade_quantity", 0))
+	if expected_trade_quantity <= 0:
+		if not trade_basis.is_empty():
+			return {"ok": false, "reason": "save pending event has an unexpected trade basis"}
+	else:
+		var trade_good_id := String(trade_basis.get("good_id", ""))
+		var unit_price := int(trade_basis.get("unit_price", -1))
+		var premium_per_unit := int(trade_basis.get("premium_per_unit", -1))
+		var premium_total := int(trade_basis.get("premium_total", -1))
+		if trigger_good_ids.is_empty() or trade_good_id != String(trigger_good_ids[0]) or int(trade_basis.get("quantity", 0)) != expected_trade_quantity:
+			return {"ok": false, "reason": "save pending event has an invalid trade basis"}
+		if unit_price < 0 or premium_per_unit != int(authored_event.get("premium_per_unit", 0)) or premium_total != expected_trade_quantity * (unit_price + premium_per_unit):
+			return {"ok": false, "reason": "save pending event has an invalid trade value"}
+		if not _event_basis_goods_are_valid(trade_basis.get("goods", {}), [trade_good_id], expected_trade_quantity):
+			return {"ok": false, "reason": "save pending event has invalid trade cargo"}
+	var loss_basis: Dictionary = pending.get("loss_basis", {})
+	var loss_good_id := String(loss_basis.get("loss_good_id", ""))
+	var loss_quantity := int(loss_basis.get("loss_quantity", 0))
+	var loss_unit_value := int(loss_basis.get("loss_unit_value", 0))
+	if loss_quantity < 0 or loss_quantity > 1 or loss_unit_value < 0 or (not loss_good_id.is_empty() and MarketContent.good(loss_good_id).is_empty()):
+		return {"ok": false, "reason": "save pending event has an invalid loss basis"}
+	return {"ok": true, "reason": ""}
+
+func _event_basis_goods_are_valid(value: Variant, allowed_good_ids: Array, expected_quantity: int) -> bool:
+	if typeof(value) != TYPE_DICTIONARY:
+		return false
+	var total := 0
+	var goods: Dictionary = value
+	for good_id_value in goods.keys():
+		var good_id := String(good_id_value)
+		var quantity_value: Variant = goods.get(good_id_value, 0)
+		if not allowed_good_ids.has(good_id) or (typeof(quantity_value) != TYPE_INT and typeof(quantity_value) != TYPE_FLOAT) or int(quantity_value) < 0:
+			return false
+		total += int(quantity_value)
+	return total == expected_quantity
 
 func migrate_serialized(data: Dictionary) -> Dictionary:
 	var source_version := int(data.get("save_version", 0))

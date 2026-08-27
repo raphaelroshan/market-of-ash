@@ -1404,6 +1404,23 @@ func _test_disk_save_sanitization() -> void:
 	orphaned_journey["journey_context"] = {"origin_id": "ashgate", "destination_id": "reedwatch", "route_id": "old_road"}
 	var rejected_orphan := AshWorldState.new(0).load_serialized(orphaned_journey)
 	_expect(not rejected_orphan.ok and rejected_orphan.reason.contains("incomplete pending journey"), "load should reject an orphaned journey that could soft-lock navigation")
+	var pending_source := AshWorldState.new(1107)
+	_expect(MarketCommandProcessor.execute(pending_source, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "medicine", "quantity": 2}}).ok, "pending-save fixture should buy its exposed cargo")
+	_expect(MarketCommandProcessor.execute(pending_source, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "toll_road", "destination_id": "brine_cross"}}).ok and not pending_source.pending_event.is_empty(), "pending-save fixture should reach its route decision")
+	var tampered_choice_save: Dictionary = pending_source.serialize()
+	var tampered_choices: Array = tampered_choice_save["pending_event"]["choices"]
+	tampered_choices[0]["money_reward"] = 9999
+	var rejected_choice := AshWorldState.new(0).load_serialized(tampered_choice_save)
+	_expect(not rejected_choice.ok and rejected_choice.reason.contains("authored choices"), "load should reject a pending event whose serialized reward differs from authored content")
+	var water_pending_source := AshWorldState.new(1107)
+	water_pending_source.crisis_stage = 1
+	water_pending_source._update_crisis_modifiers()
+	_expect(MarketCommandProcessor.execute(water_pending_source, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "water", "quantity": 2}}).ok, "trade-basis fixture should buy its shortage cargo")
+	_expect(MarketCommandProcessor.execute(water_pending_source, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "old_road", "destination_id": "reedwatch"}}).ok and water_pending_source.pending_event.get("id", "") == "last_clean_barrel", "trade-basis fixture should reach the shortage event")
+	var tampered_trade_save: Dictionary = water_pending_source.serialize()
+	tampered_trade_save["pending_event"]["trade_basis"]["premium_total"] = 9999
+	var rejected_trade := AshWorldState.new(0).load_serialized(tampered_trade_save)
+	_expect(not rejected_trade.ok and rejected_trade.reason.contains("invalid trade value"), "load should reject a pending event with a forged frozen premium")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
