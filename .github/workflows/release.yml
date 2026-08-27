@@ -56,6 +56,17 @@ jobs:
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
           python -c "import json, os, re; m=json.load(open('tools/ci_manifest.json')); p=open('project.godot', encoding='utf-8').read(); c=json.load(open('content/runtime_world.json')); m.update({'game_version': re.search(r'^config/version=\"([^\"]+)\"', p, re.M).group(1), 'content_version': c['content_version'], 'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'], 'run_id': os.environ['GITHUB_RUN_ID'], 'run_number': os.environ['GITHUB_RUN_NUMBER']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2); print(json.dumps(m, indent=2))"
+      - name: Record release checksums
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          sha256sum \
+            "build/${slug}.exe" \
+            build/web/index.html \
+            build/web/index.pck \
+            build/web/index.wasm \
+            "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            artifacts/release_manifest.json > artifacts/SHA256SUMS.txt
+          test -s artifacts/SHA256SUMS.txt
       - name: Upload Windows release candidate
         uses: actions/upload-artifact@v7
         with:

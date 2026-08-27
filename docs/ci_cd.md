@@ -44,7 +44,7 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 ## Release behavior
 
-Pull requests and pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Packaging verifies the expected Web payload and launches the exported Windows executable headlessly for two frames before upload. Every candidate includes a machine-readable manifest with the game/content versions, exact commit and ref, workflow run ID/number, repository identity, and target platforms. Version tags such as `v0.1.0` invoke the guarded release workflow with the same smoke test and provenance record.
+Pull requests and pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Packaging verifies the expected Web payload and launches the exported Windows executable headlessly for two frames before upload. Every candidate includes a machine-readable manifest with the game/content versions, exact commit and ref, workflow run ID/number, repository identity, and target platforms, plus `SHA256SUMS.txt` covering the executable, core Web payload, source snapshot, and manifest. Version tags such as `v0.1.0` invoke the guarded release workflow with the same smoke test, provenance record, and checksums.
 
 Runtime exports include the game scenes, scripts, and canonical content but exclude repository-only tests, tools, research, documentation, and workflow files. The separately packaged source snapshot retains those materials for review and reproduction.
 
