@@ -1487,6 +1487,7 @@ func _on_reset_pressed() -> void:
 		reset_confirmation_dialog.confirmed.connect(_confirm_reset)
 		add_child(reset_confirmation_dialog)
 	reset_confirmation_dialog.popup_centered(Vector2i(520, 180))
+	reset_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
 
 func _confirm_reset() -> void:
 	if reset_confirmation_dialog:

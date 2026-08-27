@@ -202,6 +202,8 @@ func _initialize() -> void:
 	var state_before_reset_prompt := JSON.stringify(ui.world.serialize())
 	ui._on_reset_pressed()
 	_expect(ui.reset_confirmation_dialog != null and ui.reset_confirmation_dialog.visible and JSON.stringify(ui.world.serialize()) == state_before_reset_prompt, "Reset run should open a confirmation without immediately replacing the current campaign")
+	await process_frame
+	_expect(ui.reset_confirmation_dialog.get_viewport().gui_get_focus_owner() == ui.reset_confirmation_dialog.get_cancel_button(), "Reset confirmation should focus the non-destructive Keep current run action")
 	ui.reset_confirmation_dialog.canceled.emit()
 	ui.reset_confirmation_dialog.hide()
 	_expect(ui.world.day == 1 and ui.world.money < 120, "cancelling reset should preserve the current campaign")
