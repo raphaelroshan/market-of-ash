@@ -113,6 +113,8 @@ def main() -> int:
 
     data = json.loads(args.input.read_text(encoding="utf-8"))
     rows = pd.DataFrame(data["rows"])
+    multi_trip_rows = pd.DataFrame(data.get("multi_trip_rows", []))
+    memory_probe = data.get("market_memory_probe", {})
     output = args.output_dir
     output.mkdir(parents=True, exist_ok=True)
 
@@ -166,6 +168,30 @@ def main() -> int:
     )
     route_mix["share"] = route_mix.groupby("policy")["runs"].transform(lambda series: series / series.sum())
     route_mix.to_csv(output / "route_mix.csv", index=False)
+
+    if not multi_trip_rows.empty:
+        multi_trip_rows["choice"] = multi_trip_rows.apply(
+            lambda row: f"{row.get('good_id', '')} → {row.get('destination_id', '')} / {row.get('route_id', '')}",
+            axis=1,
+        )
+        multi_trip_rows.to_csv(output / "multi_trip_runs.csv", index=False)
+        multi_trip_choice_mix = (
+            multi_trip_rows.groupby(["delivery_index", "choice"], sort=True)
+            .size()
+            .rename("runs")
+            .reset_index()
+        )
+        multi_trip_choice_mix["share"] = multi_trip_choice_mix.groupby("delivery_index")["runs"].transform(
+            lambda series: series / series.sum()
+        )
+        multi_trip_choice_mix.to_csv(output / "multi_trip_choice_mix.csv", index=False)
+        multi_trip_display = multi_trip_choice_mix.copy()
+        multi_trip_display["share"] = multi_trip_display["share"].map(pct)
+        multi_trip_display.columns = ["Delivery", "Chosen trade", "Runs", "Share"]
+        multi_trip_table = markdown_table(multi_trip_display)
+    else:
+        multi_trip_choice_mix = pd.DataFrame()
+        multi_trip_table = "No multi-trip results were produced."
 
     calibration = (
         rows[rows["policy"] != "no_trade"]
@@ -249,7 +275,7 @@ The run starts every simulated trader in the current quick-playtest state: Ashga
 | --- | --- |
 """ + "\n".join(f"| {POLICY_LABELS[key]} | {POLICY_RULES[key]} |" for key in POLICY_LABELS) + f"""
 
-The simulator tests only the initial one-trade loop. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, market memory, or player learning over multiple runs.
+The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, or human learning.
 
 ## Results
 
@@ -266,6 +292,14 @@ Under legal paths, the **forecast maximizer** selects **{forecast_choice['choice
 Every deterministic policy still concentrates on one legal initial trade in this linear, one-trip model. That is a genuine early-economy design signal after the topology fix: repeated opening runs may become rote unless market memory, information quality, or a meaningful inventory/risk trade-off produces legible rotation.
 
 ![Choice concentration chart](choice_concentration.png)
+
+## Repeated-Delivery Choice Concentration
+
+{multi_trip_table}
+
+The adaptive policy re-evaluates the best legal forecast before each of three outbound deliveries, returning to Ashgate between trips. This is a mechanical concentration probe, not a human strategy model. It shows whether bounded local supply pressure is strong enough to make the visible best opening trade rotate under the current route graph and crisis timing.
+
+The fixed Reedwatch water probe starts at **{int(memory_probe.get('baseline_price', 0))}** ashmarks per unit. A four-unit delivery creates **{float(memory_probe.get('initial_pressure', 0.0)) * 100:.0f}%** pressure and changes the immediate price to **{int(memory_probe.get('post_delivery_price', 0))}**. Pressure returns to zero after **{int(memory_probe.get('recovery_days', 0))}** elapsed days and repeated deliveries clamp at **{float(memory_probe.get('saturated_pressure', 0.0)) * 100:.0f}%**.
 
 ## Forecast Calibration
 
@@ -284,7 +318,7 @@ The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashm
 | Finding | Evidence from corrected run | Why it matters | Suggested next test, not a balance change |
 | --- | --- | --- | --- |
 | **Route topology is now authoritative** | All completed runs use content-declared endpoints, and invalid Old Road → Brine Cross departures are rejected in regression coverage. | Route fees, risk, map presentation, and forecast now describe the same corridor. | Keep endpoint validation in future route-content review; no balance action is indicated by this implementation fix alone. |
-| **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Implement bounded market memory (A2) and rerun the harness to measure whether recent deliveries create readable trade rotation. |
+| **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Use the repeated-delivery results above to judge whether current pressure/decay values create enough readable rotation before changing balance. |
 | **Forecast/resolution calibration** | Mean forecast error ranges from {signed(float(calibration['mean_error'].min()))} to {signed(float(calibration['mean_error'].max()))} ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
 | **Capacity dominates the first decision** | The forecast policy loads an average of {forecast_policy['mean_quantity']:.1f} units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
 | **Guided delivery is not an economic optimum** | The Grain teaching run averages {signed(float(guided_policy['mean_realized_economic_profit']))} realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |
@@ -314,6 +348,8 @@ The attached raw results were generated by `tools/simulate_trade_policies.gd` an
         "summary": summary.drop(columns="policy_order").to_dict(orient="records"),
         "choice_mix": choice_mix.to_dict(orient="records"),
         "calibration": calibration.to_dict(orient="records"),
+        "multi_trip_choice_mix": multi_trip_choice_mix.to_dict(orient="records"),
+        "market_memory_probe": memory_probe,
     }
     (output / "analysis_summary.json").write_text(json.dumps(artifact, indent=2), encoding="utf-8")
     print(f"Wrote analysis to {output}")

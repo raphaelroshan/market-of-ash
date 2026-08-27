@@ -21,6 +21,18 @@ static func price_details(good: String, settlement: Dictionary, world: Dictionar
 	var demand_modifier: float = float(settlement.get("demand", {}).get(good, 1.0))
 	var crisis_modifier: float = float(world.get("crisis_modifiers", {}).get(good, 1.0))
 	var faction_modifier: float = float(settlement.get("faction_price_modifier", 1.0))
+	var settlement_id := String(settlement.get("id", ""))
+	var market_pressure_value: Variant = world.get("market_pressure", {})
+	var market_pressure_table: Dictionary = market_pressure_value if typeof(market_pressure_value) == TYPE_DICTIONARY else {}
+	var settlement_pressure_value: Variant = market_pressure_table.get(settlement_id, {})
+	var settlement_pressure: Dictionary = settlement_pressure_value if typeof(settlement_pressure_value) == TYPE_DICTIONARY else {}
+	var memory_rules := MarketContent.market_memory_rules()
+	var market_pressure := clampf(
+		float(settlement_pressure.get(good, memory_rules.get("pressure_min", 0.0))),
+		float(memory_rules.get("pressure_min", 0.0)),
+		float(memory_rules.get("pressure_max", 0.0)),
+	)
+	var market_memory_modifier := 1.0 - market_pressure
 	var reasons: Array[String] = []
 	if settlement_modifier >= 1.15:
 		reasons.append("local production is limited")
@@ -38,16 +50,20 @@ static func price_details(good: String, settlement: Dictionary, world: Dictionar
 		reasons.append("local faction terms raise market prices")
 	elif faction_modifier < 0.95:
 		reasons.append("local faction terms lower market prices")
+	if market_pressure > 0.0:
+		reasons.append("your recent deliveries increased local supply")
 	if reasons.is_empty():
 		reasons.append("normal local conditions")
 	return {
 		"ok": true,
-		"unit_price": maxi(1, int(round(base * settlement_modifier * demand_modifier * crisis_modifier * faction_modifier))),
+		"unit_price": maxi(1, int(round(base * settlement_modifier * demand_modifier * crisis_modifier * faction_modifier * market_memory_modifier))),
 		"base_price": base,
 		"settlement_modifier": settlement_modifier,
 		"demand_modifier": demand_modifier,
 		"crisis_modifier": crisis_modifier,
 		"faction_modifier": faction_modifier,
+		"market_pressure": market_pressure,
+		"market_memory_modifier": market_memory_modifier,
 		"reasons": reasons,
 	}
 

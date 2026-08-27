@@ -2,7 +2,7 @@
 
 **Roadmap slice:** B1a
 
-**Status:** Approved design for B1b implementation
+**Status:** Implemented in B1b
 
 **Player behavior in B1a:** No gameplay behavior changes.
 

@@ -18,7 +18,7 @@ The run starts every simulated trader in the current quick-playtest state: Ashga
 | Toll-road-only | Chooses the best displayed net-profit trade while using the legal Toll Road corridor only. |
 | No trade baseline | Takes no action; baseline for resource preservation. |
 
-The simulator tests only the initial one-trade loop. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, market memory, or player learning over multiple runs.
+The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. It does not model crew, contracts, event choices, faction effects beyond existing price modifiers, or human learning.
 
 ## Results
 
@@ -48,6 +48,18 @@ Every deterministic policy still concentrates on one legal initial trade in this
 
 ![Choice concentration chart](choice_concentration.png)
 
+## Repeated-Delivery Choice Concentration
+
+| Delivery   | Chosen trade                    | Runs   | Share   |
+|:-----------|:--------------------------------|:-------|:--------|
+| 1          | water → reedwatch / old_road    | 100    | 100.0%  |
+| 2          | water → reedwatch / old_road    | 100    | 100.0%  |
+| 3          | medicine → reedwatch / old_road | 100    | 100.0%  |
+
+The adaptive policy re-evaluates the best legal forecast before each of three outbound deliveries, returning to Ashgate between trips. This is a mechanical concentration probe, not a human strategy model. It shows whether bounded local supply pressure is strong enough to make the visible best opening trade rotate under the current route graph and crisis timing.
+
+The fixed Reedwatch water probe starts at **32** ashmarks per unit. A four-unit delivery creates **16%** pressure and changes the immediate price to **27**. Pressure returns to zero after **6** elapsed days and repeated deliveries clamp at **35%**.
+
 ## Forecast Calibration
 
 | Policy                | Forecast net   | Realized economic   | Mean error   | Mean absolute error   |
@@ -75,7 +87,7 @@ The forecast-maximizing policy's mean error fell from **+66.8** to **-0.2** ashm
 | Finding | Evidence from corrected run | Why it matters | Suggested next test, not a balance change |
 | --- | --- | --- | --- |
 | **Route topology is now authoritative** | All completed runs use content-declared endpoints, and invalid Old Road → Brine Cross departures are rejected in regression coverage. | Route fees, risk, map presentation, and forecast now describe the same corridor. | Keep endpoint validation in future route-content review; no balance action is indicated by this implementation fix alone. |
-| **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Implement bounded market memory (A2) and rerun the harness to measure whether recent deliveries create readable trade rotation. |
+| **Legal opening-choice concentration** | The forecast and gross-margin policies each select one legal opening trade in 100.0% of runs. | Once players learn the display, early trade can become routine rather than a meaningful choice. | Use the repeated-delivery results above to judge whether current pressure/decay values create enough readable rotation before changing balance. |
 | **Forecast/resolution calibration** | Mean forecast error ranges from -0.4 to +0.2 ashmarks-equivalent across active policies after both paths adopted the one-unit model. | Small residual error is expected across finite deterministic samples, but systematic drift would weaken trust. | Keep the shared loss helper under regression coverage and rerun this report after route, price, cargo-loss, or crisis changes. |
 | **Capacity dominates the first decision** | The forecast policy loads an average of 7.0 units against a 12-unit capacity. | The opening may reward filling the hold more than comparing cargo, route, and information. | Observe first-time testers’ chosen quantities, then compare against a lower-cash or tighter-provision test preset. |
 | **Guided delivery is not an economic optimum** | The Grain teaching run averages -19.8 realized economic profit. | The suggested first action should teach a visible trade-off without falsely implying that it is the best available profit path. | Ask testers to explain why they followed or rejected the suggested Grain move; retain it only if it reliably teaches the forecast model. |

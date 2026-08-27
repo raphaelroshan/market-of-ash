@@ -158,5 +158,33 @@
       "mean_error": -0.4,
       "mean_absolute_error": 7.6
     }
-  ]
+  ],
+  "multi_trip_choice_mix": [
+    {
+      "delivery_index": 1,
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "delivery_index": 2,
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "delivery_index": 3,
+      "choice": "medicine \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    }
+  ],
+  "market_memory_probe": {
+    "baseline_price": 32,
+    "initial_pressure": 0.16,
+    "post_delivery_price": 27,
+    "recovery_days": 6,
+    "sale_ok": true,
+    "saturated_pressure": 0.35
+  }
 }

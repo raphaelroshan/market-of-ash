@@ -39,7 +39,7 @@ static func _buy_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var origin := world.settlement(world.current_settlement)
 	if origin.is_empty():
 		return _failure("current settlement is unavailable")
-	var unit_price := MarketEconomy.price_for(good_id, origin, {"crisis_modifiers": world.crisis_modifiers})
+	var unit_price := MarketEconomy.price_for(good_id, origin, world.pricing_context())
 	var total := unit_price * quantity
 	if world.money < total:
 		return _failure("you need %d ashmarks, but have %d" % [total, world.money])
@@ -47,7 +47,7 @@ static func _buy_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	world.money -= total
 	world.cargo[good_id] = int(validation.new_quantity)
 	world.cargo["weight"] = int(validation.new_weight)
-	var message := "Bought %d %s for %d ashmarks. %s." % [quantity, good_id, total, MarketEconomy.explain_price(good_id, origin, {"crisis_modifiers": world.crisis_modifiers})]
+	var message := "Bought %d %s for %d ashmarks. %s." % [quantity, good_id, total, MarketEconomy.explain_price(good_id, origin, world.pricing_context())]
 	world.log.append(message)
 	return _success(message, {
 		"money": -total,
@@ -69,19 +69,25 @@ static func _sell_goods(world: AshWorldState, inputs: Dictionary) -> Dictionary:
 	var destination := world.settlement(world.current_settlement)
 	if destination.is_empty():
 		return _failure("current settlement is unavailable")
-	var unit_price := MarketEconomy.price_for(good_id, destination, {"crisis_modifiers": world.crisis_modifiers})
+	var unit_price := MarketEconomy.price_for(good_id, destination, world.pricing_context())
 	var total := unit_price * requested_quantity
 	var removed_weight := int(good.get("weight", 0)) * requested_quantity
+	var memory_result := world.record_market_delivery(world.current_settlement, good_id, requested_quantity)
+	if not memory_result.ok:
+		return _failure(String(memory_result.reason))
 
 	world.money += total
 	world.cargo[good_id] = held_quantity - requested_quantity
 	world.cargo["weight"] = maxi(0, int(world.cargo.get("weight", 0)) - removed_weight)
-	var message := "Sold %d %s for %d ashmarks." % [requested_quantity, good_id, total]
+	var memory_record: Dictionary = memory_result.record
+	var pressure_points := int(round(float(memory_record.effective_impact) * 100.0))
+	var message := "Sold %d %s for %d ashmarks. Your delivery softened this market's %s price pressure by %d%%." % [requested_quantity, good_id, total, good_id, pressure_points]
 	world.log.append(message)
 	return _success(message, {
 		"money": total,
 		"cargo": {good_id: -requested_quantity, "weight": -removed_weight},
 		"unit_price": unit_price,
+		"market_memory": memory_record,
 	})
 
 static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionary:
@@ -102,7 +108,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 	var loss_basis := MarketEconomy.incident_loss_basis(
 		world.cargo,
 		destination,
-		{"crisis_modifiers": world.crisis_modifiers},
+		world.pricing_context(),
 	)
 	var expected_loss := MarketEconomy.expected_incident_loss(selected_route, loss_basis)
 	var travel_result := world.travel(route_id)

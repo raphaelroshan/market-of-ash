@@ -539,10 +539,8 @@ func _refresh_forecasts() -> void:
 	var quantity := int(cargo_quantity.value)
 	var origin := world.settlement(world.current_settlement)
 	var destination := world.settlement(destination_id)
-	var world_context := {
-		"crisis_modifiers": world.crisis_modifiers,
-		"cargo": world.cargo,
-	}
+	var world_context := world.pricing_context()
+	world_context["cargo"] = world.cargo
 	var market_text := _market_preview_text(good_id, quantity, origin, world_context)
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
@@ -560,13 +558,21 @@ func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary
 		return "MARKET\nNo valid good selected."
 	var reason_text := "; ".join(details.reasons)
 	var unit_price := int(details.unit_price)
+	var memory_text := ""
+	if float(details.market_pressure) > 0.0:
+		var delivery := world.latest_market_delivery(String(settlement.get("id", "")), good_id)
+		var decay_percent := int(round(float(MarketContent.market_memory_rules().get("daily_decay_per_day", 0.0)) * 100.0))
+		if delivery.is_empty():
+			memory_text = "\nMarket memory: recent deliveries softened this price by %d%%; the effect recovers by %d%% per day." % [int(round(float(details.market_pressure) * 100.0)), decay_percent]
+		else:
+			memory_text = "\nMarket memory: your last %d %s delivered here softened this price by %d%%; the effect recovers by %d%% per day." % [int(delivery.quantity), good_id, int(round(float(details.market_pressure) * 100.0)), decay_percent]
 	var comparison: Array[String] = []
 	for settlement_id in MarketContent.settlement_ids():
 		var candidate := world.settlement(settlement_id)
 		if candidate == settlement:
 			continue
 		comparison.append("%s %d" % [String(candidate.get("name", settlement_id)), MarketEconomy.price_for(good_id, candidate, world_context)])
-	return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s\nOther markets: %s\nBase %d × local %.2f × demand %.2f × crisis %.2f × faction %.2f" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, "; ".join(comparison), int(details.base_price), float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier)]
+	return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s%s\nOther markets: %s\nBase %d × local %.2f × demand %.2f × crisis %.2f × faction %.2f × memory %.2f" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, memory_text, "; ".join(comparison), int(details.base_price), float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.market_memory_modifier)]
 
 func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
 	var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, world_context)

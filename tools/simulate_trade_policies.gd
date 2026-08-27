@@ -15,15 +15,19 @@ const POLICIES := ["guided_grain_delivery", "forecast_maximizer", "gross_margin_
 
 func _init() -> void:
 	var rows: Array[Dictionary] = []
+	var multi_trip_rows: Array[Dictionary] = []
 	for seed in range(1, SEED_COUNT + 1):
 		for policy in POLICIES:
 			rows.append(_run_policy(seed, policy))
+		multi_trip_rows.append_array(_run_multi_trip_policy(seed))
 	var payload := {
 		"simulation": "Market of Ash first-run single-trade policy simulation",
 		"seed_count": SEED_COUNT,
 		"starting_state": {"money": STARTING_MONEY, "provisions": STARTING_PROVISIONS, "cargo_weight": 0, "settlement": "ashgate", "day": 1},
 		"policies": POLICIES,
 		"rows": rows,
+		"multi_trip_rows": multi_trip_rows,
+		"market_memory_probe": _market_memory_probe(),
 	}
 	var output_path := _output_path()
 	if not output_path.is_empty():
@@ -80,13 +84,110 @@ func _run_policy(seed: int, policy: String) -> Dictionary:
 	var incident := bool(depart.state_delta.get("cargo", {}).get("weight", 0) < 0)
 	return _row(world, policy, candidate, preview, "completed", incident, sold_quantity, sell_message)
 
+func _run_multi_trip_policy(seed: int) -> Array[Dictionary]:
+	var world := AshWorldState.new(seed)
+	var rows: Array[Dictionary] = []
+	for delivery_index in range(1, 4):
+		var candidate := _choose_candidate(world, "forecast_maximizer")
+		if candidate.is_empty():
+			rows.append({"seed": seed, "delivery_index": delivery_index, "status": "no feasible trade"})
+			break
+		var buy := MarketCommandProcessor.execute(world, {
+			"id": MarketCommandProcessor.BUY_GOODS,
+			"inputs": {"good_id": candidate.good_id, "quantity": candidate.quantity},
+		})
+		if not buy.ok:
+			rows.append({"seed": seed, "delivery_index": delivery_index, "status": String(buy.reason)})
+			break
+		var depart := MarketCommandProcessor.execute(world, {
+			"id": MarketCommandProcessor.DEPART_ROUTE,
+			"inputs": {"route_id": candidate.route_id, "destination_id": candidate.destination_id},
+		})
+		if not depart.ok:
+			rows.append({"seed": seed, "delivery_index": delivery_index, "status": String(depart.reason)})
+			break
+		var sell_price_before := MarketEconomy.price_for(candidate.good_id, world.settlement(candidate.destination_id), world.pricing_context())
+		var remaining := int(world.cargo.get(String(candidate.good_id), 0))
+		var sell := {"ok": true, "reason": "", "message": "No cargo remained", "state_delta": {}}
+		if remaining > 0:
+			sell = MarketCommandProcessor.execute(world, {
+				"id": MarketCommandProcessor.SELL_GOODS,
+				"inputs": {"good_id": candidate.good_id, "quantity": remaining},
+			})
+		var sell_price_after := MarketEconomy.price_for(candidate.good_id, world.settlement(candidate.destination_id), world.pricing_context())
+		rows.append({
+			"seed": seed,
+			"delivery_index": delivery_index,
+			"status": "completed" if sell.ok else String(sell.reason),
+			"good_id": String(candidate.good_id),
+			"destination_id": String(candidate.destination_id),
+			"route_id": String(candidate.route_id),
+			"quantity_purchased": int(candidate.quantity),
+			"quantity_delivered": remaining if sell.ok else 0,
+			"forecast_expected_net_profit": int(candidate.preview.expected_net_profit),
+			"sale_price_before": sell_price_before,
+			"sale_price_after": sell_price_after,
+			"market_pressure_after": world.market_pressure_for(String(candidate.destination_id), String(candidate.good_id)),
+		})
+		if delivery_index == 3:
+			break
+		var return_route_id := _route_between(world.current_settlement, "ashgate")
+		if return_route_id.is_empty():
+			break
+		var return_result := MarketCommandProcessor.execute(world, {
+			"id": MarketCommandProcessor.DEPART_ROUTE,
+			"inputs": {"route_id": return_route_id, "destination_id": "ashgate"},
+		})
+		if not return_result.ok:
+			break
+	return rows
+
+func _route_between(origin_id: String, destination_id: String) -> String:
+	for route_id in MarketContent.routes_from(origin_id):
+		if MarketContent.route_connects(route_id, origin_id, destination_id):
+			return route_id
+	return ""
+
+func _market_memory_probe() -> Dictionary:
+	var world := AshWorldState.new(1)
+	world.current_settlement = "reedwatch"
+	world.cargo = {"water": 4, "weight": 4}
+	var baseline_price := MarketEconomy.price_for("water", world.settlement("reedwatch"), world.pricing_context())
+	var sale := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.SELL_GOODS,
+		"inputs": {"good_id": "water", "quantity": 4},
+	})
+	var post_delivery_price := MarketEconomy.price_for("water", world.settlement("reedwatch"), world.pricing_context())
+	var initial_pressure := world.market_pressure_for("reedwatch", "water")
+	var recovery_days := 0
+	while world.market_pressure_for("reedwatch", "water") > 0.0 and recovery_days < 100:
+		world.advance_day(1)
+		recovery_days += 1
+
+	var saturation_world := AshWorldState.new(1)
+	saturation_world.current_settlement = "reedwatch"
+	for _index in range(3):
+		saturation_world.cargo = {"water": 4, "weight": 4}
+		MarketCommandProcessor.execute(saturation_world, {
+			"id": MarketCommandProcessor.SELL_GOODS,
+			"inputs": {"good_id": "water", "quantity": 4},
+		})
+	return {
+		"sale_ok": bool(sale.ok),
+		"baseline_price": baseline_price,
+		"post_delivery_price": post_delivery_price,
+		"initial_pressure": initial_pressure,
+		"recovery_days": recovery_days,
+		"saturated_pressure": saturation_world.market_pressure_for("reedwatch", "water"),
+	}
+
 func _choose_candidate(world: AshWorldState, policy: String) -> Dictionary:
 	if policy == "guided_grain_delivery":
 		return _candidate_for(world, "grain", 2, "reedwatch", "old_road")
 	var best: Dictionary = {}
 	for good_id in MarketContent.good_ids():
 		var origin := world.settlement(world.current_settlement)
-		var purchase_price := MarketEconomy.price_for(good_id, origin, {"crisis_modifiers": world.crisis_modifiers})
+		var purchase_price := MarketEconomy.price_for(good_id, origin, world.pricing_context())
 		for destination_id in MarketContent.destinations_from(world.current_settlement):
 			for route_id in MarketContent.routes_from(world.current_settlement):
 				if policy == "toll_road_only" and route_id != "toll_road":
@@ -120,7 +221,7 @@ func _candidate_for(world: AshWorldState, good_id: String, quantity: int, destin
 		world.settlement(world.current_settlement),
 		world.settlement(destination_id),
 		world.route(route_id),
-		{"crisis_modifiers": world.crisis_modifiers, "cargo": simulated_cargo},
+		_world_context_with_cargo(world, simulated_cargo),
 	)
 	if not preview.ok:
 		return {}
@@ -194,3 +295,8 @@ func _route_roll_from_history(world: AshWorldState) -> float:
 		if String(entry.id) == MarketCommandProcessor.DEPART_ROUTE:
 			return float(entry.state_delta.get("risk_roll", -1.0))
 	return -1.0
+
+func _world_context_with_cargo(world: AshWorldState, cargo: Dictionary) -> Dictionary:
+	var context := world.pricing_context()
+	context["cargo"] = cargo
+	return context

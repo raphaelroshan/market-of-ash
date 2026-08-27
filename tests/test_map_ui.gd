@@ -80,6 +80,8 @@ func _initialize() -> void:
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Enter settlement should return the player to the central shop")
 	ui._on_sell_pressed()
 	_expect(ui.playtest_status_label.text.contains("RUN COMPLETE"), "selling delivered grain from the destination shop did not complete the playtest objective")
+	_expect(ui.shop_market_preview_label.text.contains("Market memory: your last 2 grain delivered here softened this price by 8%"), "completed sale did not expose the local delivery-memory explanation")
+	_expect(ui.shop_market_preview_label.text.contains("memory 0.92"), "market preview did not show the post-delivery price multiplier")
 
 	ui.queue_free()
 	await process_frame

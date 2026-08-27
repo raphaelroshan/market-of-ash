@@ -16,6 +16,7 @@ func _init() -> void:
 	_test_explainable_route_preview()
 	_test_incident_loss_model()
 	_test_command_buy_and_sell()
+	_test_market_memory()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -192,6 +193,83 @@ func _test_command_buy_and_sell() -> void:
 	_expect(world.cargo.get("water", 0) == 0, "sell command should remove sold cargo")
 	_expect(world.cargo.get("weight", 0) == 0, "sell command should reduce cargo weight")
 
+func _test_market_memory() -> void:
+	var world := AshWorldState.new(1107)
+	world.current_settlement = "reedwatch"
+	world.cargo = {"water": 4, "weight": 4}
+	var destination := world.settlement("reedwatch")
+	var before_price := MarketEconomy.price_for("water", destination, world.pricing_context())
+	var sale := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.SELL_GOODS,
+		"inputs": {"good_id": "water", "quantity": 4},
+	})
+	_expect(sale.ok, "market-memory fixture sale should succeed")
+	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.16), "four-unit stage-zero delivery should add 16% supply pressure")
+	_expect(is_equal_approx(float(sale.state_delta.market_memory.effective_impact), 0.16), "sale result should expose the effective pressure change")
+	_expect(sale.message.contains("softened this market's water price pressure by 16%"), "sale result should explain the market-memory effect")
+	var after_details := MarketEconomy.price_details("water", destination, world.pricing_context())
+	_expect(int(after_details.unit_price) < before_price, "a completed delivery should soften the next local sale price")
+	_expect(is_equal_approx(float(after_details.market_memory_modifier), 0.84), "price details should expose the bounded memory multiplier")
+	_expect(after_details.reasons.has("your recent deliveries increased local supply"), "price details should explain recent-delivery pressure")
+	var latest := world.latest_market_delivery("reedwatch", "water")
+	_expect(int(latest.quantity) == 4 and int(latest.day) == 1, "latest delivery should retain visible quantity and day inputs")
+
+	var pressure_before_buy := world.market_pressure_for("reedwatch", "water")
+	var buy := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": "water", "quantity": 1},
+	})
+	_expect(buy.ok, "buy should remain legal after a delivery changes local pressure")
+	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), pressure_before_buy), "buying must not change local supply pressure")
+
+	world.advance_day(1)
+	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.13), "one elapsed day should decay pressure by the authored amount")
+	world.advance_day(20)
+	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.0), "market pressure should decay to but never below zero")
+
+	var failed_world := AshWorldState.new(1107)
+	failed_world.current_settlement = "reedwatch"
+	var failed_sale := MarketCommandProcessor.execute(failed_world, {
+		"id": MarketCommandProcessor.SELL_GOODS,
+		"inputs": {"good_id": "water", "quantity": 1},
+	})
+	_expect(not failed_sale.ok, "sale without cargo should fail")
+	_expect(failed_world.market_pressure.is_empty() and failed_world.market_delivery_history.is_empty(), "failed sale should not write market memory")
+	_expect(not failed_world.record_market_delivery("missing", "water", 1).ok, "unknown settlements should not receive market pressure")
+	_expect(not failed_world.record_market_delivery("reedwatch", "missing", 1).ok, "unknown goods should not receive market pressure")
+
+	var saturated_world := AshWorldState.new(1107)
+	saturated_world.current_settlement = "reedwatch"
+	saturated_world.cargo_capacity = 20
+	saturated_world.cargo = {"water": 12, "weight": 12}
+	for _index in range(3):
+		var saturated_sale := MarketCommandProcessor.execute(saturated_world, {
+			"id": MarketCommandProcessor.SELL_GOODS,
+			"inputs": {"good_id": "water", "quantity": 4},
+		})
+		_expect(saturated_sale.ok, "repeated legal sales should succeed through the command boundary")
+	_expect(is_equal_approx(saturated_world.market_pressure_for("reedwatch", "water"), 0.35), "repeated deliveries should clamp at the authored pressure maximum")
+	for _index in range(13):
+		saturated_world.record_market_delivery("reedwatch", "grain", 1)
+	_expect(saturated_world.market_delivery_history.size() == 12, "delivery history should remain bounded to the authored limit")
+
+	var crisis_world := AshWorldState.new(1107)
+	crisis_world.current_settlement = "reedwatch"
+	crisis_world.crisis_stage = 2
+	crisis_world._update_crisis_modifiers()
+	crisis_world.cargo = {"water": 4, "weight": 4}
+	var crisis_sale := MarketCommandProcessor.execute(crisis_world, {
+		"id": MarketCommandProcessor.SELL_GOODS,
+		"inputs": {"good_id": "water", "quantity": 4},
+	})
+	_expect(crisis_sale.ok, "crisis delivery should succeed")
+	_expect(is_equal_approx(crisis_world.market_pressure_for("reedwatch", "water"), 0.112), "stage-two crisis should reduce delivery effectiveness without changing the pressure formula")
+
+	var restored := AshWorldState.new(0)
+	var restore_result := restored.load_serialized(crisis_world.serialize())
+	_expect(restore_result.ok and is_equal_approx(restored.market_pressure_for("reedwatch", "water"), 0.112), "save/load should preserve market pressure")
+	_expect(restored.latest_market_delivery("reedwatch", "water") == crisis_world.latest_market_delivery("reedwatch", "water"), "save/load should preserve visible delivery memory")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -268,11 +346,22 @@ func _test_legacy_save_migration() -> void:
 	legacy_save.erase("save_version")
 	legacy_save.erase("content_version")
 	legacy_save.erase("command_history")
+	legacy_save.erase("market_pressure")
+	legacy_save.erase("market_delivery_history")
 	var migrated := AshWorldState.new(0)
 	var migration_result := migrated.load_serialized(legacy_save)
 	_expect(migration_result.ok, "legacy save without version metadata should migrate")
 	_expect(int(migration_result.migrated_from) == 0, "legacy save should report its source version")
 	_expect(migrated.command_history.is_empty(), "legacy save migration should initialize empty command history")
+	_expect(migrated.market_pressure.is_empty() and migrated.market_delivery_history.is_empty(), "legacy save migration should initialize empty market memory")
+	var version_one_save := legacy_world.serialize()
+	version_one_save["save_version"] = 1
+	version_one_save.erase("market_pressure")
+	version_one_save.erase("market_delivery_history")
+	var migrated_v1 := AshWorldState.new(0)
+	var migration_v1_result := migrated_v1.load_serialized(version_one_save)
+	_expect(migration_v1_result.ok and int(migration_v1_result.migrated_from) == 1, "version-one saves should migrate to the market-memory schema")
+	_expect(migrated_v1.serialize().save_version == 2, "version-one migration should produce save version two")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)

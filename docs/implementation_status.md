@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0 forecast/resolution calibration are implemented. B1 market-memory design is next.
+**Roadmap status:** A0–A1 foundations, B0 forecast/resolution calibration, and B1 bounded market memory are implemented. B2 settlement opportunities is next.
 
 ## Implemented player-facing spine
 
@@ -13,9 +13,10 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 1 and content version `0.5.0`; unversioned saves migrate to version 1 and future saves fail safely.
+- Saves declare save version 2 and content version `0.5.0`; version-zero and version-one saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
+- Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and save version 2 preserves it.
 
 ## Current command IDs
 
@@ -40,6 +41,8 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `current_settlement`
 - `reputation`
 - `crisis_stage`
+- `market_pressure`
+- `market_delivery_history`
 - `log`
 - `command_history`
 
@@ -74,9 +77,8 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 ## Remaining roadmap-to-code mismatches
 
 1. **One charter reference is stale.** `docs/gpt_agent_handoff_roadmap.md` references `docs/alpha_release_roadmap.md`, which is not present. The active roadmap is `docs/gpt_agent_handoff_roadmap.md`.
-2. **Roadmap fixtures are not present.** `tests/fixtures/` and its campaign-state fixtures are planned but not yet implemented.
-3. **Market memory is absent.** Repeated deliveries do not yet soften or recover local premiums, so the opening Water → Reedwatch loop remains dominant.
-4. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. The baseline and B0 were verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
+2. **Most campaign fixtures are not present.** The first invalid market-memory fixture exists, but the broader fresh/saturated/contract/event/faction/crisis/ending fixture matrix remains planned.
+3. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
 
 ## Baseline verification commands
 
@@ -111,6 +113,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Forecast-maximizer mean error improved from `+66.8` to `-0.2` ashmarks-equivalent across 100 seeds.
 - Forecast-maximizer mean absolute error improved from `66.8` to `14.5`; the residual is binary incident variance rather than structural load-size error.
 
+## B1 market-memory result
+
+- A four-unit Reedwatch water delivery creates 16% supply pressure and lowers the immediate unit price from 32 to 27 ashmarks.
+- Pressure decays by 3% per elapsed day, returns to zero after six days for that delivery, and clamps at 35% under repeated supply.
+- Crisis stages reduce the effect of new deliveries while keeping crisis and memory modifiers separately visible.
+- The adaptive three-delivery simulation chooses Water → Reedwatch for the first two deliveries and rotates to Medicine → Reedwatch on the third.
+
 ## Next permitted task
 
-Card B1a: define the bounded market-memory schema, validation rules, price-composition order, and save/replay contract without changing gameplay prices yet.
+Card B2: add the settlement opportunity shell and two-slot visit budget, beginning with one live action at one settlement.
