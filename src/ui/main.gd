@@ -1172,7 +1172,7 @@ func _on_export_report_pressed() -> void:
 	if file.get_error() != OK:
 		_set_event("Report export failed. The campaign remains unchanged.")
 	else:
-		_set_event("REPORT EXPORTED — %s\nBuild, seed, campaign evidence, and outcome context are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
+		_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
