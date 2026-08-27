@@ -1827,7 +1827,7 @@ class MapPanel extends Control:
 			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#f4e6c7"))
-			var settlement_detail := "%s · resilience %d" % [String(world.settlement(settlement_id).get("role", "market")), world.resilience_for(settlement_id)] if world != null else "settlement"
+			var settlement_detail := "Resilience %d/10" % world.resilience_for(settlement_id) if world != null else "Settlement"
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), settlement_detail, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
 		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
 		if traveling:
