@@ -42,7 +42,11 @@ func _init() -> void:
 	var restored := AshWorldState.new(0)
 	var restore_result := restored.load_serialized(world.serialize())
 	_expect(restore_result.ok, "the completed campaign should survive save/load")
-	_expect(JSON.stringify(restored.serialize()) == JSON.stringify(world.serialize()), "the restored ending state should exactly match the serialized campaign")
+	_expect(restored.ending_id == world.ending_id and restored.day == world.day and restored.current_settlement == world.current_settlement, "the restored campaign should preserve its ending, time, and location")
+	_expect(restored.command_history == world.command_history and restored.contract_history == world.contract_history, "the restored campaign should preserve its command and contract evidence")
+	var canonical_restore := AshWorldState.new(0)
+	var canonical_result := canonical_restore.load_serialized(restored.serialize())
+	_expect(canonical_result.ok and JSON.stringify(canonical_restore.serialize()) == JSON.stringify(restored.serialize()), "a normalized campaign save should remain stable across another load")
 
 	if failures.is_empty():
 		print("Campaign smoke: PASS")

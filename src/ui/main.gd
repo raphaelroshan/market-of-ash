@@ -10,12 +10,17 @@ const PLAYTEST_GOOD := "grain"
 const PLAYTEST_QUANTITY := 2
 const PLAYTEST_DESTINATION := "reedwatch"
 const PLAYTEST_ROUTE := "old_road"
+const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 
 var world: AshWorldState
 var game_layer: Control
 var shop_layer: Control
 var menu_layer: Control
 var start_game_button: Button
+var continue_game_button: Button
+var menu_save_status_label: Label
+var reduce_motion_checkbox: CheckBox
+var large_text_checkbox: CheckBox
 var shop_good_option: OptionButton
 var shop_quantity: SpinBox
 var shop_market_preview_label: Label
@@ -55,11 +60,20 @@ var market_preview_label: Label
 var route_preview_label: Label
 var log_label: Label
 var diagnostics_label: Label
+var save_status_label: Label
+var departure_save_status_label: Label
+var save_status_text := "SAVE — No save written this session."
+var save_path := DEFAULT_SAVE_PATH
+var autosave_enabled := true
 var map_panel
 var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
 func _ready() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
+	theme = Theme.new()
+	theme.default_font_size = 16
+	if FileAccess.file_exists(save_path):
+		save_status_text = "SAVE — Existing save available. Load validates it before replacing this run."
 	game_layer = Control.new()
 	game_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(game_layer)
@@ -105,11 +119,40 @@ func _build_main_menu() -> void:
 	preset.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
 	content.add_child(preset)
+	var controls_hint := Label.new()
+	controls_hint.text = "Controls: mouse, keyboard arrows/Tab + Enter/Space, or controller D-pad/stick + A. Escape or B returns from departure planning."
+	controls_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	controls_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	controls_hint.add_theme_color_override("font_color", Color("#c7b49a"))
+	content.add_child(controls_hint)
+	reduce_motion_checkbox = CheckBox.new()
+	reduce_motion_checkbox.text = "Reduce travel motion"
+	reduce_motion_checkbox.tooltip_text = "Show the caravan at its destination immediately; route outcomes and timing are unchanged."
+	content.add_child(reduce_motion_checkbox)
+	large_text_checkbox = CheckBox.new()
+	large_text_checkbox.text = "Large text"
+	large_text_checkbox.tooltip_text = "Increase interface text by 25%. Long shop and route panels remain scrollable."
+	large_text_checkbox.toggled.connect(_on_large_text_toggled)
+	content.add_child(large_text_checkbox)
 	start_game_button = Button.new()
 	start_game_button.text = "Start Game"
 	start_game_button.custom_minimum_size = Vector2(0, 48)
 	start_game_button.pressed.connect(_on_start_game_pressed)
 	content.add_child(start_game_button)
+	continue_game_button = Button.new()
+	continue_game_button.text = "Continue saved game"
+	continue_game_button.custom_minimum_size = Vector2(0, 42)
+	continue_game_button.disabled = not FileAccess.file_exists(save_path)
+	continue_game_button.tooltip_text = "No saved campaign exists yet." if continue_game_button.disabled else "Validate and continue the saved campaign."
+	continue_game_button.pressed.connect(_on_load_pressed)
+	content.add_child(continue_game_button)
+	menu_save_status_label = Label.new()
+	menu_save_status_label.text = save_status_text
+	menu_save_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	menu_save_status_label.add_theme_font_size_override("font_size", 11)
+	menu_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
+	content.add_child(menu_save_status_label)
 
 func _show_main_menu() -> void:
 	game_layer.visible = false
@@ -135,6 +178,10 @@ func _show_shop() -> void:
 func _show_departure() -> void:
 	shop_layer.visible = false
 	game_layer.visible = true
+	var journey_locked := not world.pending_event.is_empty() or arrival_pending
+	commit_departure_button.disabled = journey_locked
+	return_to_shop_button.disabled = journey_locked
+	enter_settlement_button.visible = arrival_pending
 	_refresh_ui()
 	if not world.pending_event.is_empty():
 		_grab_first_enabled(event_choice_buttons)
@@ -156,6 +203,18 @@ func _grab_first_enabled(controls: Array[Button]) -> bool:
 		if _grab_focus_if_available(control):
 			return true
 	return false
+
+func _on_large_text_toggled(enabled: bool) -> void:
+	theme.default_font_size = 20 if enabled else 16
+	_apply_text_scale(self, 1.25 if enabled else 1.0)
+
+func _apply_text_scale(node: Node, scale: float) -> void:
+	if node is Control and node.has_theme_font_size_override("font_size"):
+		if not node.has_meta("base_font_size"):
+			node.set_meta("base_font_size", node.get_theme_font_size("font_size"))
+		node.add_theme_font_size_override("font_size", int(round(float(node.get_meta("base_font_size")) * scale)))
+	for child in node.get_children():
+		_apply_text_scale(child, scale)
 
 func _build_shop() -> void:
 	shop_layer = Control.new()
@@ -237,9 +296,15 @@ func _build_shop() -> void:
 	var action_card := PanelContainer.new()
 	action_card.custom_minimum_size = Vector2(360, 0)
 	columns.add_child(action_card)
+	var action_scroll := ScrollContainer.new()
+	action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	action_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	action_card.add_child(action_scroll)
 	var actions := VBoxContainer.new()
+	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_theme_constant_override("separation", 14)
-	action_card.add_child(actions)
+	action_scroll.add_child(actions)
 	var caravan_title := Label.new()
 	caravan_title.text = "CARAVAN"
 	caravan_title.add_theme_font_size_override("font_size", 20)
@@ -276,6 +341,16 @@ func _build_shop() -> void:
 	save_button.text = "Save prototype state"
 	save_button.pressed.connect(_on_save_pressed)
 	actions.add_child(save_button)
+	var load_button := Button.new()
+	load_button.text = "Load saved state"
+	load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
+	load_button.pressed.connect(_on_load_pressed)
+	actions.add_child(load_button)
+	save_status_label = Label.new()
+	save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	save_status_label.add_theme_font_size_override("font_size", 11)
+	save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
+	actions.add_child(save_status_label)
 	var reset_button := Button.new()
 	reset_button.text = "Reset run"
 	reset_button.pressed.connect(_on_reset_pressed)
@@ -364,9 +439,15 @@ func _build_ui() -> void:
 	var right := PanelContainer.new()
 	right.custom_minimum_size = Vector2(360, 0)
 	columns.add_child(right)
+	var controls_scroll := ScrollContainer.new()
+	controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	controls_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	controls_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(controls_scroll)
 	var controls := VBoxContainer.new()
+	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	controls.add_theme_constant_override("separation", 10)
-	right.add_child(controls)
+	controls_scroll.add_child(controls)
 
 	var control_title := Label.new()
 	control_title.text = "DEPARTURE DESK"
@@ -466,6 +547,16 @@ func _build_ui() -> void:
 	save_button.text = "Save prototype state"
 	save_button.pressed.connect(_on_save_pressed)
 	controls.add_child(save_button)
+	var load_button := Button.new()
+	load_button.text = "Load saved state"
+	load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
+	load_button.pressed.connect(_on_load_pressed)
+	controls.add_child(load_button)
+	departure_save_status_label = Label.new()
+	departure_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	departure_save_status_label.add_theme_font_size_override("font_size", 11)
+	departure_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
+	controls.add_child(departure_save_status_label)
 
 func _forecast_label() -> Label:
 	var label := Label.new()
@@ -526,6 +617,7 @@ func _on_start_game_pressed() -> void:
 	selected_map_cell = Vector2i(-1, -1)
 	if map_panel:
 		map_panel.world = world
+		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
 		map_panel.reset_travel(world.current_settlement)
 	_populate_destination_options()
 	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
@@ -782,14 +874,79 @@ func _on_depart_pressed() -> void:
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
 		_set_event(String(result.message))
+		if autosave_enabled:
+			_write_save("AUTOSAVED")
 	else:
 		_set_event("%s blocked: %s." % [label, String(result.reason)])
 	_refresh_ui()
 
 func _on_save_pressed() -> void:
-	var file := FileAccess.open("user://market_of_ash_prototype.save", FileAccess.WRITE)
+	if _write_save("SAVED"):
+		_set_event("Versioned prototype state saved. Command history is included for deterministic review.")
+	else:
+		_set_event("Save failed. The current run remains active and unchanged.")
+	_refresh_ui()
+
+func _write_save(status_prefix: String) -> bool:
+	var file := FileAccess.open(save_path, FileAccess.WRITE)
+	if file == null:
+		save_status_text = "SAVE ERROR — Could not open the save path. Current run unchanged."
+		return false
 	file.store_string(JSON.stringify(world.serialize()))
-	_set_event("Versioned prototype state saved. Command history is included for deterministic review.")
+	if file.get_error() != OK:
+		save_status_text = "SAVE ERROR — Could not finish writing. Current run unchanged."
+		return false
+	var settlement_name := String(world.settlement(world.current_settlement).get("name", world.current_settlement))
+	save_status_text = "%s — Day %d · %s · save v%d · content %s" % [status_prefix, world.day, settlement_name, AshWorldState.SAVE_VERSION, MarketContent.content_version()]
+	if continue_game_button:
+		continue_game_button.disabled = false
+		continue_game_button.tooltip_text = "Validate and continue the saved campaign."
+	return true
+
+func _on_load_pressed() -> void:
+	if not FileAccess.file_exists(save_path):
+		save_status_text = "LOAD BLOCKED — No saved campaign exists yet. Current run unchanged."
+		_set_event(save_status_text)
+		_refresh_ui()
+		return
+	var file := FileAccess.open(save_path, FileAccess.READ)
+	if file == null:
+		save_status_text = "LOAD BLOCKED — The save could not be opened. Current run unchanged."
+		_set_event(save_status_text)
+		_refresh_ui()
+		return
+	var parser := JSON.new()
+	var parse_error := parser.parse(file.get_as_text())
+	var parsed: Variant = parser.data
+	if parse_error != OK or typeof(parsed) != TYPE_DICTIONARY:
+		save_status_text = "LOAD BLOCKED — The file is not a valid save object. Current run unchanged."
+		_set_event(save_status_text)
+		_refresh_ui()
+		return
+	var candidate := AshWorldState.new(world.seed)
+	var load_result := candidate.load_serialized(parsed)
+	if not bool(load_result.get("ok", false)):
+		save_status_text = "LOAD BLOCKED — %s. Current run unchanged." % String(load_result.get("reason", "Save validation failed"))
+		_set_event(save_status_text)
+		_refresh_ui()
+		return
+	world = candidate
+	arrival_pending = false
+	selected_map_cell = Vector2i(-1, -1)
+	if map_panel:
+		map_panel.world = world
+		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
+		map_panel.reset_travel(world.current_settlement)
+	_populate_destination_options()
+	_populate_route_options()
+	var migrated_from := int(load_result.get("migrated_from", AshWorldState.SAVE_VERSION))
+	var migration_text := " · migrated from v%d" % migrated_from if migrated_from < AshWorldState.SAVE_VERSION else ""
+	save_status_text = "LOADED — Day %d · %s · save v%d%s" % [world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), AshWorldState.SAVE_VERSION, migration_text]
+	_set_event("Saved campaign loaded after validation. Seed %d and command history are restored." % world.seed)
+	if world.pending_event.is_empty():
+		_show_shop()
+	else:
+		_show_departure()
 
 func _on_reset_pressed() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
@@ -1102,6 +1259,12 @@ func _refresh_ui() -> void:
 			var latest: Dictionary = world.command_history.back()
 			last_command = "%s (%s)" % [String(latest.get("id", "unknown")), "ok" if bool(latest.get("ok", false)) else "blocked"]
 		diagnostics_label.text = "DIAGNOSTICS — seed %d · save v%d · content %s · last command %s" % [world.seed, AshWorldState.SAVE_VERSION, MarketContent.content_version(), last_command]
+	if save_status_label:
+		save_status_label.text = save_status_text
+	if departure_save_status_label:
+		departure_save_status_label.text = save_status_text
+	if menu_save_status_label:
+		menu_save_status_label.text = save_status_text
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."
@@ -1129,6 +1292,8 @@ func _refresh_ui() -> void:
 		map_panel.world = world
 		map_panel.selected_cell = selected_map_cell
 		map_panel.queue_redraw()
+	if large_text_checkbox and large_text_checkbox.button_pressed:
+		_apply_text_scale(self, 1.25)
 
 class MapPanel extends Control:
 	signal grid_cell_selected(cell: Vector2i)
@@ -1150,6 +1315,7 @@ class MapPanel extends Control:
 	var travel_points: Array[Vector2] = []
 	var travel_progress: float = 1.0
 	var traveling: bool = false
+	var reduce_motion: bool = false
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
@@ -1219,8 +1385,8 @@ class MapPanel extends Control:
 		else:
 			travel_points.append(origin.lerp(destination, 0.5) + Vector2(0, -28))
 		travel_points.append(destination)
-		travel_progress = 0.0
-		traveling = true
+		travel_progress = 1.0 if reduce_motion else 0.0
+		traveling = not reduce_motion
 		queue_redraw()
 
 	func _polyline_position(points: Array[Vector2], progress: float) -> Vector2:

@@ -7,11 +7,23 @@ func _initialize() -> void:
 	var ui: Control = scene.instantiate()
 	root.add_child(ui)
 	await process_frame
+	var test_save_path := "user://market_of_ash_map_ui_test.save"
+	var absolute_test_save_path := ProjectSettings.globalize_path(test_save_path)
+	if FileAccess.file_exists(test_save_path):
+		DirAccess.remove_absolute(absolute_test_save_path)
+	ui.save_path = test_save_path
+	ui.autosave_enabled = false
+	ui.continue_game_button.disabled = true
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")
+	_expect(ui.continue_game_button != null and ui.continue_game_button.text == "Continue saved game", "main menu should expose a separate validated continue action")
+	_expect(ui.reduce_motion_checkbox != null and ui.reduce_motion_checkbox.text == "Reduce travel motion", "main menu should expose a reduced-motion option")
+	_expect(ui.large_text_checkbox != null and ui.large_text_checkbox.text == "Large text", "main menu should expose a large-text option")
+	_expect(_action_has_joypad_button("ui_accept", 0), "ui_accept should retain the primary controller button")
+	_expect(_action_has_joypad_button("ui_cancel", 1), "ui_cancel should retain the secondary controller button")
 
 	ui._on_start_game_pressed()
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
@@ -20,6 +32,7 @@ func _initialize() -> void:
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "grain" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")
 	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text == "Plan departure", "shop did not expose the plan-departure handoff")
+	_expect(_has_scroll_ancestor(ui.plan_departure_button), "the long shop action rail should remain reachable through a scroll container")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
 	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
@@ -29,6 +42,33 @@ func _initialize() -> void:
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	_expect(ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.9.0"), "shop diagnostics should expose reproducible seed/save/content versions")
+	var state_before_missing_load := JSON.stringify(ui.world.serialize())
+	ui._on_load_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
+	ui._on_save_pressed()
+	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate"), "manual save should write a versioned campaign and expose a readable summary")
+	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
+	var manual_save_state := JSON.stringify(ui.world.serialize())
+	ui._on_settlement_action_pressed("ashgate_provision_bundle")
+	_expect(JSON.stringify(ui.world.serialize()) != manual_save_state, "save/load fixture should mutate the active run before restoration")
+	ui._on_load_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == manual_save_state and ui.save_status_label.text.contains("LOADED — Day 1 · Ashgate"), "loading a valid save should restore the exact campaign state")
+	var corrupt_file := FileAccess.open(test_save_path, FileAccess.WRITE)
+	corrupt_file.store_string("{not valid json")
+	corrupt_file = null
+	var state_before_corrupt_load := JSON.stringify(ui.world.serialize())
+	ui._on_load_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_corrupt_load and ui.save_status_label.text.contains("not a valid save object"), "a corrupt save should be rejected without replacing the active run")
+	var future_save: Dictionary = ui.world.serialize()
+	future_save["save_version"] = 999
+	var future_file := FileAccess.open(test_save_path, FileAccess.WRITE)
+	future_file.store_string(JSON.stringify(future_save))
+	future_file = null
+	var state_before_future_load := JSON.stringify(ui.world.serialize())
+	ui._on_load_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_future_load and ui.save_status_label.text.contains("newer than this build"), "a future-version save should be rejected without replacing the active run")
+	ui._on_save_pressed()
+	ui.autosave_enabled = true
 	var action_money_before: int = ui.world.money
 	var action_provisions_before: int = ui.world.provisions
 	ui._on_settlement_action_pressed("ashgate_provision_bundle")
@@ -54,6 +94,7 @@ func _initialize() -> void:
 	_expect(int(ui.world.cargo.get("grain", 0)) == 2 and int(ui.world.cargo.get("weight", 0)) == 2, "guided test action did not execute the promised grain purchase")
 	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "guided test action did not use the explicit command boundary")
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")
+	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v11"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3"), "grain purchase did not advance the playtest objective")
 
 	var shop_state: String = JSON.stringify(ui.world.serialize())
@@ -63,6 +104,7 @@ func _initialize() -> void:
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("Grain x2"), "departure desk did not carry the planned load forward")
 	_expect(ui.route_preview_label != null and ui.route_preview_label.text.contains("EXPECTED NET PROFIT"), "departure desk did not render the route-profit preview")
+	_expect(_has_scroll_ancestor(ui.commit_departure_button), "the departure control rail should remain reachable through a scroll container")
 	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 0/4"), "departure desk did not pin the active contract and cargo shortfall")
 	_expect(ui.route_preview_label.text.contains("1 Grain unit at risk"), "departure desk did not disclose the one-unit cargo risk basis")
 	_expect(ui.route_preview_label.text.contains("Risk source:"), "departure desk did not disclose the authored route-risk source")
@@ -262,6 +304,19 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "open_routes_relief" and ui.shop_status_label.text.contains("ENDING — Open Routes, Shared Wells"), "qualified crisis state did not expose the deterministic ending summary")
 
+	var state_before_text_scale := JSON.stringify(ui.world.serialize())
+	ui.large_text_checkbox.button_pressed = true
+	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
+	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
+	ui.reduce_motion_checkbox.button_pressed = true
+	ui._on_start_game_pressed()
+	ui._on_guided_test_action()
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")
+
+	if FileAccess.file_exists(test_save_path):
+		DirAccess.remove_absolute(absolute_test_save_path)
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():
@@ -275,3 +330,17 @@ func _initialize() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+func _action_has_joypad_button(action: StringName, button_index: int) -> bool:
+	for input_event in InputMap.action_get_events(action):
+		if input_event is InputEventJoypadButton and input_event.button_index == button_index:
+			return true
+	return false
+
+func _has_scroll_ancestor(control: Control) -> bool:
+	var parent := control.get_parent()
+	while parent != null:
+		if parent is ScrollContainer:
+			return true
+		parent = parent.get_parent()
+	return false

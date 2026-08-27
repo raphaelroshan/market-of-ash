@@ -57,9 +57,9 @@ Every response should acknowledge cause and effect in the same format: an outcom
 
 | Element | Purpose | Alpha behavior | Polish requirement |
 | --- | --- | --- | --- |
-| **Start Game** | Enter a deterministic first-run preset. | Starts Ashgate, day one, 120 ashmarks, 12 provisions, and empty cargo. | Changes to **Continue** when a save exists; shows save day and settlement. |
+| **Start Game / Continue** | Enter a deterministic first-run preset or validate and restore an existing campaign. | Starts Ashgate, day one, 120 ashmarks, 12 provisions, and empty cargo; Continue is separately enabled when a save exists and shows save status. | Add multiple save slots only if playtesting demonstrates a need. |
 | **Quick Playtest card** | Explain the test state and avoid false promises. | States the first-run preset and optional grain learning move. | Shows estimated loop length and what feedback is being tested. |
-| **Settings** | Make comfort and control discoverable before play. | Placeholder is acceptable only until input/audio options exist. | Display, text size, audio, controller, remapping, color-safe status, and accessibility defaults. |
+| **Settings** | Make comfort and control discoverable before play. | Main Menu exposes large text, reduced motion, and mouse/keyboard/controller guidance. | Add audio, runtime remapping, and persisted accessibility preferences. |
 | **Quit** | Give a conventional, safe exit. | Desktop-only. | Confirms only if unsaved changes exist; never presents an intrusive quit prompt during the first minute. |
 
 ### 4.2 Settlement Shop — the central screen

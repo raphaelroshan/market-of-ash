@@ -434,11 +434,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	money = int(restored.get("money", money))
 	provisions = int(restored.get("provisions", provisions))
 	cargo_capacity = int(restored.get("cargo_capacity", cargo_capacity))
-	cargo = restored.get("cargo", {"weight": 0}).duplicate(true)
+	cargo = _sanitize_cargo(restored.get("cargo", {"weight": 0}))
 	current_settlement = String(restored.get("current_settlement", current_settlement))
 	if not has_settlement(current_settlement):
 		current_settlement = "ashgate"
-	reputation = restored.get("reputation", reputation).duplicate(true)
+	reputation = _sanitize_reputation(restored.get("reputation", reputation))
 	crisis_stage = int(restored.get("crisis_stage", crisis_stage))
 	market_pressure = _sanitize_market_pressure(restored.get("market_pressure", {}))
 	market_delivery_history.clear()
@@ -572,6 +572,37 @@ func _sanitize_settlement_resilience(value: Variant) -> Dictionary:
 		if not has_settlement(settlement_id):
 			continue
 		sanitized[settlement_id] = clampi(int(records.get(settlement_id_value, 0)), 0, 10)
+	return sanitized
+
+func _sanitize_cargo(value: Variant) -> Dictionary:
+	var sanitized: Dictionary = {"weight": 0}
+	if typeof(value) != TYPE_DICTIONARY:
+		return sanitized
+	var records: Dictionary = value
+	var remaining_capacity := maxi(0, cargo_capacity)
+	for good_id in MarketContent.good_ids():
+		var good := MarketContent.good(good_id)
+		var unit_weight := maxi(1, int(good.get("weight", 1)))
+		var requested := maxi(0, int(records.get(good_id, 0)))
+		var accepted := mini(requested, int(remaining_capacity / unit_weight))
+		if accepted <= 0:
+			continue
+		sanitized[good_id] = accepted
+		sanitized["weight"] = int(sanitized.weight) + accepted * unit_weight
+		remaining_capacity -= accepted * unit_weight
+	return sanitized
+
+func _sanitize_reputation(value: Variant) -> Dictionary:
+	var records: Dictionary = value if typeof(value) == TYPE_DICTIONARY else {}
+	var sanitized: Dictionary = {}
+	for faction_id_value in MarketContent.factions().keys():
+		var faction_id := String(faction_id_value)
+		var faction := MarketContent.faction(faction_id)
+		sanitized[faction_id] = clampi(
+			int(records.get(faction_id, 0)),
+			int(faction.get("reputation_min", -10)),
+			int(faction.get("reputation_max", 10)),
+		)
 	return sanitized
 
 func _sanitize_route_conditions(value: Variant) -> Dictionary:

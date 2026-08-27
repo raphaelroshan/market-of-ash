@@ -271,3 +271,19 @@
 **Reason:** Mouse, keyboard, and controller players need the same primary path without guessing which control owns input after a layer change or dynamically rebuilt event card. Explicit transition focus is small, deterministic, and regression-testable.
 
 **Trade-off:** Godot's default directional traversal still determines movement between controls, and disabled-choice explanations remain visible text rather than focusable controls. A manual controller and assistive-readability audit is still required before external alpha distribution.
+
+## ADR-035: Save files are validated before replacing the active campaign
+
+**Decision:** Every successful player command writes the current versioned state to the prototype save path and exposes a concise autosave summary. Manual Save uses the same writer. Load parses into a separate candidate world, applies migrations and normalization there, and swaps the live world only after validation succeeds. Missing, malformed, or future-version files leave the current run untouched and produce a visible recovery message.
+
+**Reason:** External playtests need recoverable progress and useful bug context without allowing a damaged file to destroy a playable in-memory run. Candidate loading also keeps migration and sanitization inside the simulation boundary rather than duplicating them in UI code.
+
+**Trade-off:** The prototype currently maintains one save slot and does not yet use a temporary-file/backup rotation for interrupted writes. Campaign saves intentionally exclude device-specific accessibility and input preferences.
+
+## ADR-036: Accessibility options change presentation, never simulation
+
+**Decision:** Restore controller A/B bindings alongside keyboard Accept/Cancel, expose a 25% large-text option, place long Shop and Departure rails in vertical scroll containers, and offer reduced travel motion. Large text and reduced motion are session presentation preferences and do not enter campaign state or command history.
+
+**Reason:** The alpha's core route can be made substantially more usable without introducing a settings framework into the deterministic simulation. Scrollable rails let text reflow instead of clipping, while reduced motion preserves immediate access to the same resolved outcome.
+
+**Trade-off:** Preferences are not persisted yet, directional focus still relies on Godot's default traversal, and physical-controller/high-DPI verification remains a manual release gate.

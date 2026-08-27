@@ -33,6 +33,7 @@ func _init() -> void:
 	_test_depart_command()
 	_test_travel_consumes_resources()
 	_test_save_round_trip()
+	_test_disk_save_sanitization()
 	_test_legacy_save_migration()
 	if failures.is_empty():
 		print("PASS: Market of Ash economy tests")
@@ -1239,6 +1240,22 @@ func _test_save_round_trip() -> void:
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
 	_expect(restored.serialize().content_version == "1.9.0", "serialized state should declare the content version")
+
+func _test_disk_save_sanitization() -> void:
+	var source := AshWorldState.new(42)
+	var disk_data: Variant = JSON.parse_string(JSON.stringify(source.serialize()))
+	_expect(typeof(disk_data) == TYPE_DICTIONARY, "serialized campaign should parse back into a save object")
+	if typeof(disk_data) != TYPE_DICTIONARY:
+		return
+	disk_data["cargo"] = {"water": 99.0, "unknown_good": 4.0, "weight": -12.0}
+	disk_data["reputation"] = {"wardens": 999.0, "caravans": -999.0, "unknown_faction": 7.0}
+	var restored := AshWorldState.new(0)
+	var result := restored.load_serialized(disk_data)
+	_expect(result.ok, "disk-parsed numeric values should load through normalization")
+	_expect(int(restored.cargo.get("water", 0)) == 12 and int(restored.cargo.get("weight", 0)) == 12, "loaded cargo should be recomputed and bounded by hold capacity")
+	_expect(not restored.cargo.has("unknown_good"), "loaded cargo should discard unknown good IDs")
+	_expect(int(restored.reputation.get("wardens", 0)) == 10 and int(restored.reputation.get("caravans", 0)) == -10, "loaded reputation should clamp to authored faction bounds")
+	_expect(not restored.reputation.has("unknown_faction"), "loaded reputation should discard unknown faction IDs")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

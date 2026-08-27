@@ -10,10 +10,11 @@
 - Settlement Shop owns local price inspection, buying, selling, cargo context, and the handoff to travel planning.
 - Departure Desk owns the regional map, legal destination/route selection, route forecast, return-to-shop navigation, and travel commitment.
 - Successful travel presents an arrival report before the player enters the destination shop.
+- The Main Menu exposes separate fresh-start and validated-continue actions plus a reduced-motion option.
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 11 and runtime content version `1.9.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 11 and runtime content version `1.9.0`; successful commands autosave, manual save/load summaries are visible, older saves migrate safely, and malformed or future saves leave the active run untouched.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -96,9 +97,9 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 ## Current test scripts
 
-- `tests/test_economy.gd`: content loading, prices, crisis modifiers, capacity, route forecasts, command success/failure/history, route topology, travel resources, saves, and migration.
+- `tests/test_economy.gd`: content loading, prices, crisis modifiers, capacity, route forecasts, command success/failure/history, route topology, travel resources, save normalization, and migration.
 - `tests/test_map_ui.gd`: main-menu start, non-mutating forecast/navigation, guided purchase command use, Shop → Departure Desk transition, legal route filtering, forecast presentation, route geometry, and predictable keyboard/controller focus across screen and event transitions.
-- `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and exact save/load restoration.
+- `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and canonical save/load restoration.
 - `tools/simulate_trade_policies.gd`: read-only 100-seed opening-policy simulation through the production command boundary.
 
 ## Current UI transitions
@@ -265,7 +266,12 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
 - The settlement shop exposes seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
 - Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
+- Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. The Main Menu explains both schemes.
+- A reduced-motion option skips caravan interpolation without changing route time or outcome.
+- A large-text option increases interface text by 25%; scrollable Shop and Departure rails keep long content reachable as it reflows.
+- Successful commands autosave to the single prototype slot. Manual Save, Continue, and Load show day/location/version context; missing, malformed, and future saves are rejected before the active world is replaced.
 - Local preset parsing and project import pass. CI run 36 exported and uploaded a 94 MB Windows executable plus a complete Web payload (`index.html`, JavaScript, PCK, and WASM); direct local export remains unavailable only because the temporary editor installation lacks templates.
+- `docs/ux/alpha_accessibility_input_audit.md` separates automated evidence from the physical-controller, high-DPI, minimum-window, color-simulation, and browser checks still requiring human execution. `docs/playtest_feedback_form.md` captures comprehension and causal run stories without personal data.
 
 ## Next permitted task
 
