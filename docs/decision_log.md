@@ -119,3 +119,11 @@
 **Reason:** Market of Ash has a strong central promise but limited alpha scope. Large autonomous batches are likely to introduce generic framework abstraction, content breadth, or mechanics that are genre-appropriate but weaken the economic route decision. Small vertical slices make determinism, save safety, content validation, balance simulation, and player comprehension reviewable.
 
 **Trade-off:** This process is slower than parallel feature generation and requires explicit review gates. It avoids far more expensive rework from schema drift, UI-owned rules, ambiguous visual feedback, and systems that fail to deepen trade/travel decisions.
+
+## ADR-016: Forecast and route incidents share a one-exposed-unit model
+
+**Decision:** Preserve the bounded one-unit route incident. Before departure, identify the carried good with the highest destination unit value, breaking equal-value ties by canonical good order. Calculate expected cargo loss as route risk multiplied by that one unit value. The forecast and resolver both call pure `MarketEconomy` helpers for this selection and valuation, and every forecast/result exposes the loss-model label, good, value basis, risk source, and expected loss. Empty caravans have zero cargo loss risk.
+
+**Reason:** The previous forecast multiplied risk by the entire selected load value while the resolver removed at most one unit. This made forecasts structurally too pessimistic as load size increased and weakened trust in the commitment screen. A shared one-unit model matches actual resolution, stays legible for mixed cargo, and preserves recovery after an unlucky early trip.
+
+**Trade-off:** The most valuable destination unit is predictably exposed, so mixed-cargo players cannot use content-order accidents to shield expensive goods. This is intentionally conservative and simple; later guards, packing services, or crew hooks may change the exposed-unit selection only through an explicit, tested rule.
