@@ -1737,6 +1737,16 @@ class MapPanel extends Control:
 			return String(world.routes[route_id].get("name", route_id))
 		return route_id.replace("_", " ").capitalize()
 
+	func _map_heading() -> String:
+		var crisis_label := String(MarketContent.crisis_stage(world.crisis_stage).get("label", "Regional pressure")) if world != null else "Regional pressure"
+		return "FIVE-WELL BASIN — %s — SELECT A SETTLEMENT" % crisis_label.to_upper()
+
+	func _settlement_marker_detail(settlement_id: String) -> String:
+		if world == null:
+			return "Settlement"
+		var location_prefix := "HERE · " if settlement_id == world.current_settlement else ""
+		return "%sResilience %d/10" % [location_prefix, world.resilience_for(settlement_id)]
+
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
 		travel_points.clear()
@@ -1800,7 +1810,7 @@ class MapPanel extends Control:
 				var fill := Color("#332820") if (x + y) % 2 == 0 else Color("#382c23")
 				draw_rect(_cell_rect(cell), fill, true)
 				draw_rect(_cell_rect(cell), Color("#5c4838"), false, 1.0)
-		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), "FIVE-WELL BASIN — SELECT A SETTLEMENT", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), _map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e6c58d"))
 		var route_ids := ["old_road", "toll_road", "dry_cut"]
 		for route_id in route_ids:
 			var route_points: Array[Vector2] = _route_points(route_id)
@@ -1827,12 +1837,11 @@ class MapPanel extends Control:
 			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#f4e6c7"))
-			var settlement_detail := "Resilience %d/10" % world.resilience_for(settlement_id) if world != null else "Settlement"
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), settlement_detail, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
 		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
 		if traveling:
 			caravan_position = _polyline_position(travel_points, travel_progress)
 		draw_circle(caravan_position, 10.0, Color("#17130f"))
 		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
 		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f0d27d"))
-		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "GOLD MARKER = CURRENT LOCATION", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c7b49a"))
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "HERE = CURRENT LOCATION", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c7b49a"))
