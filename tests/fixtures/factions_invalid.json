@@ -1,0 +1,14 @@
+{
+  "wardens": {
+    "name": "",
+    "minimum": 5,
+    "maximum": 1,
+    "trusted_threshold": 9,
+    "toll_route_id": "missing",
+    "toll_discount": 0,
+    "below_label": "",
+    "trusted_label": "",
+    "effect": "",
+    "tradeoff": ""
+  }
+}

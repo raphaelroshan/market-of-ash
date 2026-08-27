@@ -663,9 +663,17 @@ static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) ->
 	world.money -= cost
 	world.provisions += provisions_added
 	world.visit_slots_remaining -= slots_required
+	var reputation_results: Dictionary = {}
+	var reputation_delta: Dictionary = effects.get("reputation", {})
+	for faction_id_value in reputation_delta.keys():
+		var faction_id := String(faction_id_value)
+		var reputation_result := world.adjust_reputation(faction_id, int(reputation_delta.get(faction_id_value, 0)))
+		if reputation_result.ok:
+			reputation_results[faction_id] = reputation_result
 	if time_cost > 0:
 		world.advance_day(time_cost)
-	var message := "Packed %d route provisions for %d ashmarks. %d of %d visit slots remain." % [provisions_added, cost, world.visit_slots_remaining, int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))]
+	var standing_message := " Warden standing is now %d." % int(world.reputation.get("wardens", 0)) if reputation_results.has("wardens") else ""
+	var message := "Packed %d route provisions for %d ashmarks. %d of %d visit slots remain.%s" % [provisions_added, cost, world.visit_slots_remaining, int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2)), standing_message]
 	world.log.append(message)
 	return _success(message, {
 		"action_id": String(action.id),
@@ -674,6 +682,7 @@ static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) ->
 		"day": time_cost,
 		"visit_slots": -slots_required,
 		"visit_slots_remaining": world.visit_slots_remaining,
+		"reputation": reputation_results,
 	})
 
 static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Dictionary:

@@ -692,7 +692,10 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 		cargo_risk_text = "Cargo risk: 1 %s unit at risk, valued at %d at %s; expected loss %d at %d%% risk." % [String(preview.loss_good_id).capitalize(), int(preview.loss_unit_value), destination.get("name", "the destination"), int(preview.expected_loss), int(round(float(preview.risk) * 100.0))]
 	var intelligence: Dictionary = world_context.get("route_intelligence", {})
 	var intelligence_text := "%s — %s" % [String(intelligence.get("label", "Scout unavailable")), String(intelligence.get("detail", "No current field report."))]
-	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text]
+	var faction_text := ""
+	if route.has("faction_effect"):
+		faction_text = "\nWarden permit: %s Trade-off: %s" % [String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
+	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
 
 func _on_buy_pressed() -> void:
 	_sync_shop_plan_to_departure()
@@ -1034,7 +1037,8 @@ func _refresh_ui() -> void:
 		shop_status_label.text += "\nSettlement resilience: %d/10" % world.resilience_for(world.current_settlement)
 		if not world.known_information.is_empty():
 			shop_status_label.text += " · Known leads: %d" % world.known_information.size()
-		shop_status_label.text += " · Wardens %+d · Caravans %+d" % [int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0))]
+		var warden_status := world.faction_status("wardens")
+		shop_status_label.text += " · Wardens %+d (%s; threshold %+d) · Caravans %+d" % [int(world.reputation.get("wardens", 0)), String(warden_status.get("tier", "Unknown")), int(warden_status.get("next_threshold", 0)), int(world.reputation.get("caravans", 0))]
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.4.0",
+  "content_version": "1.5.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -33,7 +33,7 @@
         "cost": 6,
         "service_slots": 1,
         "time_cost": 0,
-        "effects": {"provisions": 4},
+        "effects": {"provisions": 4, "reputation": {"wardens": 1}},
         "description": "Pay the Ashgate stores to seal four route-ready provision packs.",
         "tradeoff": "More travel flexibility now, but six fewer ashmarks for cargo.",
         "unavailable_reason": ""
@@ -178,6 +178,20 @@
       }
     ]
   },
+  "factions": {
+    "wardens": {
+      "name": "Ash Wardens",
+      "minimum": -10,
+      "maximum": 10,
+      "trusted_threshold": 2,
+      "toll_route_id": "toll_road",
+      "toll_discount": 3,
+      "below_label": "Unregistered",
+      "trusted_label": "Recognized carrier",
+      "effect": "Recognized carriers pay 3 fewer ashmarks on the Toll Road.",
+      "tradeoff": "The discount comes with a named manifest and greater official visibility."
+    }
+  },
   "events": {
     "max_history": 20,
     "records": [
@@ -197,6 +211,7 @@
             "id": "pay_posted_toll",
             "label": "Pay 6 ashmarks",
             "money_cost": 6,
+            "reputation_delta": {"wardens": 1},
             "provision_cost": 0,
             "days": 0,
             "cargo_risk": 0.0,

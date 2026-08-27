@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B6 are implemented. The first Ash Warden relationship threshold is next.
+**Roadmap status:** A0–A1 foundations, B0–B6, and the first B7 Ash Warden threshold are implemented.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 9 and runtime content version `1.4.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 9 and runtime content version `1.5.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -26,6 +26,7 @@
 - Nara Vey can be recruited and assigned through the visit budget; departure forecasts distinguish unavailable, stale, and same-day scout-informed route notes without changing the authored risk.
 - Jorun Pale shares the same recruit/assign lifecycle; a current logistics plan reduces provision use by one, never below one, while leaving route time and risk intact.
 - Tess Oryn shares the crew lifecycle and visibly unlocks a Gatekeeper ledger challenge with a one-day cost, a named information lead, and a disclosed Warden-standing penalty.
+- Ash Warden standing is bounded and visible; recognized carriers at +2 pay three fewer ashmarks on the Toll Road while accepting greater official visibility.
 
 ## Current command IDs
 
@@ -217,6 +218,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The enabled challenge costs one day, avoids extra cargo/resource loss, records `gatekeeper_invented_tolls`, and visibly changes Warden standing from 0 to -1.
 - The choice resolves through the existing event command and save boundary; no persuasion roll or dialogue framework was added.
 
+## B7 first-faction result
+
+- `Pack Warden rations` and `Pay the posted toll` each grant one named Warden-standing point; Tess's ledger challenge removes one.
+- Standing is clamped from -10 to +10. The shop shows the current value, tier, and +2 threshold.
+- At +2 the Toll Road fee changes from 12 to 9 ashmarks in both forecast and travel resolution, with the named-manifest visibility tradeoff shown before departure.
+- Other routes, prices, event chances, and contracts are unchanged, preventing a universal faction bonus.
+
 ## Next permitted task
 
-Card B6/B7: implement the first practical Ash Warden relationship threshold and make its route/service trade-off visible.
+Continue B7 with a bounded Free Caravan relationship effect that competes with Warden recognition.

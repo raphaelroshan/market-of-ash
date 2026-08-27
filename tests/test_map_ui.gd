@@ -31,6 +31,7 @@ func _initialize() -> void:
 	var action_provisions_before: int = ui.world.provisions
 	ui._on_settlement_action_pressed("ashgate_provision_bundle")
 	_expect(ui.world.money == action_money_before - 6 and ui.world.provisions == action_provisions_before + 4, "local opportunity UI did not execute the command's visible effects")
+	_expect(ui.world.reputation.wardens == 1 and ui.shop_status_label.text.contains("Wardens +1"), "Warden ration action did not expose its named standing gain")
 	_expect(ui.opportunity_status_label.text.contains("1 of 2 visit slots remain"), "local opportunity UI did not refresh the remaining visit budget")
 	ui._on_start_game_pressed()
 	ui._on_accept_contract_pressed("reedwatch_water_relief_01")
@@ -211,6 +212,15 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("gatekeepers_chalk", "challenge_chalk_ledger")
 	_expect(ui.world.reputation.wardens == -1 and ui.world.known_information.has("gatekeeper_invented_tolls"), "Tess's UI choice did not apply its named political and information consequences")
 	_expect(ui.event_label.text.contains("Warden standing is now -1"), "Tess's arrival report did not disclose the relationship cost")
+
+	ui._on_start_game_pressed()
+	ui.world.adjust_reputation("wardens", 2)
+	ui._refresh_ui()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "brine_cross")
+	ui._on_destination_changed(ui.destination_option.selected)
+	_expect(ui.route_preview_label.text.contains("Route fee 9") and ui.route_preview_label.text.contains("Recognized carriers pay 3 fewer"), "recognized Warden forecast did not show the discounted Toll Road fee")
+	_expect(ui.route_preview_label.text.contains("greater official visibility"), "Warden threshold forecast did not disclose its control tradeoff")
 
 	ui.queue_free()
 	await process_frame

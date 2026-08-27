@@ -214,4 +214,12 @@
 
 **Reason:** A fixer should change an actual negotiation rather than add an invisible percentage bonus. Keeping the unavailable choice visible teaches Tess's role before recruitment, while the named relationship cost makes the option a tradeoff rather than a universally superior replacement for paying or waiting.
 
-**Trade-off:** Reputation is displayed and serialized but has no threshold effect until the B7 faction proof. Tess currently changes one event only; broader contract and market negotiation hooks remain later slices.
+**Trade-off:** Tess currently changes one event only; broader contract and market negotiation hooks remain later slices. Her Warden penalty now feeds the explicit B7 threshold rather than a hidden global modifier.
+
+## ADR-028: Warden recognition discounts one official route
+
+**Decision:** Bound Ash Warden standing from -10 through +10 and define one threshold at +2. Below it, the caravan is `Unregistered` and pays the authored Toll Road fee. At or above it, `Recognized carrier` status discounts that route by three ashmarks. Buying Warden ration packs and paying the Gatekeeper's posted toll each grant +1; Tess's ledger challenge grants -1. The UI shows value, tier, threshold, effect, and the official-visibility tradeoff.
+
+**Reason:** Faction alignment needs a practical commerce consequence with named causes and counterweight. A single official-route discount is easy to understand and test, composes with route forecasting and resolution, and does not make Warden standing a universal price bonus.
+
+**Trade-off:** Official visibility is currently a disclosed narrative cost rather than a second mechanical penalty. Only the Toll Road changes, reputation has one threshold, and Free Caravan effects remain a later slice.

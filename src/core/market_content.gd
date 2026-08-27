@@ -150,6 +150,12 @@ static func crew_records() -> Array[Dictionary]:
 			records.append(raw_crew.duplicate(true))
 	return records
 
+static func faction(faction_id: String) -> Dictionary:
+	var factions: Variant = runtime_world().get("factions", {})
+	if typeof(factions) != TYPE_DICTIONARY:
+		return {}
+	return factions.get(faction_id, {}).duplicate(true)
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -282,6 +288,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
 	_validate_contracts(data.get("contracts", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
+	_validate_factions(data.get("factions", {}), errors)
 	_validate_events(data.get("events", {}), errors)
 
 	var routes_data: Variant = data.get("routes", {})
@@ -614,6 +621,29 @@ static func _validate_crew(value: Variant, visit_slot_limit: int, errors: Array[
 		for route_id in REQUIRED_ROUTE_IDS:
 			if String(route_notes.get(route_id, "")).is_empty():
 				errors.append("crew %s route_notes must describe %s" % [crew_id, route_id])
+
+static func _validate_factions(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("factions must be an object")
+		return
+	var factions: Dictionary = value
+	var wardens_value: Variant = factions.get("wardens", {})
+	if typeof(wardens_value) != TYPE_DICTIONARY:
+		errors.append("factions.wardens must be an object")
+		return
+	var wardens: Dictionary = wardens_value
+	for field in ["name", "below_label", "trusted_label", "effect", "tradeoff"]:
+		if String(wardens.get(field, "")).is_empty():
+			errors.append("factions.wardens must declare %s" % field)
+	var minimum := int(wardens.get("minimum", 0))
+	var maximum := int(wardens.get("maximum", 0))
+	var threshold := int(wardens.get("trusted_threshold", 0))
+	if minimum >= maximum or threshold <= minimum or threshold > maximum:
+		errors.append("factions.wardens bounds and trusted_threshold are invalid")
+	if not REQUIRED_ROUTE_IDS.has(String(wardens.get("toll_route_id", ""))):
+		errors.append("factions.wardens toll_route_id must reference a known route")
+	if int(wardens.get("toll_discount", 0)) <= 0:
+		errors.append("factions.wardens toll_discount must be positive")
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

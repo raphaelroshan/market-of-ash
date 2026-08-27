@@ -61,15 +61,18 @@ func route(id: String) -> Dictionary:
 	if result.is_empty():
 		return result
 	var condition_value: Variant = route_conditions.get(id, {})
-	if typeof(condition_value) != TYPE_DICTIONARY:
-		return result
-	var condition: Dictionary = condition_value
-	if condition.is_empty():
-		return result
-	result["risk"] = clampf(float(result.get("risk", 0.0)) + float(condition.get("risk_delta", 0.0)), 0.0, 1.0)
-	result["cost"] = maxi(0, int(result.get("cost", 0)) + int(condition.get("cost_delta", 0)))
-	result["condition"] = condition.duplicate(true)
-	result["description"] = "%s Route condition: %s" % [String(result.get("description", "")), String(condition.get("description", ""))]
+	if typeof(condition_value) == TYPE_DICTIONARY:
+		var condition: Dictionary = condition_value
+		if not condition.is_empty():
+			result["risk"] = clampf(float(result.get("risk", 0.0)) + float(condition.get("risk_delta", 0.0)), 0.0, 1.0)
+			result["cost"] = maxi(0, int(result.get("cost", 0)) + int(condition.get("cost_delta", 0)))
+			result["condition"] = condition.duplicate(true)
+			result["description"] = "%s Route condition: %s" % [String(result.get("description", "")), String(condition.get("description", ""))]
+	var wardens := MarketContent.faction("wardens")
+	if id == String(wardens.get("toll_route_id", "")) and int(reputation.get("wardens", 0)) >= int(wardens.get("trusted_threshold", 999)):
+		result["cost"] = maxi(0, int(result.get("cost", 0)) - int(wardens.get("toll_discount", 0)))
+		result["faction_effect"] = String(wardens.get("effect", ""))
+		result["faction_tradeoff"] = String(wardens.get("tradeoff", ""))
 	return result
 
 func set_route_condition(route_id: String, condition: Dictionary) -> Dictionary:
@@ -105,10 +108,25 @@ func record_information(information_id: String) -> bool:
 func adjust_reputation(faction_id: String, delta: int) -> Dictionary:
 	if not reputation.has(faction_id):
 		return {"ok": false, "reason": "unknown faction"}
+	var rules := MarketContent.faction(faction_id)
 	var before := int(reputation.get(faction_id, 0))
-	var after := clampi(before + delta, -10, 10)
+	var after := clampi(before + delta, int(rules.get("minimum", -10)), int(rules.get("maximum", 10)))
 	reputation[faction_id] = after
 	return {"ok": true, "before": before, "after": after, "delta": after - before}
+
+func faction_status(faction_id: String) -> Dictionary:
+	var rules := MarketContent.faction(faction_id)
+	if rules.is_empty():
+		return {}
+	var value := int(reputation.get(faction_id, 0))
+	var threshold := int(rules.get("trusted_threshold", 0))
+	return {
+		"value": value,
+		"tier": String(rules.get("trusted_label", "Trusted")) if value >= threshold else String(rules.get("below_label", "Unrecognized")),
+		"next_threshold": threshold,
+		"effect": String(rules.get("effect", "")),
+		"tradeoff": String(rules.get("tradeoff", "")),
+	}
 
 func is_crew_recruited(crew_id: String) -> bool:
 	return recruited_crew.has(crew_id)

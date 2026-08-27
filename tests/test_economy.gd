@@ -26,6 +26,7 @@ func _init() -> void:
 	_test_nara_vey_crew()
 	_test_jorun_pale_crew()
 	_test_tess_oryn_crew()
+	_test_warden_relationship_threshold()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -47,7 +48,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.4.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.5.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -61,6 +62,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.crew_member("nara_vey").get("role", "") == "Scout", "runtime content should expose Nara Vey's stable crew record")
 	_expect(MarketContent.crew_member("jorun_pale").get("role", "") == "Quartermaster", "runtime content should expose Jorun Pale's stable crew record")
 	_expect(MarketContent.crew_member("tess_oryn").get("role", "") == "Fixer", "runtime content should expose Tess Oryn's stable crew record")
+	_expect(int(MarketContent.faction("wardens").get("trusted_threshold", 0)) == 2, "runtime content should expose the first Warden threshold")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -309,6 +311,7 @@ func _test_settlement_actions() -> void:
 	_expect(first.ok, "the live Ashgate provision action should succeed")
 	_expect(world.money == money_before - 6 and world.provisions == provisions_before + 4, "the provision action should apply its disclosed money and provision deltas")
 	_expect(world.visit_slots_remaining == 1, "the first auxiliary action should consume one visit slot")
+	_expect(world.reputation.wardens == 1, "packing Warden rations should apply its named standing gain")
 	_expect(int(first.state_delta.visit_slots_remaining) == 1, "action result should expose remaining visit slots")
 	var second := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
@@ -1092,6 +1095,24 @@ func _test_tess_oryn_crew() -> void:
 	_expect(world.reputation.wardens == -1 and world.known_information.has("gatekeeper_invented_tolls"), "Tess's named negotiation should record both its Warden cost and information result")
 	_expect(world.assigned_crew == "tess_oryn" and world.route_intelligence("toll_road").status == "stale", "travel should retain Tess's assignment while aging her route note")
 
+func _test_warden_relationship_threshold() -> void:
+	var world := AshWorldState.new(1)
+	_expect(world.faction_status("wardens").tier == "Unregistered" and int(world.route("toll_road").cost) == 12, "below-threshold Warden standing should retain the full Toll Road fee")
+	world.adjust_reputation("wardens", 2)
+	var trusted := world.faction_status("wardens")
+	_expect(trusted.tier == "Recognized carrier" and int(trusted.next_threshold) == 2, "threshold status should expose the recognized tier and cutoff")
+	_expect(int(world.route("toll_road").cost) == 9 and String(world.route("toll_road").faction_effect).contains("3 fewer"), "recognized Warden standing should apply and explain the three-ashmark Toll Road discount")
+	world.money = 20
+	var depart := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(depart.ok and world.money == 11 and int(depart.state_delta.money) == -9, "discounted Toll Road forecast and travel resolution should charge the same fee")
+	world.adjust_reputation("wardens", 100)
+	_expect(world.reputation.wardens == 10 and int(world.route("toll_road").cost) == 9, "above-threshold standing should clamp and retain the bounded discount")
+	world.adjust_reputation("wardens", -100)
+	_expect(world.reputation.wardens == -10 and int(world.route("toll_road").cost) == 12, "low standing should clamp and remove the permit discount")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -1160,7 +1181,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.4.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.5.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

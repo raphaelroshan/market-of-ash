@@ -163,6 +163,24 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_factions = copy.deepcopy(runtime)
+    invalid_factions["factions"] = json.loads(
+        (ROOT / "tests/fixtures/factions_invalid.json").read_text(encoding="utf-8")
+    )
+    faction_errors = validate(invalid_factions)
+    expected_faction_fragments = (
+        "must declare name",
+        "bounds and trusted_threshold are invalid",
+        "toll_route_id must reference a known route",
+        "toll_discount must be a positive integer",
+    )
+    missing_factions = [fragment for fragment in expected_faction_fragments if not any(fragment in error for error in faction_errors)]
+    if missing_factions:
+        print("FAIL: invalid faction fixture did not produce expected errors")
+        for fragment in missing_factions:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

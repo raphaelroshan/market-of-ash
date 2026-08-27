@@ -347,6 +347,23 @@ def validate_crew(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
                 fail(errors, f"crew {crew_id}.route_notes must describe {route_id}")
 
 
+def validate_factions(value: Any, errors: list[str]) -> None:
+    factions = as_object(value, "factions", errors)
+    wardens = as_object(factions.get("wardens"), "factions.wardens", errors)
+    for field in ("name", "below_label", "trusted_label", "effect", "tradeoff"):
+        if not isinstance(wardens.get(field), str) or not wardens[field]:
+            fail(errors, f"factions.wardens must declare {field}")
+    minimum = wardens.get("minimum")
+    maximum = wardens.get("maximum")
+    threshold = wardens.get("trusted_threshold")
+    if not all(isinstance(value, int) for value in (minimum, maximum, threshold)) or not minimum < threshold <= maximum:
+        fail(errors, "factions.wardens bounds and trusted_threshold are invalid")
+    if wardens.get("toll_route_id") not in REQUIRED_ROUTES:
+        fail(errors, "factions.wardens.toll_route_id must reference a known route")
+    if not isinstance(wardens.get("toll_discount"), int) or wardens["toll_discount"] <= 0:
+        fail(errors, "factions.wardens.toll_discount must be a positive integer")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -370,6 +387,7 @@ def validate(data: Any) -> list[str]:
     visit_slot_limit = settlement_action_rules.get("visit_slots_per_arrival") if isinstance(settlement_action_rules, dict) else None
     validate_contracts(root.get("contracts"), visit_slot_limit, errors)
     validate_crew(root.get("crew"), visit_slot_limit, errors)
+    validate_factions(root.get("factions"), errors)
     validate_events(root.get("events"), errors)
 
     goods = root.get("goods")
