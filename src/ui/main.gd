@@ -29,6 +29,7 @@ var pause_summary_label: Label
 var focus_before_pause: Control
 var start_game_button: Button
 var continue_game_button: Button
+var quit_button: Button
 var menu_save_status_label: Label
 var controls_hint_label: Label
 var binding_status_label: Label
@@ -223,10 +224,19 @@ func _build_main_menu() -> void:
 	menu_save_status_label.add_theme_font_size_override("font_size", 11)
 	menu_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(menu_save_status_label)
+	quit_button = Button.new()
+	quit_button.text = "Quit"
+	quit_button.tooltip_text = "Close the desktop build. Browser builds use the browser tab instead."
+	quit_button.visible = not OS.has_feature("web")
+	quit_button.pressed.connect(_on_quit_pressed)
+	content.add_child(quit_button)
 	content.move_child(start_game_button, 4)
 	content.move_child(continue_game_button, 5)
 	content.move_child(menu_save_status_label, 6)
 	_refresh_binding_labels()
+
+func _on_quit_pressed() -> void:
+	get_tree().quit()
 
 func _build_pause_menu() -> void:
 	pause_layer = Control.new()

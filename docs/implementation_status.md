@@ -12,6 +12,7 @@
 - Successful travel presents an arrival report before the player enters the destination shop.
 - The regional map is a real planning surface rather than a placeholder grid: settlement markers select direct destinations, explain unreachable stops, label the current crisis stage/location and local resilience without relying on color, and visually highlight the caravan's position. Once travel is committed, map clicks and planning selectors lock until the route decision and arrival report are complete.
 - The scroll-safe Main Menu keeps fresh-start and validated-continue actions above optional accessibility/input settings, and exposes reduced motion, large text, keyboard remapping, and default restoration.
+- Desktop builds expose a conventional Main Menu Quit action; Web builds omit it and leave tab lifecycle to the browser.
 - The Main Menu also exposes a persisted Interface Sounds switch. Short generated cues distinguish successful commands, blocked actions, and committed travel without carrying essential information or adding external audio assets.
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
