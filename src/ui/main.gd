@@ -389,6 +389,17 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	theme.default_font_size = 20 if enabled else 16
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
 	_save_presentation_settings()
+	get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
+
+func _ensure_focused_control_visible() -> void:
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused == null:
+		return
+	var ancestor := focused.get_parent()
+	while ancestor != null:
+		if ancestor is ScrollContainer:
+			ancestor.ensure_control_visible(focused)
+		ancestor = ancestor.get_parent()
 
 func _on_reduce_motion_toggled(enabled: bool) -> void:
 	reduce_motion_enabled = enabled
@@ -825,6 +836,7 @@ func _build_ui() -> void:
 	controls_shell.add_theme_constant_override("separation", 10)
 	right.add_child(controls_shell)
 	var controls_scroll := ScrollContainer.new()
+	controls_scroll.name = "DepartureControlsScroll"
 	controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	controls_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	controls_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL

@@ -466,6 +466,14 @@ func _initialize() -> void:
 	_expect(ui.event_choice_reason_labels.size() == 1 and ui.event_choice_reason_labels[0].text.contains("Tess Oryn"), "disabled event prerequisites should remain readable without hovering or focusing the unavailable control")
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "a route decision should focus its first available choice")
+	ui.large_text_checkbox.button_pressed = true
+	await process_frame
+	await process_frame
+	var departure_scroll: ScrollContainer = ui.find_child("DepartureControlsScroll", true, false)
+	var focused_event_choice: Control = ui.get_viewport().gui_get_focus_owner()
+	_expect(departure_scroll != null and focused_event_choice == ui.event_choice_buttons[0] and focused_event_choice.get_global_rect().position.y >= departure_scroll.get_global_rect().position.y and focused_event_choice.get_global_rect().end.y <= departure_scroll.get_global_rect().end.y, "large text should scroll the first enabled route choice fully into view: choice %s, scroll %s" % [focused_event_choice.get_global_rect(), departure_scroll.get_global_rect()])
+	ui.large_text_checkbox.button_pressed = false
+	await process_frame
 	ui._on_save_pressed()
 	ui._open_pause()
 	ui._on_pause_load_pressed()
