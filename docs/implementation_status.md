@@ -256,6 +256,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 ## B9 crisis and ending proof
 
 - Crisis stages transition deterministically at days 4, 7, and 10 and expose a current label plus practical objective in the settlement header.
+- The Shop's campaign outlook lists the exact contract, resilience, faction, arms, and money progress for every ending, then collapses to the immutable conclusion once one is reached.
 - Thin Wells, Empty Reservoir, and Settlement Decision add named route pressure to the same Old Road/Toll Road records used by forecasts and resolution; saved repairs, faction discounts, and arms inspections compose deterministically.
 - At Thin Wells, Brine Cross activates a one-time cistern queue action: spending one day and one visit slot records the pump-failure lead and adds one visible local resilience point.
 - Hollow Market's one-time route rumor costs six ashmarks and one visit slot, records a water-cache lead, and lowers Dry Cut risk by five points. Reedwatch's one-time shelter requires completed relief plus Thin Wells, spends one day/slot, and adds resilience and Free Caravan standing.

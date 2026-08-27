@@ -32,6 +32,7 @@ var opportunity_buttons: Array[Button] = []
 var contract_buttons: Array[Button] = []
 var crew_buttons: Array[Button] = []
 var active_contract_label: Label
+var campaign_outlook_label: Label
 var ending_panel: PanelContainer
 var ending_label: Label
 var plan_departure_button: Button
@@ -312,6 +313,11 @@ func _build_shop() -> void:
 	caravan_title.add_theme_font_size_override("font_size", 20)
 	caravan_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(caravan_title)
+	campaign_outlook_label = Label.new()
+	campaign_outlook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	campaign_outlook_label.add_theme_font_size_override("font_size", 12)
+	campaign_outlook_label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	actions.add_child(campaign_outlook_label)
 	ending_panel = PanelContainer.new()
 	ending_panel.visible = false
 	actions.add_child(ending_panel)
@@ -1302,6 +1308,12 @@ func _has_completed_contract(contract_id: String) -> bool:
 			return true
 	return false
 
+func _campaign_outlook_text() -> String:
+	if not world.ending_id.is_empty():
+		return "CAMPAIGN OUTLOOK — Conclusion recorded: %s." % String(MarketContent.ending(world.ending_id).get("title", world.ending_id))
+	var relief_mark := "done" if _has_completed_contract("reedwatch_water_relief_01") else "needed"
+	return "CAMPAIGN OUTLOOK — Outcomes are checked at crisis stage 3 (Day 10).\nOpen Routes: relief %s · Reedwatch %d/2 resilience · arms %d/1 max.\nOrder at the Cistern: Wardens %d/3 · Caravans %d/1 max · arms %d/1 max.\nNo Road Owns the Sky: Caravans %d/2 · Wardens %d/1 max · arms %d/1 max.\nThe Best Margin: %d/220 ashmarks · Reedwatch %d/1 max resilience · arms %d/1 max." % [relief_mark, world.resilience_for("reedwatch"), world.arms_escalation, int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, int(world.reputation.get("caravans", 0)), int(world.reputation.get("wardens", 0)), world.arms_escalation, world.money, world.resilience_for("reedwatch"), world.arms_escalation]
+
 func _set_event(text: String) -> void:
 	event_label.text = text
 
@@ -1327,6 +1339,8 @@ func _refresh_ui() -> void:
 		if ending_panel.visible:
 			var ending := MarketContent.ending(world.ending_id)
 			ending_label.text = "CAMPAIGN CONCLUSION\n%s\n%s\n\nThis outcome is recorded in the save. You may continue trading to inspect the resulting region." % [String(ending.get("title", world.ending_id)), world.ending_summary]
+	if campaign_outlook_label:
+		campaign_outlook_label.text = _campaign_outlook_text()
 	if diagnostics_label:
 		var last_command := "none"
 		if not world.command_history.is_empty():

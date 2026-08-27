@@ -335,3 +335,11 @@
 **Reason:** Cinderford was drawn and authored as a settlement but could not be selected, leaving the five-settlement promise false. Segment profiles make the existing map stop playable without inventing a fourth route type or charging the full corridor fee for half a journey.
 
 **Trade-off:** Segment travel shares the Toll Road's faction, crisis, arms, crew, and event rules. Segment-specific narrative variants and different provision costs remain future content rather than a second routing engine.
+
+## ADR-043: Ending progress is visible before the deadline
+
+**Decision:** The Settlement Shop includes a compact campaign-outlook block that names all four conclusions and shows live progress toward their contract, resilience, faction, arms, and money thresholds. At an ending, it collapses to the recorded title while the separate conclusion card provides the full regional summary.
+
+**Reason:** A deterministic ending is not a meaningful player goal if its predicate is only visible in code or documentation. Showing exact thresholds lets the player intentionally pursue or avoid a political/economic outcome before day ten.
+
+**Trade-off:** The outlook is intentionally numeric and compact for the alpha. It does not predict future event availability or recommend a morally preferred ending.

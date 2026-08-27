@@ -41,6 +41,7 @@ func _initialize() -> void:
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
 	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
+	_expect(ui.campaign_outlook_label.text.contains("Open Routes") and ui.campaign_outlook_label.text.contains("Wardens 0/3") and ui.campaign_outlook_label.text.contains("120/220 ashmarks"), "shop should expose exact progress toward each campaign conclusion")
 	_expect(ui.opportunity_buttons.size() == 3 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[2].disabled, "Ashgate should expose provisions, cargo-gated arms, and condition-gated recovery")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
@@ -367,6 +368,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "ending_ash_merchant" and ui.shop_status_label.text.contains("ENDING — The Best Margin"), "profit-first crisis state did not expose the fourth deterministic ending summary")
 	_expect(ui.ending_panel.visible and ui.ending_label.text.contains("The Best Margin") and ui.ending_label.text.contains("continue trading"), "profit-first ending should update the dedicated conclusion card without blocking continued play")
+	_expect(ui.campaign_outlook_label.text.contains("Conclusion recorded: The Best Margin"), "campaign outlook should collapse to the immutable reached conclusion")
 
 	var state_before_text_scale := JSON.stringify(ui.world.serialize())
 	ui.large_text_checkbox.button_pressed = true
