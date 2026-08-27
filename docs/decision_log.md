@@ -103,3 +103,11 @@
 **Reason:** Route fees, risk, travel animation, profit forecast, and state mutation must all describe the same corridor. Allowing an arbitrary destination after selecting a route created invalid paths that looked legal in the caravan desk but contradicted the traversal map and distorted simulation results.
 
 **Trade-off:** The first alpha map has deliberately limited direct connectivity; inaccessible settlements remain authored economic contexts until a connected corridor or a broader travel system is added. Endpoint validation takes precedence over offering a complete regional travel graph prematurely.
+
+## ADR-014: Settlement shop as home state; departure map as commitment state
+
+**Decision:** The playable flow separates the local trade screen from the regional travel screen. Starting a run and entering a settlement opens the Settlement Shop. The shop owns buying, selling, local price explanations, cargo context, and the `Plan departure` handoff. The Departure Desk owns the map, canonical destinations and routes, route forecast, `Return to shop`, and `Commit departure`. A successful departure remains on an arrival report until the player selects `Enter settlement`.
+
+**Reason:** The product’s central rhythm is inspect market, form a plan, commit to a route, experience a consequence, arrive, and reinvest. Keeping map and purchase controls in one screen weakens the difference between local browsing and an action that spends time, provisions, and risk. The separation makes the route forecast a deliberate commitment check while preserving the simulation command boundary.
+
+**Trade-off:** This adds one navigation step before travel and does not yet add full contracts, crew, events, or final art. Planning selections persist when returning to the shop, and the added step is justified only because it clarifies the real player decision rather than hiding it behind a modal confirmation.
