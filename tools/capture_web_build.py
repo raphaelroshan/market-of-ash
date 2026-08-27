@@ -33,16 +33,29 @@ def png_dimensions(path: Path) -> tuple[int, int]:
 
 
 def set_viewport_size(driver: webdriver.Chrome, width: int, height: int) -> None:
-    driver.set_window_size(width, height)
-    inner_width = int(driver.execute_script("return window.innerWidth"))
-    inner_height = int(driver.execute_script("return window.innerHeight"))
-    driver.set_window_size(width + (width - inner_width), height + (height - inner_height))
-    actual_width = int(driver.execute_script("return window.innerWidth"))
-    actual_height = int(driver.execute_script("return window.innerHeight"))
-    if (actual_width, actual_height) != (width, height):
-        raise AssertionError(
-            f"could not establish requested viewport {(width, height)}; got {(actual_width, actual_height)}"
+    # Headless Chrome can transiently ignore WebDriver window-resize calls while
+    # its first renderer is starting. CDP's device metrics apply to the page
+    # viewport directly, avoiding dependence on runner window-manager chrome.
+    driver.execute_cdp_cmd(
+        "Emulation.setDeviceMetricsOverride",
+        {
+            "width": width,
+            "height": height,
+            "deviceScaleFactor": 1,
+            "mobile": False,
+        },
+    )
+    deadline = time.monotonic() + 5.0
+    actual = (0, 0)
+    while time.monotonic() < deadline:
+        actual = (
+            int(driver.execute_script("return window.innerWidth")),
+            int(driver.execute_script("return window.innerHeight")),
         )
+        if actual == (width, height):
+            return
+        time.sleep(0.1)
+    raise AssertionError(f"could not establish requested viewport {(width, height)}; got {actual}")
 
 
 def capture_frame(driver: webdriver.Chrome, output: Path, expected_size: tuple[int, int]) -> int:
