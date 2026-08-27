@@ -675,6 +675,16 @@ func _initialize() -> void:
 	ui._on_depart_pressed()
 	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")
 	_expect(ui.enter_settlement_button.visible and ui.enter_settlement_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "large text should keep the arrival handoff visible outside the result rail")
+	ui._open_pause()
+	await process_frame
+	var pause_card: PanelContainer = ui.find_child("PauseCard", true, false)
+	_expect(pause_card != null and pause_card.get_global_rect().position.y >= ui.pause_layer.get_global_rect().position.y and pause_card.get_global_rect().end.y <= ui.pause_layer.get_global_rect().end.y, "large text should keep the complete Pause card inside the game layout")
+	ui._close_pause()
+	ui._on_reset_pressed()
+	await process_frame
+	_expect(ui.reset_confirmation_dialog.position.y >= 0 and ui.reset_confirmation_dialog.position.y + ui.reset_confirmation_dialog.size.y <= int(ui.get_viewport().get_visible_rect().end.y), "large text should keep the reset confirmation fully visible")
+	ui.reset_confirmation_dialog.canceled.emit()
+	ui.reset_confirmation_dialog.hide()
 
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):

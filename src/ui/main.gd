@@ -263,6 +263,7 @@ func _build_pause_menu() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	pause_layer.add_child(center)
 	var card := PanelContainer.new()
+	card.name = "PauseCard"
 	card.custom_minimum_size = Vector2(480, 0)
 	center.add_child(card)
 	var content := VBoxContainer.new()
