@@ -16,10 +16,12 @@ const POLICIES := ["guided_grain_delivery", "forecast_maximizer", "gross_margin_
 func _init() -> void:
 	var rows: Array[Dictionary] = []
 	var multi_trip_rows: Array[Dictionary] = []
+	var event_probe_rows: Array[Dictionary] = []
 	for seed in range(1, SEED_COUNT + 1):
 		for policy in POLICIES:
 			rows.append(_run_policy(seed, policy))
 		multi_trip_rows.append_array(_run_multi_trip_policy(seed))
+		event_probe_rows.append(_run_span_event_probe(seed))
 	var payload := {
 		"simulation": "Market of Ash first-run single-trade policy simulation",
 		"seed_count": SEED_COUNT,
@@ -27,6 +29,7 @@ func _init() -> void:
 		"policies": POLICIES,
 		"rows": rows,
 		"multi_trip_rows": multi_trip_rows,
+		"event_probe_rows": event_probe_rows,
 		"market_memory_probe": _market_memory_probe(),
 	}
 	var output_path := _output_path()
@@ -41,6 +44,34 @@ func _init() -> void:
 	else:
 		print("SIMULATION_JSON=" + JSON.stringify(payload))
 	quit(0)
+
+func _run_span_event_probe(seed: int) -> Dictionary:
+	var world := AshWorldState.new(seed)
+	world.cargo = {"scrap": 2, "weight": 2}
+	var depart := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	if not depart.ok:
+		return {"seed": seed, "policy": "span_material_reserve_probe", "status": String(depart.reason), "event_id": "", "event_choice_id": "", "route_risk_after": float(world.route("old_road").risk)}
+	var event_id := String(world.pending_event.get("id", ""))
+	var choice_id := ""
+	var status := "no event"
+	if event_id == "span_at_cinderford":
+		choice_id = "reserve_materials_for_span"
+		var resolution := MarketCommandProcessor.execute(world, {
+			"id": MarketCommandProcessor.RESOLVE_EVENT,
+			"inputs": {"event_id": event_id, "choice_id": choice_id},
+		})
+		status = "completed" if resolution.ok else String(resolution.reason)
+	return {
+		"seed": seed,
+		"policy": "span_material_reserve_probe",
+		"status": status,
+		"event_id": event_id,
+		"event_choice_id": choice_id,
+		"route_risk_after": float(world.route("old_road").risk),
+	}
 
 func _output_path() -> String:
 	for argument in OS.get_cmdline_user_args():
@@ -159,6 +190,9 @@ func _resolve_pending_event_for_policy(world: AshWorldState) -> Dictionary:
 	var choice_id := "wait_for_stamped_review"
 	if event_id == "gatekeepers_chalk" and world.money >= 6:
 		choice_id = "pay_posted_toll"
+	elif event_id == "span_at_cinderford":
+		var material_basis: Dictionary = world.pending_event.get("material_basis", {})
+		choice_id = "reserve_materials_for_span" if int(material_basis.get("quantity", 0)) >= 2 else "turn_back_with_cargo"
 	return MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.RESOLVE_EVENT,
 		"inputs": {"event_id": event_id, "choice_id": choice_id},

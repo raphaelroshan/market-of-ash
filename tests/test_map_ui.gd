@@ -123,6 +123,25 @@ func _initialize() -> void:
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
 	_expect(ui.world.event_history.size() == 1 and ui.world.event_history.back().choice_id == "pay_posted_toll", "event UI did not preserve the chosen outcome")
 
+	ui._on_start_game_pressed()
+	ui._select_option_by_id(ui.shop_good_option, "scrap")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	_expect(ui.world.pending_event.get("id", "") == "span_at_cinderford", "eligible Old Road load did not present The Span at Cinderford")
+	_expect(ui.event_title_label.text == "The Span at Cinderford", "span event card did not render its authored title")
+	_expect(ui.event_stakes_label.text.contains("Old Road") and ui.event_stakes_label.text.contains("Repair stock recognized: 2 Scrap"), "span event card did not expose route and frozen material context")
+	_expect(ui.event_choice_buttons.size() == 4, "span event should expose all four authored choices")
+	_expect(ui.event_choice_buttons[0].text.contains("+30 ashmarks") and ui.event_choice_buttons[0].text.contains("2 materials"), "premium option did not disclose its reward and cargo cost")
+	_expect(ui.event_choice_buttons[3].text.contains("return to origin"), "turn-back recovery did not disclose its movement result")
+	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "span choices should remain keyboard/controller focusable")
+	ui._on_event_choice_pressed("span_at_cinderford", "reserve_materials_for_span")
+	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "reedwatch", "reserving span materials did not complete arrival")
+	_expect(is_equal_approx(float(ui.world.route("old_road").risk), 0.25), "span event UI choice did not apply the disclosed later-route improvement")
+	_expect(ui.event_label.text.contains("public support") and ui.enter_settlement_button.visible, "arrival report did not explain why the span choice changed the next route decision")
+
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

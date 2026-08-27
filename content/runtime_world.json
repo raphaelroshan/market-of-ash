@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "0.8.0",
+  "content_version": "0.9.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -158,6 +158,86 @@
             "days": 1,
             "cargo_risk": 0.0,
             "outcome": "The office confirms the original fare after a full day of delay."
+          }
+        ]
+      },
+      {
+        "id": "span_at_cinderford",
+        "title": "The Span at Cinderford",
+        "category": "travel_decision",
+        "route_ids": ["old_road"],
+        "trigger_chance": 0.70,
+        "trigger_roll_salt": 29,
+        "minimum_cargo_value": 0,
+        "active_contract_relevant": false,
+        "trigger_good_ids_any": ["scrap", "charcoal"],
+        "minimum_trigger_good_quantity": 2,
+        "setup": "A Cinderford bridge crew has shored up a failed support and recognizes repair stock in the caravan.",
+        "stakes": "Trade the material for immediate margin, reserve it for a safer public span, carry the measurements onward, or turn back with the load intact.",
+        "choices": [
+          {
+            "id": "sell_materials_at_premium",
+            "label": "Sell 2 repair materials for 30 ashmarks",
+            "money_cost": 0,
+            "money_reward": 30,
+            "provision_cost": 0,
+            "material_quantity": 2,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "outcome": "The crew buys the stock for private repair work; the public span remains exposed."
+          },
+          {
+            "id": "reserve_materials_for_span",
+            "label": "Reserve 2 materials for the public span",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 2,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "route_condition": {
+              "route_id": "old_road",
+              "id": "cinderford_span_patched",
+              "label": "Cinderford span patched",
+              "risk_delta": -0.10,
+              "cost_delta": 0,
+              "description": "Reserved repair stock has lowered the chance of a load failure at the Cinderford span."
+            },
+            "outcome": "The crew bolts the reserved stock into the public support and reopens a steadier crossing."
+          },
+          {
+            "id": "carry_repair_message",
+            "label": "Carry the repair measurements onward",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "route_condition": {
+              "route_id": "old_road",
+              "id": "cinderford_span_surveyed",
+              "label": "Cinderford span surveyed",
+              "risk_delta": -0.05,
+              "cost_delta": 0,
+              "description": "Delivered measurements let the road crews mark a safer load line across the span."
+            },
+            "outcome": "The next road crew receives exact measurements and marks a safer load line."
+          },
+          {
+            "id": "turn_back_with_cargo",
+            "label": "Turn back with the cargo intact",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "origin",
+            "outcome": "The caravan reverses before the failed support and preserves the full load."
           }
         ]
       }

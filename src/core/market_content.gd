@@ -469,6 +469,15 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 			errors.append("event %s minimum_cargo_value must be non-negative" % event_id)
 		if typeof(event_record.get("active_contract_relevant", false)) != TYPE_BOOL:
 			errors.append("event %s active_contract_relevant must be boolean" % event_id)
+		var trigger_good_ids: Array = event_record.get("trigger_good_ids_any", [])
+		for trigger_good_id in trigger_good_ids:
+			if not REQUIRED_GOOD_IDS.has(String(trigger_good_id)):
+				errors.append("event %s references unknown trigger good %s" % [event_id, trigger_good_id])
+		var minimum_trigger_quantity := int(event_record.get("minimum_trigger_good_quantity", 0))
+		if minimum_trigger_quantity < 0:
+			errors.append("event %s minimum_trigger_good_quantity must be non-negative" % event_id)
+		if not trigger_good_ids.is_empty() and minimum_trigger_quantity <= 0:
+			errors.append("event %s must require a positive trigger-good quantity" % event_id)
 		var choices: Array = event_record.get("choices", [])
 		if choices.size() < 2:
 			errors.append("event %s must declare at least two choices" % event_id)
@@ -488,12 +497,29 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 			for required_text in ["label", "outcome"]:
 				if String(choice.get(required_text, "")).is_empty():
 					errors.append("event %s choice %s must declare %s" % [event_id, choice_id, required_text])
-			for non_negative_field in ["money_cost", "provision_cost", "days"]:
-				if int(choice.get(non_negative_field, -1)) < 0:
+			for non_negative_field in ["money_cost", "money_reward", "provision_cost", "material_quantity", "days"]:
+				if int(choice.get(non_negative_field, 0)) < 0:
 					errors.append("event %s choice %s %s must be non-negative" % [event_id, choice_id, non_negative_field])
 			var cargo_risk := float(choice.get("cargo_risk", -1.0))
 			if cargo_risk < 0.0 or cargo_risk > 1.0:
 				errors.append("event %s choice %s cargo_risk must be between 0 and 1" % [event_id, choice_id])
+			var arrival_target := String(choice.get("arrival_target", "destination"))
+			if not ["destination", "origin"].has(arrival_target):
+				errors.append("event %s choice %s arrival_target must be destination or origin" % [event_id, choice_id])
+			var condition_value: Variant = choice.get("route_condition", {})
+			if typeof(condition_value) != TYPE_DICTIONARY:
+				errors.append("event %s choice %s route_condition must be an object" % [event_id, choice_id])
+			else:
+				var condition: Dictionary = condition_value
+				if not condition.is_empty():
+					if not REQUIRED_ROUTE_IDS.has(String(condition.get("route_id", ""))):
+						errors.append("event %s choice %s route_condition references an unknown route" % [event_id, choice_id])
+					for condition_text in ["id", "label", "description"]:
+						if String(condition.get(condition_text, "")).is_empty():
+							errors.append("event %s choice %s route_condition must declare %s" % [event_id, choice_id, condition_text])
+					var risk_delta := float(condition.get("risk_delta", 0.0))
+					if risk_delta < -1.0 or risk_delta > 1.0:
+						errors.append("event %s choice %s route_condition risk_delta must be between -1 and 1" % [event_id, choice_id])
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

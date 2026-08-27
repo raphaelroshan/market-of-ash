@@ -27,6 +27,10 @@ POLICY_RULES = {
     "no_trade": "Takes no action; baseline for resource preservation.",
 }
 
+EVENT_PROBE_LABELS = {
+    "span_material_reserve_probe": "Span material-reserve probe",
+}
+
 PRE_B0_CALIBRATION = {
     "guided_grain_delivery": {"mean_error": 3.2, "mean_absolute_error": 4.6},
     "forecast_maximizer": {"mean_error": 66.8, "mean_absolute_error": 66.8},
@@ -169,7 +173,11 @@ def main() -> int:
     route_mix["share"] = route_mix.groupby("policy")["runs"].transform(lambda series: series / series.sum())
     route_mix.to_csv(output / "route_mix.csv", index=False)
 
-    event_rows = rows[rows["event_id"] != ""]
+    event_rows = rows[rows["event_id"] != ""].copy()
+    event_probe_rows = pd.DataFrame(data.get("event_probe_rows", []))
+    if not event_probe_rows.empty:
+        event_probe_rows["policy_label"] = event_probe_rows["policy"].map(EVENT_PROBE_LABELS).fillna(event_probe_rows["policy"])
+        event_rows = pd.concat([event_rows, event_probe_rows[event_probe_rows["event_id"] != ""]], ignore_index=True, sort=False)
     if not event_rows.empty:
         event_summary = (
             event_rows.groupby(["policy_label", "event_id", "event_choice_id"], sort=False)
@@ -293,7 +301,7 @@ The run starts every simulated trader in the current quick-playtest state: Ashga
 | --- | --- |
 """ + "\n".join(f"| {POLICY_LABELS[key]} | {POLICY_RULES[key]} |" for key in POLICY_LABELS) + f"""
 
-The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. When Gatekeeper's Chalk triggers, the synthetic policy pays if it can and otherwise waits for review. It does not model human event preference, crew, contracts, broader faction effects, or player learning.
+The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. When Gatekeeper's Chalk triggers, the synthetic policy pays if it can and otherwise waits for review. A separate two-scrap Old Road probe reserves materials whenever The Span at Cinderford triggers, verifying deterministic event coverage and the persistent 35% → 25% route-risk change. It does not model human event preference, crew, contracts, broader faction effects, or player learning.
 
 ## Results
 
@@ -323,7 +331,7 @@ The fixed Reedwatch water probe starts at **{int(memory_probe.get('baseline_pric
 
 {event_table}
 
-Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it triggers. The automated policy always pays when affordable, so this table measures deterministic trigger coverage and execution stability rather than choice quality.
+Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it triggers; the automated policy pays when affordable. The separate Span probe carries two scrap and always reserves it for the public support, producing the authored 70% trigger rate and a persistent Old Road risk change from 35% to 25%. These probes measure deterministic coverage and execution stability rather than human choice quality.
 
 ## Forecast Calibration
 

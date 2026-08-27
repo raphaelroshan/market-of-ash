@@ -10,6 +10,8 @@
       "trigger_roll_salt": -1,
       "minimum_cargo_value": -1,
       "active_contract_relevant": "yes",
+      "trigger_good_ids_any": ["missing_good"],
+      "minimum_trigger_good_quantity": -1,
       "setup": "",
       "stakes": "",
       "choices": [
@@ -17,10 +19,23 @@
           "id": "only_choice",
           "label": "",
           "money_cost": -1,
+          "money_reward": -1,
           "provision_cost": -1,
+          "material_quantity": -1,
           "days": -1,
           "cargo_risk": 2.0,
+          "arrival_target": "nowhere",
+          "route_condition": "bad",
           "outcome": ""
+        },
+        {
+          "id": "second_choice",
+          "label": "Wait",
+          "money_cost": 0,
+          "provision_cost": 0,
+          "days": 0,
+          "cargo_risk": 0.0,
+          "outcome": "Wait safely."
         }
       ]
     }

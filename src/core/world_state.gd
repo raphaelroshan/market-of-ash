@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 5
+const SAVE_VERSION := 6
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -27,6 +27,7 @@ var journey_context: Dictionary = {}
 var pending_event: Dictionary = {}
 var resolved_event_ids: Array[String] = []
 var event_history: Array[Dictionary] = []
+var route_conditions: Dictionary = {}
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -51,7 +52,31 @@ func settlement(id: String) -> Dictionary:
 	return result
 
 func route(id: String) -> Dictionary:
-	return routes.get(id, {}).duplicate(true)
+	var result: Dictionary = routes.get(id, {}).duplicate(true)
+	if result.is_empty():
+		return result
+	var condition_value: Variant = route_conditions.get(id, {})
+	if typeof(condition_value) != TYPE_DICTIONARY:
+		return result
+	var condition: Dictionary = condition_value
+	if condition.is_empty():
+		return result
+	result["risk"] = clampf(float(result.get("risk", 0.0)) + float(condition.get("risk_delta", 0.0)), 0.0, 1.0)
+	result["cost"] = maxi(0, int(result.get("cost", 0)) + int(condition.get("cost_delta", 0)))
+	result["condition"] = condition.duplicate(true)
+	result["description"] = "%s Route condition: %s" % [String(result.get("description", "")), String(condition.get("description", ""))]
+	return result
+
+func set_route_condition(route_id: String, condition: Dictionary) -> Dictionary:
+	if not routes.has(route_id):
+		return {"ok": false, "reason": "unknown route"}
+	if String(condition.get("id", "")).is_empty():
+		return {"ok": false, "reason": "route condition needs a stable id"}
+	var snapshot := condition.duplicate(true)
+	snapshot["route_id"] = route_id
+	snapshot["applied_day"] = day
+	route_conditions[route_id] = snapshot
+	return {"ok": true, "condition": snapshot.duplicate(true)}
 
 func has_settlement(id: String) -> bool:
 	return settlements.has(id)
@@ -267,6 +292,7 @@ func serialize() -> Dictionary:
 		"pending_event": pending_event.duplicate(true),
 		"resolved_event_ids": resolved_event_ids.duplicate(),
 		"event_history": event_history.duplicate(true),
+		"route_conditions": route_conditions.duplicate(true),
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -321,6 +347,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	for raw_event in saved_event_history.slice(maxi(0, saved_event_history.size() - event_history_limit)):
 		if typeof(raw_event) == TYPE_DICTIONARY:
 			event_history.append(raw_event.duplicate(true))
+	route_conditions = _sanitize_route_conditions(restored.get("route_conditions", {}))
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -359,7 +386,32 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 		migrated["pending_event"] = migrated.get("pending_event", {})
 		migrated["resolved_event_ids"] = migrated.get("resolved_event_ids", [])
 		migrated["event_history"] = migrated.get("event_history", [])
+	if source_version < 6:
+		migrated["save_version"] = 6
+		migrated["route_conditions"] = migrated.get("route_conditions", {})
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
+
+func _sanitize_route_conditions(value: Variant) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		return {}
+	var sanitized: Dictionary = {}
+	var records: Dictionary = value
+	for route_id_value in records.keys():
+		var route_id := String(route_id_value)
+		if not routes.has(route_id):
+			continue
+		var raw_condition: Variant = records.get(route_id_value, {})
+		if typeof(raw_condition) != TYPE_DICTIONARY:
+			continue
+		var condition: Dictionary = raw_condition
+		if String(condition.get("id", "")).is_empty():
+			continue
+		var snapshot := condition.duplicate(true)
+		snapshot["route_id"] = route_id
+		snapshot["risk_delta"] = clampf(float(snapshot.get("risk_delta", 0.0)), -1.0, 1.0)
+		snapshot["cost_delta"] = int(snapshot.get("cost_delta", 0))
+		sanitized[route_id] = snapshot
+	return sanitized
 
 func _sanitize_active_contracts(value: Variant) -> Dictionary:
 	if typeof(value) != TYPE_DICTIONARY:

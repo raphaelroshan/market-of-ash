@@ -111,7 +111,12 @@ def main() -> int:
         "trigger_roll_salt must be a non-negative integer",
         "minimum_cargo_value must be a non-negative integer",
         "active_contract_relevant must be boolean",
-        "choices must contain at least two choices",
+        "references unknown trigger good",
+        "minimum_trigger_good_quantity must be a non-negative integer",
+        "money_reward must be a non-negative integer",
+        "material_quantity must be a non-negative integer",
+        "arrival_target must be destination or origin",
+        "route_condition must be an object",
     )
     missing_events = [
         fragment

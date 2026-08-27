@@ -167,3 +167,11 @@
 **Reason:** Travel needs a real decision rather than only a passive cargo-loss roll, but the first event seam must remain narrow, testable, and recoverable. A saved pending event supports exact replay and mid-event saves, while an always-available wait choice prevents low-money/low-provision soft locks.
 
 **Trade-off:** Eligible Toll Road journeys that trigger this event do not also roll the generic route incident. The first event is one-time per campaign and uses explicit core resolution rather than a generic effect interpreter; later events must reuse this seam unless an ADR justifies extending it.
+
+## ADR-022: The Cinderford span stores one visible route condition
+
+**Decision:** Implement `span_at_cinderford` on the Old Road as the first cargo-to-infrastructure event. Carrying at least two scrap/charcoal units makes the event relevant. The player may sell two units for immediate cash, reserve them and one day for a ten-point route-risk reduction, carry measurements for one provision/day and a five-point reduction, or spend a day returning to the origin with cargo intact. A successful public outcome stores one bounded `route_conditions[old_road]` snapshot that directly modifies the same route record used by forecasts and resolution.
+
+**Reason:** The second event must make preparation materially different from Gatekeeper's Chalk and prove that a travel decision can change a later trade plan. Repair cargo now competes between immediate margin and public route safety, while the saved route condition keeps the consequence visible, deterministic, and reusable without introducing a generic project engine.
+
+**Trade-off:** The alpha route graph does not yet connect Cinderford directly, so the bridge crew appears on the infrastructure-heavy Old Road corridor and the condition is named for their town. Only one active condition is stored per route; stacking, deterioration, project stages, settlement resilience, and competing private conditions remain future explicit slices.

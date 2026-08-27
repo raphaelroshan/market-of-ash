@@ -194,6 +194,13 @@
       "event_choice_id": "pay_posted_toll",
       "runs": 65,
       "share_of_policy_runs": 0.65
+    },
+    {
+      "policy_label": "Span material-reserve probe",
+      "event_id": "span_at_cinderford",
+      "event_choice_id": "reserve_materials_for_span",
+      "runs": 70,
+      "share_of_policy_runs": 0.7
     }
   ]
 }

@@ -214,6 +214,19 @@ def validate_events(value: Any, errors: list[str]) -> None:
             fail(errors, f"event {event_id}.minimum_cargo_value must be a non-negative integer")
         if not isinstance(event.get("active_contract_relevant"), bool):
             fail(errors, f"event {event_id}.active_contract_relevant must be boolean")
+        trigger_good_ids = event.get("trigger_good_ids_any", [])
+        if not isinstance(trigger_good_ids, list):
+            fail(errors, f"event {event_id}.trigger_good_ids_any must be a list")
+            trigger_good_ids = []
+        else:
+            for good_id in trigger_good_ids:
+                if good_id not in REQUIRED_GOODS:
+                    fail(errors, f"event {event_id} references unknown trigger good {good_id}")
+        minimum_trigger_quantity = event.get("minimum_trigger_good_quantity", 0)
+        if not isinstance(minimum_trigger_quantity, int) or minimum_trigger_quantity < 0:
+            fail(errors, f"event {event_id}.minimum_trigger_good_quantity must be a non-negative integer")
+        elif trigger_good_ids and minimum_trigger_quantity <= 0:
+            fail(errors, f"event {event_id} must require a positive trigger-good quantity")
         choices = event.get("choices")
         if not isinstance(choices, list) or len(choices) < 2:
             fail(errors, f"event {event_id}.choices must contain at least two choices")
@@ -231,12 +244,28 @@ def validate_events(value: Any, errors: list[str]) -> None:
             for field in ("label", "outcome"):
                 if not isinstance(choice.get(field), str) or not choice[field]:
                     fail(errors, f"event {event_id} choice {choice_id} must declare {field}")
-            for field in ("money_cost", "provision_cost", "days"):
-                if not isinstance(choice.get(field), int) or choice[field] < 0:
+            for field in ("money_cost", "money_reward", "provision_cost", "material_quantity", "days"):
+                value = choice.get(field, 0)
+                if not isinstance(value, int) or value < 0:
                     fail(errors, f"event {event_id} choice {choice_id}.{field} must be a non-negative integer")
             cargo_risk = choice.get("cargo_risk")
             if not isinstance(cargo_risk, (int, float)) or not 0 <= cargo_risk <= 1:
                 fail(errors, f"event {event_id} choice {choice_id}.cargo_risk must be between 0 and 1")
+            arrival_target = choice.get("arrival_target", "destination")
+            if arrival_target not in ("destination", "origin"):
+                fail(errors, f"event {event_id} choice {choice_id}.arrival_target must be destination or origin")
+            condition = choice.get("route_condition", {})
+            if not isinstance(condition, dict):
+                fail(errors, f"event {event_id} choice {choice_id}.route_condition must be an object")
+            elif condition:
+                if condition.get("route_id") not in REQUIRED_ROUTES:
+                    fail(errors, f"event {event_id} choice {choice_id}.route_condition references an unknown route")
+                for field in ("id", "label", "description"):
+                    if not isinstance(condition.get(field), str) or not condition[field]:
+                        fail(errors, f"event {event_id} choice {choice_id}.route_condition must declare {field}")
+                risk_delta = condition.get("risk_delta", 0)
+                if not isinstance(risk_delta, (int, float)) or not -1 <= risk_delta <= 1:
+                    fail(errors, f"event {event_id} choice {choice_id}.route_condition risk_delta must be between -1 and 1")
 
 
 def validate(data: Any) -> list[str]:
