@@ -32,6 +32,19 @@ def png_dimensions(path: Path) -> tuple[int, int]:
     return struct.unpack(">II", data[16:24])
 
 
+def set_viewport_size(driver: webdriver.Chrome, width: int, height: int) -> None:
+    driver.set_window_size(width, height)
+    inner_width = int(driver.execute_script("return window.innerWidth"))
+    inner_height = int(driver.execute_script("return window.innerHeight"))
+    driver.set_window_size(width + (width - inner_width), height + (height - inner_height))
+    actual_width = int(driver.execute_script("return window.innerWidth"))
+    actual_height = int(driver.execute_script("return window.innerHeight"))
+    if (actual_width, actual_height) != (width, height):
+        raise AssertionError(
+            f"could not establish requested viewport {(width, height)}; got {(actual_width, actual_height)}"
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--url", required=True)
@@ -56,7 +69,7 @@ def main() -> int:
     driver = webdriver.Chrome(options=options)
     try:
         for width, height in VIEWPORTS:
-            driver.set_window_size(width, height)
+            set_viewport_size(driver, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             actual_width = int(driver.execute_script("return window.innerWidth"))
