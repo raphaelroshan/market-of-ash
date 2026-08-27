@@ -285,7 +285,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Loading from Pause also fails closed: invalid or missing files keep the overlay open with the validation reason, while a successful load closes it and focuses the restored Shop or route decision.
 - The Main Menu pre-validates primary and backup saves, shows day/location/money/cargo before Continue, and disables Continue when neither generation is safe to load.
 - Shop and Pause can export a versioned, privacy-safe JSON playtest report containing the exact packaged commit/run, build/content/save versions, seed, current resources, contracts, events, route conditions, information, crew, ending context, command history, and game log without personal identifiers. Pause keeps the result and output path visible above the overlay actions.
-- Local preset parsing and project import pass. CI run 36 exported and uploaded a 94 MB Windows executable plus a complete Web payload (`index.html`, JavaScript, PCK, and WASM); direct local export remains unavailable only because the temporary editor installation lacks templates.
+- Local preset parsing and project import pass. CI run 73 exported the Windows executable and complete Web payload, verified their required files, launched the packaged Windows game headlessly, and uploaded a provenance manifest plus source snapshot; direct local export remains unavailable only because the temporary editor installation lacks templates.
 - `docs/ux/alpha_accessibility_input_audit.md` separates automated evidence from the physical-controller, high-DPI, minimum-window, color-simulation, and browser checks still requiring human execution. `docs/playtest_feedback_form.md` captures comprehension and causal run stories without personal data.
 
 ## Next permitted task
