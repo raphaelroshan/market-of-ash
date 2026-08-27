@@ -728,7 +728,8 @@ func _build_shop() -> void:
 	action_shell.add_child(next_step)
 	plan_departure_button = Button.new()
 	plan_departure_button.text = "Plan departure"
-	plan_departure_button.custom_minimum_size = Vector2(0, 48)
+	plan_departure_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	plan_departure_button.custom_minimum_size = Vector2(0, 56)
 	plan_departure_button.tooltip_text = "Open the regional map, choose a legal corridor, and inspect the full route forecast."
 	plan_departure_button.pressed.connect(_on_plan_departure_pressed)
 	action_shell.add_child(plan_departure_button)
@@ -1242,7 +1243,7 @@ func _on_export_report_pressed() -> void:
 	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
 		var bridge: Object = Engine.get_singleton("JavaScriptBridge")
 		bridge.call("download_buffer", report_json.to_utf8_buffer(), WEB_REPORT_FILENAME, "application/json")
-		_set_event("REPORT DOWNLOADED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
+		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
 		var file := FileAccess.open(report_path, FileAccess.WRITE)
 		if file == null:
@@ -1378,6 +1379,8 @@ func _refresh_forecasts() -> void:
 	var quantity := int(cargo_quantity.value)
 	var origin := world.settlement(world.current_settlement)
 	var destination := world.settlement(destination_id)
+	if plan_departure_button:
+		plan_departure_button.text = "Plan %s x%d to %s" % [good_id.capitalize(), quantity, String(destination.get("name", destination_id))]
 	var world_context := world.pricing_context()
 	var forecast_cargo := world.cargo.duplicate(true)
 	forecast_cargo[good_id] = maxi(int(forecast_cargo.get(good_id, 0)), quantity)

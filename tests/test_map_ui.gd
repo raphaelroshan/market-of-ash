@@ -111,7 +111,7 @@ func _initialize() -> void:
 	_expect(ui.world.current_settlement == "ashgate" and ui.world.day == 1, "Start Game did not load the authored Ashgate day-one preset")
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "water" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")
-	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text == "Plan departure", "shop did not expose the plan-departure handoff")
+	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text.contains("Plan Water x2 to Reedwatch"), "shop did not expose the selected cargo and destination on the plan-departure handoff")
 	_expect(not _has_scroll_ancestor(ui.plan_departure_button) and ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "Plan departure should remain pinned outside the long action rail and visible without scrolling")
 	var buy_cargo_button: Button = ui.find_child("BuyCargoButton", true, false)
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
