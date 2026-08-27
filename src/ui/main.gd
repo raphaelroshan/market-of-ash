@@ -450,6 +450,8 @@ func _load_presentation_settings() -> void:
 	for action_name in REMAPPABLE_ACTIONS:
 		var keycodes: Array = requested_bindings.get(action_name, DEFAULT_KEY_BINDINGS[action_name]) if bindings_valid else DEFAULT_KEY_BINDINGS[action_name]
 		_replace_keyboard_bindings(action_name, keycodes)
+	if not bindings_valid:
+		_save_presentation_settings()
 
 func _save_presentation_settings() -> void:
 	if not settings_persistence_enabled:

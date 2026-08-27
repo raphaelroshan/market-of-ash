@@ -73,6 +73,8 @@ func _initialize() -> void:
 	invalid_bindings.save(test_settings_path)
 	ui._load_presentation_settings()
 	_expect(_action_has_key("ui_accept", KEY_ENTER) and _action_has_key("ui_cancel", KEY_ESCAPE) and _action_has_key("ui_pause", KEY_P), "invalid persisted key conflicts should fall back to the complete default scheme")
+	var repaired_bindings := ConfigFile.new()
+	_expect(repaired_bindings.load(test_settings_path) == OK and repaired_bindings.get_value("input", "ui_accept", []).has(KEY_ENTER) and repaired_bindings.get_value("input", "ui_cancel", []).has(KEY_ESCAPE), "invalid persisted bindings should be replaced with a valid default settings file")
 
 	ui._on_start_game_pressed()
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
@@ -243,6 +245,13 @@ func _initialize() -> void:
 	ui._open_pause()
 	ui._on_export_report_pressed()
 	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("REPORT EXPORTED") and ui.pause_summary_label.text.contains("market_of_ash_map_ui_report_test.json"), "report export from Pause should show a visible result and output path without closing the overlay")
+	ui._close_pause()
+	var valid_report_path: String = ui.report_path
+	ui.report_path = "user://market_of_ash_missing_report_parent/report.json"
+	ui._open_pause()
+	ui._on_export_report_pressed()
+	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("Report export failed") and JSON.stringify(ui.world.serialize()) == state_before_report, "a failed report export should stay visible in Pause without mutating the campaign")
+	ui.report_path = valid_report_path
 	ui._close_pause()
 
 	var shop_state: String = JSON.stringify(ui.world.serialize())
