@@ -414,7 +414,7 @@ func _initialize() -> void:
 		ui._on_depart_pressed()
 		_expect(ui.map_panel.traveling, "successful departure did not start presentation traversal")
 		_expect(ui.map_panel.travel_points.size() == 3, "travel traversal did not create origin, waypoint, destination")
-		_expect(ui.enter_settlement_button.visible and ui.commit_departure_button.disabled and not ui.departure_travel_actions.visible, "arrival state should replace the planning actions with an explicit settlement-entry action")
+		_expect(ui.enter_settlement_button.visible and ui.enter_settlement_button.text == "Enter Reedwatch" and ui.commit_departure_button.disabled and not ui.departure_travel_actions.visible, "arrival state should replace the planning actions with a destination-specific settlement-entry action")
 		_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "an uninterrupted arrival should focus the settlement-entry action")
 		_expect(ui.playtest_status_label.text.contains("STEP 3 OF 3"), "arrival with water did not advance the playtest objective")
 		_expect(not ui.guided_test_button.visible, "the first-move purchase helper should not follow the caravan to later settlements")
@@ -494,7 +494,7 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
 	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "brine_cross", "paying the event toll did not complete arrival")
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
-	_expect(ui.event_label.text.contains("NEXT — Review the result") and ui.event_label.text.contains("Enter settlement"), "a resolved journey should state how to continue into the destination")
+	_expect(ui.event_label.text.contains("NEXT — Review the result") and ui.event_label.text.contains("Enter Brine Cross"), "a resolved journey should state the named destination action needed to continue")
 	_expect(ui.destination_option.disabled and ui.route_option.disabled, "an arrival report should keep planning controls locked until the player enters the settlement")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "resolving a route decision should move focus to settlement entry")
 	_expect(ui.world.event_history.size() == 1 and ui.world.event_history.back().choice_id == "pay_posted_toll", "event UI did not preserve the chosen outcome")
@@ -652,8 +652,8 @@ func _initialize() -> void:
 	await process_frame
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
-	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the pinned departure action visible")
-	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text at the minimum viewport should keep the primary Buy action visible before scrolling")
+	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the pinned departure action inside the game layout")
+	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the primary Buy action inside the game layout")
 	_expect(ui.guided_test_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the optional first-trade helper visible while it is relevant")
 	ui._show_main_menu()
 	await process_frame

@@ -1561,7 +1561,7 @@ func _next_step_text() -> String:
 	if not world.pending_event.is_empty():
 		return "Choose one available route response; unavailable prerequisites are listed below their choices."
 	if arrival_pending:
-		return "Review the result, then choose Enter settlement to trade at the destination."
+		return "Review the result, then choose Enter %s to trade at the destination." % String(world.settlement(world.current_settlement).get("name", "settlement"))
 	if shop_layer != null and shop_layer.visible:
 		return "Adjust cargo or local commitments, then open Plan departure when the next route is worthwhile."
 	return "Adjust the destination, route, or forecast load before committing travel."
@@ -2145,6 +2145,8 @@ func _refresh_ui() -> void:
 			departure_status_label.text = "ARRIVAL REPORT — %s\n%s\nReview what changed, then enter the settlement to trade again." % [String(world.settlement(world.current_settlement).get("name", "Unknown settlement")), String(event_label.text)]
 		else:
 			departure_status_label.text = "COMMITMENT CHECK — The map only shows legal corridors. Returning to the shop preserves this plan and spends nothing."
+	if enter_settlement_button:
+		enter_settlement_button.text = "Enter %s" % String(world.settlement(world.current_settlement).get("name", "settlement"))
 	if playtest_banner and playtest_banner.text.is_empty():
 		playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
 	_refresh_playtest_status()
