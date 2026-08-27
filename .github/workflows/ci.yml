@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Policy checks
@@ -55,7 +55,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -80,12 +80,12 @@ jobs:
       AI_REVIEW_REQUIRED: ${{ vars.AI_REVIEW_REQUIRED || 'false' }}
     steps:
       - name: Checkout full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install AI client when enabled
@@ -113,7 +113,7 @@ jobs:
             --fail-on critical
       - name: Upload review report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-review-${{ github.run_number }}
           path: artifacts/
@@ -130,7 +130,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -173,7 +173,7 @@ jobs:
         run: |
           python -c "import json, os, re; m=json.load(open('tools/ci_manifest.json')); p=open('project.godot', encoding='utf-8').read(); c=json.load(open('content/runtime_world.json')); m.update({'game_version': re.search(r'^config/version=\"([^\"]+)\"', p, re.M).group(1), 'content_version': c['content_version'], 'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'], 'run_id': os.environ['GITHUB_RUN_ID'], 'run_number': os.environ['GITHUB_RUN_NUMBER']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2); print(json.dumps(m, indent=2))"
       - name: Upload release candidate
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-candidate-${{ github.run_number }}
           path: |

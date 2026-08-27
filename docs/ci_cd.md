@@ -78,6 +78,8 @@ If Godot is not installed, `scripts/verify.sh` exits with a clear setup error. D
 
 The workflow deliberately does not provide an automatic production deploy. Storefront release should remain gated by a clean tag, human review, and platform-specific credentials.
 
+Workflow plumbing uses the current Node 24-based major versions of GitHub's checkout, Python setup, and artifact upload actions so release evidence is not produced through deprecated action runtimes.
+
 ## All-games validation
 
 Market of Ash also contains an `All games validation` workflow. It is available by manual dispatch and runs weekly. It checks out the pinned ref from all three private repositories, runs the same policy and Godot checks, and creates one artifact bundle containing each repository’s diff and AI report.

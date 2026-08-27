@@ -26,7 +26,7 @@ jobs:
       AI_REVIEW_REQUIRED: ${{ vars.AI_REVIEW_REQUIRED || 'false' }}
     steps:
       - name: Checkout Market of Ash
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: raphaelroshan/market-of-ash
           ref: ${{ env.REF_TO_TEST }}
@@ -34,7 +34,7 @@ jobs:
           token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
           fetch-depth: 2
       - name: Checkout The Cartographer’s Siege
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: raphaelroshan/the-cartographers-siege
           ref: ${{ env.REF_TO_TEST }}
@@ -42,7 +42,7 @@ jobs:
           token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
           fetch-depth: 2
       - name: Checkout Pack the Keep
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: raphaelroshan/pack-the-keep
           ref: ${{ env.REF_TO_TEST }}
@@ -50,7 +50,7 @@ jobs:
           token: ${{ secrets.CROSS_REPO_READ_TOKEN || github.token }}
           fetch-depth: 2
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Setup Godot
@@ -91,7 +91,7 @@ jobs:
           done
       - name: Upload consolidated artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: all-games-validation-${{ github.run_number }}
           path: artifacts/
