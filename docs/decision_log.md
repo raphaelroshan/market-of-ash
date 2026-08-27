@@ -288,10 +288,10 @@
 
 **Trade-off:** Preferences are not persisted yet, directional focus still relies on Godot's default traversal, and physical-controller/high-DPI verification remains a manual release gate.
 
-## ADR-037: Ending selection is ordered and supports a regulated Warden conclusion
+## ADR-037: Ending selection is ordered and supports faction-specific conclusions
 
-**Decision:** Replace the singular runtime ending record with an ordered `crisis.endings` list. `open_routes_relief` remains first and wins if its contract/resilience predicate overlaps another ending. `ending_warden_reserve` becomes the second conclusion at crisis stage three when Warden standing is at least three, Free Caravan standing is at most one, and arms escalation is at most one.
+**Decision:** Replace the singular runtime ending record with an ordered `crisis.endings` list. `open_routes_relief` remains first and wins if its contract/resilience predicate overlaps another ending. `ending_warden_reserve` resolves at crisis stage three when Warden standing is at least three and Free Caravan standing is at most one. `ending_free_caravan_routes` resolves when Free Caravan standing is at least two and Warden standing is at most one. All three currently require arms escalation at one or lower.
 
-**Reason:** The campaign roadmap requires distinct viable conclusions from different trade and relationship strategies. A medicine trade through the Toll Road plus repeated visible Warden logistics choices now produces a materially different outcome without adding a new subsystem or making arms mandatory.
+**Reason:** The campaign roadmap requires distinct viable conclusions from different trade and relationship strategies. Regulated medicine trade plus Warden logistics produces controlled access, while route information plus public water sharing produces an independent-road outcome. Neither strategy adds a new subsystem or makes arms mandatory.
 
-**Trade-off:** Only two of the four concept-manifest endings are implemented. Ending predicates remain explicit core branches rather than a generic expression interpreter, and the shared-relief outcome has deliberate precedence when both qualify.
+**Trade-off:** Three of the four concept-manifest endings are now represented; the profit-first `ending_ash_merchant` remains unimplemented. Ending predicates remain explicit core branches rather than a generic expression interpreter, and the shared-relief outcome has deliberate precedence when predicates overlap.

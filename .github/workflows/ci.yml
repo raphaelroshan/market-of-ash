@@ -142,7 +142,7 @@ jobs:
           include-templates: true
       - name: Import and validate project
         run: godot --headless --path . --editor --quit
-      - name: Export Windows build when presets exist
+      - name: Export Windows and Web builds when presets exist
         run: |
           mkdir -p build artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")

@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has two distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards are configured; the documented hardware/rendered audit remains.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has three distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards are configured; the documented hardware/rendered audit remains.
 
 ## Implemented player-facing spine
 
@@ -256,10 +256,11 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Crisis stages transition deterministically at days 4, 7, and 10 and expose a current label plus practical objective in the settlement header.
 - `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
 - `Order at the Cistern` requires Warden standing 3+, Free Caravan standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes the resulting permit-controlled access and regulated trade style.
+- `No Road Owns the Sky` requires Free Caravan standing 2+, Warden standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes independent access, volatile margins, and shared route information.
 - Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
 - Ending rules are ordered: when a state qualifies for both, completed shared relief takes precedence over regulated reserve control.
 - Save version 11 preserves either ending. Tests cover every stage boundary, unmet predicates, both successful resolutions, precedence, save/load, migration, and UI presentation.
-- Two fresh seed-1107 command campaigns reach different endings: one fulfills relief and builds public resilience; the other profits from regulated medicine trade and crosses the Warden recognition threshold.
+- Three fresh command campaigns reach different endings: relief plus public resilience, regulated medicine trade plus Warden recognition, and exposed-route information plus publicly shared water for Free Caravan standing.
 
 ## B10 build-operations result
 

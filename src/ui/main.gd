@@ -923,7 +923,7 @@ func _write_save(status_prefix: String) -> bool:
 		save_status_text = "SAVE ERROR — Could not promote the validated save. Previous save preserved when available."
 		return false
 	var settlement_name := String(world.settlement(world.current_settlement).get("name", world.current_settlement))
-	save_status_text = "%s — Day %d · %s · save v%d · content %s" % [status_prefix, world.day, settlement_name, AshWorldState.SAVE_VERSION, MarketContent.content_version()]
+	save_status_text = "%s — Day %d · %s · %d ashmarks · hold %d/%d · save v%d · content %s" % [status_prefix, world.day, settlement_name, world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity, AshWorldState.SAVE_VERSION, MarketContent.content_version()]
 	if continue_game_button:
 		continue_game_button.disabled = false
 		continue_game_button.tooltip_text = "Validate and continue the saved campaign."
@@ -960,7 +960,7 @@ func _on_load_pressed() -> void:
 	var migrated_from := int(load_result.get("migrated_from", AshWorldState.SAVE_VERSION))
 	var migration_text := " · migrated from v%d" % migrated_from if migrated_from < AshWorldState.SAVE_VERSION else ""
 	var status_prefix := "RECOVERED BACKUP" if recovered_backup else "LOADED"
-	save_status_text = "%s — Day %d · %s · save v%d%s" % [status_prefix, world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), AshWorldState.SAVE_VERSION, migration_text]
+	save_status_text = "%s — Day %d · %s · %d ashmarks · hold %d/%d · save v%d%s" % [status_prefix, world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity, AshWorldState.SAVE_VERSION, migration_text]
 	_set_event("Saved campaign loaded after validation. Seed %d and command history are restored." % world.seed)
 	if world.pending_event.is_empty():
 		_show_shop()

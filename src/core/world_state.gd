@@ -346,6 +346,8 @@ func _ending_is_eligible(ending: Dictionary) -> bool:
 			return false
 		"ending_warden_reserve":
 			return int(reputation.get("wardens", 0)) >= int(ending.get("minimum_warden_reputation", 0)) and int(reputation.get("caravans", 0)) <= int(ending.get("maximum_caravan_reputation", 10))
+		"ending_free_caravan_routes":
+			return int(reputation.get("caravans", 0)) >= int(ending.get("minimum_caravan_reputation", 0)) and int(reputation.get("wardens", 0)) <= int(ending.get("maximum_warden_reputation", 10))
 	return false
 
 func _decay_market_pressure(days: int) -> void:

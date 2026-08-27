@@ -51,7 +51,7 @@ func _initialize() -> void:
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
 	ui._on_save_pressed()
-	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate"), "manual save should write a versioned campaign and expose a readable summary")
+	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
 	var manual_save_state := JSON.stringify(ui.world.serialize())
 	ui._on_settlement_action_pressed("ashgate_provision_bundle")
@@ -317,6 +317,11 @@ func _initialize() -> void:
 	ui.world.advance_day(9)
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "ending_warden_reserve" and ui.shop_status_label.text.contains("ENDING — Order at the Cistern"), "regulated crisis state did not expose the second deterministic ending summary")
+	ui._on_start_game_pressed()
+	ui.world.adjust_reputation("caravans", 2)
+	ui.world.advance_day(9)
+	ui._refresh_ui()
+	_expect(ui.world.ending_id == "ending_free_caravan_routes" and ui.shop_status_label.text.contains("ENDING — No Road Owns the Sky"), "open-road crisis state did not expose the third deterministic ending summary")
 
 	var state_before_text_scale := JSON.stringify(ui.world.serialize())
 	ui.large_text_checkbox.button_pressed = true

@@ -609,6 +609,14 @@
         "maximum_caravan_reputation": 1,
         "maximum_arms_escalation": 1,
         "summary": "Public water reserves remain uneven, but the Ash Wardens secure the cistern roads under permits. Arms traffic stays contained; the caravan chose predictable access and regulated margins over an open network."
+      },
+      {
+        "id": "ending_free_caravan_routes",
+        "title": "No Road Owns the Sky",
+        "minimum_caravan_reputation": 2,
+        "maximum_warden_reputation": 1,
+        "maximum_arms_escalation": 1,
+        "summary": "Shared water reaches exposed settlements through independent caravans, keeping access open without Warden permits. Arms traffic stays contained; the caravan chose volatile margins, public information, and risk shared across the road network."
       }
     ]
   },

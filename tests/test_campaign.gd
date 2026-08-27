@@ -66,6 +66,27 @@ func _init() -> void:
 	_expect(warden_world.ending_id != world.ending_id, "the two fresh command paths should produce distinct campaign conclusions")
 	_expect(warden_world.ending_summary.contains("predictable access") and warden_world.ending_summary.contains("regulated margins"), "the regulated ending should explain access and trade-style consequences")
 
+	var caravan_world := AshWorldState.new(3)
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.BUY_GOODS, {"good_id": "medicine", "quantity": 2}), "buy cargo for the independent-route opening")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "reedwatch"}), "take the exposed road for route information")
+	_expect(caravan_world.pending_event.get("id", "") == "three_riders_no_banner", "the independent-route campaign should encounter the unmarked riders")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "three_riders_no_banner", "choice_id": "wait_and_read_the_tracks"}), "trade time for public route information")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.SELL_GOODS, {"good_id": "medicine", "quantity": 2}), "sell the medicine after preserving the route lead")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "ashgate"}), "return for a public water shipment")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.BUY_GOODS, {"good_id": "water", "quantity": 2}), "buy water for the public queue")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "reedwatch"}), "deliver water during the shortage")
+	_expect(caravan_world.pending_event.get("id", "") == "last_clean_barrel", "the seeded independent-route delivery should reach The Last Clean Barrel")
+	_expect_ok(_command(caravan_world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "last_clean_barrel", "choice_id": "share_barrels_fairly"}), "share water through the public queue")
+	_expect(int(caravan_world.reputation.get("caravans", 0)) == 2 and int(caravan_world.reputation.get("wardens", 0)) == 0, "the independent route should cross its distinct Caravan threshold")
+	var caravan_targets := ["ashgate", "brine_cross", "ashgate", "reedwatch", "ashgate"]
+	var caravan_routes := ["old_road", "toll_road", "toll_road", "old_road", "old_road"]
+	for index in range(caravan_targets.size()):
+		_expect_ok(_command(caravan_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": caravan_routes[index], "destination_id": caravan_targets[index]}), "advance the independent-route campaign toward day ten")
+	_expect(caravan_world.day == 10 and caravan_world.crisis_stage == 3, "the independent-route campaign should reach the settlement-decision stage")
+	_expect(caravan_world.ending_id == "ending_free_caravan_routes", "the information-and-public-supply strategy should reach No Road Owns the Sky")
+	_expect(caravan_world.ending_id != world.ending_id and caravan_world.ending_id != warden_world.ending_id, "all three fresh campaign strategies should produce distinct conclusions")
+	_expect(caravan_world.ending_summary.contains("volatile margins") and caravan_world.ending_summary.contains("public information"), "the independent ending should explain access and trade-style consequences")
+
 	if failures.is_empty():
 		print("Campaign smoke: PASS")
 	else:
