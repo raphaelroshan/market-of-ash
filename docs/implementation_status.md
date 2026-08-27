@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B7 are implemented. The first bounded B8 arms-trade proof is implemented; de-escalation and policy comparison are next.
+**Roadmap status:** A0–A1 foundations and B0–B7 are implemented. B8 now includes one arms sale, one threshold, and one explicit recovery action; policy comparison is next.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 10 and runtime content version `1.7.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 10 and runtime content version `1.8.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -29,6 +29,7 @@
 - Ash Warden standing is bounded and visible; recognized carriers at +2 pay three fewer ashmarks on the Toll Road while accepting greater official visibility.
 - Free Caravan standing is bounded and visible; known road-sharers at +2 pay two fewer ashmarks on the Old Road while its cargo risk remains unchanged.
 - One sealed arms crate and one named Cinder Rider broker offer create a visible 0–6 escalation track; the first threshold adds a disclosed Toll Road inspection surcharge only while arms cargo is carried.
+- Ashgate's public manifest audit spends twelve ashmarks, one day, and one visit slot to reduce arms escalation by one and preserve a named information lead.
 
 ## Current command IDs
 
@@ -241,7 +242,8 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The Ashgate Cinder Rider broker pays 82 ashmarks for one crate, consumes one visit slot, raises escalation from 0 to 2, and lowers both implemented faction standings by one.
 - At escalation 2, carrying another crate adds a visible five-ashmark Toll Road inspection surcharge; Warden permit discounts compose deterministically with it.
 - The sale result names Reedwatch Water Relief as the viable non-arms alternative. Save version 10 preserves escalation and named arms history.
+- Escalation is recoverable: the public manifest audit is blocked at zero, otherwise lowers pressure by one and records its cost and result without deleting the original sale history.
 
 ## Next permitted task
 
-Add the first explicit arms de-escalation action and compare arms/non-arms policies against the contract's viability gates.
+Compare arms and non-arms policies against the contract's viability gates before adding another arms offer or threshold.

@@ -22,7 +22,7 @@ func _initialize() -> void:
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
 	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
-	_expect(ui.opportunity_buttons.size() == 2 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[1].disabled, "Ashgate should expose its provision service and cargo-gated arms offer")
+	_expect(ui.opportunity_buttons.size() == 3 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[2].disabled, "Ashgate should expose provisions, cargo-gated arms, and condition-gated recovery")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
@@ -242,6 +242,9 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.destination_option, "brine_cross")
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_preview_label.text.contains("Route fee 17") and ui.route_preview_label.text.contains("Arms inspection surcharge: +5"), "arms escalation did not expose the Toll Road inspection surcharge before departure")
+	ui._on_return_to_shop_pressed()
+	ui._on_settlement_action_pressed("ashgate_public_manifest_audit")
+	_expect(ui.world.arms_escalation == 1 and ui.event_label.text.contains("fell to 1/6"), "manifest audit UI did not apply and explain de-escalation")
 
 	ui.queue_free()
 	await process_frame

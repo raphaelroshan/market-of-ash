@@ -247,3 +247,11 @@
 **Reason:** This is the smallest end-to-end proof that immediate arms profit can create a future commercial cost. It reuses cargo, settlement actions, reputation, route preview, and save boundaries without adding combat or a generic political scripting engine.
 
 **Trade-off:** The arms crate has flat ordinary-market pricing so its special broker offer—not generic arbitrage—carries the premium. The first threshold affects one route only, and de-escalation actions remain the next implementation slice required by the contract.
+
+## ADR-032: Arms escalation recovers through a costly public audit
+
+**Decision:** Add `Fund a public manifest audit` as the first de-escalation action. It is available in Ashgate only when escalation is above zero and costs twelve ashmarks, one day, and one visit slot to reduce escalation by one and record `public_manifest_audit` as known information.
+
+**Reason:** Arms pressure must be recoverable through a named non-combat action whose opportunity cost is clear. A public audit directly counters hidden manifests while preserving the profit already earned and the historical record of the sale.
+
+**Trade-off:** Recovery is deliberately slower than escalation: one sale adds two while one audit removes one. Additional material-based recovery and high-stage consequences remain future work.

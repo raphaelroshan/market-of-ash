@@ -49,7 +49,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.7.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.8.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -1133,6 +1133,12 @@ func _test_arms_trade_proof() -> void:
 	_expect(sale.ok and world.money == 157 and int(world.cargo.get("sealed_arms_crate", 0)) == 0, "named arms sale should remove one crate and pay eighty-two ashmarks")
 	_expect(world.arms_escalation == 2 and world.reputation.wardens == -1 and world.reputation.caravans == -1, "arms sale should expose and apply its bounded escalation and faction costs")
 	_expect(sale.message.contains("Reedwatch Water Relief"), "arms result should name the viable non-arms alternative")
+	var recovery := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "ashgate_public_manifest_audit"}})
+	_expect(recovery.ok and world.arms_escalation == 1 and world.money == 145 and world.day == 2, "public manifest audit should spend its stated resources and lower escalation by one")
+	_expect(world.known_information.has("public_manifest_audit") and world.arms_trade_history.size() == 2, "arms recovery should record its public information and named history")
+	var quiet_world := AshWorldState.new(1)
+	var unnecessary := MarketCommandProcessor.execute(quiet_world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "ashgate_public_manifest_audit"}})
+	_expect(not unnecessary.ok and quiet_world.money == 120 and quiet_world.visit_slots_remaining == 2, "unnecessary de-escalation should block without mutation")
 	var inspected := AshWorldState.new(1)
 	inspected.arms_escalation = 2
 	inspected.cargo = {"sealed_arms_crate": 1, "weight": 2}
@@ -1141,7 +1147,7 @@ func _test_arms_trade_proof() -> void:
 	_expect(int(inspected.route("toll_road").cost) == 14, "Warden permit discount and arms inspection surcharge should compose deterministically")
 	var restored := AshWorldState.new(0)
 	var restore_result := restored.load_serialized(world.serialize())
-	_expect(restore_result.ok and restored.arms_escalation == 2 and restored.arms_trade_history.size() == 1, "save/load should preserve arms escalation and its named history")
+	_expect(restore_result.ok and restored.arms_escalation == 1 and restored.arms_trade_history.size() == 2, "save/load should preserve arms escalation and its named sale/recovery history")
 
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
@@ -1211,7 +1217,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.7.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.8.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)

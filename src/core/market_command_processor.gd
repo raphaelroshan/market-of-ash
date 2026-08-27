@@ -653,6 +653,8 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 			return _apply_provision_bundle(world, action)
 		"ashgate_cinder_rider_arms_sale":
 			return _apply_arms_sale(world, action)
+		"ashgate_public_manifest_audit":
+			return _apply_arms_recovery(world, action)
 		_:
 			return _failure(String(action.get("unavailable_reason", "this opportunity is not implemented yet")))
 
@@ -711,6 +713,24 @@ static func _apply_arms_sale(world: AshWorldState, action: Dictionary) -> Dictio
 	var message := "Sold %d sealed arms crate for %d ashmarks. Arms escalation is now %d/6; Wardens and Free Caravans each lost standing. Non-arms alternative: %s." % [quantity, payout, world.arms_escalation, String(alternative.get("name", "relief trade"))]
 	world.log.append(message)
 	return _success(message, {"action_id": String(action.id), "money": payout, "cargo": {good_id: -quantity, "weight": -removed_weight}, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "arms_escalation": escalation, "reputation": reputation_results})
+
+static func _apply_arms_recovery(world: AshWorldState, action: Dictionary) -> Dictionary:
+	if world.arms_escalation <= 0:
+		return _failure("arms escalation is already at zero; no manifest audit is needed")
+	var cost := int(action.get("cost", 0))
+	var slots := int(action.get("service_slots", 1))
+	var days := int(action.get("time_cost", 0))
+	var recovery: Dictionary = action.get("effects", {}).get("arms_recovery", {})
+	world.money -= cost
+	world.visit_slots_remaining -= slots
+	if days > 0:
+		world.advance_day(days)
+	var escalation := world.adjust_arms_escalation(int(recovery.get("escalation_delta", -1)), String(action.get("id", "")))
+	var information_id := String(recovery.get("information_id", ""))
+	world.record_information(information_id)
+	var message := "Funded the public manifest audit for %d ashmarks and %d day. Arms escalation fell to %d/6; the published audit is now a known lead." % [cost, days, world.arms_escalation]
+	world.log.append(message)
+	return _success(message, {"action_id": String(action.id), "money": -cost, "day": days, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "arms_escalation": escalation, "information_id": information_id})
 
 static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Dictionary:
 	if good_id.is_empty() or int(world.cargo.get(good_id, 0)) <= 0:

@@ -863,6 +863,8 @@ func _refresh_opportunities() -> void:
 		if effects.has("arms_sale"):
 			var arms_sale: Dictionary = effects.get("arms_sale", {})
 			effect_summary = "+%d ashmarks, -%d sealed crate, escalation +%d" % [int(arms_sale.get("payout", 0)), int(arms_sale.get("quantity", 0)), int(arms_sale.get("escalation_delta", 0))]
+		elif effects.has("arms_recovery"):
+			effect_summary = "arms escalation %d" % int(effects.get("arms_recovery", {}).get("escalation_delta", 0))
 		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
@@ -878,6 +880,9 @@ func _refresh_opportunities() -> void:
 			if int(world.cargo.get(String(arms_requirement.get("good_id", "")), 0)) < int(arms_requirement.get("quantity", 0)):
 				action_button.disabled = true
 				unavailable_reason = "Needs %d sealed arms crate; acquire one first." % int(arms_requirement.get("quantity", 0))
+		elif effects.has("arms_recovery") and world.arms_escalation <= 0:
+			action_button.disabled = true
+			unavailable_reason = "Arms escalation is already zero; no audit is needed."
 		action_button.tooltip_text = unavailable_reason if action_button.disabled else "%s %s" % [String(action.get("description", "")), String(action.get("tradeoff", ""))]
 		action_button.pressed.connect(_on_settlement_action_pressed.bind(String(action.get("id", ""))))
 		opportunity_list.add_child(action_button)

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.7.0",
+  "content_version": "1.8.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -67,6 +67,20 @@
         },
         "description": "A Cinder Rider broker offers 82 ashmarks for one sealed arms crate.",
         "tradeoff": "Raises arms escalation to the first inspection threshold and costs standing with both road networks.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "ashgate_public_manifest_audit",
+        "settlement_id": "ashgate",
+        "name": "Fund a public manifest audit",
+        "category": "arms_recovery",
+        "available": true,
+        "cost": 12,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"arms_recovery": {"escalation_delta": -1, "information_id": "public_manifest_audit"}},
+        "description": "Pay neutral clerks to reconcile sealed-cargo manifests and publish the discrepancies.",
+        "tradeoff": "Costs money, one day, and a visit slot to reduce arms pressure by one stage.",
         "unavailable_reason": ""
       },
       {
