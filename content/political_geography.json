@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "market-of-ash",
-  "content_version": "0.2.0",
+  "content_version": "0.3.0",
   "design_principle": "The region should feel interdependent: every settlement has something another needs, and every political solution creates a new access or trust problem.",
   "reputation_axes": [
     {
@@ -27,6 +27,30 @@
       "meaning": "How well the five settlements can absorb a shortage without relying on one faction or one caravan.",
       "benefits": ["more_recoverable_crisis", "fair_distribution_options", "stronger_final_endings"],
       "costs": ["requires_materials_or_margin", "slower_short_term_profit"]
+    },
+    {
+      "id": "cinder_rider_armed_power",
+      "name": "Cinder Rider Armed Power",
+      "range": [0, 5],
+      "meaning": "The Cinder Riders’ ability to protect routes, coerce rivals, and act as a regional power.",
+      "benefits": ["safer_old_road_escorts", "frontier_protection", "major_faction_contracts"],
+      "costs": ["route_intimidation", "tribal_conflict", "settlement_fear"]
+    },
+    {
+      "id": "salt_crown_armed_power",
+      "name": "Salt Crown Armed Power",
+      "range": [0, 5],
+      "meaning": "The Salt Crown’s ability to defend wells, enforce cistern law, and dominate water access.",
+      "benefits": ["well_security", "stable_water_convoys", "major_faction_contracts"],
+      "costs": ["water_monopoly", "tribal_conflict", "permit_pressure"]
+    },
+    {
+      "id": "tribal_conflict",
+      "name": "Tribal Conflict",
+      "range": [0, 5],
+      "meaning": "How close the rival tribes are to open regional war.",
+      "benefits": ["high_weapon_margins", "escort_demand", "emergency_contracts"],
+      "costs": ["route_closures", "civilian_displacement", "volatile_prices", "settlement_resilience_loss"]
     }
   ],
   "political_groups": [
@@ -57,6 +81,34 @@
       "fear": "A crisis so severe that settlements accept permanent centralized control.",
       "mechanical_expression": "caravan_openness reputation and informal contract access",
       "not_villainous": "Open movement genuinely supplies isolated places and breaks monopolies, but the strongest merchants can profit from scarcity and leave weak settlements behind."
+    },
+    {
+      "id": "cinder_riders",
+      "name": "The Cinder Riders",
+      "tier": "tribal_power",
+      "base": "reedwatch",
+      "public_goal": "Keep the old routes open for mobile clans, escorts, and frontier families rather than letting permits decide who may move.",
+      "real_need": "Secure water, mounts, and weapon access after repeated raids displaced their seasonal camps.",
+      "power_base": ["mobile_escorts", "old_road_guides", "ashland_mounts", "frontier_alliances"],
+      "internal_blocs": ["route_clans", "young_war_bands", "elder_mediators"],
+      "preferred_player_behavior": ["sell_fairly", "carry_grain", "sell_tools_before_weapons", "mediate_route_access"],
+      "fear": "Becoming dependent on a single merchant or losing the Old Road to a permanent checkpoint.",
+      "mechanical_expression": "cinder_rider_armed_power, route_control, and caravan_openness pressure",
+      "not_villainous": "They protect isolated travelers and know the frontier better than any official map, but armed young bands can turn protection into coercion when weapons and victories accumulate."
+    },
+    {
+      "id": "salt_crown",
+      "name": "The Salt Crown",
+      "tier": "tribal_power",
+      "base": "brine_cross",
+      "public_goal": "Restore the old cistern law under which water, salt, and defense are held by a recognized basin authority.",
+      "real_need": "Reclaim wells and salt flats that were divided among merchants and Wardens after the ashfall.",
+      "power_base": ["well_guardians", "salt_workers", "fortified_camps", "metal_trade"],
+      "internal_blocs": ["cistern_houses", "salt_lords", "water_priests"],
+      "preferred_player_behavior": ["sell_weapons_selectively", "fund_pump_repair", "publish_water_measures", "accept_basin_tolls"],
+      "fear": "Losing control of the wells and being forced to bargain for water with outsiders.",
+      "mechanical_expression": "salt_crown_armed_power, water access, and warden_control pressure",
+      "not_villainous": "They can stabilize water distribution and defend wells, but their law can become a monopoly when armed power and territory grow faster than legitimacy."
     },
     {
       "id": "wellkeepers_compact",

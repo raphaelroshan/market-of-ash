@@ -33,6 +33,8 @@ jobs:
         run: python tools/validate_content.py --manifest content/content_manifest.json
       - name: Validate political geography
         run: python tools/validate_political_geography.py --data content/political_geography.json
+      - name: Validate tribal conflict
+        run: python tools/validate_tribal_conflict.py --data content/tribal_conflict.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})

@@ -68,6 +68,7 @@ jobs:
             python "$repo/tools/validate_content.py" --manifest "$repo/content/content_manifest.json"
             if [ "$repo" = "repos/market_of_ash" ]; then
               python "$repo/tools/validate_political_geography.py" --data "$repo/content/political_geography.json"
+              python "$repo/tools/validate_tribal_conflict.py" --data "$repo/content/tribal_conflict.json"
             fi
             bash "$repo/scripts/verify.sh"
           done

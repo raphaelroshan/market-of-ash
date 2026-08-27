@@ -1,12 +1,13 @@
 {
   "schema_version": 1,
   "game_id": "market-of-ash",
-  "content_version": "0.2.0",
+  "content_version": "0.3.0",
   "campaign": {
     "title": "The Wells Remember",
     "premise": "A caravan crosses a recovering ashland as a spreading water shortage turns ordinary trade into a contest over trust, access, and the future of the region.",
     "player_role": "A newly independent caravan master with enough capital to survive one bad season, but not enough to ignore the people who control the roads.",
     "regional_objective": "Keep the five-settlement water network alive long enough to decide who will control its future.",
+    "content_extensions": ["content/political_geography.json", "content/tribal_conflict.json"],
     "chapters": [
       {
         "id": "chapter_1_first_ledger",
@@ -62,6 +63,22 @@
       "private_pressure": "Their leaders can mistake freedom for the right to leave weaker settlements behind.",
       "mechanical_hooks": ["lower_route_costs", "new_contracts", "volatile_prices"],
       "content_rule": "A Caravan choice should trade access for instability, never read as simply good."
+    },
+    {
+      "id": "cinder_riders",
+      "name": "The Cinder Riders",
+      "public_position": "Keep the Old Road open for frontier families and independent movement.",
+      "private_pressure": "Armed escorts can become coercive when route power grows faster than legitimacy.",
+      "mechanical_hooks": ["cinder_rider_armed_power", "old_road_escorts", "weapon_contracts"],
+      "content_rule": "A Rider choice should trade movement and escort safety against intimidation and conflict."
+    },
+    {
+      "id": "salt_crown",
+      "name": "The Salt Crown",
+      "public_position": "Restore shared cistern law and defend the basin’s water sources.",
+      "private_pressure": "Stable water access can become a monopoly enforced by armed power.",
+      "mechanical_hooks": ["salt_crown_armed_power", "well_security", "water_contracts"],
+      "content_rule": "A Crown choice should trade water stability against permits, tolls, and monopoly pressure."
     }
   ],
   "locations": [

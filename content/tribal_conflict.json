@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "game_id": "market-of-ash",
+  "framework_version": "0.3.0",
+  "design_promise": "Weapons are profitable goods whose movement changes the political map; the player can trade arms, but cannot pretend the cargo has no owner or consequence.",
+  "faction_refs": ["cinder_riders", "salt_crown"],
+  "state_axes": [
+    {
+      "id": "cinder_rider_armed_power",
+      "range": [0, 5],
+      "meaning": "The Cinder Riders’ capacity to protect routes, coerce rivals, and become a major regional power."
+    },
+    {
+      "id": "salt_crown_armed_power",
+      "range": [0, 5],
+      "meaning": "The Salt Crown’s capacity to defend wells, enforce cistern law, and dominate water access."
+    },
+    {
+      "id": "tribal_conflict",
+      "range": [0, 5],
+      "meaning": "The region’s visible level of confrontation, from tense border trade to open war."
+    },
+    {
+      "id": "tribal_legitimacy",
+      "range": [0, 5],
+      "meaning": "How much local settlements believe either tribe is protecting people rather than accumulating power."
+    }
+  ],
+  "weapon_goods": [
+    {
+      "id": "scrap_blades",
+      "name": "Scrap Blades",
+      "source": "cinderford",
+      "inputs": ["scrap", "charcoal"],
+      "buyers": ["cinder_riders", "salt_crown", "ash_wardens", "reedwatch_frontier_league"],
+      "base_profile": "high_margin_low_bulk",
+      "trade_value": 18,
+      "bulk": 1,
+      "direct_power_effect": 1,
+      "political_risk": 1,
+      "notes": "The most accessible arms good. Useful for defending caravans, but easy to move through unofficial routes."
+    },
+    {
+      "id": "reed_bows",
+      "name": "Reed Bows",
+      "source": "reedwatch",
+      "inputs": ["cloth", "scrap"],
+      "buyers": ["cinder_riders", "reedwatch_frontier_league", "free_caravans"],
+      "base_profile": "medium_margin_low_bulk",
+      "trade_value": 14,
+      "bulk": 1,
+      "direct_power_effect": 1,
+      "political_risk": 1,
+      "notes": "Supports frontier defense and escort work, but can arm small bands quickly."
+    },
+    {
+      "id": "salt_crown_armor",
+      "name": "Salt-Crown Lamellar",
+      "source": "cinderford",
+      "inputs": ["scrap", "cloth", "charcoal"],
+      "buyers": ["salt_crown", "ash_wardens", "cinder_riders"],
+      "base_profile": "high_margin_high_bulk",
+      "trade_value": 32,
+      "bulk": 3,
+      "direct_power_effect": 2,
+      "political_risk": 2,
+      "notes": "Expensive protection that makes a faction harder to dislodge and signals a serious military commitment."
+    },
+    {
+      "id": "powder_components",
+      "name": "Powder Components",
+      "source": "hollow_market",
+      "inputs": ["charcoal", "scrap"],
+      "buyers": ["salt_crown", "ash_wardens", "cinder_riders"],
+      "base_profile": "very_high_margin_high_risk",
+      "trade_value": 44,
+      "bulk": 2,
+      "direct_power_effect": 3,
+      "political_risk": 3,
+      "notes": "Rare and dangerous. A shipment can change the conflict quickly, but attracts inspections, theft, and retaliation."
+    }
+  ],
+  "arms_trade_rules": {
+    "preserve_frontier_trade": [
+      "Weapon goods use the same buy, carry, route, demand, and sell loop as ordinary goods.",
+      "The player can still profit without selling weapons by carrying water, grain, medicine, scrap, charcoal, or cloth.",
+      "Weapons should be high-margin alternatives, not strictly better commodities.",
+      "Weapon prices rise with conflict, but route risk, inspections, shortages, and political consequences rise with them.",
+      "A weapon sale changes faction power only when the shipment reaches a buyer; buying weapons does not cause invisible escalation."
+    ],
+    "power_formula": "buyer_armed_power increases by direct_power_effect modified by shipment_size, delivery_success, and existing_power_gap",
+    "conflict_formula": "tribal_conflict increases when both tribes gain arms, when a high-risk shipment is intercepted, or when a faction’s power gap crosses a visible threshold",
+    "legitimacy_formula": "tribal_legitimacy increases through protection, fair distribution, and mediation; it decreases when arms are used for coercion, blockade, or settlement intimidation",
+    "visibility": ["buyer_name", "shipment_size", "expected_power_change", "route_risk", "likely_rival_response", "civilian_or_settlement_risk"],
+    "no_hidden_effects": "The player must receive a report after a weapon delivery explaining whether the shipment strengthened escorts, escalated a rivalry, or was diverted."
+  },
+  "escalation_stages": [
+    {
+      "stage": 0,
+      "id": "uneasy_trade",
+      "name": "Uneasy Trade",
+      "visible_map_changes": ["small_tribal_camps", "ordinary_escort_requests", "rumors_of_missing_cargo"],
+      "weapon_behavior": "Arms are legal or tolerated, and both tribes seek small defensive shipments.",
+      "player_options": ["sell_small_arms", "carry_civilian_goods", "offer_mediation"],
+      "failure_cost": "A local escort becomes less reliable or a settlement becomes suspicious."
+    },
+    {
+      "stage": 1,
+      "id": "armed_escorts",
+      "name": "Armed Escorts",
+      "visible_map_changes": ["tribal_escorts_on_old_road", "new_weapon_contracts", "inspection_marks"],
+      "weapon_behavior": "Small arms improve route protection, but weapon buyers start competing for supply.",
+      "player_options": ["sell_to_one_side", "split_shipments", "sell_tools_and_armor", "share_route_information"],
+      "failure_cost": "The rival increases patrols and weapon prices become more volatile."
+    },
+    {
+      "stage": 2,
+      "id": "contested_routes",
+      "name": "Contested Routes",
+      "visible_map_changes": ["temporary_checkpoints", "blocked_old_road_segments", "frontier_refugee_camps", "tribal_patrol_icons"],
+      "weapon_behavior": "A large shipment raises armed power and can close a route if the rival feels outmatched.",
+      "player_options": ["run_a_high_risk_contract", "carry_food_and_medicine", "fund_neutral_escorts", "mediate_ceasefire"],
+      "failure_cost": "Cargo seizure, route closure, settlement resilience loss, or forced rerouting."
+    },
+    {
+      "stage": 3,
+      "id": "open_war",
+      "name": "Open War",
+      "visible_map_changes": ["burned_route_markers", "displaced_households", "military_camps", "water_convoy_demand"],
+      "weapon_behavior": "High-risk arms are extremely profitable but create direct risk to civilian routes and the caravan itself.",
+      "player_options": ["choose_a_side", "run_neutral_relief", "sell_only_defensive_goods", "organize_a_prisoner_exchange"],
+      "failure_cost": "Multiple routes close, water prices spike, and one settlement may become temporarily inaccessible."
+    },
+    {
+      "stage": 4,
+      "id": "regional_emergency",
+      "name": "Regional Emergency",
+      "visible_map_changes": ["water_rationing", "emergency_contracts", "major_faction_delegations", "militia_mobilization"],
+      "weapon_behavior": "The tribe with higher power can become a major faction, but legitimacy determines whether its control stabilizes or oppresses the region.",
+      "player_options": ["support_major_faction", "build_shared_defense", "negotiate_power_sharing", "protect_refugee_routes"],
+      "failure_cost": "A faction dominates a key resource and the final campaign conditions harden."
+    },
+    {
+      "stage": 5,
+      "id": "new_order",
+      "name": "The New Order",
+      "visible_map_changes": ["faction_banners_at_routes", "new_toll_rules", "regional_treaty_or_military_rule", "changed_market_access"],
+      "weapon_behavior": "A tribe has become a major regional power, a coalition has formed, or both tribes have exhausted their ability to continue.",
+      "player_options": ["accept_the_new_order", "publish_the_ledger", "back_a_power_share", "leave_with_a_new_network"],
+      "failure_cost": "The player inherits a profitable but politically narrow market or a region with long recovery debt."
+    }
+  ],
+  "tribal_relationships": [
+    {
+      "id": "cinder_riders_vs_salt_crown",
+      "sides": ["cinder_riders", "salt_crown"],
+      "starting_posture": "cold_competition",
+      "shared_interest": "Both need water, scrap, and safe movement through the basin.",
+      "irreconcilable_pressure": "The Cinder Riders reject permanent cistern control; the Salt Crown rejects unregulated armed movement.",
+      "peace_conditions": ["tribal_legitimacy >= 3", "tribal_conflict <= 1", "shared_water_contract == true"],
+      "war_conditions": ["tribal_conflict >= 3", "either_armed_power >= 4", "high_risk_shipment_intercepted == true"],
+      "major_faction_condition": "armed_power >= 4 and legitimacy >= 2 and settlement_resilience >= 2",
+      "player_leverage": ["weapon_delivery", "water_delivery", "route_information", "mediation", "infrastructure_investment"]
+    }
+  ],
+  "conflict_events": [
+    {
+      "id": "first_arms_contract",
+      "chapter": "chapter_1_first_ledger",
+      "title": "A Weapon Has a Buyer",
+      "trigger": "crisis_stage >= 0 and weapon_goods_available == true",
+      "setup": "A Cinder Rider and a Salt Crown representative both offer cash for the same crate of scrap blades. Neither asks what the other has offered.",
+      "choices": [
+        {"id": "sell_cinder_riders", "label": "Sell the blades to the Cinder Riders.", "effects": ["money:+18", "cinder_rider_armed_power:+1", "tribal_conflict:+0", "buyer_contract:cinder_riders"], "visible_result": "The Riders can protect the Old Road, but the Salt Crown begins watching your cargo."},
+        {"id": "sell_salt_crown", "label": "Sell the blades to the Salt Crown.", "effects": ["money:+18", "salt_crown_armed_power:+1", "tribal_conflict:+0", "buyer_contract:salt_crown"], "visible_result": "The wells gain a stronger guard, but the Cinder Riders see a rival gaining leverage."},
+        {"id": "split_and_disclose", "label": "Split the shipment and disclose the rival offer.", "effects": ["money:+11", "cinder_rider_armed_power:+1", "salt_crown_armed_power:+1", "tribal_conflict:+1", "tribal_legitimacy:+1"], "visible_result": "Both sides gain a little, and both learn that the market can be made transparent."},
+        {"id": "sell_tools_instead", "label": "Offer scrap and repair tools instead of weapons.", "effects": ["money:+9", "settlement_resilience:+1", "cinder_guild_relation:+1"], "visible_result": "The shipment supports infrastructure without immediately increasing armed power."
+        }
+      ]
+    },
+    {
+      "id": "escort_retalition",
+      "chapter": "chapter_2_thin_wells",
+      "title": "The Escort That Wasn’t Neutral",
+      "trigger": "either_armed_power >= 1 and route == old_road",
+      "setup": "An armed escort offers a reduced rate after your last weapon delivery. A second escort warns that the first is now part of the conflict.",
+      "choices": [
+        {"id": "hire_armed_escort", "label": "Hire the cheaper escort.", "effects": ["money:-6", "risk:-0.20", "tribal_conflict:+1", "route_control:cinder_riders"], "visible_result": "The road is safer for your caravan and less neutral for everyone else."},
+        {"id": "hire_neutral_escort", "label": "Pay for a neutral mixed escort.", "effects": ["money:-12", "risk:-0.15", "tribal_conflict:-1", "tribal_legitimacy:+1"], "visible_result": "The caravan travels more slowly but proves that protection does not have to become allegiance."},
+        {"id": "travel_without_escort", "label": "Travel without an escort and keep your manifest private.", "effects": ["risk:+0.15", "money:+0", "information:route_observed"], "visible_result": "You preserve neutrality at a visible cost in safety."
+        }
+      ]
+    },
+    {
+      "id": "salt_crown_water_blockade",
+      "chapter": "chapter_3_the_empty_reservoir",
+      "title": "The Cistern Gate",
+      "trigger": "salt_crown_armed_power >= 3 and water_shortage == true",
+      "setup": "The Salt Crown offers to protect Brine Cross’s water in exchange for exclusive access through the next two market days. The Cinder Riders call it a blockade with better language.",
+      "choices": [
+        {"id": "accept_exclusive_water", "label": "Accept the protected water contract.", "effects": ["money:+24", "salt_crown_armed_power:+1", "water_access:regulated", "caravan_openness:-1"], "visible_result": "Water reaches paying buyers reliably, while smaller traders lose access."},
+        {"id": "open_neutral_convoy", "label": "Fund a neutral convoy for all settlements.", "effects": ["money:-18", "tribal_conflict:-1", "tribal_legitimacy:+1", "settlement_resilience:+1"], "visible_result": "The convoy costs more than the contract but keeps the basin from becoming one faction’s reservoir."},
+        {"id": "sell_powder_components", "label": "Sell high-risk powder components to the Cinder Riders.", "effects": ["money:+44", "cinder_rider_armed_power:+3", "tribal_conflict:+2", "route_closure_risk:+1"], "visible_result": "The margin is extraordinary. So is the chance that the next road becomes a battlefield."
+        }
+      ]
+    },
+    {
+      "id": "the_tribes_choose",
+      "chapter": "chapter_4_what_remains",
+      "title": "The Basin Chooses",
+      "trigger": "tribal_conflict >= 3 or either_armed_power >= 4",
+      "setup": "The two tribes send delegations to Ashgate. Each claims that one final shipment would restore order. The ledger says both are preparing for the same war.",
+      "choices": [
+        {"id": "back_cinder_riders", "label": "Back the Cinder Riders as the open-road power.", "effects": ["major_faction:cinder_riders", "route_access:old_road_open", "water_access:negotiated", "tribal_conflict:+1"], "visible_result": "The Old Road remains open, but armed escorts become the price of movement."},
+        {"id": "back_salt_crown", "label": "Back the Salt Crown as the basin authority.", "effects": ["major_faction:salt_crown", "water_access:stable", "route_access:permit_required", "tribal_conflict:+1"], "visible_result": "The wells are defended and rationed, but the market now has a gatekeeper."},
+        {"id": "force_power_share", "label": "Withhold weapons and force a shared water-and-road compact.", "effects": ["money:-30", "tribal_conflict:-2", "tribal_legitimacy:+2", "settlement_resilience:+2", "major_faction:shared_compact"], "visible_result": "No one gets everything. The basin keeps more of its choices."},
+        {"id": "profit_from_final_war", "label": "Take the final arms contract and leave before the roads close.", "effects": ["money:+60", "tribal_conflict:+2", "settlement_resilience:-1", "ending:ash_merchant"], "visible_result": "The caravan leaves rich, while the region inherits the consequences of the margin."
+        }
+      ]
+    }
+  ],
+  "meta_progression": {
+    "principle": "The long-term layer should make trading richer by adding capacity, information, and optional strategic commitments, never by replacing the act of buying and selling.",
+    "tracks": [
+      {
+        "id": "caravan_enterprise",
+        "name": "Caravan Enterprise",
+        "nodes": [
+          {"id": "route_ledger", "cost": 1, "effect": "show_price_history_and_faction_demand", "trade_value": "Know whether a high price is a real shortage or a manufactured rumor."},
+          {"id": "warehouse_lease", "cost": 2, "effect": "store_one_extra_good_between_days", "trade_value": "Wait for a better market without turning storage into passive income."},
+          {"id": "repair_wagon", "cost": 2, "effect": "reduce_cargo_loss_from_route_obstacles", "trade_value": "Protect a chosen cargo commitment on risky routes."},
+          {"id": "chartered_convoy", "cost": 3, "effect": "carry_high_value_goods_with_reduced_risk", "trade_value": "Make a weapon shipment safer without making it consequence-free."}
+        ]
+      },
+      {
+        "id": "political_capital",
+        "name": "Political Capital",
+        "nodes": [
+          {"id": "public_manifest", "cost": 1, "effect": "show_buyer_and_route_consequences", "trade_value": "Make political cargo choices more legible before sale."},
+          {"id": "neutral_brokerage", "cost": 2, "effect": "unlock_mixed_escort_and_mediation_contracts", "trade_value": "Earn less than a war contract while keeping more routes open."},
+          {"id": "shared_storage_charter", "cost": 3, "effect": "protect_one_shared_reserve_from_faction_seizure", "trade_value": "Turn relationships into a recovery option rather than a passive reputation bonus."},
+          {"id": "regional_seat", "cost": 4, "effect": "unlock_major_faction_power_sharing_choice", "trade_value": "Influence the post-crisis market without becoming its ruler."
+          }
+        ]
+      }
+    ],
+    "unlock_sources": ["completed_delivery", "settlement_resilience", "crew_relationships", "mediation_events", "profitable_run"],
+    "guardrails": [
+      "Do not add a second travel game on top of trade; meta upgrades should shorten friction or widen choices.",
+      "Do not make weapons the only profitable goods; ordinary trade should remain a strong route to money and progression.",
+      "Do not make faction power invisible; show shipment reports, banners, patrols, prices, and route changes.",
+      "Do not make the player responsible for every conflict outcome; tribes have internal politics and can reject or misuse a shipment.",
+      "Every high-margin arms contract needs at least one non-arms alternative with a meaningful benefit."
+    ]
+  },
+  "major_faction_outcomes": [
+    {
+      "id": "cinder_rider_major_faction",
+      "trigger": "cinder_rider_armed_power >= 4 and cinder_rider_legitimacy >= 2",
+      "market_change": "Old Road becomes open under escort culture; water remains negotiated and prices stay volatile.",
+      "player_trade_position": "High access to frontier and escort contracts, lower official protection."
+    },
+    {
+      "id": "salt_crown_major_faction",
+      "trigger": "salt_crown_armed_power >= 4 and salt_crown_legitimacy >= 2",
+      "market_change": "Water becomes stable inside the cistern system but permission and tolls become more important.",
+      "player_trade_position": "Reliable water contracts, reduced informal trade, stronger inspection pressure."
+    },
+    {
+      "id": "shared_compact_major_faction",
+      "trigger": "tribal_legitimacy >= 4 and tribal_conflict <= 1 and settlement_resilience >= 3",
+      "market_change": "No tribe dominates; shared convoys and public measures reduce extreme volatility.",
+      "player_trade_position": "Lower peak margins but stronger recovery, access, and long-term contracts."
+    }
+  ],
+  "design_guardrails": [
+    "A weapon sale must be a trade decision first and a political trigger second.",
+    "Weapon demand should rise with conflict, but route risk, inspections, and settlement needs should rise with it.",
+    "The player should be able to become wealthy without becoming a war profiteer.",
+    "A tribe becomes a major faction through both armed power and legitimacy; combat strength alone creates fear, not stable rule.",
+    "The conflict layer should create new routes, contracts, and map changes rather than pause the trading game for a separate combat campaign.",
+    "Sovereign-style meta progression should be persistent capacity and influence, not a snowball that makes early trade obsolete."
+  ]
+}

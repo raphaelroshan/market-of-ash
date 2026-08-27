@@ -4,7 +4,7 @@
 
 Content is authored as both a human-readable design bible and a machine-readable manifest. The design bible explains the dramatic purpose, player-facing language, and progression logic. `content/content_manifest.json` contains stable identifiers and structured fields that future Godot systems can load without parsing prose.
 
-The content layer is deliberately separate from simulation code. Events describe requirements and intended effects, but runtime code must translate those effects into explicit validated commands. Narrative text must never be used as a hidden scripting language.
+The content layer is deliberately separate from simulation code. Events describe requirements and intended effects, but runtime code must translate those effects into explicit validated commands. Narrative text must never be used as a hidden scripting language. Market of Ash keeps tribal conflict, weapon goods, escalation, and persistent enterprise progression in `content/tribal_conflict.json`; these are authored inputs, not executable economy logic.
 
 ## Repository structure
 
@@ -13,8 +13,10 @@ The content layer is deliberately separate from simulation code. Events describe
 | `design/content_bible.md` | Narrative premise, tone, locations or rooms, characters or commanders, event rules, progression, endings, and implementation guidance. |
 | `content/content_manifest.json` | Stable IDs and structured authored content for campaign chapters, locations, events, progression tracks, and endings. |
 | `content/political_geography.json` | Structured data for political groups, resource distribution, tensions, map nodes, corridors, obstacles, and crisis-stage map changes. |
+| `content/tribal_conflict.json` | Rival tribes, weapon goods, armed-power state, conflict escalation, conflict events, major-faction outcomes, and meta-progression. |
 | `tools/validate_content.py` | Deterministic JSON/reference validator used by CI. |
 | `tools/validate_political_geography.py` | Market-specific validator for faction, resource, map, tension, and obstacle coverage. |
+| `tools/validate_tribal_conflict.py` | Validator for rival factions, weapon goods, escalation stages, conflict events, and meta-progression. |
 | `ci/quality_contract.md` | Game-specific review criteria used by the multi-agent reviewer. |
 
 ## Authoring contract
@@ -29,7 +31,7 @@ Progression nodes should unlock a new decision or response rather than only incr
 
 An implementation agent should first read the relevant section of the content bible, then inspect the manifest and current simulation state. It should add or update the smallest content slice: one event card, one location or room report, one choice effect, or one progression milestone. The agent must update the manifest, add or update deterministic validation coverage, and show the player-facing result before expanding the catalog.
 
-When content introduces a new mechanic, the agent should make the command and state change explicit in the simulation layer. When content only changes text or presentation, it should preserve deterministic outcomes. Before merging, run the policy checker, content validator, and Godot headless tests. During review, use the game-specific quality contract to check that the new content strengthens the central decision rather than adding lore without consequence.
+When content introduces a new mechanic, the agent should make the command and state change explicit in the simulation layer. When content only changes text or presentation, it should preserve deterministic outcomes. Before merging, run the policy checker, content validator, political-geography validator, tribal-conflict validator, and Godot headless tests. For local checks, use `python tools/validate_political_geography.py --data content/political_geography.json` and `python tools/validate_tribal_conflict.py --data content/tribal_conflict.json`. During review, use the game-specific quality contract to check that the new content strengthens the central decision rather than adding lore without consequence.
 
 ## Content quality checklist
 

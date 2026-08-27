@@ -12,6 +12,8 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | --- | --- | --- |
 | Repository policy | Required files, test presence, secret patterns, large/generated artifacts | Blocks on policy errors. |
 | Content manifest | Stable IDs, chapter/location references, event choices, progression nodes, pack contents, and endings | Blocks on malformed content. |
+| Market political geography | Factions, resource distribution, tensions, map nodes, corridors, obstacles, and crisis-stage map changes | Blocks on malformed map or faction data. |
+| Market tribal conflict | Rival tribes, weapon goods, armed-power escalation, conflict events, major-faction outcomes, and meta-progression | Blocks on malformed conflict data. |
 | Godot headless tests | Deterministic game-state behavior and regression cases | Blocks on test failure. |
 | AI architecture review | Ownership, determinism, save boundaries, coupling, maintainability | Reports; blocks on critical findings. |
 | AI gameplay review | Player-facing behavior, fairness, onboarding, failure states, design fit | Reports; blocks on critical findings. |
@@ -52,6 +54,8 @@ Run the deterministic project-specific test and policy checks locally:
 ```bash
 python tools/policy_check.py --repo local
 python tools/validate_content.py --manifest content/content_manifest.json
+python tools/validate_political_geography.py --data content/political_geography.json
+python tools/validate_tribal_conflict.py --data content/tribal_conflict.json
 bash scripts/verify.sh
 ```
 
