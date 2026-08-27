@@ -10,7 +10,7 @@
 | --- | --- | --- |
 | Keyboard | Tab/directional navigation uses Godot focus traversal. Accept, Back, and Pause keys can be rebound from the Main Menu; conflicting or modified shortcuts are rejected and defaults can be restored. | UI smoke exercises remapping, conflict rejection, persistence, and default restoration. |
 | Controller | D-pad/stick focus traversal uses Godot UI actions; A accepts, B goes back/pauses, and Menu pauses during play. | Controller bindings are source controlled and asserted by the UI smoke test. |
-| Focus continuity | Shop, Departure Desk, route decisions, and arrival each establish a predictable enabled focus target. | UI smoke assertions cover every transition. |
+| Focus continuity | Shop, Departure Desk, route decisions, and arrival each establish a predictable enabled focus target. Resume restores the prior control when it still exists and falls back safely when a save/load refresh rebuilt it. | UI smoke assertions cover every transition and the dynamic-control lifetime case. |
 | Reduced motion | A persisted Main Menu option skips caravan interpolation and presents the completed route immediately without changing simulation time or outcome. | UI smoke test checks completed progress, no active animation, and settings-file round trip. |
 | Text size/reflow | A persisted Main Menu option increases inherited and explicit interface text by 25%; launch controls remain above optional settings, both Shop columns and the Departure action rail scroll vertically, and long dynamic action labels wrap across lines. | UI smoke test checks the visible Start action, scaling without campaign mutation, settings-file round trip, scroll ancestors, and wrapped event controls. |
 | Color independence | Money, provisions, risk, crisis, current map location, settlement resilience, standing, escalation, disabled reasons, and outcomes are always written as text; color is supplementary. Disabled route-event prerequisites remain persistently visible rather than tooltip-only. | Static UI inspection and UI text assertions. |
@@ -26,6 +26,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 | Flow | Mouse | Keyboard | Controller | Pass condition |
 | --- | --- | --- | --- | --- |
 | Main Menu → Start | Click | Tab, Enter/Space | D-pad/stick, A | Starts in Shop with cargo selector focused. |
+| Remap keyboard | Click a binding, press a key | Focus a binding, Enter/Space, then press an unmodified key | Controller remains available but is not remapped | New label and controls hint update; conflict/navigation keys are rejected; Restore Defaults repairs the original scheme. |
 | Shop trade | Click selectors/buttons | Tab/arrows, Enter/Space | D-pad/stick, A | Price explanation remains visible; buy/sell result and autosave status update. |
 | Shop → Departure | Click | Focus Plan departure, Enter/Space | Focus Plan departure, A | Destination receives focus; no resources change. |
 | Departure edit/back | Click / Return button | Selectors; Escape | Selectors; B | Legal routes update; back restores Shop focus and does not mutate state. P/Menu opens Pause. |
@@ -48,7 +49,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 
 1. Large-text reflow and scrolling are implemented but still need rendered checks at minimum window and high OS scaling for clipping and comfortable line length.
 2. Controller behavior is configured and headlessly asserted but has not been exercised on physical Windows hardware.
-3. Audio cues and screen-reader semantics are not implemented; essential information remains available as text.
+3. Controller remapping, audio cues, and screen-reader semantics are not implemented; essential information and fixed controller bindings remain available as text.
 
 ## Remapping plan
 

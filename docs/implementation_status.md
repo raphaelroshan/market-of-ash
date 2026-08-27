@@ -292,4 +292,4 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 ## Next permitted task
 
-Continue B10 with a documented input/accessibility audit and the lowest-risk blockers it identifies.
+Run the packaged candidate through the documented rendered browser/Windows, high-DPI, and physical-controller matrix. Keep any resulting fixes narrow; do not broaden into beta content or storefront integration until those observations are recorded.

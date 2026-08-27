@@ -125,10 +125,13 @@ func _initialize() -> void:
 	ui._on_save_pressed()
 	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
+	ui.opportunity_buttons[0].grab_focus()
 	ui._open_pause()
 	ui._on_save_pressed()
 	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("SAVED — Day 1 · Ashgate"), "saving from Pause should keep the overlay open and show its result there")
+	await process_frame
 	ui._close_pause()
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "resuming after a Pause save should fall back safely when the prior dynamic control was rebuilt")
 	ui._refresh_continue_availability()
 	_expect(ui.menu_save_status_label.text.contains("CONTINUE — Day 1 · Ashgate · 120 ashmarks · hold 0/12 · primary save"), "main menu should preview a validated saved campaign before loading")
 	var manual_save_state := JSON.stringify(ui.world.serialize())

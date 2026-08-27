@@ -334,8 +334,8 @@ func _show_departure() -> void:
 	else:
 		_grab_focus_if_available(destination_option)
 
-func _grab_focus_if_available(control: Control) -> bool:
-	if control == null or not control.is_visible_in_tree() or control.focus_mode == Control.FOCUS_NONE:
+func _grab_focus_if_available(control: Variant) -> bool:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or control.focus_mode == Control.FOCUS_NONE:
 		return false
 	if control is BaseButton and control.disabled:
 		return false
