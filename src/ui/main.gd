@@ -54,6 +54,7 @@ var cargo_quantity: SpinBox
 var market_preview_label: Label
 var route_preview_label: Label
 var log_label: Label
+var diagnostics_label: Label
 var map_panel
 var selected_map_cell: Vector2i = Vector2i(-1, -1)
 
@@ -258,6 +259,11 @@ func _build_shop() -> void:
 	reset_button.text = "Reset run"
 	reset_button.pressed.connect(_on_reset_pressed)
 	actions.add_child(reset_button)
+	diagnostics_label = Label.new()
+	diagnostics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	diagnostics_label.add_theme_font_size_override("font_size", 11)
+	diagnostics_label.add_theme_color_override("font_color", Color("#8f8374"))
+	actions.add_child(diagnostics_label)
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -548,6 +554,11 @@ func _on_return_to_shop_pressed() -> void:
 	_sync_departure_plan_to_shop()
 	_set_event("Back at the settlement shop. Your planning selection was preserved; no resources changed.")
 	_show_shop()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("ui_cancel") and game_layer != null and game_layer.visible and world.pending_event.is_empty():
+		_on_return_to_shop_pressed()
+		get_viewport().set_input_as_handled()
 
 func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))
@@ -1061,6 +1072,12 @@ func _refresh_ui() -> void:
 		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.crisis_rules().get("ending", {}).get("title", world.ending_id)), world.ending_summary]
+	if diagnostics_label:
+		var last_command := "none"
+		if not world.command_history.is_empty():
+			var latest: Dictionary = world.command_history.back()
+			last_command = "%s (%s)" % [String(latest.get("id", "unknown")), "ok" if bool(latest.get("ok", false)) else "blocked"]
+		diagnostics_label.text = "DIAGNOSTICS — seed %d · save v%d · content %s · last command %s" % [world.seed, AshWorldState.SAVE_VERSION, MarketContent.content_version(), last_command]
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

@@ -27,6 +27,7 @@ func _initialize() -> void:
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
+	_expect(ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.9.0"), "shop diagnostics should expose reproducible seed/save/content versions")
 	var action_money_before: int = ui.world.money
 	var action_provisions_before: int = ui.world.provisions
 	ui._on_settlement_action_pressed("ashgate_provision_bundle")
@@ -63,7 +64,10 @@ func _initialize() -> void:
 	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 0/4"), "departure desk did not pin the active contract and cargo shortfall")
 	_expect(ui.route_preview_label.text.contains("1 Grain unit at risk"), "departure desk did not disclose the one-unit cargo risk basis")
 	_expect(ui.route_preview_label.text.contains("Risk source:"), "departure desk did not disclose the authored route-risk source")
-	ui._on_return_to_shop_pressed()
+	var cancel_event := InputEventAction.new()
+	cancel_event.action = "ui_cancel"
+	cancel_event.pressed = true
+	ui._unhandled_input(cancel_event)
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Return to shop should close the departure map")
 	if JSON.stringify(ui.world.serialize()) != shop_state:
 		failures.append("returning from departure planning mutated authoritative world state")

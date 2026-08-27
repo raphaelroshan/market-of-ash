@@ -260,8 +260,9 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Source-controlled export presets now define `Windows Desktop` and `Web` artifacts.
 - Pull-request packaging and tagged releases export both targets with Godot 4.4.1 templates before uploading artifacts.
 - The project declares a 1280×720 canvas with a 960×540 minimum window and canvas-item stretch for smaller desktop displays.
+- The settlement shop exposes seed, save version, content version, and last command status for reproducible playtest reports; `ui_cancel` returns safely from departure planning when no event is pending.
 - Local preset parsing and project import pass. A local Web binary export remains blocked only by the temporary editor installation's missing export templates; CI explicitly installs them.
 
 ## Next permitted task
 
-Continue B10 with packaged-build smoke execution, input/accessibility review, and player-facing diagnostics.
+Continue B10 with packaged-build smoke execution and a manual visual/accessibility review at supported window sizes.
