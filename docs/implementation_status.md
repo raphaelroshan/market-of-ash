@@ -260,8 +260,10 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - `The Best Margin` requires at least 220 ashmarks, Reedwatch resilience 1 or lower, and arms escalation 1 or lower at stage 3. It describes profitable but uneven crisis recovery.
 - Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
 - Ending rules are ordered: when a state qualifies for both, completed shared relief takes precedence over regulated reserve control.
+- Ending evaluation occurs after the complete command, so a day-ten event choice or arrival consequence can change the selected conclusion before it becomes immutable.
 - Save version 11 preserves either ending. Tests cover every stage boundary, unmet predicates, both successful resolutions, precedence, save/load, migration, and UI presentation.
 - Four fresh command campaigns reach different endings: relief plus public resilience, regulated medicine trade plus Warden recognition, exposed-route information plus publicly shared water for Free Caravan standing, and repeated arbitrage plus a scarcity-premium sale for concentrated merchant profit.
+- Reached endings appear in a dedicated scrollable campaign-conclusion card, remain saved, and do not prevent post-ending trade inspection.
 
 ## B10 build-operations result
 

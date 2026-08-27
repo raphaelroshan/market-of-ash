@@ -1189,6 +1189,23 @@ func _test_crisis_progression_and_ending() -> void:
 	merchant_world.advance_day(9)
 	_expect(merchant_world.ending_id == "ending_ash_merchant", "a wealthy low-resilience state should reach the profit-first ending")
 	_expect(merchant_world.ending_summary.contains("concentrated profit"), "merchant ending should explain its supply, access, escalation, and trade-style result")
+	var decision_world := AshWorldState.new(3)
+	decision_world.day = 9
+	decision_world.money = 220
+	decision_world.cargo = {"water": 2, "weight": 2}
+	decision_world.reputation["caravans"] = 1
+	decision_world.resolved_event_ids.append("three_riders_no_banner")
+	var decision_departure := MarketCommandProcessor.execute(decision_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(decision_departure.ok and decision_world.pending_event.get("id", "") == "last_clean_barrel", "day-ten decision fixture should pause at the final public-water choice")
+	_expect(decision_world.ending_id.is_empty(), "crossing the ending day during travel should not lock an outcome before the pending decision")
+	var decision_resolution := MarketCommandProcessor.execute(decision_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "share_barrels_fairly"},
+	})
+	_expect(decision_resolution.ok and decision_world.ending_id == "ending_free_caravan_routes", "the final route decision should determine the eligible ending before it is recorded")
 	var restored := AshWorldState.new(0)
 	var restore_result := restored.load_serialized(ending_world.serialize())
 	_expect(restore_result.ok and restored.ending_id == ending_world.ending_id and restored.ending_summary == ending_world.ending_summary, "save/load should preserve the reached ending")

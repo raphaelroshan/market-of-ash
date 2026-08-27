@@ -308,7 +308,7 @@ func _update_crisis_modifiers() -> void:
 		crisis_modifiers["water"] = 1.95
 		crisis_modifiers["medicine"] = 1.35
 
-func advance_day(days: int) -> void:
+func advance_day(days: int, evaluate_campaign: bool = true) -> void:
 	var elapsed_days := maxi(0, days)
 	day += elapsed_days
 	_decay_market_pressure(elapsed_days)
@@ -320,7 +320,8 @@ func advance_day(days: int) -> void:
 		crisis_stage = next_stage
 		_update_crisis_modifiers()
 		log.append("Crisis stage %d: %s." % [crisis_stage, String(MarketContent.crisis_stage(crisis_stage).get("label", "Regional pressure"))])
-	evaluate_ending()
+	if evaluate_campaign:
+		evaluate_ending()
 
 func evaluate_ending() -> bool:
 	if not ending_id.is_empty() or crisis_stage < 3:
@@ -385,7 +386,7 @@ func travel(route_id: String) -> Dictionary:
 		return {"ok": false, "reason": "not enough provisions"}
 	money -= int(selected.cost)
 	provisions -= provision_cost
-	advance_day(int(selected.days))
+	advance_day(int(selected.days), false)
 	return {"ok": true, "risk": float(selected.risk), "days": int(selected.days), "provisions": provision_cost, "cost": int(selected.cost)}
 
 func record_command(command: Dictionary, result: Dictionary) -> void:

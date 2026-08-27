@@ -295,3 +295,11 @@
 **Reason:** The campaign roadmap requires distinct viable conclusions from different trade and relationship strategies. Regulated medicine trade plus Warden logistics produces controlled access, route information plus public water sharing produces an independent-road outcome, and repeated arbitrage plus a scarcity-premium sale produces a profitable but uneven recovery. None requires a new subsystem or makes arms mandatory.
 
 **Trade-off:** All four concept-manifest ending directions now have runtime counterparts, although their IDs and exact thresholds remain specific to this compact alpha. Ending predicates remain explicit core branches rather than a generic expression interpreter, and earlier authored outcomes have deliberate precedence when predicates overlap.
+
+## ADR-038: Endings resolve after the complete player command
+
+**Decision:** Day advancement inside travel, event responses, and settlement actions updates crisis stages but defers ending evaluation. The command recorder evaluates endings only after every cost, event choice, arrival effect, contract resolution, reputation change, and resilience change from that command is complete. Direct test/setup calls to `advance_day` retain immediate evaluation by default.
+
+**Reason:** A day-ten route event can change the very values that select an ending. Recording an immutable result at the midpoint of travel would ignore the player's final choice and could produce a summary contradicted by the completed command.
+
+**Trade-off:** Callers that compose a state-changing action outside `MarketCommandProcessor` must explicitly decide whether to defer evaluation. Production mutation remains command-boundary only, and the regression suite covers a day-ten choice that changes the winning ending.

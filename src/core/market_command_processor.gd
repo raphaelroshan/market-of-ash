@@ -362,7 +362,7 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		specific_cargo_delta = _remove_event_materials(world, specific_basis, cargo_cost_quantity).delta
 	var extra_days := int(choice.get("days", 0))
 	if extra_days > 0:
-		world.advance_day(extra_days)
+		world.advance_day(extra_days, false)
 	var cargo_delta: Dictionary = {}
 	var cargo_loss_message := ""
 	var cargo_risk := float(choice.get("cargo_risk", 0.0))
@@ -675,7 +675,7 @@ static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) ->
 		if reputation_result.ok:
 			reputation_results[faction_id] = reputation_result
 	if time_cost > 0:
-		world.advance_day(time_cost)
+		world.advance_day(time_cost, false)
 	var standing_message := " Warden standing is now %d." % int(world.reputation.get("wardens", 0)) if reputation_results.has("wardens") else ""
 	var message := "Packed %d route provisions for %d ashmarks. %d of %d visit slots remain.%s" % [provisions_added, cost, world.visit_slots_remaining, int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2)), standing_message]
 	world.log.append(message)
@@ -724,7 +724,7 @@ static func _apply_arms_recovery(world: AshWorldState, action: Dictionary) -> Di
 	world.money -= cost
 	world.visit_slots_remaining -= slots
 	if days > 0:
-		world.advance_day(days)
+		world.advance_day(days, false)
 	var escalation := world.adjust_arms_escalation(int(recovery.get("escalation_delta", -1)), String(action.get("id", "")))
 	var information_id := String(recovery.get("information_id", ""))
 	world.record_information(information_id)

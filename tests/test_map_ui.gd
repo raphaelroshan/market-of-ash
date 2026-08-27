@@ -312,6 +312,7 @@ func _initialize() -> void:
 	ui.world.advance_day(8)
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "open_routes_relief" and ui.shop_status_label.text.contains("ENDING — Open Routes, Shared Wells"), "qualified crisis state did not expose the deterministic ending summary")
+	_expect(ui.ending_panel.visible and ui.ending_label.text.contains("CAMPAIGN CONCLUSION") and ui.ending_label.text.contains("Open Routes, Shared Wells"), "completed relief should receive a dedicated campaign-conclusion card")
 	ui._on_start_game_pressed()
 	ui.world.adjust_reputation("wardens", 3)
 	ui.world.advance_day(9)
@@ -327,6 +328,7 @@ func _initialize() -> void:
 	ui.world.advance_day(9)
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "ending_ash_merchant" and ui.shop_status_label.text.contains("ENDING — The Best Margin"), "profit-first crisis state did not expose the fourth deterministic ending summary")
+	_expect(ui.ending_panel.visible and ui.ending_label.text.contains("The Best Margin") and ui.ending_label.text.contains("continue trading"), "profit-first ending should update the dedicated conclusion card without blocking continued play")
 
 	var state_before_text_scale := JSON.stringify(ui.world.serialize())
 	ui.large_text_checkbox.button_pressed = true
