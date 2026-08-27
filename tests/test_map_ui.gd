@@ -119,9 +119,11 @@ func _initialize() -> void:
 	_expect(buy_cargo_button.custom_minimum_size.y >= 44 and sell_cargo_button.custom_minimum_size.y >= 44 and ui.guided_test_button.custom_minimum_size.y >= 44, "first-trade actions should expose comfortable pointer and controller targets")
 	_expect(buy_cargo_button.text.contains("Buy 2 Water") and buy_cargo_button.text.contains("30 ashmarks") and not buy_cargo_button.disabled, "Buy should state the affordable selected quantity, cargo, and total cost")
 	_expect(sell_cargo_button.text == "Sell 2 Water" and sell_cargo_button.disabled and sell_cargo_button.tooltip_text.contains("Hold contains 0"), "Sell should be visibly unavailable when the selected quantity is not held")
+	_expect(ui.shop_transaction_status_label.text.contains("Sell unavailable") and ui.shop_transaction_status_label.text.contains("0/2 Water"), "a blocked sale should expose its hold shortfall as persistent text")
 	ui.shop_quantity.value = 12
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	_expect(buy_cargo_button.disabled and buy_cargo_button.tooltip_text.contains("costs 180 ashmarks") and buy_cargo_button.tooltip_text.contains("has 120"), "Buy should explain when the selected load is unaffordable")
+	_expect(ui.shop_transaction_status_label.text.contains("need 180 ashmarks") and ui.shop_transaction_status_label.text.contains("have 120"), "a blocked purchase should expose its cash shortfall as persistent text")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
@@ -297,6 +299,7 @@ func _initialize() -> void:
 	ui._on_guided_test_action()
 	_expect(int(ui.world.cargo.get("water", 0)) == 2 and int(ui.world.cargo.get("weight", 0)) == 2, "guided test action did not execute the promised water purchase")
 	_expect(not sell_cargo_button.disabled, "Sell should become available once the selected quantity is held")
+	_expect(ui.shop_transaction_status_label.text == "Buy or sell the selected load.", "available trade actions should clear stale block reasons")
 	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "guided test action did not use the explicit command boundary")
 	_expect(ui.event_label.text.contains("NEXT —") and ui.event_label.text.contains("Plan departure"), "a successful shop command should end with a concrete next action")
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")

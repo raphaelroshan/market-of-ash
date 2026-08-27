@@ -45,6 +45,7 @@ var shop_quantity: SpinBox
 var shop_market_preview_label: Label
 var shop_buy_button: Button
 var shop_sell_button: Button
+var shop_transaction_status_label: Label
 var shop_status_label: Label
 var shop_cargo_label: Label
 var opportunity_status_label: Label
@@ -638,6 +639,11 @@ func _build_shop() -> void:
 	shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
 	shop_sell_button.pressed.connect(_on_sell_pressed)
 	purchase_row.add_child(shop_sell_button)
+	shop_transaction_status_label = Label.new()
+	shop_transaction_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_transaction_status_label.add_theme_font_size_override("font_size", 12)
+	shop_transaction_status_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	market_shell.add_child(shop_transaction_status_label)
 	guided_test_button = Button.new()
 	guided_test_button.text = "Optional: Buy 2 water"
 	guided_test_button.custom_minimum_size = Vector2(0, 44)
@@ -1339,6 +1345,7 @@ func _refresh_forecasts() -> void:
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
+	var transaction_notes: Array[String] = []
 	if shop_buy_button:
 		var unit_price := MarketEconomy.price_for(good_id, origin, world_context)
 		var buy_total := unit_price * quantity
@@ -1347,8 +1354,10 @@ func _refresh_forecasts() -> void:
 		shop_buy_button.disabled = not bool(buy_validation.get("ok", false)) or world.money < buy_total
 		if not bool(buy_validation.get("ok", false)):
 			shop_buy_button.tooltip_text = "Cannot buy this load: %s." % String(buy_validation.get("reason", "invalid cargo load"))
+			transaction_notes.append("Buy unavailable: %s." % String(buy_validation.get("reason", "invalid cargo load")))
 		elif world.money < buy_total:
 			shop_buy_button.tooltip_text = "This load costs %d ashmarks; the caravan has %d." % [buy_total, world.money]
+			transaction_notes.append("Buy unavailable: need %d ashmarks; have %d." % [buy_total, world.money])
 		else:
 			shop_buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	if shop_sell_button:
@@ -1356,6 +1365,10 @@ func _refresh_forecasts() -> void:
 		shop_sell_button.text = "Sell %d %s" % [quantity, good_id.capitalize()]
 		shop_sell_button.disabled = held_quantity < quantity
 		shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan." if not shop_sell_button.disabled else "Hold contains %d of the selected %d %s." % [held_quantity, quantity, good_id.capitalize()]
+		if shop_sell_button.disabled:
+			transaction_notes.append("Sell unavailable: hold has %d/%d %s." % [held_quantity, quantity, good_id.capitalize()])
+	if shop_transaction_status_label:
+		shop_transaction_status_label.text = "Buy or sell the selected load." if transaction_notes.is_empty() else " ".join(transaction_notes)
 	if departure_load_label:
 		departure_load_label.text = "FORECAST SCENARIO\n%s x%d · actually held %d · total hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get(good_id, 0)), int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
