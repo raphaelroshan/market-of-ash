@@ -362,7 +362,7 @@
 
 ## ADR-046: The regional map selects destinations instead of placeholder cells
 
-**Decision:** Settlement markers on the route map are clickable planning controls. A directly connected marker selects the matching destination and legal route without committing resources; the current settlement and unreachable settlements explain why no journey was selected. Markers also identify the caravan's current location and each settlement's resilience.
+**Decision:** Settlement markers on the route map are clickable planning controls. A directly connected marker selects the matching destination and legal route without committing resources; the current settlement and unreachable settlements explain why no journey was selected. Markers also identify the caravan's current location and each settlement's resilience. After route commitment, map selection and planning controls remain locked until the event and arrival report are complete.
 
 **Reason:** The alpha's primary map should support the trade-and-travel decision rather than expose a future-editor placeholder interaction. Reusing the authoritative destination list keeps map clicks equivalent to the Departure Desk selector.
 

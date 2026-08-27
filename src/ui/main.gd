@@ -1239,6 +1239,10 @@ func _on_reset_pressed() -> void:
 	_refresh_ui()
 
 func _on_map_settlement_selected(settlement_id: String) -> void:
+	if not world.pending_event.is_empty() or arrival_pending:
+		_set_event("This journey is already committed. Resolve the route decision or enter the destination before planning another trip.")
+		_refresh_ui()
+		return
 	var settlement_name := String(world.settlement(settlement_id).get("name", settlement_id))
 	if settlement_id == world.current_settlement:
 		_set_event("You are already in %s. Choose another settlement to plan a journey." % settlement_name)
@@ -1556,6 +1560,15 @@ func _set_event(text: String) -> void:
 
 func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
+	var journey_locked := not world.pending_event.is_empty() or arrival_pending
+	if destination_option:
+		destination_option.disabled = journey_locked
+	if route_option:
+		route_option.disabled = journey_locked
+	if cargo_good_option:
+		cargo_good_option.disabled = journey_locked
+	if cargo_quantity:
+		cargo_quantity.editable = not journey_locked
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
 		var crisis := MarketContent.crisis_stage(world.crisis_stage)

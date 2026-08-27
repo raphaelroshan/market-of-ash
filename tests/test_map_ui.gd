@@ -265,6 +265,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel.travel_progress > 0.0, "presentation traversal did not advance")
 
 	ui._on_enter_settlement_pressed()
+	_expect(not ui.destination_option.disabled and not ui.route_option.disabled and not ui.cargo_good_option.disabled and ui.cargo_quantity.editable, "entering the settlement should unlock planning controls for the next journey")
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Enter settlement should return the player to the central shop")
 	_expect(ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "arrival did not refresh the destination visit budget")
 	_expect(ui.opportunity_buttons.size() == 1 and ui.opportunity_buttons[0].disabled, "Reedwatch should show its unavailable opportunity with a disabled control")
@@ -287,6 +288,10 @@ func _initialize() -> void:
 	ui._on_depart_pressed()
 	_expect(not ui.world.pending_event.is_empty() and ui.world.pending_event.id == "gatekeepers_chalk", "eligible Toll Road trip did not present Gatekeeper's Chalk")
 	_expect(ui.event_card.visible and not ui.enter_settlement_button.visible, "pending route event should block arrival and show the event card")
+	_expect(ui.destination_option.disabled and ui.route_option.disabled and ui.cargo_good_option.disabled and not ui.cargo_quantity.editable, "a committed route event should lock planning controls until it resolves")
+	var committed_destination: String = ui._selected_id(ui.destination_option)
+	ui._on_map_settlement_selected("reedwatch")
+	_expect(ui._selected_id(ui.destination_option) == committed_destination and ui.event_label.text.contains("journey is already committed"), "map clicks should not rewrite the displayed plan during a committed journey")
 	_expect(ui.event_title_label.text == "The Gatekeeper's Chalk", "event card did not render the authored title")
 	_expect(ui.event_stakes_label.text.contains("Toll Road") and ui.event_stakes_label.text.contains("1 Medicine unit valued at 44"), "event card did not expose route and cargo context")
 	_expect(ui.event_choice_buttons.size() == 4, "Gatekeeper's Chalk should expose its three base choices and Tess's visible negotiation option")
@@ -301,6 +306,7 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
 	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "brine_cross", "paying the event toll did not complete arrival")
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
+	_expect(ui.destination_option.disabled and ui.route_option.disabled, "an arrival report should keep planning controls locked until the player enters the settlement")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "resolving a route decision should move focus to settlement entry")
 	_expect(ui.world.event_history.size() == 1 and ui.world.event_history.back().choice_id == "pay_posted_toll", "event UI did not preserve the chosen outcome")
 
