@@ -155,6 +155,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Forecast-maximizer mean error improved from `+66.8` to `-0.2` ashmarks-equivalent across 100 seeds.
 - Forecast-maximizer mean absolute error improved from `66.8` to `14.5`; the residual is binary incident variance rather than structural load-size error.
 - With all four travel events active, the current synthetic policy's event choices reduce forecast-maximizer mean absolute error further to `7.0`; this is policy behavior, not a retuning of the forecast formula.
+- After Cinderford became reachable, the Toll-road-only policy shifted from Medicine → Brine Cross to Grain → Cinderford and improved mean realized economic value from `+7.8` to `+20.6`; the primary forecast-maximizer remained Water → Reedwatch at `+99.7`.
 
 ## B1 market-memory result
 
@@ -167,7 +168,8 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 - Each fresh start and settlement arrival provides two auxiliary-action slots; normal buying and selling consume none.
 - Ashgate offers `Pack Warden rations`: six ashmarks for four provisions and one visit slot.
-- Brine Cross's cistern queue becomes actionable at Thin Wells. Hollow Market sells one persistent Dry Cut report, and completed water relief unlocks Reedwatch's supply shelter during the crisis. Cinderford still shows one disabled future opportunity with a specific dependency reason.
+- Brine Cross's cistern queue becomes actionable at Thin Wells. Cinderford can reserve a Toll Road repair, Hollow Market sells one persistent Dry Cut report, and completed water relief unlocks Reedwatch's supply shelter during the crisis.
+- Cinderford is a real Toll Road stop rather than a decorative waypoint: Ashgate and Brine Cross each connect to it through a six-ashmark segment, while the direct through passage remains available.
 - A third auxiliary action is blocked without changing resources, and save version 3 preserves remaining slots.
 
 ## B3 first-contract result
@@ -257,6 +259,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Thin Wells, Empty Reservoir, and Settlement Decision add named route pressure to the same Old Road/Toll Road records used by forecasts and resolution; saved repairs, faction discounts, and arms inspections compose deterministically.
 - At Thin Wells, Brine Cross activates a one-time cistern queue action: spending one day and one visit slot records the pump-failure lead and adds one visible local resilience point.
 - Hollow Market's one-time route rumor costs six ashmarks and one visit slot, records a water-cache lead, and lowers Dry Cut risk by five points. Reedwatch's one-time shelter requires completed relief plus Thin Wells, spends one day/slot, and adds resilience and Free Caravan standing.
+- Cinderford is now a selectable Toll Road stop. Ashgate–Cinderford and Cinderford–Brine Cross each cost six ashmarks, while the existing direct Ashgate–Brine Cross passage remains twelve. Its repair bench spends fourteen ashmarks, one day, and one slot to lower Toll Road exposure by three points.
 - `Open Routes, Shared Wells` requires the completed Reedwatch relief contract, Reedwatch resilience 2+, and arms escalation 1 or lower at stage 3.
 - `Order at the Cistern` requires Warden standing 3+, Free Caravan standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes the resulting permit-controlled access and regulated trade style.
 - `No Road Owns the Sky` requires Free Caravan standing 2+, Warden standing 1 or lower, and arms escalation 1 or lower at stage 3. It describes independent access, volatile margins, and shared route information.

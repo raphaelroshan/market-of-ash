@@ -168,7 +168,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 			return _failure("unknown route")
 		var endpoints: Array = route.get("endpoints", [])
 		return _failure("%s does not connect %s to %s" % [String(route.get("name", route_id)), world.settlement(world.current_settlement).get("name", world.current_settlement), world.settlement(destination_id).get("name", destination_id)])
-	var selected_route := world.route(route_id)
+	var selected_route := world.route(route_id, origin_id, destination_id)
 	var destination := world.settlement(destination_id)
 	var loss_basis := MarketEconomy.incident_loss_basis(
 		world.cargo,
@@ -178,7 +178,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 	var expected_loss := MarketEconomy.expected_incident_loss(selected_route, loss_basis)
 	var cargo_value := MarketEconomy.cargo_value(world.cargo, destination, world.pricing_context())
 	var departed_day := world.day
-	var travel_result := world.travel(route_id)
+	var travel_result := world.travel(route_id, destination_id)
 	if not travel_result.ok:
 		return _failure(String(travel_result.reason))
 
@@ -659,7 +659,7 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	match action_id:
 		"ashgate_provision_bundle":
 			return _apply_provision_bundle(world, action)
-		"brine_cross_cistern_queue", "hollow_market_route_rumor", "reedwatch_supply_shelter":
+		"brine_cross_cistern_queue", "cinderford_repair_bench", "hollow_market_route_rumor", "reedwatch_supply_shelter":
 			return _apply_civic_action(world, action)
 		"ashgate_cinder_rider_arms_sale":
 			return _apply_arms_sale(world, action)

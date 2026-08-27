@@ -787,8 +787,8 @@ func _refresh_forecasts() -> void:
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		route_preview_label.text = "ROUTE FORECAST\nChoose a directly connected destination and route."
 		return
-	var selected_route := world.route(route_id)
-	selected_route["provisions"] = world.route_provision_cost(route_id)
+	var selected_route := world.route(route_id, world.current_settlement, destination_id)
+	selected_route["provisions"] = world.route_provision_cost(route_id, destination_id)
 	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 
 func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:

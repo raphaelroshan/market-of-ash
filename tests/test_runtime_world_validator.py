@@ -220,6 +220,14 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    # Route-stop validation keeps intermediate settlements reachable without accepting malformed segments.
+    invalid_routes = copy.deepcopy(runtime)
+    invalid_routes["routes"]["toll_road"]["segments"][0]["endpoints"] = ["ashgate", "missing_town"]
+    route_errors = validate(invalid_routes)
+    if not any("segment 0 contains an unknown settlement" in error for error in route_errors):
+        print("FAIL: invalid route segment did not produce the expected error")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

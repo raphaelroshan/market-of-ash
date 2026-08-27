@@ -51,7 +51,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.14.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.15.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
@@ -74,7 +74,9 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
 	_expect(MarketContent.route_connects("old_road", "ashgate", "reedwatch"), "old road should connect its authored endpoints")
 	_expect(not MarketContent.route_connects("old_road", "ashgate", "brine_cross"), "old road should reject destinations outside its authored endpoints")
-	_expect(MarketContent.destinations_from("ashgate") == ["reedwatch", "brine_cross"], "Ashgate should expose only the two directly connected destinations")
+	_expect(MarketContent.route_connects("toll_road", "ashgate", "cinderford") and MarketContent.route_connects("toll_road", "cinderford", "brine_cross"), "Toll Road should expose Cinderford as a reachable authored stop")
+	_expect(MarketContent.destinations_from("ashgate") == ["reedwatch", "cinderford", "brine_cross"], "Ashgate should expose Reedwatch and both Toll Road destinations")
+	_expect(MarketContent.destinations_from("cinderford") == ["ashgate", "brine_cross"], "Cinderford should expose both adjacent/full Toll Road connections")
 
 func _test_base_prices() -> void:
 	_expect(MarketEconomy.base_price("water") == 18, "water base price should be 18")
@@ -418,6 +420,24 @@ func _test_settlement_actions() -> void:
 	})
 	_expect(shelter.ok and shelter_world.day == 5 and shelter_world.resilience_for("reedwatch") == 1, "Reedwatch shelter should spend a day and strengthen local resilience")
 	_expect(int(shelter_world.reputation.get("caravans", 0)) == 1 and shelter_world.known_information.has("reedwatch_supply_shelter_open"), "Reedwatch shelter should grant its named Caravan standing and durable lead")
+
+	var cinder_world := AshWorldState.new(1107)
+	var cinder_departure := MarketCommandProcessor.execute(cinder_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "cinderford"},
+	})
+	_expect(cinder_departure.ok and cinder_world.current_settlement == "cinderford" and cinder_world.money == 114, "Cinderford should be reachable through the six-ashmark Toll Road segment")
+	var repair := MarketCommandProcessor.execute(cinder_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "cinderford_repair_bench"},
+	})
+	_expect(repair.ok and cinder_world.money == 100 and cinder_world.day == 3, "Cinderford repair bench should spend its disclosed money and day")
+	_expect(cinder_world.known_information.has("cinderford_repair_ledger") and is_equal_approx(float(cinder_world.route("toll_road", "cinderford", "brine_cross").risk), 0.05), "Cinderford repair work should preserve its ledger and lower segment risk")
+	var onward := MarketCommandProcessor.execute(cinder_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	_expect(onward.ok and cinder_world.current_settlement == "brine_cross" and int(onward.state_delta.money) == -6, "Cinderford should connect onward to Brine Cross with its segment cost")
 
 func _test_reedwatch_relief_contract() -> void:
 	var world := AshWorldState.new(1)
@@ -1081,14 +1101,14 @@ func _test_nara_vey_crew() -> void:
 	var restored_result := restored.load_serialized(world.serialize())
 	_expect(restored_result.ok and restored.is_crew_recruited("nara_vey") and restored.assigned_crew == "nara_vey", "save/load should preserve Nara's recruited and assigned state")
 	_expect(restored.route_intelligence("old_road").status == "stale", "save/load should preserve the age of Nara's report")
-	var no_route_world := AshWorldState.new(1)
-	no_route_world.recruited_crew.append("nara_vey")
-	no_route_world.current_settlement = "cinderford"
-	var no_route := MarketCommandProcessor.execute(no_route_world, {
+	var cinderford_scout_world := AshWorldState.new(1)
+	cinderford_scout_world.recruited_crew.append("nara_vey")
+	cinderford_scout_world.current_settlement = "cinderford"
+	var cinderford_assignment := MarketCommandProcessor.execute(cinderford_scout_world, {
 		"id": MarketCommandProcessor.ASSIGN_CREW,
 		"inputs": {"crew_id": "nara_vey"},
 	})
-	_expect(not no_route.ok and no_route_world.visit_slots_remaining == 2, "Nara assignment should block without mutation where no authored route leaves")
+	_expect(cinderford_assignment.ok and cinderford_scout_world.visit_slots_remaining == 1 and cinderford_scout_world.route_intelligence("toll_road").status == "scout_informed", "reachable Cinderford should support a Toll Road scout assignment")
 	_expect(world.route_intelligence("missing").status == "unavailable", "route intelligence should handle a missing route safely")
 
 func _test_jorun_pale_crew() -> void:
@@ -1342,7 +1362,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.14.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.15.0", "serialized state should declare the content version")
 
 func _test_disk_save_sanitization() -> void:
 	var source := AshWorldState.new(42)

@@ -327,3 +327,11 @@
 **Reason:** Settlement identity must affect the next trade, route, or regional decision. Hollow Market now sells actionable uncertainty reduction, while Reedwatch lets completed relief become local infrastructure instead of ending at a payout message.
 
 **Trade-off:** Both actions are deliberately one-time and explicit. Their information IDs remain visible records rather than inputs to a generic quest graph, and Cinderford remains the final inaccessible/non-interactive settlement gap.
+
+## ADR-042: Cinderford is an explicit Toll Road stop
+
+**Decision:** Keep the three canonical route IDs, but allow a route to declare validated point-to-point segments. The Toll Road now supports Ashgate–Cinderford and Cinderford–Brine Cross segments at six ashmarks each, plus the existing twelve-ashmark Ashgate–Brine Cross through passage. Cinderford's one-time repair bench costs fourteen ashmarks, one day, and one visit slot to record its ledger and reduce Toll Road risk by three points.
+
+**Reason:** Cinderford was drawn and authored as a settlement but could not be selected, leaving the five-settlement promise false. Segment profiles make the existing map stop playable without inventing a fourth route type or charging the full corridor fee for half a journey.
+
+**Trade-off:** Segment travel shares the Toll Road's faction, crisis, arms, crew, and event rules. Segment-specific narrative variants and different provision costs remain future content rather than a second routing engine.

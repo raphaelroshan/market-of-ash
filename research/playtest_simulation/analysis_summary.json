@@ -59,15 +59,15 @@
       "runs": 100,
       "completion_rate": 1.0,
       "incident_rate": 0.03,
-      "mean_forecast_net_profit": 9.0,
-      "mean_realized_cash_profit": 12.78,
-      "mean_realized_economic_profit": 7.78,
-      "median_realized_economic_profit": 7.0,
-      "p10_realized_economic_profit": 7.0,
-      "p90_realized_economic_profit": 13.0,
-      "loss_rate": 0.03,
-      "mean_forecast_error": -1.22,
-      "mean_quantity": 3.0,
+      "mean_forecast_net_profit": 17.0,
+      "mean_realized_cash_profit": 25.62,
+      "mean_realized_economic_profit": 20.62,
+      "median_realized_economic_profit": 19.0,
+      "p10_realized_economic_profit": 19.0,
+      "p90_realized_economic_profit": 25.0,
+      "loss_rate": 0.0,
+      "mean_forecast_error": 3.62,
+      "mean_quantity": 9.0,
       "mean_provisions_remaining": 11.0
     },
     {
@@ -120,7 +120,7 @@
     {
       "policy": "toll_road_only",
       "policy_label": "Toll-road-only",
-      "choice": "medicine \u2192 brine_cross / toll_road",
+      "choice": "grain \u2192 cinderford / toll_road",
       "runs": 100,
       "share": 1.0
     }
@@ -153,10 +153,10 @@
     {
       "policy": "toll_road_only",
       "policy_label": "Toll-road-only",
-      "forecast_net": 9.0,
-      "realized_economic": 7.78,
-      "mean_error": -1.22,
-      "mean_absolute_error": 3.78
+      "forecast_net": 17.0,
+      "realized_economic": 20.62,
+      "mean_error": 3.62,
+      "mean_absolute_error": 4.1
     }
   ],
   "multi_trip_choice_mix": [

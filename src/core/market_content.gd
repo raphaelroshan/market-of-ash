@@ -228,26 +228,52 @@ static func route(route_id: String) -> Dictionary:
 static func route_connects(route_id: String, origin_id: String, destination_id: String) -> bool:
 	if origin_id == destination_id:
 		return false
-	var endpoints: Variant = route(route_id).get("endpoints", [])
-	if typeof(endpoints) != TYPE_ARRAY or endpoints.size() != 2:
-		return false
-	var forward := String(endpoints[0]) == origin_id and String(endpoints[1]) == destination_id
-	var reverse := String(endpoints[1]) == origin_id and String(endpoints[0]) == destination_id
-	return forward or reverse
+	var route_record := route(route_id)
+	for raw_segment in route_record.get("segments", []):
+		if typeof(raw_segment) != TYPE_DICTIONARY:
+			continue
+		var endpoints: Array = raw_segment.get("endpoints", [])
+		if endpoints.size() == 2 and endpoints.has(origin_id) and endpoints.has(destination_id):
+			return true
+	var endpoints: Variant = route_record.get("endpoints", [])
+	return typeof(endpoints) == TYPE_ARRAY and endpoints.size() == 2 and endpoints.has(origin_id) and endpoints.has(destination_id)
+
+static func route_segment(route_id: String, origin_id: String, destination_id: String) -> Dictionary:
+	for raw_segment in route(route_id).get("segments", []):
+		if typeof(raw_segment) != TYPE_DICTIONARY:
+			continue
+		var segment: Dictionary = raw_segment
+		var endpoints: Array = segment.get("endpoints", [])
+		if endpoints.size() == 2 and endpoints.has(origin_id) and endpoints.has(destination_id):
+			return segment.duplicate(true)
+	return {}
 
 static func routes_from(settlement_id: String) -> Array[String]:
 	var ids: Array[String] = []
 	for route_id in REQUIRED_ROUTE_IDS:
-		var endpoints: Variant = route(route_id).get("endpoints", [])
-		if typeof(endpoints) == TYPE_ARRAY and endpoints.has(settlement_id):
+		var route_record := route(route_id)
+		var stops: Variant = route_record.get("stops", route_record.get("endpoints", []))
+		if typeof(stops) == TYPE_ARRAY and stops.has(settlement_id):
 			ids.append(route_id)
 	return ids
 
 static func destinations_from(settlement_id: String) -> Array[String]:
 	var ids: Array[String] = []
 	for route_id in routes_from(settlement_id):
-		var endpoints: Array = route(route_id).get("endpoints", [])
-		for endpoint_id in endpoints:
+		var route_record := route(route_id)
+		var segments: Array = route_record.get("segments", [])
+		if not segments.is_empty():
+			for raw_segment in segments:
+				if typeof(raw_segment) != TYPE_DICTIONARY:
+					continue
+				var endpoints: Array = raw_segment.get("endpoints", [])
+				if endpoints.has(settlement_id):
+					for endpoint_id in endpoints:
+						var destination_id := String(endpoint_id)
+						if destination_id != settlement_id and not ids.has(destination_id):
+							ids.append(destination_id)
+			continue
+		for endpoint_id in route_record.get("endpoints", []):
 			var destination_id := String(endpoint_id)
 			if destination_id != settlement_id and not ids.has(destination_id):
 				ids.append(destination_id)
@@ -360,6 +386,27 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			var risk := float(route.get("risk", -1.0))
 			if risk < 0.0 or risk > 1.0:
 				errors.append("route %s risk must be between 0 and 1" % route_id)
+			var segments_value: Variant = route.get("segments", [])
+			if typeof(segments_value) != TYPE_ARRAY:
+				errors.append("route %s segments must be an array" % route_id)
+			else:
+				for raw_segment in segments_value:
+					if typeof(raw_segment) != TYPE_DICTIONARY:
+						errors.append("route %s segments must be objects" % route_id)
+						continue
+					var segment: Dictionary = raw_segment
+					var segment_endpoints: Array = segment.get("endpoints", [])
+					if segment_endpoints.size() != 2 or String(segment_endpoints[0]) == String(segment_endpoints[1]):
+						errors.append("route %s segment endpoints are invalid" % route_id)
+						continue
+					for endpoint_id in segment_endpoints:
+						if not REQUIRED_SETTLEMENT_IDS.has(String(endpoint_id)):
+							errors.append("route %s segment has unknown endpoint: %s" % [route_id, String(endpoint_id)])
+					if int(segment.get("cost", -1)) < 0 or int(segment.get("days", 0)) <= 0:
+						errors.append("route %s segment cost or days is invalid" % route_id)
+					var segment_risk := float(segment.get("risk", -1.0))
+					if segment_risk < 0.0 or segment_risk > 1.0:
+						errors.append("route %s segment risk must be between 0 and 1" % route_id)
 
 	return {"ok": errors.is_empty(), "errors": errors}
 
@@ -472,6 +519,12 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 				errors.append("settlement action hollow_market_route_rumor must record information")
 			if String(condition.get("route_id", "")) != "dry_cut" or float(condition.get("risk_delta", 0.0)) >= 0.0:
 				errors.append("settlement action hollow_market_route_rumor must reduce Dry Cut risk")
+		elif bool(action.get("available", false)) and action_id == "cinderford_repair_bench":
+			var condition: Dictionary = effects_value.get("route_condition", {})
+			if String(effects_value.get("information_id", "")).is_empty():
+				errors.append("settlement action cinderford_repair_bench must record information")
+			if String(condition.get("route_id", "")) != "toll_road" or float(condition.get("risk_delta", 0.0)) >= 0.0:
+				errors.append("settlement action cinderford_repair_bench must reduce Toll Road risk")
 		elif bool(action.get("available", false)) and action_id == "reedwatch_supply_shelter":
 			var resilience: Dictionary = effects_value.get("settlement_resilience", {})
 			if String(action.get("requires_completed_contract_id", "")) != "reedwatch_water_relief_01":

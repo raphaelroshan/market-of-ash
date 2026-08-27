@@ -60,10 +60,16 @@ func settlement(id: String) -> Dictionary:
 		result["id"] = id
 	return result
 
-func route(id: String) -> Dictionary:
+func route(id: String, origin_id: String = "", destination_id: String = "") -> Dictionary:
 	var result: Dictionary = routes.get(id, {}).duplicate(true)
 	if result.is_empty():
 		return result
+	if not origin_id.is_empty() and not destination_id.is_empty():
+		var segment := MarketContent.route_segment(id, origin_id, destination_id)
+		if not segment.is_empty():
+			for field in ["cost", "days", "risk"]:
+				result[field] = segment.get(field, result.get(field))
+			result["segment_endpoints"] = segment.get("endpoints", []).duplicate()
 	var condition_value: Variant = route_conditions.get(id, {})
 	if typeof(condition_value) == TYPE_DICTIONARY:
 		var condition: Dictionary = condition_value
@@ -174,8 +180,8 @@ func route_intelligence(route_id: String) -> Dictionary:
 	var status := "scout_informed" if assigned_crew == "nara_vey" else "logistics_informed"
 	return {"status": status, "label": "%s-informed" % String(assigned.get("name", "Crew")).trim_suffix(" Vey").trim_suffix(" Pale"), "detail": String(report.get("note", "The route remains uncertain.")), "observed_day": int(report.get("observed_day", day))}
 
-func route_provision_cost(route_id: String) -> int:
-	var selected := route(route_id)
+func route_provision_cost(route_id: String, destination_id: String = "") -> int:
+	var selected := route(route_id, current_settlement, destination_id) if not destination_id.is_empty() else route(route_id)
 	if selected.is_empty():
 		return 0
 	var base_cost := int(selected.get("days", 0))
@@ -383,13 +389,13 @@ func _decay_market_pressure(days: int) -> void:
 func _rounded_pressure(value: float) -> float:
 	return roundf(value * 10000.0) / 10000.0
 
-func travel(route_id: String) -> Dictionary:
-	var selected := route(route_id)
+func travel(route_id: String, destination_id: String = "") -> Dictionary:
+	var selected := route(route_id, current_settlement, destination_id) if not destination_id.is_empty() else route(route_id)
 	if selected.is_empty():
 		return {"ok": false, "reason": "unknown route"}
 	if money < int(selected.cost):
 		return {"ok": false, "reason": "not enough money for route cost"}
-	var provision_cost := route_provision_cost(route_id)
+	var provision_cost := route_provision_cost(route_id, destination_id)
 	if provisions < provision_cost:
 		return {"ok": false, "reason": "not enough provisions"}
 	money -= int(selected.cost)

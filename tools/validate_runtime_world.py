@@ -164,6 +164,12 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
                 fail(errors, "settlement action hollow_market_route_rumor must record information")
             if not isinstance(condition, dict) or condition.get("route_id") != "dry_cut" or not isinstance(condition.get("risk_delta"), (int, float)) or not -1 <= condition["risk_delta"] < 0:
                 fail(errors, "settlement action hollow_market_route_rumor must reduce Dry Cut risk")
+        elif action.get("available") is True and action_id == "cinderford_repair_bench":
+            condition = effects.get("route_condition")
+            if not isinstance(effects.get("information_id"), str) or not effects["information_id"]:
+                fail(errors, "settlement action cinderford_repair_bench must record information")
+            if not isinstance(condition, dict) or condition.get("route_id") != "toll_road" or not isinstance(condition.get("risk_delta"), (int, float)) or not -1 <= condition["risk_delta"] < 0:
+                fail(errors, "settlement action cinderford_repair_bench must reduce Toll Road risk")
         elif action.get("available") is True and action_id == "reedwatch_supply_shelter":
             resilience = effects.get("settlement_resilience")
             if required_contract_id != "reedwatch_water_relief_01":
@@ -584,6 +590,23 @@ def validate(data: Any) -> list[str]:
         risk = route.get("risk")
         if not isinstance(risk, (int, float)) or not 0 <= risk <= 1:
             fail(errors, f"route {route_id}.risk must be a number between 0 and 1")
+        segments = route.get("segments", [])
+        if not isinstance(segments, list):
+            fail(errors, f"route {route_id}.segments must be a list")
+        for segment_index, segment_value in enumerate(segments if isinstance(segments, list) else []):
+            segment = as_object(segment_value, f"route {route_id}.segments[{segment_index}]", errors)
+            segment_endpoints = segment.get("endpoints")
+            if not isinstance(segment_endpoints, list) or len(segment_endpoints) != 2 or segment_endpoints[0] == segment_endpoints[1]:
+                fail(errors, f"route {route_id} segment {segment_index} must contain two different endpoints")
+            elif any(endpoint not in REQUIRED_SETTLEMENTS for endpoint in segment_endpoints):
+                fail(errors, f"route {route_id} segment {segment_index} contains an unknown settlement")
+            if not isinstance(segment.get("cost"), int) or segment["cost"] < 0:
+                fail(errors, f"route {route_id} segment {segment_index}.cost must be a non-negative integer")
+            if not isinstance(segment.get("days"), int) or segment["days"] <= 0:
+                fail(errors, f"route {route_id} segment {segment_index}.days must be a positive integer")
+            segment_risk = segment.get("risk")
+            if not isinstance(segment_risk, (int, float)) or not 0 <= segment_risk <= 1:
+                fail(errors, f"route {route_id} segment {segment_index}.risk must be between 0 and 1")
     return errors
 
 

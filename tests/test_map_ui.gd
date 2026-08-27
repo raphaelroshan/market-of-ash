@@ -46,7 +46,7 @@ func _initialize() -> void:
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
-	_expect(ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.14.0"), "shop diagnostics should expose reproducible seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.15.0"), "shop diagnostics should expose reproducible seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -103,6 +103,12 @@ func _initialize() -> void:
 	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[0].text.contains("-5% Dry Cut risk"), "Hollow Market should expose its paid Dry Cut report")
 	ui._on_settlement_action_pressed("hollow_market_route_rumor")
 	_expect(ui.world.known_information.has("dry_cut_water_cache") and is_equal_approx(float(ui.world.route("dry_cut").risk), 0.50), "Hollow Market rumor UI should apply its visible route condition")
+	ui.world.current_settlement = "cinderford"
+	ui.world.reset_visit_slots()
+	ui._refresh_ui()
+	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[0].text.contains("-3% Toll Road risk"), "reachable Cinderford should expose its repair-bench route investment")
+	ui._on_settlement_action_pressed("cinderford_repair_bench")
+	_expect(ui.world.known_information.has("cinderford_repair_ledger") and is_equal_approx(float(ui.world.route("toll_road").risk), 0.07), "Cinderford repair UI should apply its visible Toll Road condition")
 	ui.world.current_settlement = "reedwatch"
 	ui.world.crisis_stage = 1
 	ui.world._update_crisis_modifiers()
@@ -158,6 +164,9 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.destination_option, "brine_cross")
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road", "destination selection should expose only the connected Toll Road route")
+	ui._select_option_by_id(ui.destination_option, "cinderford")
+	ui._on_destination_changed(ui.destination_option.selected)
+	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road" and ui.route_preview_label.text.contains("Route fee 6"), "Cinderford should be selectable as the nearer Toll Road stop with its segment fee")
 	ui._select_option_by_id(ui.destination_option, "reedwatch")
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "old_road", "destination selection should restore the connected Old Road route")
