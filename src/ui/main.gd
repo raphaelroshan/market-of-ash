@@ -1241,9 +1241,7 @@ func _on_export_report_pressed() -> void:
 		"game_log": world.log.duplicate(),
 	}
 	var report_json := JSON.stringify(report, "\t")
-	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
-		var bridge: Object = Engine.get_singleton("JavaScriptBridge")
-		bridge.call("download_buffer", report_json.to_utf8_buffer(), WEB_REPORT_FILENAME, "application/json")
+	if _download_web_report(report_json):
 		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
 		var file := FileAccess.open(report_path, FileAccess.WRITE)
@@ -1262,6 +1260,15 @@ func _on_export_report_pressed() -> void:
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
+
+func _download_web_report(report_json: String) -> bool:
+	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
+		return false
+	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+	if not bridge.has_method("download_buffer"):
+		return false
+	bridge.call("download_buffer", report_json.to_utf8_buffer(), WEB_REPORT_FILENAME, "application/json")
+	return true
 
 func _report_viewport_size() -> Vector2i:
 	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):

@@ -328,6 +328,7 @@ func _initialize() -> void:
 	report_input.pressed = true
 	ui._input(report_input)
 	var state_before_report := JSON.stringify(ui.world.serialize())
+	_expect(not ui._download_web_report("{}"), "desktop/headless report delivery should retain the validated local-file path")
 	ui._on_export_report_pressed()
 	_expect(FileAccess.file_exists(test_report_path) and JSON.stringify(ui.world.serialize()) == state_before_report, "playtest report export should write diagnostics without mutating campaign state")
 	var report_parser := JSON.new()
