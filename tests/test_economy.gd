@@ -27,6 +27,7 @@ func _init() -> void:
 	_test_jorun_pale_crew()
 	_test_tess_oryn_crew()
 	_test_warden_relationship_threshold()
+	_test_arms_trade_proof()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -48,7 +49,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.6.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.7.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -64,7 +65,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.crew_member("tess_oryn").get("role", "") == "Fixer", "runtime content should expose Tess Oryn's stable crew record")
 	_expect(int(MarketContent.faction("wardens").get("trusted_threshold", 0)) == 2, "runtime content should expose the first Warden threshold")
 	_expect(int(MarketContent.faction("caravans").get("trusted_threshold", 0)) == 2, "runtime content should expose the Free Caravan threshold")
-	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
+	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
 	_expect(MarketContent.route_connects("old_road", "ashgate", "reedwatch"), "old road should connect its authored endpoints")
@@ -1121,6 +1122,27 @@ func _test_warden_relationship_threshold() -> void:
 	_expect(caravan_world.faction_status("caravans").tier == "Known road-sharer" and int(caravan_world.route("old_road").cost) == 2, "Free Caravan threshold should discount only the Old Road by two ashmarks")
 	_expect(int(caravan_world.route("toll_road").cost) == 12 and is_equal_approx(float(caravan_world.route("old_road").risk), 0.35), "Free Caravan standing should not alter Warden fees or exposed-route risk")
 
+func _test_arms_trade_proof() -> void:
+	var blocked_world := AshWorldState.new(1)
+	var blocked := MarketCommandProcessor.execute(blocked_world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "ashgate_cinder_rider_arms_sale"}})
+	_expect(not blocked.ok and blocked_world.arms_escalation == 0 and blocked_world.visit_slots_remaining == 2, "arms offer should block without cargo and preserve all state")
+	var world := AshWorldState.new(1)
+	var buy := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "sealed_arms_crate", "quantity": 1}})
+	_expect(buy.ok and int(world.cargo.get("sealed_arms_crate", 0)) == 1, "the single arms good should use the normal cargo purchase boundary")
+	var sale := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "ashgate_cinder_rider_arms_sale"}})
+	_expect(sale.ok and world.money == 157 and int(world.cargo.get("sealed_arms_crate", 0)) == 0, "named arms sale should remove one crate and pay eighty-two ashmarks")
+	_expect(world.arms_escalation == 2 and world.reputation.wardens == -1 and world.reputation.caravans == -1, "arms sale should expose and apply its bounded escalation and faction costs")
+	_expect(sale.message.contains("Reedwatch Water Relief"), "arms result should name the viable non-arms alternative")
+	var inspected := AshWorldState.new(1)
+	inspected.arms_escalation = 2
+	inspected.cargo = {"sealed_arms_crate": 1, "weight": 2}
+	_expect(int(inspected.route("toll_road").cost) == 17 and String(inspected.route("toll_road").arms_effect).contains("+5"), "noticed arms traffic should disclose the Toll Road inspection surcharge")
+	inspected.adjust_reputation("wardens", 2)
+	_expect(int(inspected.route("toll_road").cost) == 14, "Warden permit discount and arms inspection surcharge should compose deterministically")
+	var restored := AshWorldState.new(0)
+	var restore_result := restored.load_serialized(world.serialize())
+	_expect(restore_result.ok and restored.arms_escalation == 2 and restored.arms_trade_history.size() == 1, "save/load should preserve arms escalation and its named history")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -1189,7 +1211,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.6.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.7.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -1269,6 +1291,14 @@ func _test_legacy_save_migration() -> void:
 	var migration_v8_result := migrated_v8.load_serialized(version_eight_save)
 	_expect(migration_v8_result.ok and int(migration_v8_result.migrated_from) == 8, "version-eight saves should migrate to the crew schema")
 	_expect(migrated_v8.recruited_crew.is_empty() and migrated_v8.assigned_crew.is_empty() and migrated_v8.crew_reports.is_empty(), "version-eight migration should initialize empty crew state")
+	var version_nine_save := legacy_world.serialize()
+	version_nine_save["save_version"] = 9
+	version_nine_save.erase("arms_escalation")
+	version_nine_save.erase("arms_trade_history")
+	var migrated_v9 := AshWorldState.new(0)
+	var migration_v9_result := migrated_v9.load_serialized(version_nine_save)
+	_expect(migration_v9_result.ok and int(migration_v9_result.migrated_from) == 9, "version-nine saves should migrate to the arms-escalation schema")
+	_expect(migrated_v9.arms_escalation == 0 and migrated_v9.arms_trade_history.is_empty(), "version-nine migration should initialize quiet arms state")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)

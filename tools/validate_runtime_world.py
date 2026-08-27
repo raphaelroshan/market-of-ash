@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REQUIRED_GOODS = ("grain", "water", "scrap", "medicine", "charcoal", "cloth")
+REQUIRED_GOODS = ("grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate")
 REQUIRED_SETTLEMENTS = ("ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch")
 REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut")
 
@@ -127,6 +127,18 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
         effects = action.get("effects")
         if not isinstance(effects, dict):
             fail(errors, f"settlement action {action_id}.effects must be an object")
+        elif action.get("category") == "arms_trade":
+            arms_sale = effects.get("arms_sale")
+            if not isinstance(arms_sale, dict):
+                fail(errors, f"settlement action {action_id}.arms_sale must be an object")
+            else:
+                if arms_sale.get("good_id") != "sealed_arms_crate":
+                    fail(errors, f"settlement action {action_id}.arms_sale must use sealed_arms_crate")
+                for field in ("quantity", "payout", "escalation_delta"):
+                    if not isinstance(arms_sale.get(field), int) or arms_sale[field] <= 0:
+                        fail(errors, f"settlement action {action_id}.arms_sale.{field} must be a positive integer")
+                if not isinstance(arms_sale.get("alternative_contract_id"), str) or not arms_sale["alternative_contract_id"]:
+                    fail(errors, f"settlement action {action_id}.arms_sale must name a non-arms alternative")
         elif action.get("available") is True and action_id == "ashgate_provision_bundle":
             if not isinstance(effects.get("provisions"), int) or effects["provisions"] <= 0:
                 fail(errors, "settlement action ashgate_provision_bundle must add provisions")
@@ -365,6 +377,19 @@ def validate_factions(value: Any, errors: list[str]) -> None:
             fail(errors, f"factions.{faction_id}.toll_discount must be a positive integer")
 
 
+def validate_arms_trade(value: Any, errors: list[str]) -> None:
+    rules = as_object(value, "arms_trade", errors)
+    if rules.get("minimum") != 0 or rules.get("maximum") != 6 or not isinstance(rules.get("inspection_threshold"), int) or not 0 < rules["inspection_threshold"] <= 6:
+        fail(errors, "arms_trade bounds or inspection_threshold are invalid")
+    if rules.get("inspection_route_id") not in REQUIRED_ROUTES:
+        fail(errors, "arms_trade.inspection_route_id must reference a known route")
+    if not isinstance(rules.get("inspection_surcharge"), int) or rules["inspection_surcharge"] <= 0:
+        fail(errors, "arms_trade.inspection_surcharge must be a positive integer")
+    for field in ("quiet_label", "noticed_label", "warning", "recovery"):
+        if not isinstance(rules.get(field), str) or not rules[field]:
+            fail(errors, f"arms_trade must declare {field}")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -389,6 +414,7 @@ def validate(data: Any) -> list[str]:
     validate_contracts(root.get("contracts"), visit_slot_limit, errors)
     validate_crew(root.get("crew"), visit_slot_limit, errors)
     validate_factions(root.get("factions"), errors)
+    validate_arms_trade(root.get("arms_trade"), errors)
     validate_events(root.get("events"), errors)
 
     goods = root.get("goods")

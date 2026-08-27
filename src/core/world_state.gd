@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 9
+const SAVE_VERSION := 10
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -33,6 +33,8 @@ var known_information: Array[String] = []
 var recruited_crew: Array[String] = []
 var assigned_crew: String = ""
 var crew_reports: Dictionary = {}
+var arms_escalation: int = 0
+var arms_trade_history: Array[Dictionary] = []
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -76,6 +78,10 @@ func route(id: String) -> Dictionary:
 			result["faction_name"] = String(faction.get("name", faction_id))
 			result["faction_effect"] = String(faction.get("effect", ""))
 			result["faction_tradeoff"] = String(faction.get("tradeoff", ""))
+	var arms_rules := MarketContent.arms_trade_rules()
+	if id == String(arms_rules.get("inspection_route_id", "")) and arms_escalation >= int(arms_rules.get("inspection_threshold", 999)) and int(cargo.get("sealed_arms_crate", 0)) > 0:
+		result["cost"] = int(result.get("cost", 0)) + int(arms_rules.get("inspection_surcharge", 0))
+		result["arms_effect"] = "Arms inspection surcharge: +%d ashmarks." % int(arms_rules.get("inspection_surcharge", 0))
 	return result
 
 func set_route_condition(route_id: String, condition: Dictionary) -> Dictionary:
@@ -130,6 +136,14 @@ func faction_status(faction_id: String) -> Dictionary:
 		"effect": String(rules.get("effect", "")),
 		"tradeoff": String(rules.get("tradeoff", "")),
 	}
+
+func adjust_arms_escalation(delta: int, source_id: String) -> Dictionary:
+	var rules := MarketContent.arms_trade_rules()
+	var before := arms_escalation
+	arms_escalation = clampi(before + delta, int(rules.get("minimum", 0)), int(rules.get("maximum", 6)))
+	var record := {"source_id": source_id, "day": day, "before": before, "after": arms_escalation, "delta": arms_escalation - before}
+	arms_trade_history.append(record)
+	return record
 
 func is_crew_recruited(crew_id: String) -> bool:
 	return recruited_crew.has(crew_id)
@@ -281,7 +295,7 @@ func record_market_delivery(settlement_id: String, good_id: String, quantity: in
 	return {"ok": true, "record": record.duplicate(true)}
 
 func _update_crisis_modifiers() -> void:
-	crisis_modifiers = {"grain": 1.0, "water": 1.0, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.0}
+	crisis_modifiers = {"grain": 1.0, "water": 1.0, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0}
 	if crisis_stage >= 1:
 		crisis_modifiers["water"] = 1.35
 		crisis_modifiers["medicine"] = 1.15
@@ -382,6 +396,8 @@ func serialize() -> Dictionary:
 		"recruited_crew": recruited_crew.duplicate(),
 		"assigned_crew": assigned_crew,
 		"crew_reports": crew_reports.duplicate(true),
+		"arms_escalation": arms_escalation,
+		"arms_trade_history": arms_trade_history.duplicate(true),
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -452,6 +468,14 @@ func load_serialized(data: Dictionary) -> Dictionary:
 	if not recruited_crew.has(assigned_crew):
 		assigned_crew = ""
 	crew_reports = restored.get("crew_reports", {}).duplicate(true) if typeof(restored.get("crew_reports", {})) == TYPE_DICTIONARY else {}
+	var arms_rules := MarketContent.arms_trade_rules()
+	arms_escalation = clampi(int(restored.get("arms_escalation", 0)), int(arms_rules.get("minimum", 0)), int(arms_rules.get("maximum", 6)))
+	arms_trade_history.clear()
+	var saved_arms_history: Variant = restored.get("arms_trade_history", [])
+	if typeof(saved_arms_history) == TYPE_ARRAY:
+		for raw_arms_record in saved_arms_history:
+			if typeof(raw_arms_record) == TYPE_DICTIONARY:
+				arms_trade_history.append(raw_arms_record.duplicate(true))
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -504,6 +528,10 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 		migrated["recruited_crew"] = migrated.get("recruited_crew", [])
 		migrated["assigned_crew"] = migrated.get("assigned_crew", "")
 		migrated["crew_reports"] = migrated.get("crew_reports", {})
+	if source_version < 10:
+		migrated["save_version"] = 10
+		migrated["arms_escalation"] = migrated.get("arms_escalation", 0)
+		migrated["arms_trade_history"] = migrated.get("arms_trade_history", [])
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:

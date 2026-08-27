@@ -651,6 +651,8 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	match action_id:
 		"ashgate_provision_bundle":
 			return _apply_provision_bundle(world, action)
+		"ashgate_cinder_rider_arms_sale":
+			return _apply_arms_sale(world, action)
 		_:
 			return _failure(String(action.get("unavailable_reason", "this opportunity is not implemented yet")))
 
@@ -684,6 +686,31 @@ static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) ->
 		"visit_slots_remaining": world.visit_slots_remaining,
 		"reputation": reputation_results,
 	})
+
+static func _apply_arms_sale(world: AshWorldState, action: Dictionary) -> Dictionary:
+	var effects: Dictionary = action.get("effects", {})
+	var sale: Dictionary = effects.get("arms_sale", {})
+	var good_id := String(sale.get("good_id", ""))
+	var quantity := int(sale.get("quantity", 0))
+	if int(world.cargo.get(good_id, 0)) < quantity:
+		return _failure("this offer needs %d sealed arms crate; buy or acquire one first" % quantity)
+	var slots := int(action.get("service_slots", 1))
+	var payout := int(sale.get("payout", 0))
+	var removed_weight := int(MarketContent.good(good_id).get("weight", 0)) * quantity
+	world.cargo[good_id] = int(world.cargo.get(good_id, 0)) - quantity
+	world.cargo["weight"] = maxi(0, int(world.cargo.get("weight", 0)) - removed_weight)
+	world.money += payout
+	world.visit_slots_remaining -= slots
+	var escalation := world.adjust_arms_escalation(int(sale.get("escalation_delta", 0)), String(action.get("id", "")))
+	var reputation_results: Dictionary = {}
+	var reputation_delta: Dictionary = sale.get("reputation", {})
+	for faction_id_value in reputation_delta.keys():
+		var faction_id := String(faction_id_value)
+		reputation_results[faction_id] = world.adjust_reputation(faction_id, int(reputation_delta.get(faction_id_value, 0)))
+	var alternative := MarketContent.contract(String(sale.get("alternative_contract_id", "")))
+	var message := "Sold %d sealed arms crate for %d ashmarks. Arms escalation is now %d/6; Wardens and Free Caravans each lost standing. Non-arms alternative: %s." % [quantity, payout, world.arms_escalation, String(alternative.get("name", "relief trade"))]
+	world.log.append(message)
+	return _success(message, {"action_id": String(action.id), "money": payout, "cargo": {good_id: -quantity, "weight": -removed_weight}, "visit_slots": -slots, "visit_slots_remaining": world.visit_slots_remaining, "arms_escalation": escalation, "reputation": reputation_results})
 
 static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Dictionary:
 	if good_id.is_empty() or int(world.cargo.get(good_id, 0)) <= 0:

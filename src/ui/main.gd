@@ -695,6 +695,8 @@ func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, des
 	var faction_text := ""
 	if route.has("faction_effect"):
 		faction_text = "\n%s standing: %s Trade-off: %s" % [String(route.get("faction_name", "Faction")), String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
+	if route.has("arms_effect"):
+		faction_text += "\nEscalation warning: %s" % String(route.get("arms_effect", ""))
 	return "ROUTE FORECAST — %s to %s via %s\nPurchase %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
 
 func _on_buy_pressed() -> void:
@@ -858,6 +860,9 @@ func _refresh_opportunities() -> void:
 		var time_cost := int(action.get("time_cost", 0))
 		var effects: Dictionary = action.get("effects", {})
 		var effect_summary := "+%d provisions" % int(effects.get("provisions", 0)) if effects.has("provisions") else "future effect"
+		if effects.has("arms_sale"):
+			var arms_sale: Dictionary = effects.get("arms_sale", {})
+			effect_summary = "+%d ashmarks, -%d sealed crate, escalation +%d" % [int(arms_sale.get("payout", 0)), int(arms_sale.get("quantity", 0)), int(arms_sale.get("escalation_delta", 0))]
 		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
@@ -868,6 +873,11 @@ func _refresh_opportunities() -> void:
 		elif world.money < cost:
 			action_button.disabled = true
 			unavailable_reason = "You need %d ashmarks, but have %d." % [cost, world.money]
+		elif effects.has("arms_sale"):
+			var arms_requirement: Dictionary = effects.get("arms_sale", {})
+			if int(world.cargo.get(String(arms_requirement.get("good_id", "")), 0)) < int(arms_requirement.get("quantity", 0)):
+				action_button.disabled = true
+				unavailable_reason = "Needs %d sealed arms crate; acquire one first." % int(arms_requirement.get("quantity", 0))
 		action_button.tooltip_text = unavailable_reason if action_button.disabled else "%s %s" % [String(action.get("description", "")), String(action.get("tradeoff", ""))]
 		action_button.pressed.connect(_on_settlement_action_pressed.bind(String(action.get("id", ""))))
 		opportunity_list.add_child(action_button)
@@ -1040,6 +1050,9 @@ func _refresh_ui() -> void:
 		var warden_status := world.faction_status("wardens")
 		var caravan_status := world.faction_status("caravans")
 		shop_status_label.text += " · Wardens %+d (%s; threshold %+d) · Caravans %+d (%s; threshold %+d)" % [int(world.reputation.get("wardens", 0)), String(warden_status.get("tier", "Unknown")), int(warden_status.get("next_threshold", 0)), int(world.reputation.get("caravans", 0)), String(caravan_status.get("tier", "Unknown")), int(caravan_status.get("next_threshold", 0))]
+		var arms_rules := MarketContent.arms_trade_rules()
+		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
+		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

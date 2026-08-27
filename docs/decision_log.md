@@ -239,3 +239,11 @@
 **Reason:** Arms can deepen the region's politics only if they remain part of the trading game. A bounded, previewed state with explicit counterplay lets the player compare immediate margin against future access without turning weapons into mandatory progression or a hidden morality meter.
 
 **Trade-off:** The first implementation will support one arms good and one buyer rather than a broad weapons economy. Non-arms parity and recovery are release gates, so profitable arms tuning may be constrained even when fiction suggests a larger premium.
+
+## ADR-031: The first arms sale crosses one visible inspection threshold
+
+**Decision:** Add `sealed_arms_crate` as the sole arms-tagged good and one Ashgate Cinder Rider broker offer. Buying remains an ordinary cargo transaction; selling one crate through the named opportunity pays 82 ashmarks, consumes one visit slot, raises arms escalation by two, and lowers both Warden and Free Caravan standing by one. At escalation two, carrying another arms crate on the Toll Road adds a visible five-ashmark inspection surcharge. The result names Reedwatch Water Relief as the non-arms alternative.
+
+**Reason:** This is the smallest end-to-end proof that immediate arms profit can create a future commercial cost. It reuses cargo, settlement actions, reputation, route preview, and save boundaries without adding combat or a generic political scripting engine.
+
+**Trade-off:** The arms crate has flat ordinary-market pricing so its special broker offer—not generic arbitrage—carries the premium. The first threshold affects one route only, and de-escalation actions remain the next implementation slice required by the contract.

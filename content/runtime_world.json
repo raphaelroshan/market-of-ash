@@ -1,13 +1,14 @@
 {
   "schema_version": 1,
-  "content_version": "1.6.0",
+  "content_version": "1.7.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
     {"id": "scrap", "name": "Scrap", "base_price": 9, "weight": 1},
     {"id": "medicine", "name": "Medicine", "base_price": 32, "weight": 1},
     {"id": "charcoal", "name": "Charcoal", "base_price": 14, "weight": 1},
-    {"id": "cloth", "name": "Dyed Cloth", "base_price": 24, "weight": 1}
+    {"id": "cloth", "name": "Dyed Cloth", "base_price": 24, "weight": 1},
+    {"id": "sealed_arms_crate", "name": "Sealed Arms Crate", "base_price": 45, "weight": 2, "tags": ["arms", "regulated", "high_value"]}
   ],
   "planning_assumptions": {
     "provision_value": 3,
@@ -51,6 +52,22 @@
         "description": "Wait with the wellkeepers to learn which pumps are failing.",
         "tradeoff": "Better local information in exchange for a day.",
         "unavailable_reason": "Cistern reports are not connected to the simulation yet."
+      },
+      {
+        "id": "ashgate_cinder_rider_arms_sale",
+        "settlement_id": "ashgate",
+        "name": "Sell a sealed crate to the Cinder Rider broker",
+        "category": "arms_trade",
+        "available": true,
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {
+          "arms_sale": {"good_id": "sealed_arms_crate", "quantity": 1, "payout": 82, "escalation_delta": 2, "reputation": {"wardens": -1, "caravans": -1}, "alternative_contract_id": "reedwatch_water_relief_01"}
+        },
+        "description": "A Cinder Rider broker offers 82 ashmarks for one sealed arms crate.",
+        "tradeoff": "Raises arms escalation to the first inspection threshold and costs standing with both road networks.",
+        "unavailable_reason": ""
       },
       {
         "id": "cinderford_repair_bench",
@@ -511,38 +528,49 @@
     "ashgate": {
       "name": "Ashgate",
       "role": "regulated hub",
-      "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1},
-      "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1},
+      "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.0
     },
     "brine_cross": {
       "name": "Brine Cross",
       "role": "water market",
-      "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95},
-      "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95},
+      "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.0
     },
     "cinderford": {
       "name": "Cinderford",
       "role": "foundry town",
-      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15},
-      "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0},
+      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.0
     },
     "hollow_market": {
       "name": "Hollow Market",
       "role": "free-trade bazaar",
-      "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75},
-      "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8},
+      "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 0.95
     },
     "reedwatch": {
       "name": "Reedwatch",
       "role": "frontier settlement",
-      "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9},
-      "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0},
+      "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.05
     }
+  },
+  "arms_trade": {
+    "minimum": 0,
+    "maximum": 6,
+    "inspection_threshold": 2,
+    "inspection_route_id": "toll_road",
+    "inspection_surcharge": 5,
+    "quiet_label": "Quiet manifests",
+    "noticed_label": "Noticed traffic",
+    "warning": "This sale raises arms escalation to a visible Warden inspection threshold.",
+    "recovery": "Public route support and verified warning-sharing will provide later de-escalation paths."
   },
   "routes": {
     "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},

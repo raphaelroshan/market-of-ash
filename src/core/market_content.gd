@@ -5,7 +5,7 @@ extends RefCounted
 ## Authored JSON remains data only; simulation code maps it to explicit commands.
 
 const RUNTIME_WORLD_PATH := "res://content/runtime_world.json"
-const REQUIRED_GOOD_IDS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth"]
+const REQUIRED_GOOD_IDS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate"]
 const REQUIRED_SETTLEMENT_IDS := ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch"]
 const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
 
@@ -160,6 +160,10 @@ static func factions() -> Dictionary:
 	var records: Variant = runtime_world().get("factions", {})
 	return records.duplicate(true) if typeof(records) == TYPE_DICTIONARY else {}
 
+static func arms_trade_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("arms_trade", {})
+	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -293,6 +297,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	_validate_contracts(data.get("contracts", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_factions(data.get("factions", {}), errors)
+	_validate_arms_trade(data.get("arms_trade", {}), errors)
 	_validate_events(data.get("events", {}), errors)
 
 	var routes_data: Variant = data.get("routes", {})
@@ -407,6 +412,19 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 		var effects_value: Variant = action.get("effects", {})
 		if typeof(effects_value) != TYPE_DICTIONARY:
 			errors.append("settlement action %s effects must be an object" % action_id)
+		elif String(action.get("category", "")) == "arms_trade":
+			var arms_sale_value: Variant = effects_value.get("arms_sale", {})
+			if typeof(arms_sale_value) != TYPE_DICTIONARY:
+				errors.append("settlement action %s arms_sale must be an object" % action_id)
+			else:
+				var arms_sale: Dictionary = arms_sale_value
+				if String(arms_sale.get("good_id", "")) != "sealed_arms_crate":
+					errors.append("settlement action %s arms_sale must use sealed_arms_crate" % action_id)
+				for field in ["quantity", "payout", "escalation_delta"]:
+					if int(arms_sale.get(field, 0)) <= 0:
+						errors.append("settlement action %s arms_sale %s must be positive" % [action_id, field])
+				if String(arms_sale.get("alternative_contract_id", "")).is_empty():
+					errors.append("settlement action %s arms_sale must name a non-arms alternative" % action_id)
 		elif bool(action.get("available", false)) and action_id == "ashgate_provision_bundle" and int(effects_value.get("provisions", 0)) <= 0:
 			errors.append("settlement action ashgate_provision_bundle must add provisions")
 		if not bool(action.get("available", false)) and String(action.get("unavailable_reason", "")).is_empty():
@@ -649,6 +667,24 @@ static func _validate_factions(value: Variant, errors: Array[String]) -> void:
 			errors.append("factions.%s toll_route_id must reference a known route" % faction_id)
 		if int(faction.get("toll_discount", 0)) <= 0:
 			errors.append("factions.%s toll_discount must be positive" % faction_id)
+
+static func _validate_arms_trade(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("arms_trade must be an object")
+		return
+	var rules: Dictionary = value
+	var minimum := int(rules.get("minimum", -1))
+	var maximum := int(rules.get("maximum", -1))
+	var threshold := int(rules.get("inspection_threshold", -1))
+	if minimum != 0 or maximum != 6 or threshold <= minimum or threshold > maximum:
+		errors.append("arms_trade bounds or inspection_threshold are invalid")
+	if not REQUIRED_ROUTE_IDS.has(String(rules.get("inspection_route_id", ""))):
+		errors.append("arms_trade inspection_route_id must reference a known route")
+	if int(rules.get("inspection_surcharge", 0)) <= 0:
+		errors.append("arms_trade inspection_surcharge must be positive")
+	for field in ["quiet_label", "noticed_label", "warning", "recovery"]:
+		if String(rules.get(field, "")).is_empty():
+			errors.append("arms_trade must declare %s" % field)
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

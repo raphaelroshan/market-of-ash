@@ -181,6 +181,25 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_arms = copy.deepcopy(runtime)
+    invalid_arms["arms_trade"] = json.loads(
+        (ROOT / "tests/fixtures/arms_trade_invalid.json").read_text(encoding="utf-8")
+    )
+    arms_errors = validate(invalid_arms)
+    expected_arms_fragments = (
+        "bounds or inspection_threshold are invalid",
+        "inspection_route_id must reference a known route",
+        "inspection_surcharge must be a positive integer",
+        "must declare quiet_label",
+        "must declare warning",
+    )
+    missing_arms = [fragment for fragment in expected_arms_fragments if not any(fragment in error for error in arms_errors)]
+    if missing_arms:
+        print("FAIL: invalid arms-trade fixture did not produce expected errors")
+        for fragment in missing_arms:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

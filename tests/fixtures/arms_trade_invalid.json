@@ -1,0 +1,11 @@
+{
+  "minimum": 1,
+  "maximum": 2,
+  "inspection_threshold": 4,
+  "inspection_route_id": "missing",
+  "inspection_surcharge": 0,
+  "quiet_label": "",
+  "noticed_label": "",
+  "warning": "",
+  "recovery": ""
+}

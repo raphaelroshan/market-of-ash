@@ -22,7 +22,7 @@ func _initialize() -> void:
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
 	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
-	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled, "Ashgate should expose one usable local opportunity")
+	_expect(ui.opportunity_buttons.size() == 2 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[1].disabled, "Ashgate should expose its provision service and cargo-gated arms offer")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
 	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
@@ -228,6 +228,20 @@ func _initialize() -> void:
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_preview_label.text.contains("Route fee 2") and ui.route_preview_label.text.contains("Known road-sharers pay 2 fewer"), "Free Caravan threshold did not show the discounted Old Road fee")
 	_expect(ui.route_preview_label.text.contains("does not reduce the route's exposed cargo risk"), "Free Caravan threshold did not disclose its risk tradeoff")
+
+	ui._on_start_game_pressed()
+	ui._select_option_by_id(ui.shop_good_option, "sealed_arms_crate")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	_expect(not ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[1].text.contains("escalation +2"), "arms offer did not expose its cargo gate, payout, and escalation")
+	ui._on_settlement_action_pressed("ashgate_cinder_rider_arms_sale")
+	_expect(ui.world.arms_escalation == 2 and int(ui.world.cargo.get("sealed_arms_crate", 0)) == 1, "arms offer UI did not apply the named sale")
+	_expect(ui.shop_status_label.text.contains("Arms escalation: 2/6") and ui.event_label.text.contains("Reedwatch Water Relief"), "arms result did not show its threshold and non-arms alternative")
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "brine_cross")
+	ui._on_destination_changed(ui.destination_option.selected)
+	_expect(ui.route_preview_label.text.contains("Route fee 17") and ui.route_preview_label.text.contains("Arms inspection surcharge: +5"), "arms escalation did not expose the Toll Road inspection surcharge before departure")
 
 	ui.queue_free()
 	await process_frame
