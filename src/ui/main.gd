@@ -1036,6 +1036,8 @@ func _on_guided_test_action() -> void:
 	if result.ok:
 		guided_test_button.disabled = true
 	_show_command_result(result, "Test action")
+	if result.ok:
+		_grab_focus_if_available(plan_departure_button)
 
 func _on_plan_departure_pressed() -> void:
 	_sync_shop_plan_to_departure()

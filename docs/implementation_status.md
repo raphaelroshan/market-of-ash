@@ -20,6 +20,7 @@
 - Forecasts label selected quantities as trade scenarios, show the matching quantity actually held, and warn that departure carries only the real hold when a proposed load has not been purchased.
 - First-run objective progress is reconstructed from saved command evidence, so loading after the guided purchase or completed sale cannot reset the prompt or repeat its one-use action; missing cargo produces a specific recovery prompt instead of silently returning to step one.
 - The optional purchase helper exists only in the Ashgate Day 1 opening. Skipping it transitions the status to free play instead of carrying a tutorial-only action into later settlements.
+- Completing the optional purchase transfers keyboard/controller focus from the now-disabled helper to Plan departure, matching the visible next-step instruction.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary; runtime and loaded histories both retain only the newest 100 command records.
 - The human-readable campaign log retains the newest 200 entries both during play and after load, preventing long sessions or imported saves from inflating saves and diagnostic reports without bound.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.

@@ -284,6 +284,7 @@ func _initialize() -> void:
 	_expect(ui.guided_test_button.disabled, "guided test action should be unavailable after its one preset execution")
 	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v11"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_status_label.text.contains("STEP 2 OF 3"), "water purchase did not advance the playtest objective")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "the guided purchase should move focus from its disabled button to the stated Plan departure action")
 	ui._on_save_pressed()
 	ui._on_start_game_pressed()
 	ui._on_load_pressed()
