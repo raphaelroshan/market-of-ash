@@ -142,6 +142,27 @@ func _initialize() -> void:
 	_expect(is_equal_approx(float(ui.world.route("old_road").risk), 0.25), "span event UI choice did not apply the disclosed later-route improvement")
 	_expect(ui.event_label.text.contains("public support") and ui.enter_settlement_button.visible, "arrival report did not explain why the span choice changed the next route decision")
 
+	ui._on_start_game_pressed()
+	ui.world.crisis_stage = 1
+	ui.world._update_crisis_modifiers()
+	ui._select_option_by_id(ui.shop_good_option, "water")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	_expect(ui.world.pending_event.get("id", "") == "last_clean_barrel", "shortage-stage water load did not present The Last Clean Barrel")
+	_expect(ui.event_title_label.text == "The Last Clean Barrel", "barrel event card did not render its authored title")
+	_expect(ui.event_stakes_label.text.contains("Shortage basis: 2 Water") and ui.event_stakes_label.text.contains("plus 6 premium each"), "barrel event did not expose its frozen cargo and premium basis")
+	_expect(ui.event_choice_buttons.size() == 4 and ui.event_choice_buttons[0].text.contains("+"), "barrel event did not expose all choices and the exact emergency payout")
+	_expect(ui.event_choice_buttons[2].disabled and ui.event_choice_buttons[2].tooltip_text.contains("active water relief commitment"), "contract-only barrel response did not show its unavailable prerequisite")
+	_expect(ui.event_choice_buttons[3].focus_mode != Control.FOCUS_NONE, "sealed-cargo recovery should remain focusable")
+	ui._on_event_choice_pressed("last_clean_barrel", "share_barrels_fairly")
+	_expect(ui.world.current_settlement == "reedwatch" and ui.world.resilience_for("reedwatch") == 2, "fair barrel distribution did not strengthen destination resilience")
+	_expect(ui.event_label.text.contains("resilience is now 2/10"), "barrel arrival report did not explain the persistent settlement result")
+	ui._on_enter_settlement_pressed()
+	_expect(ui.shop_status_label.text.contains("Settlement resilience: 2/10"), "settlement shop did not expose the event's persistent resilience result")
+
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():

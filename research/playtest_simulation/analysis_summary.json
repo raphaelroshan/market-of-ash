@@ -201,6 +201,13 @@
       "event_choice_id": "reserve_materials_for_span",
       "runs": 70,
       "share_of_policy_runs": 0.7
+    },
+    {
+      "policy_label": "Last Barrel fair-share probe",
+      "event_id": "last_clean_barrel",
+      "event_choice_id": "share_barrels_fairly",
+      "runs": 60,
+      "share_of_policy_runs": 0.6
     }
   ]
 }

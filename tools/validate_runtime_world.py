@@ -205,6 +205,16 @@ def validate_events(value: Any, errors: list[str]) -> None:
             for route_id in route_ids:
                 if route_id not in REQUIRED_ROUTES:
                     fail(errors, f"event {event_id} references unknown route {route_id}")
+        destination_ids = event.get("destination_ids", [])
+        if not isinstance(destination_ids, list):
+            fail(errors, f"event {event_id}.destination_ids must be a list")
+        else:
+            for destination_id in destination_ids:
+                if destination_id not in REQUIRED_SETTLEMENTS:
+                    fail(errors, f"event {event_id} references unknown destination {destination_id}")
+        crisis_stage_min = event.get("crisis_stage_min", 0)
+        if not isinstance(crisis_stage_min, int) or not 0 <= crisis_stage_min <= 3:
+            fail(errors, f"event {event_id}.crisis_stage_min must be an integer from 0 through 3")
         trigger_chance = event.get("trigger_chance")
         if not isinstance(trigger_chance, (int, float)) or not 0 <= trigger_chance <= 1:
             fail(errors, f"event {event_id}.trigger_chance must be between 0 and 1")
@@ -227,6 +237,10 @@ def validate_events(value: Any, errors: list[str]) -> None:
             fail(errors, f"event {event_id}.minimum_trigger_good_quantity must be a non-negative integer")
         elif trigger_good_ids and minimum_trigger_quantity <= 0:
             fail(errors, f"event {event_id} must require a positive trigger-good quantity")
+        for field in ("trade_quantity", "premium_per_unit"):
+            value = event.get(field, 0)
+            if not isinstance(value, int) or value < 0:
+                fail(errors, f"event {event_id}.{field} must be a non-negative integer")
         choices = event.get("choices")
         if not isinstance(choices, list) or len(choices) < 2:
             fail(errors, f"event {event_id}.choices must contain at least two choices")
@@ -254,6 +268,13 @@ def validate_events(value: Any, errors: list[str]) -> None:
             arrival_target = choice.get("arrival_target", "destination")
             if arrival_target not in ("destination", "origin"):
                 fail(errors, f"event {event_id} choice {choice_id}.arrival_target must be destination or origin")
+            if choice.get("trade_mode", "none") not in ("none", "premium_sale", "fair_share"):
+                fail(errors, f"event {event_id} choice {choice_id}.trade_mode is unsupported")
+            if not isinstance(choice.get("requires_active_contract", False), bool):
+                fail(errors, f"event {event_id} choice {choice_id}.requires_active_contract must be boolean")
+            resilience_delta = choice.get("resilience_delta", 0)
+            if not isinstance(resilience_delta, int) or not 0 <= resilience_delta <= 10:
+                fail(errors, f"event {event_id} choice {choice_id}.resilience_delta must be an integer from 0 through 10")
             condition = choice.get("route_condition", {})
             if not isinstance(condition, dict):
                 fail(errors, f"event {event_id} choice {choice_id}.route_condition must be an object")

@@ -29,6 +29,7 @@ POLICY_RULES = {
 
 EVENT_PROBE_LABELS = {
     "span_material_reserve_probe": "Span material-reserve probe",
+    "last_barrel_fair_share_probe": "Last Barrel fair-share probe",
 }
 
 PRE_B0_CALIBRATION = {
@@ -301,7 +302,7 @@ The run starts every simulated trader in the current quick-playtest state: Ashga
 | --- | --- |
 """ + "\n".join(f"| {POLICY_LABELS[key]} | {POLICY_RULES[key]} |" for key in POLICY_LABELS) + f"""
 
-The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. When Gatekeeper's Chalk triggers, the synthetic policy pays if it can and otherwise waits for review. A separate two-scrap Old Road probe reserves materials whenever The Span at Cinderford triggers, verifying deterministic event coverage and the persistent 35% → 25% route-risk change. It does not model human event preference, crew, contracts, broader faction effects, or player learning.
+The simulator tests the initial one-trade loop plus an adaptive three-delivery policy that re-evaluates the best visible trade after market pressure and elapsed-time decay. When Gatekeeper's Chalk triggers, the synthetic policy pays if it can and otherwise waits for review. Separate probes reserve two scrap for The Span at Cinderford and share two water at The Last Clean Barrel, verifying deterministic trigger coverage and persistent follow-up state. It does not model human event preference, crew, contracts, broader faction effects, or player learning.
 
 ## Results
 
@@ -331,7 +332,7 @@ The fixed Reedwatch water probe starts at **{int(memory_probe.get('baseline_pric
 
 {event_table}
 
-Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it triggers; the automated policy pays when affordable. The separate Span probe carries two scrap and always reserves it for the public support, producing the authored 70% trigger rate and a persistent Old Road risk change from 35% to 25%. These probes measure deterministic coverage and execution stability rather than human choice quality.
+Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it triggers; the automated policy pays when affordable. The Span probe carries two scrap and reserves it for the public support, producing the authored 70% trigger rate and a persistent Old Road risk change from 35% to 25%. The shortage-stage Last Barrel probe shares two water, producing the authored 60% trigger rate, crisis-adjusted market memory, and two resilience points. These probes measure deterministic coverage and execution stability rather than human choice quality.
 
 ## Forecast Calibration
 

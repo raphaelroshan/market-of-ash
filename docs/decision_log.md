@@ -174,4 +174,12 @@
 
 **Reason:** The second event must make preparation materially different from Gatekeeper's Chalk and prove that a travel decision can change a later trade plan. Repair cargo now competes between immediate margin and public route safety, while the saved route condition keeps the consequence visible, deterministic, and reusable without introducing a generic project engine.
 
-**Trade-off:** The alpha route graph does not yet connect Cinderford directly, so the bridge crew appears on the infrastructure-heavy Old Road corridor and the condition is named for their town. Only one active condition is stored per route; stacking, deterioration, project stages, settlement resilience, and competing private conditions remain future explicit slices.
+**Trade-off:** The alpha route graph does not yet connect Cinderford directly, so the bridge crew appears on the infrastructure-heavy Old Road corridor and the condition is named for their town. Only one active condition is stored per route; stacking, deterioration, project stages, and competing private conditions remain future explicit slices.
+
+## ADR-023: Shortage settlement choices reuse market memory and contract resolution
+
+**Decision:** Implement `last_clean_barrel` as a crisis-stage arrival decision at Reedwatch or Brine Cross when at least two water units are carried. Event selection freezes two water units, the destination price, and a six-ashmark per-unit emergency premium. Premium sale and fair distribution both record ordinary delivery pressure; fair distribution additionally adds two points to a bounded `settlement_resilience` value. A contract-only choice preserves cargo and delegates to the existing arrival contract resolver, while keeping the barrels sealed is always available.
+
+**Reason:** The Desperate Settlement template must change the next market decision rather than attach moral prose to an ordinary sale. Reusing market memory makes released water soften scarcity consistently, frozen pricing protects replay, and a small visible resilience state records the non-cash public outcome without creating a general settlement simulation.
+
+**Trade-off:** Resilience is currently a visible bounded campaign fact but does not yet modify prices, services, or crisis transitions; those effects require explicit later rules. The event handles water only in its first version, and eligible journeys replace rather than stack with another travel event.

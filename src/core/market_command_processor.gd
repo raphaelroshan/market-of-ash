@@ -204,6 +204,11 @@ static func _select_travel_event(world: AshWorldState, origin_id: String, destin
 		var route_ids: Array = event_record.get("route_ids", [])
 		if not route_ids.has(route_id):
 			continue
+		var destination_ids: Array = event_record.get("destination_ids", [])
+		if not destination_ids.is_empty() and not destination_ids.has(destination_id):
+			continue
+		if world.crisis_stage < int(event_record.get("crisis_stage_min", 0)):
+			continue
 		var trigger_good_ids: Array = event_record.get("trigger_good_ids_any", [])
 		var minimum_trigger_quantity := int(event_record.get("minimum_trigger_good_quantity", 0))
 		var material_basis := _event_material_basis(world.cargo, trigger_good_ids, minimum_trigger_quantity)
@@ -226,6 +231,7 @@ static func _select_travel_event(world: AshWorldState, origin_id: String, destin
 		snapshot["resolution_roll"] = fmod(float(world.seed * 31 + world.day * 41 + salt * 3), 100.0) / 100.0
 		snapshot["loss_basis"] = loss_basis.duplicate(true)
 		snapshot["material_basis"] = material_basis.duplicate(true)
+		snapshot["trade_basis"] = _event_trade_basis(world, event_record, destination_id)
 		return snapshot
 	return {}
 
@@ -244,6 +250,9 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 	var money_reward := int(choice.get("money_reward", 0))
 	var provision_cost := int(choice.get("provision_cost", 0))
 	var material_quantity := int(choice.get("material_quantity", 0))
+	var trade_mode := String(choice.get("trade_mode", "none"))
+	var trade_basis: Dictionary = pending.get("trade_basis", {})
+	var trade_quantity := int(trade_basis.get("quantity", 0)) if trade_mode != "none" else 0
 	if world.money < money_cost:
 		return _failure("this choice needs %d ashmarks, but you have %d; choose another available route response" % [money_cost, world.money])
 	if world.provisions < provision_cost:
@@ -255,6 +264,10 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 	var destination_id := String(journey.get("destination_id", ""))
 	if not world.has_settlement(destination_id):
 		return _failure("pending journey destination is unavailable")
+	if trade_quantity > 0 and not _event_materials_available(world, trade_basis, trade_quantity):
+		return _failure("this choice needs %d %s, but the frozen event cargo is no longer held; keep the remaining load sealed" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))])
+	if bool(choice.get("requires_active_contract", false)) and not _has_relevant_active_contract(world, destination_id, String(trade_basis.get("good_id", "water"))):
+		return _failure("this response needs an active water relief commitment for this destination; choose a sale, share, or sealed-cargo response")
 	var arrival_target := String(choice.get("arrival_target", "destination"))
 	var resulting_settlement_id := String(journey.get("origin_id", "")) if arrival_target == "origin" else destination_id
 	if not world.has_settlement(resulting_settlement_id):
@@ -267,6 +280,8 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 			return _failure("event route condition needs a stable id")
 
 	world.money -= money_cost
+	if trade_mode == "premium_sale":
+		money_reward += int(trade_basis.get("premium_total", 0))
 	world.money += money_reward
 	world.provisions -= provision_cost
 	var material_delta: Dictionary = {}
@@ -275,6 +290,14 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		var removed_materials := _remove_event_materials(world, material_basis, material_quantity)
 		material_delta = removed_materials.delta
 		material_summary = String(removed_materials.summary)
+	var trade_delta: Dictionary = {}
+	var market_memory: Dictionary = {}
+	if trade_quantity > 0:
+		var removed_trade := _remove_event_materials(world, trade_basis, trade_quantity)
+		trade_delta = removed_trade.delta
+		var delivery_result := world.record_market_delivery(destination_id, String(trade_basis.get("good_id", "")), trade_quantity)
+		if delivery_result.ok:
+			market_memory = delivery_result.record
 	var extra_days := int(choice.get("days", 0))
 	if extra_days > 0:
 		world.advance_day(extra_days)
@@ -295,6 +318,10 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		if not condition_result.ok:
 			return _failure(String(condition_result.reason))
 		applied_condition = condition_result.condition
+	var resilience_result: Dictionary = {}
+	var resilience_delta := int(choice.get("resilience_delta", 0))
+	if resilience_delta > 0:
+		resilience_result = world.adjust_settlement_resilience(destination_id, resilience_delta)
 
 	world.current_settlement = resulting_settlement_id
 	world.reset_visit_slots()
@@ -304,6 +331,8 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		cargo_delta[good_id] = int(cargo_delta.get(good_id, 0)) + int(material_delta.get(good_id, 0))
 	if material_delta.has("weight"):
 		cargo_delta["weight"] = int(cargo_delta.get("weight", 0)) + int(material_delta.get("weight", 0))
+	for good_id in trade_delta.keys():
+		cargo_delta[good_id] = int(cargo_delta.get(good_id, 0)) + int(trade_delta.get(good_id, 0))
 	var outcome := {
 		"money": money_reward - money_cost,
 		"provisions": -provision_cost,
@@ -314,11 +343,15 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 		"current_settlement": resulting_settlement_id,
 		"visit_slots_remaining": world.visit_slots_remaining,
 		"route_condition": applied_condition,
+		"market_memory": market_memory,
+		"settlement_resilience": resilience_result,
 	}
 	var archived := world.archive_pending_event(choice_id, outcome)
 	var material_message := " The crew took %s." % material_summary if not material_summary.is_empty() else ""
+	var trade_message := " The ration line received %d %s; the local market now remembers that supply." % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else ""
+	var resilience_message := " %s resilience is now %d/10." % [String(world.settlement(destination_id).name), int(resilience_result.get("after", 0))] if not resilience_result.is_empty() else ""
 	var movement_message := "You returned to %s." % String(world.settlement(resulting_settlement_id).name) if arrival_target == "origin" else "You arrived at %s." % String(world.settlement(resulting_settlement_id).name)
-	var message := "%s %s%s%s %s" % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), material_message, cargo_loss_message, movement_message]
+	var message := "%s %s%s%s%s%s %s" % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), material_message, trade_message, resilience_message, cargo_loss_message, movement_message]
 	world.log.append(message)
 	var contract_resolutions: Array[Dictionary] = []
 	if arrival_target == "destination":
@@ -360,6 +393,28 @@ static func _event_material_basis(cargo: Dictionary, good_ids: Array, requested_
 		if remaining <= 0:
 			break
 	return {"quantity": requested_quantity - remaining, "goods": goods}
+
+static func _event_trade_basis(world: AshWorldState, event_record: Dictionary, destination_id: String) -> Dictionary:
+	var quantity := int(event_record.get("trade_quantity", 0))
+	var good_ids: Array = event_record.get("trigger_good_ids_any", [])
+	var basis := _event_material_basis(world.cargo, good_ids, quantity)
+	if int(basis.get("quantity", 0)) < quantity or good_ids.is_empty():
+		return {}
+	var good_id := String(good_ids[0])
+	var unit_price := MarketEconomy.price_for(good_id, world.settlement(destination_id), world.pricing_context())
+	var premium_per_unit := int(event_record.get("premium_per_unit", 0))
+	basis["good_id"] = good_id
+	basis["unit_price"] = unit_price
+	basis["premium_per_unit"] = premium_per_unit
+	basis["premium_total"] = quantity * (unit_price + premium_per_unit)
+	return basis
+
+static func _has_relevant_active_contract(world: AshWorldState, destination_id: String, good_id: String) -> bool:
+	for contract_id in world.active_contracts.keys():
+		var contract := world.active_contract(String(contract_id))
+		if String(contract.get("destination_id", "")) == destination_id and String(contract.get("good_id", "")) == good_id:
+			return true
+	return false
 
 static func _event_materials_available(world: AshWorldState, basis: Dictionary, requested_quantity: int) -> bool:
 	if int(basis.get("quantity", 0)) < requested_quantity:

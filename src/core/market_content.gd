@@ -460,6 +460,12 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 		for route_id in route_ids:
 			if not REQUIRED_ROUTE_IDS.has(String(route_id)):
 				errors.append("event %s references unknown route %s" % [event_id, route_id])
+		var destination_ids: Array = event_record.get("destination_ids", [])
+		for destination_id in destination_ids:
+			if not REQUIRED_SETTLEMENT_IDS.has(String(destination_id)):
+				errors.append("event %s references unknown destination %s" % [event_id, destination_id])
+		if int(event_record.get("crisis_stage_min", 0)) < 0 or int(event_record.get("crisis_stage_min", 0)) > 3:
+			errors.append("event %s crisis_stage_min must be between 0 and 3" % event_id)
 		var trigger_chance := float(event_record.get("trigger_chance", -1.0))
 		if trigger_chance < 0.0 or trigger_chance > 1.0:
 			errors.append("event %s trigger_chance must be between 0 and 1" % event_id)
@@ -478,6 +484,9 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 			errors.append("event %s minimum_trigger_good_quantity must be non-negative" % event_id)
 		if not trigger_good_ids.is_empty() and minimum_trigger_quantity <= 0:
 			errors.append("event %s must require a positive trigger-good quantity" % event_id)
+		for event_number_field in ["trade_quantity", "premium_per_unit"]:
+			if int(event_record.get(event_number_field, 0)) < 0:
+				errors.append("event %s %s must be non-negative" % [event_id, event_number_field])
 		var choices: Array = event_record.get("choices", [])
 		if choices.size() < 2:
 			errors.append("event %s must declare at least two choices" % event_id)
@@ -505,7 +514,14 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 				errors.append("event %s choice %s cargo_risk must be between 0 and 1" % [event_id, choice_id])
 			var arrival_target := String(choice.get("arrival_target", "destination"))
 			if not ["destination", "origin"].has(arrival_target):
-				errors.append("event %s choice %s arrival_target must be destination or origin" % [event_id, choice_id])
+					errors.append("event %s choice %s arrival_target must be destination or origin" % [event_id, choice_id])
+			var trade_mode := String(choice.get("trade_mode", "none"))
+			if not ["none", "premium_sale", "fair_share"].has(trade_mode):
+				errors.append("event %s choice %s trade_mode is unsupported" % [event_id, choice_id])
+			if typeof(choice.get("requires_active_contract", false)) != TYPE_BOOL:
+				errors.append("event %s choice %s requires_active_contract must be boolean" % [event_id, choice_id])
+			if int(choice.get("resilience_delta", 0)) < 0 or int(choice.get("resilience_delta", 0)) > 10:
+				errors.append("event %s choice %s resilience_delta must be between 0 and 10" % [event_id, choice_id])
 			var condition_value: Variant = choice.get("route_condition", {})
 			if typeof(condition_value) != TYPE_DICTIONARY:
 				errors.append("event %s choice %s route_condition must be an object" % [event_id, choice_id])

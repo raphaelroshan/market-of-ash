@@ -898,7 +898,11 @@ func _refresh_event_card() -> void:
 	for good_id in material_goods.keys():
 		material_parts.append("%d %s" % [int(material_goods.get(good_id, 0)), String(good_id).capitalize()])
 	var material_context := " Repair stock recognized: %s." % " + ".join(material_parts) if not material_parts.is_empty() else ""
-	event_stakes_label.text = "Route context: %s to %s via %s; exposed cargo: %s.%s\nWhat is at stake: %s" % [String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), cargo_context, material_context, String(pending.get("stakes", ""))]
+	var trade_basis: Dictionary = pending.get("trade_basis", {})
+	var trade_context := ""
+	if not trade_basis.is_empty():
+		trade_context = " Shortage basis: %d %s at %d each, plus %d premium each." % [int(trade_basis.get("quantity", 0)), String(trade_basis.get("good_id", "cargo")).capitalize(), int(trade_basis.get("unit_price", 0)), int(trade_basis.get("premium_per_unit", 0))]
+	event_stakes_label.text = "Route context: %s to %s via %s; exposed cargo: %s.%s%s\nWhat is at stake: %s" % [String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), cargo_context, material_context, trade_context, String(pending.get("stakes", ""))]
 	for raw_choice in pending.get("choices", []):
 		if typeof(raw_choice) != TYPE_DICTIONARY:
 			continue
@@ -906,13 +910,18 @@ func _refresh_event_card() -> void:
 		var button := Button.new()
 		var money_cost := int(choice.get("money_cost", 0))
 		var money_reward := int(choice.get("money_reward", 0))
+		var trade_mode := String(choice.get("trade_mode", "none"))
+		var trade_quantity := int(trade_basis.get("quantity", 0)) if trade_mode != "none" else 0
+		if trade_mode == "premium_sale":
+			money_reward += int(trade_basis.get("premium_total", 0))
 		var provision_cost := int(choice.get("provision_cost", 0))
 		var material_quantity := int(choice.get("material_quantity", 0))
 		var days := int(choice.get("days", 0))
 		var cargo_risk := int(round(float(choice.get("cargo_risk", 0.0)) * 100.0))
 		var money_text := "%d ashmarks" % money_cost if money_reward == 0 else "+%d ashmarks" % money_reward
 		var arrival_text := "return to origin" if String(choice.get("arrival_target", "destination")) == "origin" else "continue to destination"
-		button.text = "%s — %s · %d provisions · %d materials · %d days · %d%% cargo risk · %s" % [String(choice.get("label", "Choose")), money_text, provision_cost, material_quantity, days, cargo_risk, arrival_text]
+		var cargo_cost_text := "%d %s" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else "%d materials" % material_quantity
+		button.text = "%s — %s · %d provisions · %s · %d days · %d%% cargo risk · %s" % [String(choice.get("label", "Choose")), money_text, provision_cost, cargo_cost_text, days, cargo_risk, arrival_text]
 		var blocked_reason := ""
 		if world.money < money_cost:
 			button.disabled = true
@@ -927,10 +936,23 @@ func _refresh_event_card() -> void:
 			if available_materials < material_quantity:
 				button.disabled = true
 				blocked_reason = "Needs %d of the disclosed repair materials; %d remain." % [material_quantity, available_materials]
+		elif trade_quantity > int(world.cargo.get(String(trade_basis.get("good_id", "")), 0)):
+			button.disabled = true
+			blocked_reason = "Needs %d %s; you have %d." % [trade_quantity, String(trade_basis.get("good_id", "cargo")), int(world.cargo.get(String(trade_basis.get("good_id", "")), 0))]
+		elif bool(choice.get("requires_active_contract", false)) and not _has_relevant_event_contract(String(pending.get("destination_id", "")), String(trade_basis.get("good_id", "water"))):
+			button.disabled = true
+			blocked_reason = "Needs an active water relief commitment for this destination."
 		button.tooltip_text = blocked_reason if button.disabled else String(choice.get("outcome", ""))
 		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
 		event_choice_list.add_child(button)
 		event_choice_buttons.append(button)
+
+func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
+	for contract_id in world.active_contracts.keys():
+		var contract := world.active_contract(String(contract_id))
+		if String(contract.get("destination_id", "")) == destination_id and String(contract.get("good_id", "")) == good_id:
+			return true
+	return false
 
 func _set_event(text: String) -> void:
 	event_label.text = text
@@ -940,6 +962,7 @@ func _refresh_ui() -> void:
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
 		shop_status_label.text = "%s — %s\nDay %d · Crisis %d · %s" % [String(settlement.get("name", "Unknown settlement")), String(settlement.get("role", "market")), world.day, world.crisis_stage, String(event_label.text if event_label else "Inspect the local need, then load only what your plan can carry.")]
+		shop_status_label.text += "\nSettlement resilience: %d/10" % world.resilience_for(world.current_settlement)
 	if departure_status_label:
 		if not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."

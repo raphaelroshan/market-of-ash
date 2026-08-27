@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "0.9.0",
+  "content_version": "1.0.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -238,6 +238,86 @@
             "cargo_risk": 0.0,
             "arrival_target": "origin",
             "outcome": "The caravan reverses before the failed support and preserves the full load."
+          }
+        ]
+      },
+      {
+        "id": "last_clean_barrel",
+        "title": "The Last Clean Barrel",
+        "category": "travel_decision",
+        "route_ids": ["old_road", "toll_road", "dry_cut"],
+        "destination_ids": ["reedwatch", "brine_cross"],
+        "crisis_stage_min": 1,
+        "trigger_chance": 0.60,
+        "trigger_roll_salt": 19,
+        "minimum_cargo_value": 0,
+        "active_contract_relevant": false,
+        "trigger_good_ids_any": ["water"],
+        "minimum_trigger_good_quantity": 2,
+        "trade_quantity": 2,
+        "premium_per_unit": 6,
+        "setup": "The destination's public water queue is down to its last sealed barrel when the caravan reaches the ration line.",
+        "stakes": "Take the scarcity premium, strengthen the public queue, honor a relief commitment, or keep the load for an ordinary market sale.",
+        "choices": [
+          {
+            "id": "sell_barrels_at_peak",
+            "label": "Sell 2 water at the emergency premium",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "premium_sale",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "Private buyers take the sealed barrels at the posted emergency premium."
+          },
+          {
+            "id": "share_barrels_fairly",
+            "label": "Share 2 water through the public queue",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "fair_share",
+            "requires_active_contract": false,
+            "resilience_delta": 2,
+            "outcome": "The queue stewards ration both barrels and add the caravan's name to the public reserve ledger."
+          },
+          {
+            "id": "honor_relief_commitment",
+            "label": "Keep the load for the relief commitment",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": true,
+            "resilience_delta": 0,
+            "outcome": "The queue stands aside while the caravan reports directly to the named contract sponsor."
+          },
+          {
+            "id": "keep_barrels_sealed",
+            "label": "Keep the barrels sealed for the market",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The caravan keeps control of the load and enters the ordinary market."
           }
         ]
       }

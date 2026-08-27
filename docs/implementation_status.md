@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations, B0–B4, and the first B5 event are implemented. The remaining two canonical travel events are next.
+**Roadmap status:** A0–A1 foundations, B0–B4, and two of three B5 events are implemented. The final canonical travel event is next.
 
 ## Implemented player-facing spine
 
@@ -13,7 +13,7 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 6 and runtime content version `0.9.0`; older saves migrate safely and future saves fail safely.
+- Saves declare save version 7 and runtime content version `1.0.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
@@ -21,6 +21,7 @@
 - Ashgate offers one fixed-term Reedwatch water-relief contract; accepted terms are pinned during departure and resolve deterministically on arrival.
 - Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
+- Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
 
 ## Current command IDs
 
@@ -59,6 +60,7 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `resolved_event_ids`
 - `event_history`
 - `route_conditions`
+- `settlement_resilience`
 - `log`
 - `command_history`
 
@@ -169,6 +171,14 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Turning back costs one day, preserves cargo, returns to the origin, and prevents a low-resource soft lock without falsely running destination contract resolution.
 - Save version 6 preserves route conditions. The 100-seed material-reserve probe triggered exactly 70 times and applied the authored persistent route-risk change.
 
+## B5 second remaining-event result
+
+- A Reedwatch or Brine Cross arrival during crisis stage 1+ with two water has a deterministic 60% chance to meet `The Last Clean Barrel`.
+- The event freezes two water, destination unit price, and a six-ashmark-per-unit premium across save/load and replay.
+- Emergency sale pays the frozen premium and writes normal crisis-adjusted market memory; fair distribution writes the same supply memory plus two bounded settlement-resilience points.
+- The commitment choice is available only for a matching active relief contract and then delegates to normal contract resolution. Keeping cargo sealed is always available.
+- Save version 7 preserves settlement resilience. The 100-seed fair-share probe triggered exactly 60 times and applied the authored memory/resilience result.
+
 ## Next permitted task
 
-Card B4b: add `The Last Clean Barrel` as the Desperate Settlement template using the same tested event seam.
+Card B4b: add `Three Riders, No Banner` as the Suspicious Escort template using the same tested event seam.

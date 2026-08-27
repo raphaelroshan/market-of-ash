@@ -21,6 +21,7 @@ func _init() -> void:
 	_test_reedwatch_relief_contract()
 	_test_gatekeepers_chalk_event()
 	_test_span_at_cinderford_event()
+	_test_last_clean_barrel_event()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -42,7 +43,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "0.9.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.0.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
@@ -51,6 +52,7 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.contract("reedwatch_water_relief_01").get("destination_id", "") == "reedwatch", "runtime content should expose the first relief contract")
 	_expect(MarketContent.event("gatekeepers_chalk").get("route_ids", []).has("toll_road"), "runtime content should expose the first Toll Road event")
 	_expect(MarketContent.event("span_at_cinderford").get("route_ids", []).has("old_road"), "runtime content should expose the Cinderford span event")
+	_expect(MarketContent.event("last_clean_barrel").get("destination_ids", []).has("reedwatch"), "runtime content should expose the shortage settlement event")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -712,6 +714,131 @@ func _test_span_at_cinderford_event() -> void:
 	})
 	_expect(JSON.stringify(restored_result) == JSON.stringify(equivalent_result), "saved span event and choice should replay deterministically")
 
+func _test_last_clean_barrel_event() -> void:
+	var peak_world := AshWorldState.new(4)
+	peak_world.crisis_stage = 1
+	peak_world._update_crisis_modifiers()
+	peak_world.cargo = {"water": 2, "weight": 2}
+	var peak_depart := MarketCommandProcessor.execute(peak_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(peak_depart.ok and peak_world.pending_event.get("id", "") == "last_clean_barrel", "shortage-stage water cargo should trigger The Last Clean Barrel")
+	var frozen_trade_basis: Dictionary = peak_world.pending_event.get("trade_basis", {}).duplicate(true)
+	_expect(int(frozen_trade_basis.get("quantity", 0)) == 2 and int(frozen_trade_basis.get("premium_per_unit", 0)) == 6, "barrel event should freeze its exact two-unit premium basis")
+	var expected_payout := int(frozen_trade_basis.get("premium_total", 0))
+	var peak := MarketCommandProcessor.execute(peak_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "sell_barrels_at_peak"},
+	})
+	_expect(peak.ok and peak_world.money == 116 + expected_payout, "emergency sale should pay the frozen destination price plus twelve ashmarks total premium")
+	_expect(int(peak_world.cargo.get("water", 0)) == 0 and is_equal_approx(peak_world.market_pressure_for("reedwatch", "water"), 0.068), "emergency sale should remove two water and write crisis-adjusted delivery memory")
+
+	var share_world := AshWorldState.new(4)
+	share_world.crisis_stage = 1
+	share_world._update_crisis_modifiers()
+	share_world.cargo = {"water": 2, "weight": 2}
+	MarketCommandProcessor.execute(share_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var share := MarketCommandProcessor.execute(share_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "share_barrels_fairly"},
+	})
+	_expect(share.ok and share_world.money == 116 and int(share_world.cargo.get("water", 0)) == 0, "fair distribution should consume water without granting hidden cash")
+	_expect(share_world.resilience_for("reedwatch") == 2 and is_equal_approx(share_world.market_pressure_for("reedwatch", "water"), 0.068), "fair distribution should strengthen bounded resilience and soften local scarcity")
+	share_world.adjust_settlement_resilience("reedwatch", 20)
+	_expect(share_world.resilience_for("reedwatch") == 10, "settlement resilience should clamp at ten")
+	var restored_share := AshWorldState.new(0)
+	var restored_share_result := restored_share.load_serialized(share_world.serialize())
+	_expect(restored_share_result.ok and restored_share.resilience_for("reedwatch") == 10, "save/load should preserve bounded settlement resilience")
+
+	var contract_world := AshWorldState.new(4)
+	contract_world.crisis_stage = 1
+	contract_world._update_crisis_modifiers()
+	MarketCommandProcessor.execute(contract_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "reedwatch_water_relief_01"},
+	})
+	contract_world.cargo = {"water": 4, "weight": 4}
+	MarketCommandProcessor.execute(contract_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var honor := MarketCommandProcessor.execute(contract_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "honor_relief_commitment"},
+	})
+	_expect(honor.ok and contract_world.contract_history.size() == 1 and contract_world.contract_history.back().status == "completed", "commitment choice should preserve cargo for normal arrival contract completion")
+	_expect(int(contract_world.cargo.get("water", 0)) == 0 and contract_world.money == 266, "completed relief commitment should pay its frozen reward after base route cost")
+
+	var no_contract_world := AshWorldState.new(4)
+	no_contract_world.crisis_stage = 1
+	no_contract_world._update_crisis_modifiers()
+	no_contract_world.cargo = {"water": 2, "weight": 2}
+	MarketCommandProcessor.execute(no_contract_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var blocked_contract := MarketCommandProcessor.execute(no_contract_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "honor_relief_commitment"},
+	})
+	_expect(not blocked_contract.ok and not no_contract_world.pending_event.is_empty(), "contract response should be blocked without a matching active commitment")
+	no_contract_world.cargo = {"weight": 0}
+	var blocked_sale := MarketCommandProcessor.execute(no_contract_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "sell_barrels_at_peak"},
+	})
+	_expect(not blocked_sale.ok and not no_contract_world.pending_event.is_empty(), "missing frozen water should block the emergency sale without clearing the event")
+	no_contract_world.cargo = {"water": 2, "weight": 2}
+	var sealed := MarketCommandProcessor.execute(no_contract_world, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "keep_barrels_sealed"},
+	})
+	_expect(sealed.ok and no_contract_world.current_settlement == "reedwatch" and int(no_contract_world.cargo.get("water", 0)) == 2, "sealed-cargo recovery should preserve water for ordinary spot trade")
+
+	var wrong_stage_world := AshWorldState.new(4)
+	wrong_stage_world.cargo = {"water": 2, "weight": 2}
+	var wrong_stage := MarketCommandProcessor.execute(wrong_stage_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(wrong_stage.ok and wrong_stage_world.pending_event.is_empty(), "Last Clean Barrel should not trigger before the shortage starts")
+	var no_trigger_world := AshWorldState.new(1)
+	no_trigger_world.crisis_stage = 1
+	no_trigger_world._update_crisis_modifiers()
+	no_trigger_world.cargo = {"water": 2, "weight": 2}
+	var no_trigger := MarketCommandProcessor.execute(no_trigger_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(no_trigger.ok and no_trigger_world.pending_event.is_empty(), "eligible no-trigger seed should complete normal arrival during the shortage")
+
+	var replay_world := AshWorldState.new(4)
+	replay_world.crisis_stage = 1
+	replay_world._update_crisis_modifiers()
+	replay_world.cargo = {"water": 2, "weight": 2}
+	MarketCommandProcessor.execute(replay_world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	var pending_save := replay_world.serialize()
+	var restored_replay := AshWorldState.new(0)
+	restored_replay.load_serialized(pending_save)
+	var restored_result := MarketCommandProcessor.execute(restored_replay, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "share_barrels_fairly"},
+	})
+	var equivalent_replay := AshWorldState.new(0)
+	equivalent_replay.load_serialized(pending_save)
+	var equivalent_result := MarketCommandProcessor.execute(equivalent_replay, {
+		"id": MarketCommandProcessor.RESOLVE_EVENT,
+		"inputs": {"event_id": "last_clean_barrel", "choice_id": "share_barrels_fairly"},
+	})
+	_expect(JSON.stringify(restored_result) == JSON.stringify(equivalent_result), "saved barrel event and choice should replay deterministically")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -780,7 +907,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "0.9.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.0.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -837,6 +964,13 @@ func _test_legacy_save_migration() -> void:
 	var migration_v5_result := migrated_v5.load_serialized(version_five_save)
 	_expect(migration_v5_result.ok and int(migration_v5_result.migrated_from) == 5, "version-five saves should migrate to the route-condition schema")
 	_expect(migrated_v5.route_conditions.is_empty(), "version-five migration should initialize empty route conditions")
+	var version_six_save := legacy_world.serialize()
+	version_six_save["save_version"] = 6
+	version_six_save.erase("settlement_resilience")
+	var migrated_v6 := AshWorldState.new(0)
+	var migration_v6_result := migrated_v6.load_serialized(version_six_save)
+	_expect(migration_v6_result.ok and int(migration_v6_result.migrated_from) == 6, "version-six saves should migrate to the settlement-resilience schema")
+	_expect(migrated_v6.settlement_resilience.is_empty(), "version-six migration should initialize empty settlement resilience")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)
