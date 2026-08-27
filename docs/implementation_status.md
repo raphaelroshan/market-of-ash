@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations, B0 forecast/resolution calibration, and B1 bounded market memory are implemented. B2 settlement opportunities is next.
+**Roadmap status:** A0–A1 foundations and B0–B2 are implemented. B3's first delivery contract is next.
 
 ## Implemented player-facing spine
 
@@ -13,10 +13,11 @@
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
 - Prices and route forecasts are deterministic and explain their current inputs.
 - Buy, sell, and departure mutations pass through a serializable command/result boundary.
-- Saves declare save version 2 and content version `0.5.0`; version-zero and version-one saves migrate safely and future saves fail safely.
+- Saves declare save version 3 and runtime content version `0.6.0`; older saves migrate safely and future saves fail safely.
 - A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
-- Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and save version 2 preserves it.
+- Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
+- Settlement visits expose a two-slot auxiliary-action budget. Ashgate's live provision service competes with cargo spending; future settlement actions remain visible with dependency reasons.
 
 ## Current command IDs
 
@@ -25,6 +26,7 @@
 | `buy_goods` | `MarketCommandProcessor` | Validates good, quantity, capacity, settlement, and affordability; then mutates money/cargo. |
 | `sell_goods` | `MarketCommandProcessor` | Validates good, quantity, held cargo, and settlement; then mutates money/cargo. |
 | `depart_route` | `MarketCommandProcessor` | Validates destination and canonical route endpoints, charges fee/provisions, advances time, resolves one deterministic incident roll, and moves the caravan. |
+| `use_settlement_action` | `MarketCommandProcessor` | Validates current settlement, availability, money, and visit slots; the first implementation packs Ashgate route provisions. |
 
 Successful and failed commands append to `command_history`, bounded to 100 records.
 
@@ -43,6 +45,7 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `crisis_stage`
 - `market_pressure`
 - `market_delivery_history`
+- `visit_slots_remaining`
 - `log`
 - `command_history`
 
@@ -120,6 +123,13 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Crisis stages reduce the effect of new deliveries while keeping crisis and memory modifiers separately visible.
 - The adaptive three-delivery simulation chooses Water → Reedwatch for the first two deliveries and rotates to Medicine → Reedwatch on the third.
 
+## B2 settlement-opportunity result
+
+- Each fresh start and settlement arrival provides two auxiliary-action slots; normal buying and selling consume none.
+- Ashgate offers `Pack Warden rations`: six ashmarks for four provisions and one visit slot.
+- Brine Cross, Cinderford, Hollow Market, and Reedwatch show one disabled future opportunity each with a specific dependency reason.
+- A third auxiliary action is blocked without changing resources, and save version 3 preserves remaining slots.
+
 ## Next permitted task
 
-Card B2: add the settlement opportunity shell and two-slot visit budget, beginning with one live action at one settlement.
+Card B3: implement one Reedwatch relief delivery contract that changes cargo and route planning while preserving spot trade.

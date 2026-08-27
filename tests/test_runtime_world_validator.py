@@ -44,6 +44,33 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_actions = copy.deepcopy(runtime)
+
+    invalid_actions["settlement_actions"] = json.loads(
+        (ROOT / "tests/fixtures/settlement_actions_invalid.json").read_text(encoding="utf-8")
+    )
+    action_errors = validate(invalid_actions)
+    expected_action_fragments = (
+        "visit_slots_per_arrival must be an integer from 1 through 5",
+        "must use a lower_snake_case id",
+        "must reference a known settlement",
+        "must declare name",
+        "cost must be a non-negative integer",
+        "service_slots must be between 1 and the visit limit",
+        "time_cost must be a non-negative integer",
+        "effects must be an object",
+    )
+    missing_actions = [
+        fragment
+        for fragment in expected_action_fragments
+        if not any(fragment in error for error in action_errors)
+    ]
+    if missing_actions:
+        print("FAIL: invalid settlement-action fixture did not produce expected errors")
+        for fragment in missing_actions:
+            print(f"- missing: {fragment}")
+        return 1
+
     print("PASS: runtime world validator fixtures")
     return 0
 

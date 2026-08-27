@@ -21,6 +21,9 @@ var shop_quantity: SpinBox
 var shop_market_preview_label: Label
 var shop_status_label: Label
 var shop_cargo_label: Label
+var opportunity_status_label: Label
+var opportunity_list: VBoxContainer
+var opportunity_buttons: Array[Button] = []
 var plan_departure_button: Button
 var return_to_shop_button: Button
 var commit_departure_button: Button
@@ -210,6 +213,18 @@ func _build_shop() -> void:
 	caravan_title.add_theme_font_size_override("font_size", 20)
 	caravan_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(caravan_title)
+	var opportunity_title := Label.new()
+	opportunity_title.text = "LOCAL OPPORTUNITIES"
+	opportunity_title.add_theme_font_size_override("font_size", 18)
+	opportunity_title.add_theme_color_override("font_color", Color("#e6c58d"))
+	actions.add_child(opportunity_title)
+	opportunity_status_label = Label.new()
+	opportunity_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	opportunity_status_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	actions.add_child(opportunity_status_label)
+	opportunity_list = VBoxContainer.new()
+	opportunity_list.add_theme_constant_override("separation", 8)
+	actions.add_child(opportunity_list)
 	var next_step := Label.new()
 	next_step.text = "When the load makes sense, take it to the Departure Desk. Planning a trip does not spend resources."
 	next_step.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -498,6 +513,13 @@ func _on_enter_settlement_pressed() -> void:
 	_set_event("You entered %s. Review the local market and decide how to recover or reinvest." % String(world.settlement(world.current_settlement).get("name", "the settlement")))
 	_show_shop()
 
+func _on_settlement_action_pressed(action_id: String) -> void:
+	var result := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": action_id},
+	})
+	_show_command_result(result, "Opportunity")
+
 func _on_shop_plan_changed(_index: int) -> void:
 	_sync_shop_plan_to_departure()
 	_refresh_ui()
@@ -676,6 +698,44 @@ func _refresh_playtest_status() -> void:
 	else:
 		playtest_status_label.text = "STEP 1 OF 3 — Read the Grain market price and route forecast. Buy 2 grain when you are ready; the marked test button simply executes that normal trade."
 
+func _refresh_opportunities() -> void:
+	if opportunity_list == null or opportunity_status_label == null:
+		return
+	for child in opportunity_list.get_children():
+		opportunity_list.remove_child(child)
+		child.queue_free()
+	opportunity_buttons.clear()
+	var slot_limit := int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
+	opportunity_status_label.text = "%d of %d visit slots remain. Trading never consumes a slot." % [world.visit_slots_remaining, slot_limit]
+	var actions := MarketContent.settlement_actions_for(world.current_settlement)
+	for action in actions:
+		var action_button := Button.new()
+		var cost := int(action.get("cost", 0))
+		var slots := int(action.get("service_slots", 1))
+		var time_cost := int(action.get("time_cost", 0))
+		var effects: Dictionary = action.get("effects", {})
+		var effect_summary := "+%d provisions" % int(effects.get("provisions", 0)) if effects.has("provisions") else "future effect"
+		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
+		var unavailable_reason := String(action.get("unavailable_reason", ""))
+		if not bool(action.get("available", false)):
+			action_button.disabled = true
+		elif world.visit_slots_remaining < slots:
+			action_button.disabled = true
+			unavailable_reason = "No visit slots remain. Depart and arrive at a settlement to refresh them."
+		elif world.money < cost:
+			action_button.disabled = true
+			unavailable_reason = "You need %d ashmarks, but have %d." % [cost, world.money]
+		action_button.tooltip_text = unavailable_reason if action_button.disabled else "%s %s" % [String(action.get("description", "")), String(action.get("tradeoff", ""))]
+		action_button.pressed.connect(_on_settlement_action_pressed.bind(String(action.get("id", ""))))
+		opportunity_list.add_child(action_button)
+		opportunity_buttons.append(action_button)
+		var details := Label.new()
+		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		details.add_theme_font_size_override("font_size", 12)
+		details.add_theme_color_override("font_color", Color("#aa9a87"))
+		details.text = unavailable_reason if action_button.disabled else "%s Cost: %d ashmarks, %d visit slot, %s. %s" % [String(action.get("description", "")), cost, slots, "no day" if time_cost == 0 else "%d day" % time_cost, String(action.get("tradeoff", ""))]
+		opportunity_list.add_child(details)
+
 func _set_event(text: String) -> void:
 	event_label.text = text
 
@@ -702,6 +762,7 @@ func _refresh_ui() -> void:
 		shop_cargo_label.text = "CARAVAN — %d ashmarks · %d provisions · hold %d/%d · %s" % [world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, log_label.text]
 	if event_label.text.is_empty():
 		event_label.text = "Choose a destination, buy a small load, and compare the Old Road with the Toll Road."
+	_refresh_opportunities()
 	_refresh_forecasts()
 	if map_panel:
 		map_panel.world = world

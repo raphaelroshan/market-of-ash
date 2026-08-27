@@ -11,6 +11,7 @@ const AshWorldState = preload("res://src/core/world_state.gd")
 const BUY_GOODS := "buy_goods"
 const SELL_GOODS := "sell_goods"
 const DEPART_ROUTE := "depart_route"
+const USE_SETTLEMENT_ACTION := "use_settlement_action"
 
 static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 	var command_id := String(command.get("id", ""))
@@ -26,6 +27,8 @@ static func execute(world: AshWorldState, command: Dictionary) -> Dictionary:
 			result = _sell_goods(world, inputs)
 		DEPART_ROUTE:
 			result = _depart_route(world, inputs)
+		USE_SETTLEMENT_ACTION:
+			result = _use_settlement_action(world, inputs)
 		_:
 			result = _failure("unknown command: %s" % command_id)
 	return _record(world, command, result)
@@ -116,6 +119,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		return _failure(String(travel_result.reason))
 
 	world.current_settlement = destination_id
+	world.reset_visit_slots()
 	var risk: float = float(travel_result.risk)
 	var roll := fmod(float(world.seed * 17 + world.day * 31), 100.0) / 100.0
 	var state_delta := {
@@ -123,6 +127,7 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 		"provisions": -int(travel_result.days),
 		"day": int(travel_result.days),
 		"current_settlement": destination_id,
+		"visit_slots_remaining": world.visit_slots_remaining,
 		"route_id": route_id,
 		"risk": risk,
 		"risk_roll": roll,
@@ -149,6 +154,51 @@ static func _depart_route(world: AshWorldState, inputs: Dictionary) -> Dictionar
 			message = "You arrived at %s by the %s. The route held; the exposed %s arrived intact." % [world.settlement(destination_id).name, world.route(route_id).name, String(loss_basis.loss_good_id)]
 	world.log.append(message)
 	return _success(message, state_delta)
+
+static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> Dictionary:
+	var action_id := String(inputs.get("action_id", ""))
+	var action := MarketContent.settlement_action(action_id)
+	if action.is_empty():
+		return _failure("unknown settlement action")
+	if String(action.get("settlement_id", "")) != world.current_settlement:
+		var action_settlement := world.settlement(String(action.get("settlement_id", "")))
+		return _failure("%s is only available in %s" % [String(action.get("name", action_id)), String(action_settlement.get("name", action.get("settlement_id", "")))])
+	if not bool(action.get("available", false)):
+		return _failure(String(action.get("unavailable_reason", "this opportunity is not available yet")))
+	var slots_required := int(action.get("service_slots", 0))
+	if world.visit_slots_remaining < slots_required:
+		return _failure("no visit slots remain; depart and arrive at a settlement to refresh them")
+	var cost := int(action.get("cost", 0))
+	if world.money < cost:
+		return _failure("you need %d ashmarks for %s, but have %d" % [cost, String(action.get("name", action_id)), world.money])
+
+	match action_id:
+		"ashgate_provision_bundle":
+			return _apply_provision_bundle(world, action)
+		_:
+			return _failure(String(action.get("unavailable_reason", "this opportunity is not implemented yet")))
+
+static func _apply_provision_bundle(world: AshWorldState, action: Dictionary) -> Dictionary:
+	var cost := int(action.get("cost", 0))
+	var slots_required := int(action.get("service_slots", 1))
+	var time_cost := int(action.get("time_cost", 0))
+	var effects: Dictionary = action.get("effects", {})
+	var provisions_added := int(effects.get("provisions", 0))
+	world.money -= cost
+	world.provisions += provisions_added
+	world.visit_slots_remaining -= slots_required
+	if time_cost > 0:
+		world.advance_day(time_cost)
+	var message := "Packed %d route provisions for %d ashmarks. %d of %d visit slots remain." % [provisions_added, cost, world.visit_slots_remaining, int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))]
+	world.log.append(message)
+	return _success(message, {
+		"action_id": String(action.id),
+		"money": -cost,
+		"provisions": provisions_added,
+		"day": time_cost,
+		"visit_slots": -slots_required,
+		"visit_slots_remaining": world.visit_slots_remaining,
+	})
 
 static func _remove_cargo_unit(world: AshWorldState, good_id: String) -> Dictionary:
 	if good_id.is_empty() or int(world.cargo.get(good_id, 0)) <= 0:

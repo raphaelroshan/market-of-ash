@@ -21,6 +21,15 @@ func _initialize() -> void:
 	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text == "Plan departure", "shop did not expose the plan-departure handoff")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_status_label != null and ui.shop_status_label.text.contains("Ashgate"), "shop did not render local settlement context")
+	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
+	_expect(ui.opportunity_buttons.size() == 1 and not ui.opportunity_buttons[0].disabled, "Ashgate should expose one usable local opportunity")
+	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
+	var action_money_before: int = ui.world.money
+	var action_provisions_before: int = ui.world.provisions
+	ui._on_settlement_action_pressed("ashgate_provision_bundle")
+	_expect(ui.world.money == action_money_before - 6 and ui.world.provisions == action_provisions_before + 4, "local opportunity UI did not execute the command's visible effects")
+	_expect(ui.opportunity_status_label.text.contains("1 of 2 visit slots remain"), "local opportunity UI did not refresh the remaining visit budget")
+	ui._on_start_game_pressed()
 
 	var forecast_before: String = JSON.stringify(ui.world.serialize())
 	ui.shop_quantity.value = 3
@@ -78,6 +87,9 @@ func _initialize() -> void:
 
 	ui._on_enter_settlement_pressed()
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Enter settlement should return the player to the central shop")
+	_expect(ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "arrival did not refresh the destination visit budget")
+	_expect(ui.opportunity_buttons.size() == 1 and ui.opportunity_buttons[0].disabled, "Reedwatch should show its unavailable opportunity with a disabled control")
+	_expect(ui.opportunity_buttons[0].tooltip_text.contains("relief-contract system"), "disabled Reedwatch opportunity did not explain its dependency")
 	ui._on_sell_pressed()
 	_expect(ui.playtest_status_label.text.contains("RUN COMPLETE"), "selling delivered grain from the destination shop did not complete the playtest objective")
 	_expect(ui.shop_market_preview_label.text.contains("Market memory: your last 2 grain delivered here softened this price by 8%"), "completed sale did not expose the local delivery-memory explanation")

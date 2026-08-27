@@ -63,6 +63,33 @@ static func market_memory_rules() -> Dictionary:
 		return {}
 	return rules.duplicate(true)
 
+static func settlement_action_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("settlement_actions", {})
+	if typeof(rules) != TYPE_DICTIONARY:
+		return {}
+	return rules.duplicate(true)
+
+static func settlement_action(action_id: String) -> Dictionary:
+	var actions: Array = settlement_action_rules().get("actions", [])
+	for raw_action in actions:
+		if typeof(raw_action) != TYPE_DICTIONARY:
+			continue
+		var action: Dictionary = raw_action
+		if String(action.get("id", "")) == action_id:
+			return action.duplicate(true)
+	return {}
+
+static func settlement_actions_for(settlement_id: String) -> Array[Dictionary]:
+	var matches: Array[Dictionary] = []
+	var actions: Array = settlement_action_rules().get("actions", [])
+	for raw_action in actions:
+		if typeof(raw_action) != TYPE_DICTIONARY:
+			continue
+		var action: Dictionary = raw_action
+		if String(action.get("settlement_id", "")) == settlement_id:
+			matches.append(action.duplicate(true))
+	return matches
+
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var data := runtime_world()
@@ -191,6 +218,8 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			if float(settlement.get("faction_price_modifier", 0.0)) <= 0.0:
 				errors.append("settlement %s must have a positive faction_price_modifier" % settlement_id)
 
+	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
+
 	var routes_data: Variant = data.get("routes", {})
 	if typeof(routes_data) != TYPE_DICTIONARY:
 		errors.append("routes must be an object keyed by stable id")
@@ -263,6 +292,50 @@ static func _validate_market_memory(value: Variant, errors: Array[String]) -> vo
 	var history_limit := int(rules.get("max_delivery_history", 0))
 	if history_limit < 1 or history_limit > 100:
 		errors.append("market_memory max_delivery_history must be an integer from 1 through 100")
+
+static func _validate_settlement_actions(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("settlement_actions must be an object")
+		return
+	var rules: Dictionary = value
+	var visit_slots := int(rules.get("visit_slots_per_arrival", 0))
+	if visit_slots < 1 or visit_slots > 5:
+		errors.append("settlement_actions visit_slots_per_arrival must be between 1 and 5")
+	var actions_value: Variant = rules.get("actions", [])
+	if typeof(actions_value) != TYPE_ARRAY:
+		errors.append("settlement_actions actions must be an array")
+		return
+	var seen_ids: Dictionary = {}
+	for raw_action in actions_value:
+		if typeof(raw_action) != TYPE_DICTIONARY:
+			errors.append("each settlement action must be an object")
+			continue
+		var action: Dictionary = raw_action
+		var action_id := String(action.get("id", ""))
+		if action_id.is_empty() or not action_id.is_valid_identifier() or action_id != action_id.to_lower():
+			errors.append("settlement action ids must use lower_snake_case")
+		elif seen_ids.has(action_id):
+			errors.append("duplicate settlement action id: %s" % action_id)
+		else:
+			seen_ids[action_id] = true
+		if not REQUIRED_SETTLEMENT_IDS.has(String(action.get("settlement_id", ""))):
+			errors.append("settlement action %s must reference a known settlement" % action_id)
+		for required_text in ["name", "category", "description", "tradeoff"]:
+			if String(action.get(required_text, "")).is_empty():
+				errors.append("settlement action %s must declare %s" % [action_id, required_text])
+		if int(action.get("cost", -1)) < 0:
+			errors.append("settlement action %s cost must be non-negative" % action_id)
+		if int(action.get("service_slots", 0)) < 1 or int(action.get("service_slots", 0)) > visit_slots:
+			errors.append("settlement action %s service_slots must be between 1 and the visit limit" % action_id)
+		if int(action.get("time_cost", -1)) < 0:
+			errors.append("settlement action %s time_cost must be non-negative" % action_id)
+		var effects_value: Variant = action.get("effects", {})
+		if typeof(effects_value) != TYPE_DICTIONARY:
+			errors.append("settlement action %s effects must be an object" % action_id)
+		elif bool(action.get("available", false)) and action_id == "ashgate_provision_bundle" and int(effects_value.get("provisions", 0)) <= 0:
+			errors.append("settlement action ashgate_provision_bundle must add provisions")
+		if not bool(action.get("available", false)) and String(action.get("unavailable_reason", "")).is_empty():
+			errors.append("unavailable settlement action %s must declare unavailable_reason" % action_id)
 
 static func _validate_modifier_table(label: String, table_value: Variant, known_goods: Dictionary, errors: Array[String]) -> void:
 	if typeof(table_value) != TYPE_DICTIONARY:

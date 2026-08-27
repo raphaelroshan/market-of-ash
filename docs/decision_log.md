@@ -143,3 +143,11 @@
 **Reason:** Repeating the same profitable delivery must change the next trade decision, but a town must recover and retain its authored economic identity. Separate bounded pressure, crisis effectiveness, and decay provide predictable causes that can be shown directly in the market UI and replayed exactly.
 
 **Trade-off:** This is a deliberately compact market response rather than a production/consumption simulation. It models recent local supply relief, not inventories, factories, autonomous traders, or globally coupled prices.
+
+## ADR-019: Settlement opportunities share a two-slot arrival budget
+
+**Decision:** Every settlement arrival refreshes two auxiliary-action slots. Spot buying and selling remain free, while a successful service or opportunity consumes its authored slot cost through `use_settlement_action`. The first live proof is Ashgate's explicit `ashgate_provision_bundle` command path; unavailable future actions remain visible with concrete dependency reasons.
+
+**Reason:** Settlement visits need a small opportunity-cost layer without turning trade into a menu tax. Two slots make optional preparation compete for attention while preserving immediate commerce and a quick departure path. One explicit live action proves the content, command, UI, save, and focus seams before broader service implementation.
+
+**Trade-off:** The first implementation is intentionally asymmetric: Ashgate has one usable logistics service while other settlements preview disabled future opportunities. This creates honest scaffolding without pretending unfinished systems are interactive.

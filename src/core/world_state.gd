@@ -5,7 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 const MAX_COMMAND_HISTORY := 100
 
 var seed: int = 1107
@@ -20,6 +20,7 @@ var crisis_stage: int = 0
 var crisis_modifiers: Dictionary = {}
 var market_pressure: Dictionary = {}
 var market_delivery_history: Array[Dictionary] = []
+var visit_slots_remaining: int = 2
 var log: Array[String] = []
 var command_history: Array[Dictionary] = []
 
@@ -34,6 +35,7 @@ func _init(world_seed: int = 1107) -> void:
 		return
 	settlements = content_result.data.settlements.duplicate(true)
 	routes = content_result.data.routes.duplicate(true)
+	reset_visit_slots()
 	_update_crisis_modifiers()
 
 func settlement(id: String) -> Dictionary:
@@ -73,6 +75,9 @@ func latest_market_delivery(settlement_id: String, good_id: String) -> Dictionar
 		if String(record.get("settlement_id", "")) == settlement_id and String(record.get("good_id", "")) == good_id:
 			return record.duplicate(true)
 	return {}
+
+func reset_visit_slots() -> void:
+	visit_slots_remaining = int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
 
 func record_market_delivery(settlement_id: String, good_id: String, quantity: int) -> Dictionary:
 	if not has_settlement(settlement_id):
@@ -197,6 +202,7 @@ func serialize() -> Dictionary:
 		"crisis_stage": crisis_stage,
 		"market_pressure": market_pressure.duplicate(true),
 		"market_delivery_history": market_delivery_history.duplicate(true),
+		"visit_slots_remaining": visit_slots_remaining,
 		"log": log.duplicate(),
 		"command_history": command_history.duplicate(true),
 	}
@@ -226,6 +232,11 @@ func load_serialized(data: Dictionary) -> Dictionary:
 			var record: Dictionary = raw_record
 			if has_settlement(String(record.get("settlement_id", ""))) and not MarketContent.good(String(record.get("good_id", ""))).is_empty():
 				market_delivery_history.append(record.duplicate(true))
+	visit_slots_remaining = clampi(
+		int(restored.get("visit_slots_remaining", MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))),
+		0,
+		int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2)),
+	)
 	log.clear()
 	var saved_log: Array = restored.get("log", [])
 	for log_entry in saved_log:
@@ -251,6 +262,9 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 		migrated["save_version"] = 2
 		migrated["market_pressure"] = migrated.get("market_pressure", {})
 		migrated["market_delivery_history"] = migrated.get("market_delivery_history", [])
+	if source_version < 3:
+		migrated["save_version"] = 3
+		migrated["visit_slots_remaining"] = int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
 
 func _sanitize_market_pressure(value: Variant) -> Dictionary:

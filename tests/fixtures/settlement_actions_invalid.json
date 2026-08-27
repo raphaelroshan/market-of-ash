@@ -1,0 +1,19 @@
+{
+  "visit_slots_per_arrival": 0,
+  "actions": [
+    {
+      "id": "Bad Action ID",
+      "settlement_id": "missing",
+      "name": "",
+      "category": "",
+      "available": true,
+      "cost": -1,
+      "service_slots": 0,
+      "time_cost": -1,
+      "effects": "not-an-object",
+      "description": "",
+      "tradeoff": "",
+      "unavailable_reason": ""
+    }
+  ]
+}

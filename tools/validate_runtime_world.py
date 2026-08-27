@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -85,6 +86,54 @@ def validate_market_memory(value: Any, errors: list[str]) -> None:
         fail(errors, "market_memory.max_delivery_history must be an integer from 1 through 100")
 
 
+def validate_settlement_actions(value: Any, errors: list[str]) -> None:
+    rules = as_object(value, "settlement_actions", errors)
+    visit_slots = rules.get("visit_slots_per_arrival")
+    if not isinstance(visit_slots, int) or not 1 <= visit_slots <= 5:
+        fail(errors, "settlement_actions.visit_slots_per_arrival must be an integer from 1 through 5")
+    actions = rules.get("actions")
+    if not isinstance(actions, list):
+        fail(errors, "settlement_actions.actions must be a list")
+        return
+    seen_ids: set[str] = set()
+    for index, raw_action in enumerate(actions):
+        action = as_object(raw_action, f"settlement_actions.actions[{index}]", errors)
+        action_id = action.get("id")
+        if not isinstance(action_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", action_id):
+            fail(errors, f"settlement action at index {index} must use a lower_snake_case id")
+            action_id = f"index_{index}"
+        elif action_id in seen_ids:
+            fail(errors, f"duplicate settlement action id: {action_id}")
+        seen_ids.add(action_id)
+        if action.get("settlement_id") not in REQUIRED_SETTLEMENTS:
+            fail(errors, f"settlement action {action_id} must reference a known settlement")
+        for field in ("name", "category", "description", "tradeoff"):
+            if not isinstance(action.get(field), str) or not action[field]:
+                fail(errors, f"settlement action {action_id} must declare {field}")
+        if not isinstance(action.get("available"), bool):
+            fail(errors, f"settlement action {action_id}.available must be boolean")
+        if not isinstance(action.get("cost"), int) or action["cost"] < 0:
+            fail(errors, f"settlement action {action_id}.cost must be a non-negative integer")
+        service_slots = action.get("service_slots")
+        if (
+            not isinstance(service_slots, int)
+            or service_slots < 1
+            or not isinstance(visit_slots, int)
+            or service_slots > visit_slots
+        ):
+            fail(errors, f"settlement action {action_id}.service_slots must be between 1 and the visit limit")
+        if not isinstance(action.get("time_cost"), int) or action["time_cost"] < 0:
+            fail(errors, f"settlement action {action_id}.time_cost must be a non-negative integer")
+        effects = action.get("effects")
+        if not isinstance(effects, dict):
+            fail(errors, f"settlement action {action_id}.effects must be an object")
+        elif action.get("available") is True and action_id == "ashgate_provision_bundle":
+            if not isinstance(effects.get("provisions"), int) or effects["provisions"] <= 0:
+                fail(errors, "settlement action ashgate_provision_bundle must add provisions")
+        if action.get("available") is False and not action.get("unavailable_reason"):
+            fail(errors, f"unavailable settlement action {action_id} must declare unavailable_reason")
+
+
 def validate(data: Any) -> list[str]:
     errors: list[str] = []
     root = as_object(data, "runtime world", errors)
@@ -103,6 +152,7 @@ def validate(data: Any) -> list[str]:
         fail(errors, "planning_assumptions.time_opportunity_cost_per_day must be a non-negative integer")
 
     validate_market_memory(root.get("market_memory"), errors)
+    validate_settlement_actions(root.get("settlement_actions"), errors)
 
     goods = root.get("goods")
     if not isinstance(goods, list):

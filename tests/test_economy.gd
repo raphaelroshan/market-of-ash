@@ -17,6 +17,7 @@ func _init() -> void:
 	_test_incident_loss_model()
 	_test_command_buy_and_sell()
 	_test_market_memory()
+	_test_settlement_actions()
 	_test_command_validation_and_history()
 	_test_depart_command()
 	_test_travel_consumes_resources()
@@ -38,9 +39,12 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "0.5.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "0.6.0", "runtime content should expose content version")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
+	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
+	_expect(MarketContent.settlement_action("ashgate_provision_bundle").get("settlement_id", "") == "ashgate", "runtime content should expose the live Ashgate provision action")
+	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 1, "runtime content should expose a Reedwatch opportunity state")
 	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth"], "runtime content should expose authored stable good ids")
 	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
 	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
@@ -270,6 +274,72 @@ func _test_market_memory() -> void:
 	_expect(restore_result.ok and is_equal_approx(restored.market_pressure_for("reedwatch", "water"), 0.112), "save/load should preserve market pressure")
 	_expect(restored.latest_market_delivery("reedwatch", "water") == crisis_world.latest_market_delivery("reedwatch", "water"), "save/load should preserve visible delivery memory")
 
+func _test_settlement_actions() -> void:
+	var world := AshWorldState.new(1107)
+	_expect(world.visit_slots_remaining == 2, "a fresh settlement visit should start with two action slots")
+	var buy := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.BUY_GOODS,
+		"inputs": {"good_id": "grain", "quantity": 1},
+	})
+	_expect(buy.ok and world.visit_slots_remaining == 2, "normal trade should not consume a visit slot")
+	var money_before := world.money
+	var provisions_before := world.provisions
+	var first := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "ashgate_provision_bundle"},
+	})
+	_expect(first.ok, "the live Ashgate provision action should succeed")
+	_expect(world.money == money_before - 6 and world.provisions == provisions_before + 4, "the provision action should apply its disclosed money and provision deltas")
+	_expect(world.visit_slots_remaining == 1, "the first auxiliary action should consume one visit slot")
+	_expect(int(first.state_delta.visit_slots_remaining) == 1, "action result should expose remaining visit slots")
+	var second := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "ashgate_provision_bundle"},
+	})
+	_expect(second.ok and world.visit_slots_remaining == 0, "a second auxiliary action should consume the final visit slot")
+	var blocked_money := world.money
+	var blocked_provisions := world.provisions
+	var blocked := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "ashgate_provision_bundle"},
+	})
+	_expect(not blocked.ok and blocked.reason.contains("depart and arrive"), "a third auxiliary action should explain how visit slots recover")
+	_expect(world.money == blocked_money and world.provisions == blocked_provisions and world.visit_slots_remaining == 0, "a blocked auxiliary action should not mutate resources or slots")
+	_expect(not bool(world.command_history.back().ok), "a blocked auxiliary action should still be recorded")
+
+	var saved_with_slot := AshWorldState.new(1107)
+	MarketCommandProcessor.execute(saved_with_slot, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "ashgate_provision_bundle"},
+	})
+	var restored := AshWorldState.new(0)
+	var restore_result := restored.load_serialized(saved_with_slot.serialize())
+	_expect(restore_result.ok and restored.visit_slots_remaining == 1, "save/load should preserve the remaining visit budget")
+
+	var arrival := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "old_road", "destination_id": "reedwatch"},
+	})
+	_expect(arrival.ok and world.visit_slots_remaining == 2, "arriving at a settlement should reset the visit budget")
+	_expect(int(arrival.state_delta.visit_slots_remaining) == 2, "departure result should expose the refreshed destination visit budget")
+	var unavailable := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "reedwatch_supply_shelter"},
+	})
+	_expect(not unavailable.ok and unavailable.reason.contains("relief-contract system"), "unimplemented local opportunities should remain visible through a specific disabled reason")
+	var wrong_settlement := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "ashgate_provision_bundle"},
+	})
+	_expect(not wrong_settlement.ok and wrong_settlement.reason.contains("only available in Ashgate"), "settlement actions should be limited to their authored location")
+	var poor_world := AshWorldState.new(1107)
+	poor_world.money = 5
+	var unaffordable := MarketCommandProcessor.execute(poor_world, {
+		"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION,
+		"inputs": {"action_id": "ashgate_provision_bundle"},
+	})
+	_expect(not unaffordable.ok and poor_world.visit_slots_remaining == 2 and poor_world.provisions == 12, "an unaffordable opportunity should not mutate resources or visit slots")
+
 func _test_command_validation_and_history() -> void:
 	var world := AshWorldState.new(1107)
 	var money_before := world.money
@@ -338,7 +408,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "0.5.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "0.6.0", "serialized state should declare the content version")
 
 func _test_legacy_save_migration() -> void:
 	var legacy_world := AshWorldState.new(42)
@@ -354,6 +424,7 @@ func _test_legacy_save_migration() -> void:
 	_expect(int(migration_result.migrated_from) == 0, "legacy save should report its source version")
 	_expect(migrated.command_history.is_empty(), "legacy save migration should initialize empty command history")
 	_expect(migrated.market_pressure.is_empty() and migrated.market_delivery_history.is_empty(), "legacy save migration should initialize empty market memory")
+	_expect(migrated.visit_slots_remaining == 2, "legacy save migration should initialize the visit budget")
 	var version_one_save := legacy_world.serialize()
 	version_one_save["save_version"] = 1
 	version_one_save.erase("market_pressure")
@@ -361,7 +432,14 @@ func _test_legacy_save_migration() -> void:
 	var migrated_v1 := AshWorldState.new(0)
 	var migration_v1_result := migrated_v1.load_serialized(version_one_save)
 	_expect(migration_v1_result.ok and int(migration_v1_result.migrated_from) == 1, "version-one saves should migrate to the market-memory schema")
-	_expect(migrated_v1.serialize().save_version == 2, "version-one migration should produce save version two")
+	_expect(migrated_v1.serialize().save_version == 3, "version-one migration should produce the current save version")
+	var version_two_save := legacy_world.serialize()
+	version_two_save["save_version"] = 2
+	version_two_save.erase("visit_slots_remaining")
+	var migrated_v2 := AshWorldState.new(0)
+	var migration_v2_result := migrated_v2.load_serialized(version_two_save)
+	_expect(migration_v2_result.ok and int(migration_v2_result.migrated_from) == 2, "version-two saves should migrate to the visit-budget schema")
+	_expect(migrated_v2.visit_slots_remaining == 2, "version-two migration should initialize the visit budget")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)

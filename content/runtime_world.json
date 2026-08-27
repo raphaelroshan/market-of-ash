@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "0.5.0",
+  "content_version": "0.6.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -20,6 +20,81 @@
     "daily_decay_per_day": 0.03,
     "crisis_effectiveness": {"0": 1.0, "1": 0.85, "2": 0.7, "3": 0.55},
     "max_delivery_history": 12
+  },
+  "settlement_actions": {
+    "visit_slots_per_arrival": 2,
+    "actions": [
+      {
+        "id": "ashgate_provision_bundle",
+        "settlement_id": "ashgate",
+        "name": "Pack Warden rations",
+        "category": "logistics",
+        "available": true,
+        "cost": 6,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"provisions": 4},
+        "description": "Pay the Ashgate stores to seal four route-ready provision packs.",
+        "tradeoff": "More travel flexibility now, but six fewer ashmarks for cargo.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "brine_cross_cistern_queue",
+        "settlement_id": "brine_cross",
+        "name": "Join the cistern queue",
+        "category": "information",
+        "available": false,
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {},
+        "description": "Wait with the wellkeepers to learn which pumps are failing.",
+        "tradeoff": "Better local information in exchange for a day.",
+        "unavailable_reason": "Cistern reports are not connected to the simulation yet."
+      },
+      {
+        "id": "cinderford_repair_bench",
+        "settlement_id": "cinderford",
+        "name": "Reserve the repair bench",
+        "category": "logistics",
+        "available": false,
+        "cost": 14,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {},
+        "description": "Set aside foundry time for caravan repairs.",
+        "tradeoff": "Future protection in exchange for money and one day.",
+        "unavailable_reason": "Caravan condition is not implemented yet."
+      },
+      {
+        "id": "hollow_market_route_rumor",
+        "settlement_id": "hollow_market",
+        "name": "Buy a route rumor",
+        "category": "information",
+        "available": false,
+        "cost": 6,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {},
+        "description": "Pay a broker for a recent route report of uncertain quality.",
+        "tradeoff": "Potentially useful information that never guarantees safety.",
+        "unavailable_reason": "Information confidence is not implemented yet."
+      },
+      {
+        "id": "reedwatch_supply_shelter",
+        "settlement_id": "reedwatch",
+        "name": "Open the supply shelter",
+        "category": "relief",
+        "available": false,
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {},
+        "description": "Reserve delivered goods for a protected local supply point.",
+        "tradeoff": "Sacrifice immediate margin to strengthen a future market.",
+        "unavailable_reason": "The shelter requires the relief-contract system."
+      }
+    ]
   },
   "settlements": {
     "ashgate": {
