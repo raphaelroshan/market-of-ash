@@ -1439,6 +1439,8 @@ func _on_buy_pressed() -> void:
 	})
 	_record_first_trade(result)
 	_show_command_result(result, "Purchase")
+	if result.ok and shop_buy_button != null and shop_buy_button.disabled:
+		_grab_focus_if_available(plan_departure_button)
 
 func _on_sell_pressed() -> void:
 	_sync_shop_plan_to_departure()
@@ -1453,6 +1455,8 @@ func _on_sell_pressed() -> void:
 	})
 	_record_first_trade(result)
 	_show_command_result(result, "Sale")
+	if result.ok and shop_sell_button != null and shop_sell_button.disabled:
+		_grab_focus_if_available(plan_departure_button)
 
 func _record_first_trade(result: Dictionary) -> void:
 	if bool(result.get("ok", false)) and first_trade_elapsed_msec < 0:
