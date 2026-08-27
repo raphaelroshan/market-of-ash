@@ -1476,12 +1476,21 @@ func _guided_trade_quantity(command_id: String, settlement_id: String = "") -> i
 	for entry in world.command_history:
 		if not bool(entry.get("ok", false)) or String(entry.get("id", "")) != command_id:
 			continue
-		var inputs: Dictionary = entry.get("inputs", {})
+		var inputs_value: Variant = entry.get("inputs", {})
+		if typeof(inputs_value) != TYPE_DICTIONARY:
+			continue
+		var inputs: Dictionary = inputs_value
 		if String(inputs.get("good_id", "")) != PLAYTEST_GOOD:
 			continue
 		if not settlement_id.is_empty():
-			var state_delta: Dictionary = entry.get("state_delta", {})
-			var market_memory: Dictionary = state_delta.get("market_memory", {})
+			var state_delta_value: Variant = entry.get("state_delta", {})
+			if typeof(state_delta_value) != TYPE_DICTIONARY:
+				continue
+			var state_delta: Dictionary = state_delta_value
+			var market_memory_value: Variant = state_delta.get("market_memory", {})
+			if typeof(market_memory_value) != TYPE_DICTIONARY:
+				continue
+			var market_memory: Dictionary = market_memory_value
 			if String(market_memory.get("settlement_id", "")) != settlement_id:
 				continue
 		total += maxi(0, int(inputs.get("quantity", 0)))

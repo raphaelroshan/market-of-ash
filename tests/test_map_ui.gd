@@ -557,6 +557,9 @@ func _initialize() -> void:
 	_expect(ui.world.ending_id == "ending_ash_merchant" and ui.shop_status_label.text.contains("ENDING — The Best Margin"), "profit-first crisis state did not expose the fourth deterministic ending summary")
 	_expect(ui.ending_panel.visible and ui.ending_label.text.contains("The Best Margin") and ui.ending_label.text.contains("continue trading"), "profit-first ending should update the dedicated conclusion card without blocking continued play")
 	_expect(ui.campaign_outlook_label.text.contains("Conclusion recorded: The Best Margin"), "campaign outlook should collapse to the immutable reached conclusion")
+	ui.world.command_history.append({"id": "sell_goods", "ok": true, "inputs": "malformed legacy record", "state_delta": "malformed legacy record"})
+	ui._refresh_ui()
+	_expect(not ui.playtest_status_label.text.contains("RUN COMPLETE"), "malformed historical command details should be ignored by onboarding reconstruction")
 
 	var state_before_text_scale := JSON.stringify(ui.world.serialize())
 	ui.large_text_checkbox.button_pressed = true
