@@ -1117,12 +1117,21 @@ func _on_depart_pressed() -> void:
 
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
-		_set_event(String(result.message))
+		_set_event("%s\nNEXT — %s" % [String(result.message), _next_step_text()])
 		if autosave_enabled:
 			_write_save("AUTOSAVED")
 	else:
-		_set_event("%s blocked: %s." % [label, String(result.reason)])
+		_set_event("%s blocked: %s.\nNEXT — %s" % [label, String(result.reason), _next_step_text()])
 	_refresh_ui()
+
+func _next_step_text() -> String:
+	if not world.pending_event.is_empty():
+		return "Choose one available route response; unavailable prerequisites are listed below their choices."
+	if arrival_pending:
+		return "Review the result, then choose Enter settlement to trade at the destination."
+	if shop_layer != null and shop_layer.visible:
+		return "Adjust cargo or local commitments, then open Plan departure when the next route is worthwhile."
+	return "Adjust the destination, route, or forecast load before committing travel."
 
 func _on_save_pressed() -> void:
 	if _write_save("SAVED"):
