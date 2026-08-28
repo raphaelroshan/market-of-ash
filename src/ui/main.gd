@@ -2233,9 +2233,12 @@ class MapPanel extends Control:
 	func _settlement_point(settlement_id: String) -> Vector2:
 		return _cell_center(SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO))
 
-	func _settlement_footprint(settlement_id: String) -> Rect2:
+	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(12, 18), Vector2(CELL_SIZE.x * 2.0 + 24, CELL_SIZE.y + 36))
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 20, CELL_SIZE.y + 16))
+
+	func _settlement_footprint(settlement_id: String) -> Rect2:
+		return _settlement_marker_rect(settlement_id).grow_individual(2.0, 10.0, 2.0, 10.0)
 
 	func _route_points(route_id: String) -> Array[Vector2]:
 		match route_id:
@@ -2356,7 +2359,7 @@ class MapPanel extends Control:
 			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(route_footer_x[route_index], board.size.y + 24), "%s: %s" % [_route_label(route_ids[route_index]), route_profiles[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _route_color(route_ids[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
-			var footprint := _settlement_footprint(settlement_id)
+			var footprint := _settlement_marker_rect(settlement_id)
 			var is_current: bool = world != null and settlement_id == world.current_settlement
 			draw_rect(footprint, Color("#5a4027") if is_current else Color("#3b2b24"), true)
 			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
