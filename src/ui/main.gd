@@ -77,6 +77,8 @@ var contract_buttons: Array[Button] = []
 var crew_buttons: Array[Button] = []
 var active_contract_label: Label
 var campaign_outlook_label: Label
+var recent_conflict_panel: PanelContainer
+var recent_conflict_label: Label
 var ending_panel: PanelContainer
 var ending_label: Label
 var plan_departure_button: Button
@@ -96,6 +98,9 @@ var event_readiness_label: Label
 var event_choice_list: VBoxContainer
 var event_choice_buttons: Array[Button] = []
 var event_choice_reason_labels: Array[Label] = []
+var conflict_outcome_panel: PanelContainer
+var conflict_outcome_label: Label
+var last_conflict_outcome_text := ""
 var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
@@ -399,6 +404,9 @@ func _show_shop() -> void:
 	game_layer.visible = false
 	shop_layer.visible = true
 	arrival_pending = false
+	last_conflict_outcome_text = ""
+	if conflict_outcome_panel:
+		conflict_outcome_panel.visible = false
 	if enter_settlement_button:
 		enter_settlement_button.visible = false
 	if commit_departure_button:
@@ -859,6 +867,15 @@ func _build_shop() -> void:
 	campaign_outlook_label.add_theme_font_size_override("font_size", 12)
 	campaign_outlook_label.add_theme_color_override("font_color", Color("#d9c6a2"))
 	actions.add_child(campaign_outlook_label)
+	recent_conflict_panel = PanelContainer.new()
+	recent_conflict_panel.name = "RecentConflictPanel"
+	recent_conflict_panel.visible = false
+	actions.add_child(recent_conflict_panel)
+	recent_conflict_label = Label.new()
+	recent_conflict_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recent_conflict_label.add_theme_font_size_override("font_size", 12)
+	recent_conflict_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	recent_conflict_panel.add_child(recent_conflict_label)
 	ending_panel = PanelContainer.new()
 	ending_panel.visible = false
 	actions.add_child(ending_panel)
@@ -1117,6 +1134,14 @@ func _build_ui() -> void:
 	event_choice_list = VBoxContainer.new()
 	event_choice_list.add_theme_constant_override("separation", 10)
 	event_content.add_child(event_choice_list)
+	conflict_outcome_panel = PanelContainer.new()
+	conflict_outcome_panel.visible = false
+	controls.add_child(conflict_outcome_panel)
+	conflict_outcome_label = Label.new()
+	conflict_outcome_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	conflict_outcome_label.add_theme_font_size_override("font_size", 13)
+	conflict_outcome_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	conflict_outcome_panel.add_child(conflict_outcome_label)
 
 	destination_option.item_selected.connect(_on_destination_changed)
 	route_option.item_selected.connect(_on_forecast_input_changed)
@@ -2071,13 +2096,16 @@ func _web_accessibility_announcement() -> String:
 				menu_announcement += " %s" % binding_status_label.text
 			return menu_announcement
 		"settlement_shop":
-			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
+			var recent_conflict_text := _latest_conflict_outcome_text()
+			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
+			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
 		"departure_desk":
 			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
 		"route_event":
 			return "Caravan conflict simulation: %s. Threat, readiness, costs, risk, and expected outcomes are stated before the first available response; unavailable tactics include written reasons." % String(world.pending_event.get("title", "travel event"))
 		"arrival_handoff":
-			return "Arrival report for %s. Enter settlement is focused." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
+			var comparison_note := " " + last_conflict_outcome_text.replace("\n", " ") if not last_conflict_outcome_text.is_empty() else ""
+			return "Arrival report for %s.%s Enter settlement is focused." % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), comparison_note]
 		"pause":
 			return "Game paused. Resume is focused; save, load, report, and main-menu actions follow."
 		"new_game_confirmation":
@@ -2222,6 +2250,7 @@ func _on_event_choice_pressed(event_id: String, choice_id: String) -> void:
 		"inputs": {"event_id": event_id, "choice_id": choice_id},
 	})
 	if result.ok:
+		last_conflict_outcome_text = _conflict_outcome_comparison(result)
 		arrival_pending = true
 		enter_settlement_button.visible = true
 		_populate_destination_options()
@@ -2422,6 +2451,7 @@ func _on_depart_pressed() -> void:
 		},
 	})
 	if result.ok:
+		last_conflict_outcome_text = ""
 		arrival_pending = world.pending_event.is_empty()
 		commit_departure_button.disabled = true
 		return_to_shop_button.disabled = true
@@ -2555,6 +2585,7 @@ func _on_load_pressed() -> bool:
 	_refresh_binding_labels()
 	world = candidate
 	arrival_pending = false
+	last_conflict_outcome_text = ""
 	if map_panel:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
@@ -2894,6 +2925,9 @@ func _refresh_event_card() -> void:
 	var enabled_choice_buttons: Array = []
 	var pending := world.pending_event
 	event_card.visible = not pending.is_empty()
+	if conflict_outcome_panel and conflict_outcome_label:
+		conflict_outcome_panel.visible = pending.is_empty() and arrival_pending and not last_conflict_outcome_text.is_empty()
+		conflict_outcome_label.text = last_conflict_outcome_text
 	if pending.is_empty():
 		if arrival_pending and (pause_layer == null or not pause_layer.visible):
 			_grab_focus_if_available(enter_settlement_button)
@@ -3017,6 +3051,136 @@ func _event_tactic_label(choice: Dictionary, trade_quantity: int, cargo_cost_qua
 		return "NEGOTIATE"
 	return "COMMIT"
 
+func _conflict_outcome_comparison(result: Dictionary) -> String:
+	var state_delta: Dictionary = result.get("state_delta", {})
+	var event_record: Dictionary = Dictionary(state_delta.get("event", {})).duplicate(true)
+	event_record["outcome"] = Dictionary(state_delta.get("outcome", {})).duplicate(true)
+	event_record["choice_id"] = String(state_delta.get("choice_id", ""))
+	return _conflict_outcome_comparison_from_event(event_record)
+
+func _latest_conflict_outcome_text() -> String:
+	if world == null or world.event_history.is_empty():
+		return ""
+	return _conflict_outcome_comparison_from_event(Dictionary(world.event_history.back()))
+
+func _conflict_outcome_comparison_from_event(event_record: Dictionary) -> String:
+	var outcome: Dictionary = event_record.get("outcome", {})
+	var choice_id := String(event_record.get("choice_id", ""))
+	if event_record.is_empty() or outcome.is_empty() or choice_id.is_empty():
+		return ""
+	var choice := _event_choice_from_record(event_record, choice_id)
+	if choice.is_empty():
+		return ""
+	var trade_basis: Dictionary = event_record.get("trade_basis", {})
+	var trade_mode := String(choice.get("trade_mode", "none"))
+	var trade_quantity := int(trade_basis.get("quantity", 0)) if trade_mode != "none" else 0
+	var cargo_cost: Dictionary = choice.get("cargo_cost", {})
+	var cargo_cost_quantity := int(cargo_cost.get("quantity", 0))
+	var tactic_label := _event_tactic_label(choice, trade_quantity, cargo_cost_quantity)
+	var risk := float(choice.get("cargo_risk", 0.0))
+	var risk_percent := int(round(risk * 100.0))
+	var certainty_label := "CERTAIN" if risk_percent == 0 else "%d%% RISK" % risk_percent
+	var planned_money := int(choice.get("money_reward", 0)) - int(choice.get("money_cost", 0))
+	if trade_mode == "premium_sale":
+		planned_money += int(trade_basis.get("premium_total", 0))
+	var arrival_target := String(choice.get("arrival_target", "destination"))
+	var planned_settlement_id := String(event_record.get("origin_id", "")) if arrival_target == "origin" else String(event_record.get("destination_id", ""))
+	var planned_settlement_name := String(world.settlement(planned_settlement_id).get("name", planned_settlement_id))
+	var actual_settlement_id := String(outcome.get("current_settlement", planned_settlement_id))
+	var actual_settlement_name := String(world.settlement(actual_settlement_id).get("name", actual_settlement_id))
+	var planned_cargo := _planned_conflict_cargo_text(choice, event_record, trade_quantity, cargo_cost_quantity)
+	var actual_cargo := _actual_conflict_cargo_text(Dictionary(outcome.get("cargo", {})))
+	var risk_variance := _conflict_risk_variance_text(event_record, outcome)
+	var persistent_effects := _conflict_persistent_effects_text(outcome)
+	var comparison := "PLAN VS ACTUAL\nTACTIC — %s / %s — %s\nPLAN — %s · %s · %s · %s · %s · %s.\nACTUAL — %s · %s · %s · %s · arrived at %s.\nVARIANCE — %s\nEXPECTED — %s" % [
+		tactic_label,
+		certainty_label,
+		String(choice.get("label", "Choice")),
+		_resource_delta_text(planned_money, "ashmarks"),
+		_resource_delta_text(-int(choice.get("provision_cost", 0)), "provisions"),
+		planned_cargo,
+		_resource_delta_text(int(choice.get("days", 0)), "days"),
+		"no cargo-loss roll" if risk_percent == 0 else "%d%% cargo-loss roll" % risk_percent,
+		"return to %s" % planned_settlement_name if arrival_target == "origin" else "continue to %s" % planned_settlement_name,
+		_resource_delta_text(int(outcome.get("money", 0)), "ashmarks"),
+		_resource_delta_text(int(outcome.get("provisions", 0)), "provisions"),
+		actual_cargo,
+		_resource_delta_text(int(outcome.get("day", 0)), "days"),
+		actual_settlement_name,
+		risk_variance,
+		String(choice.get("outcome", "The conflict resolves.")),
+	]
+	if not persistent_effects.is_empty():
+		comparison += "\nPERSISTENT — %s" % persistent_effects
+	return comparison
+
+func _event_choice_from_record(event_record: Dictionary, choice_id: String) -> Dictionary:
+	for raw_choice in event_record.get("choices", []):
+		if typeof(raw_choice) == TYPE_DICTIONARY and String(raw_choice.get("id", "")) == choice_id:
+			return Dictionary(raw_choice)
+	return {}
+
+func _resource_delta_text(value: int, unit: String) -> String:
+	return "%+d %s" % [value, unit] if value != 0 else "0 %s" % unit
+
+func _planned_conflict_cargo_text(choice: Dictionary, event_record: Dictionary, trade_quantity: int, cargo_cost_quantity: int) -> String:
+	if trade_quantity > 0:
+		var trade_basis: Dictionary = event_record.get("trade_basis", {})
+		return "-%d %s planned" % [trade_quantity, String(trade_basis.get("good_id", "cargo")).capitalize()]
+	var material_quantity := int(choice.get("material_quantity", 0))
+	if material_quantity > 0:
+		return "-%d repair materials planned" % material_quantity
+	if cargo_cost_quantity > 0:
+		return "-%d %s planned" % [cargo_cost_quantity, String(choice.get("cargo_cost", {}).get("good_id", "cargo")).capitalize()]
+	return "no planned cargo spend"
+
+func _actual_conflict_cargo_text(cargo_delta: Dictionary) -> String:
+	var parts: Array[String] = []
+	var good_ids: Array = cargo_delta.keys()
+	good_ids.sort()
+	for good_id_value in good_ids:
+		var good_id := String(good_id_value)
+		if good_id == "weight" or int(cargo_delta.get(good_id_value, 0)) == 0:
+			continue
+		parts.append("%s %+d" % [good_id.capitalize(), int(cargo_delta.get(good_id_value, 0))])
+	return "cargo unchanged" if parts.is_empty() else ", ".join(parts)
+
+func _conflict_risk_variance_text(event_record: Dictionary, outcome: Dictionary) -> String:
+	var risk := float(outcome.get("cargo_risk", 0.0))
+	if risk <= 0.0:
+		return "Matched the disclosed plan; no cargo-loss roll occurred."
+	var roll := float(outcome.get("resolution_roll", 1.0))
+	var roll_percent := int(round(roll * 100.0))
+	var risk_percent := int(round(risk * 100.0))
+	var loss_basis: Dictionary = event_record.get("loss_basis", {})
+	var loss_good_id := String(loss_basis.get("loss_good_id", ""))
+	if roll < risk:
+		return "Risk realized: the %d%% roll was below %d%%; 1 %s was exposed." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo unit"]
+	return "Risk avoided: the %d%% roll cleared the %d%% threshold; the exposed %s remained intact." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo"]
+
+func _conflict_persistent_effects_text(outcome: Dictionary) -> String:
+	var parts: Array[String] = []
+	var route_condition: Dictionary = outcome.get("route_condition", {})
+	if not route_condition.is_empty():
+		parts.append(String(route_condition.get("label", "Route condition changed")))
+	var resilience: Dictionary = outcome.get("settlement_resilience", {})
+	if not resilience.is_empty():
+		parts.append("settlement resilience %d/10" % int(resilience.get("after", 0)))
+	var information_id := String(outcome.get("information_id", ""))
+	if not information_id.is_empty():
+		parts.append("information: %s" % information_id.replace("_", " "))
+	var reputation: Dictionary = outcome.get("reputation", {})
+	var faction_ids: Array = reputation.keys()
+	faction_ids.sort()
+	for faction_id_value in faction_ids:
+		var faction_id := String(faction_id_value)
+		var reputation_result: Dictionary = reputation.get(faction_id_value, {})
+		parts.append("%s standing %+d to %d" % [faction_id.capitalize(), int(reputation_result.get("delta", 0)), int(reputation_result.get("after", 0))])
+	var contracts: Array = outcome.get("contract_resolutions", [])
+	if not contracts.is_empty():
+		parts.append("%d contract result%s" % [contracts.size(), "" if contracts.size() == 1 else "s"])
+	return "; ".join(parts)
+
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
 	for contract_id in world.active_contracts.keys():
 		var contract := world.active_contract(String(contract_id))
@@ -3076,6 +3240,10 @@ func _refresh_ui() -> void:
 			ending_label.text = "CAMPAIGN CONCLUSION\n%s\n%s\n\nThis outcome is recorded in the save. You may continue trading to inspect the resulting region." % [String(ending.get("title", world.ending_id)), world.ending_summary]
 	if campaign_outlook_label:
 		campaign_outlook_label.text = _campaign_outlook_text()
+	if recent_conflict_panel and recent_conflict_label:
+		var recent_conflict_text := _latest_conflict_outcome_text()
+		recent_conflict_panel.visible = not recent_conflict_text.is_empty()
+		recent_conflict_label.text = "SINCE YOUR LAST VISIT — LAST CONFLICT\n" + recent_conflict_text if not recent_conflict_text.is_empty() else ""
 	if diagnostics_label:
 		var last_command := "none"
 		if not world.command_history.is_empty():

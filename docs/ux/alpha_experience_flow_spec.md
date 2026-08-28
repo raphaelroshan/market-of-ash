@@ -141,6 +141,8 @@ Travel must be short enough to respect the player’s time and rich enough to ma
 
 For the alpha, confrontations are presented as a **Caravan Conflict Simulation** rather than a separate combat mode. The card names the maximum disclosed cargo-loss chance and exposed asset, counts currently usable tactics, and gives every response a tactic type, certainty or risk roll, exact costs, travel result, and expected consequence. There is no hidden health damage or real-time combat state.
 
+After resolution, the same rail becomes a **Plan vs Actual** report. It compares the selected tactic's frozen resource, cargo, time, risk, and destination commitment with the command result, names whether the risk roll was avoided or realized, and lists any persistent route, settlement, information, contract, or faction effect before the player enters the settlement. The latest report remains available in the destination shop and is reconstructed from saved event history after loading.
+
 ### 4.5 Arrival and Reinvestment
 
 Arrival should take less than five seconds to comprehend. The player sees: **where they are, what survived, what they gained/lost, what has changed locally, and the primary next action**. Pressing **Enter Settlement** returns to the central shop. A small expandable route report can remain available for players who want exact deltas.
@@ -155,7 +157,7 @@ The first run is guidance, not a script. The shop highlights the Water price car
 
 ### 5.2 Returning-player loop
 
-A returning player should resume in the settlement shop with a quiet **Since your last visit** strip: regional crisis change, route condition change, local market response, one active contract or rumor, and an autosave time. They should be one click from either inspecting the selected market good or opening the departure desk.
+A returning player resumes in the settlement shop. The first implemented **Since your last visit** component is a saved-history conflict report that preserves the last tactic, disclosed plan, actual deltas, risk result, and persistent world effects. Regional crisis change, local market response, one active contract or rumor, and autosave time remain later extensions of the same strip. The player stays one click from either inspecting the selected market good or opening the departure desk.
 
 ### 5.3 Contract flow
 
