@@ -111,6 +111,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 - `tests/test_economy.gd`: content loading, prices, crisis modifiers, capacity, route forecasts, command success/failure/history, route topology, travel resources, save normalization, and migration.
 - `tests/test_map_ui.gd`: main-menu start, non-mutating forecast/navigation, guided purchase command use, Shop → Departure Desk transition, legal route filtering, forecast presentation, route geometry, and predictable keyboard/controller focus across screen and event transitions.
+- `tests/test_controller_flow.gd`: dispatches joypad A/B/Menu/D-pad events through Godot to verify Main Menu traversal, controller quantity adjustment, Shop → Departure, Pause/Resume, safe Back, and non-mutating reversible navigation.
 - `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and canonical save/load restoration.
 - `tools/simulate_trade_policies.gd`: read-only 100-seed opening-policy simulation through the production command boundary.
 
@@ -291,7 +292,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Main Menu, Shop, Departure, Pause, and route-event choices use explicit cyclic focus order. Dynamic Shop and event cycles skip disabled actions while leaving their reasons visible.
 - Selectors and utility actions maintain a 44-logical-pixel minimum target; primary trade, journey, binding, and event actions remain larger where labels need wrapping.
 - Web builds mirror the active screen, destructive confirmations, and their primary or safe focused action into a polite ARIA live region and descriptive canvas label; the diagnostic payload contains only non-personal state used by browser verification.
-- Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. The Main Menu explains both schemes.
+- Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. Explicit vertical focus neighbors prevent D-pad traps, and controller Left/Right changes focused quantities. The Main Menu explains both schemes.
 - The Main Menu can independently remap keyboard keys and controller buttons for Accept, Back, and Pause, rejects modifier/reserved/conflicting inputs, reserves D-pad directions for focus navigation, persists mappings outside campaign saves, and restores both input families in one action.
 - If the separate presentation-settings file cannot be written, the chosen option remains active for the current session and the Main Menu shows an explicit persistence warning.
 - P/controller Menu pauses from any gameplay state; Escape/B pauses where it cannot safely act as Back. The modal preserves pending events and restores the previous focus on Resume.

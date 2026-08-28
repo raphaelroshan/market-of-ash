@@ -627,7 +627,7 @@ func _refresh_binding_labels() -> void:
 		if button:
 			button.text = "Press a key or controller button…" if remapping_action == action_name else "%s: %s · Pad %s" % [String(ACTION_LABELS.get(action_name, action_name)), _keyboard_binding_text(action_name), _controller_binding_text(action_name)]
 	if controls_hint_label:
-		controls_hint_label.text = "Controls: arrows/Tab or controller D-pad/stick move focus. Accept: %s / %s. Back: %s / %s. Pause: %s / %s." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept"), _keyboard_binding_text("ui_cancel"), _controller_binding_text("ui_cancel"), _keyboard_binding_text("ui_pause"), _controller_binding_text("ui_pause")]
+		controls_hint_label.text = "Controls: arrows/Tab or controller D-pad/stick move focus; Left/Right changes quantity. Accept: %s / %s. Back: %s / %s. Pause: %s / %s." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept"), _keyboard_binding_text("ui_cancel"), _controller_binding_text("ui_cancel"), _keyboard_binding_text("ui_pause"), _controller_binding_text("ui_pause")]
 	if menu_layer != null:
 		_publish_web_ui_state()
 
@@ -769,6 +769,7 @@ func _build_shop() -> void:
 	shop_quantity.min_value = 1
 	shop_quantity.max_value = 12
 	shop_quantity.value = PLAYTEST_QUANTITY
+	shop_quantity.tooltip_text = "Controller: Left/Right changes quantity."
 	market.add_child(_labeled_control("Quantity", shop_quantity))
 	shop_market_preview_label = _forecast_label()
 	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
@@ -1024,6 +1025,7 @@ func _build_ui() -> void:
 	cargo_quantity.min_value = 1
 	cargo_quantity.max_value = 12
 	cargo_quantity.value = PLAYTEST_QUANTITY
+	cargo_quantity.tooltip_text = "Controller: Left/Right changes forecast quantity."
 	controls.add_child(_labeled_control("Forecast quantity", cargo_quantity))
 
 	departure_load_label = Label.new()
@@ -1191,6 +1193,8 @@ func _link_focus_cycle(controls: Array) -> void:
 		var previous_control: Control = controls[(index - 1 + controls.size()) % controls.size()]
 		control.focus_next = control.get_path_to(next_control)
 		control.focus_previous = control.get_path_to(previous_control)
+		control.focus_neighbor_bottom = control.get_path_to(next_control)
+		control.focus_neighbor_top = control.get_path_to(previous_control)
 
 func _populate_destination_options() -> void:
 	if destination_option == null:
@@ -1326,6 +1330,8 @@ func _on_return_to_shop_pressed() -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
 		last_input_device = "controller"
+		if event is InputEventJoypadButton and event.pressed and remapping_action.is_empty() and _adjust_focused_quantity(event.button_index):
+			get_viewport().set_input_as_handled()
 	elif event is InputEventKey:
 		last_input_device = "keyboard"
 	elif event is InputEventMouseButton or event is InputEventMouseMotion:
@@ -1352,6 +1358,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_cancel") and menu_layer != null and not menu_layer.visible:
 		_open_pause()
 		get_viewport().set_input_as_handled()
+
+func _adjust_focused_quantity(button_index: int) -> bool:
+	var direction := -1 if button_index == JOY_BUTTON_DPAD_LEFT else 1 if button_index == JOY_BUTTON_DPAD_RIGHT else 0
+	if direction == 0:
+		return false
+	var focused := get_viewport().gui_get_focus_owner()
+	for quantity_control in [shop_quantity, cargo_quantity]:
+		if quantity_control != null and quantity_control.editable and focused == quantity_control.get_line_edit():
+			quantity_control.value += direction * quantity_control.step
+			return true
+	return false
 
 func _open_pause() -> void:
 	if pause_layer == null or menu_layer.visible:
