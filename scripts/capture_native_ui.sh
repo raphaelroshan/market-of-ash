@@ -6,7 +6,7 @@ OUTPUT_DIR="${1:-$ROOT/artifacts/native-render}"
 MARKET_GODOT_BIN="${MARKET_GODOT_BIN:-godot}"
 
 mkdir -p "$OUTPUT_DIR"
-for geometry in 960x540 1280x720; do
+for geometry in 960x540 1280x720 1920x1080; do
   width="${geometry%x*}"
   height="${geometry#*x}"
   "$MARKET_GODOT_BIN" \

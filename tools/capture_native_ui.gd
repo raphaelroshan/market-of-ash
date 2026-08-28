@@ -84,6 +84,8 @@ func _run() -> void:
 	manifest_file.store_string(JSON.stringify({
 		"manifest_version": 1,
 		"platform": OS.get_name(),
+		"display_scale": ui._report_display_scale(),
+		"reported_viewport": {"width": ui._report_viewport_size().x, "height": ui._report_viewport_size().y},
 		"required_screens": CAPTURE_SCREENS,
 		"captures": captures,
 	}, "  "))

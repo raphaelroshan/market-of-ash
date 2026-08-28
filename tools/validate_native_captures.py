@@ -7,7 +7,7 @@ import argparse
 import json
 from pathlib import Path
 
-from capture_validation import VIEWPORTS, png_dimensions, require_distinct_screen, validate_capture_matrix
+from capture_validation import png_dimensions, require_distinct_screen, validate_capture_matrix
 
 
 REQUIRED_NATIVE_SCREENS = {
@@ -20,6 +20,7 @@ REQUIRED_NATIVE_SCREENS = {
     "pause_large_text",
     "departure_desk_large_text",
 }
+NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1920, 1080))
 
 
 def main() -> int:
@@ -27,17 +28,25 @@ def main() -> int:
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     captures: list[dict[str, object]] = []
-    for width, height in VIEWPORTS:
+    for width, height in NATIVE_VIEWPORTS:
         manifest_path = args.output_dir / f"native-capture-{width}x{height}.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("manifest_version") != 1:
             raise AssertionError(f"{manifest_path.name}: unsupported manifest version")
+        if float(manifest.get("display_scale", 0.0)) <= 0.0:
+            raise AssertionError(f"{manifest_path.name}: missing display scale")
+        if manifest.get("reported_viewport") != {"width": width, "height": height}:
+            raise AssertionError(f"{manifest_path.name}: reported viewport does not match requested size")
         manifest_captures = manifest.get("captures")
         if not isinstance(manifest_captures, list):
             raise AssertionError(f"{manifest_path.name}: captures must be a list")
         captures.extend(manifest_captures)
 
-    validate_capture_matrix(captures, required_screens=REQUIRED_NATIVE_SCREENS)
+    validate_capture_matrix(
+        captures,
+        required_screens=REQUIRED_NATIVE_SCREENS,
+        viewports=NATIVE_VIEWPORTS,
+    )
     by_viewport: dict[tuple[int, int], dict[str, Path]] = {}
     output_root = args.output_dir.resolve()
     for capture in captures:

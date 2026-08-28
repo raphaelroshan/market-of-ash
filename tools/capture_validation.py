@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 import struct
 import zlib
 from pathlib import Path
@@ -34,6 +35,7 @@ def png_dimensions(path: Path) -> tuple[int, int]:
     return struct.unpack(">II", data[16:24])
 
 
+@lru_cache(maxsize=None)
 def png_rgb(path: Path) -> tuple[tuple[int, int], bytes]:
     """Decode non-interlaced 8-bit RGB/RGBA screenshots without Pillow."""
     data = path.read_bytes()
