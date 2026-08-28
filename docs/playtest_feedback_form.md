@@ -4,7 +4,7 @@ Do not collect names, email addresses, account IDs, or other unnecessary persona
 
 ## Build context
 
-Use **Export playtest report** from the Shop or Pause menu and attach the resulting JSON when practical. Desktop builds write the named local file; Web builds trigger a browser download. The report contains no personal identifiers and records the build, platform, broad last-input type, viewport and display scale, presentation settings, session duration, and observed time to first trade automatically.
+Use **Export playtest report** from the Shop or Pause menu and attach the resulting JSON when practical. Desktop builds write the named local file; Web builds trigger a browser download. The report contains no personal or controller identifiers and records the build, platform, broad last-input type, active key/button mappings, viewport and display scale, presentation settings, session duration, and observed time to first trade automatically.
 
 - Build commit/version:
 - Platform and OS version:

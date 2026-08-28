@@ -587,6 +587,17 @@ func _controller_binding_text(action_name: String) -> String:
 		labels.append(_controller_button_text(int(button_index)))
 	return " / ".join(labels) if not labels.is_empty() else "Unbound"
 
+func _input_bindings_report() -> Dictionary:
+	var report: Dictionary = {}
+	for action_name in REMAPPABLE_ACTIONS:
+		report[action_name] = {
+			"keyboard_codes": _keyboard_binding_codes(action_name),
+			"keyboard_label": _keyboard_binding_text(action_name),
+			"controller_buttons": _controller_binding_codes(action_name),
+			"controller_label": _controller_binding_text(action_name),
+		}
+	return report
+
 func _refresh_binding_labels() -> void:
 	for action_name in REMAPPABLE_ACTIONS:
 		var button: Button = binding_buttons.get(action_name)
@@ -1338,7 +1349,7 @@ func _on_pause_main_menu_pressed() -> void:
 func _on_export_report_pressed() -> void:
 	var viewport_size := _report_viewport_size()
 	var report := {
-		"report_version": 4,
+		"report_version": 5,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
@@ -1346,6 +1357,7 @@ func _on_export_report_pressed() -> void:
 		"build_run": String(ProjectSettings.get_setting("market_of_ash/build_run", "local")),
 		"platform": OS.get_name(),
 		"input_device": last_input_device,
+		"input_bindings": _input_bindings_report(),
 		"viewport": {"width": int(viewport_size.x), "height": int(viewport_size.y)},
 		"display_scale": _report_display_scale(),
 		"presentation": {"large_text": large_text_enabled, "reduced_motion": reduce_motion_enabled, "interface_sounds": interface_sounds_enabled},

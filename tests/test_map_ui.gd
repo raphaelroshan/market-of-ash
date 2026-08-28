@@ -381,9 +381,14 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 4 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 5 and report.get("game_version", "") == "0.9.0-alpha-roadmap" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
+	var reported_input_bindings: Dictionary = report.get("input_bindings", {})
+	var reported_accept_binding: Dictionary = reported_input_bindings.get("ui_accept", {})
+	var reported_accept_keys: Array = reported_accept_binding.get("keyboard_codes", [])
+	var reported_accept_buttons: Array = reported_accept_binding.get("controller_buttons", [])
+	_expect(reported_input_bindings.has("ui_accept") and not reported_accept_keys.is_empty() and int(reported_accept_keys[0]) == KEY_ENTER and not reported_accept_buttons.is_empty() and int(reported_accept_buttons[0]) == JOY_BUTTON_A and not reported_accept_binding.has("device"), "playtest report should capture reproducible input mappings without controller identity: %s" % JSON.stringify(reported_input_bindings))
 	var expected_report_viewport: Vector2i = ui._report_viewport_size()
 	_expect(int(report.get("viewport", {}).get("width", 0)) == expected_report_viewport.x and int(report.get("viewport", {}).get("height", 0)) == expected_report_viewport.y and expected_report_viewport.x > 0 and expected_report_viewport.y > 0, "playtest report should capture the runtime window rather than an empty viewport")
 	_expect(float(report.get("display_scale", 0.0)) > 0.0, "playtest report should capture browser pixel ratio or desktop display scale")
