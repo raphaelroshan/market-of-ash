@@ -153,7 +153,7 @@ The first arrival after a route incident must distinguish planning failure from 
 
 ### 5.1 First-run learning path
 
-The first run is guidance, not a script. The shop highlights the Water price card, explains the optional 2-water example, and calls out **Plan Departure** only after the player has inspected or made a trade. The departure desk begins with Reedwatch and Old Road selected, but the player can freely compare Brine Cross/Toll Road or return to change cargo. The guidance completes only when a player has seen a forecast, bought or chosen not to buy, committed a route, and reached an arrival state.
+The first run is guidance, not a script. The Main Menu exposes three deterministic entry paths into the same canonical campaign: **Guided Trade** selects the two-Water Reedwatch lesson, **Conflict & Recovery** selects two Medicine and the Brine Cross Toll Road confrontation, and **Contract & Crew** selects the four-Water relief plan while leaving contract acceptance and recruitment to the player. No path grants cargo or bypasses a command. The shop calls out **Plan Departure** only after the player has inspected or made a trade, and every selection remains editable. Each path completes only when its real trade, route, event, or commitment evidence exists.
 
 ### 5.2 Returning-player loop
 

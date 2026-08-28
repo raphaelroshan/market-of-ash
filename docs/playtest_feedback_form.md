@@ -12,6 +12,7 @@ Use **Export playtest report** from the Shop or Pause menu and attach the result
 - Display resolution and OS scale:
 - Seed shown in Diagnostics:
 - Approximate play time:
+- Starting path: Guided Trade / Conflict & Recovery / Contract & Crew
 
 ## Run record
 

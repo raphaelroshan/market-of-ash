@@ -10,6 +10,38 @@ const PLAYTEST_GOOD := "water"
 const PLAYTEST_QUANTITY := 2
 const PLAYTEST_DESTINATION := "reedwatch"
 const PLAYTEST_ROUTE := "old_road"
+const PLAYTEST_PATH_GUIDED := "guided_trade"
+const PLAYTEST_PATH_CONFLICT := "conflict_recovery"
+const PLAYTEST_PATH_CAMPAIGN := "contract_crew"
+const PLAYTEST_PATHS := {
+	PLAYTEST_PATH_GUIDED: {
+		"label": "Guided Trade",
+		"good_id": "water",
+		"quantity": 2,
+		"destination_id": "reedwatch",
+		"route_id": "old_road",
+		"banner": "GUIDED TRADE — Learn price, cargo, route, arrival, and sale with the optional Water run.",
+		"opening": "Ashgate market is open. Inspect Water, buy 2 when ready, then compare routes to Reedwatch.",
+	},
+	PLAYTEST_PATH_CONFLICT: {
+		"label": "Conflict & Recovery",
+		"good_id": "medicine",
+		"quantity": 2,
+		"destination_id": "brine_cross",
+		"route_id": "toll_road",
+		"banner": "CONFLICT & RECOVERY — Prepare Medicine for the Toll Road, resolve a caravan confrontation, and review the outcome.",
+		"opening": "Ashgate market is open. Buy 2 Medicine, then take the Toll Road to Brine Cross to test conflict choices and recovery.",
+	},
+	PLAYTEST_PATH_CAMPAIGN: {
+		"label": "Contract & Crew",
+		"good_id": "water",
+		"quantity": 4,
+		"destination_id": "reedwatch",
+		"route_id": "old_road",
+		"banner": "CONTRACT & CREW — Accept the Reedwatch relief work, recruit help if desired, then prepare its four-Water load.",
+		"opening": "Ashgate market is open. Review the relief contract and crew offers before buying 4 Water for Reedwatch.",
+	},
+}
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
@@ -45,6 +77,8 @@ var pause_main_menu_button: Button
 var pause_summary_label: Label
 var focus_before_pause: Control
 var start_game_button: Button
+var start_conflict_button: Button
+var start_campaign_button: Button
 var continue_game_button: Button
 var quit_button: Button
 var menu_save_status_label: Label
@@ -132,6 +166,8 @@ var audio_player: AudioStreamPlayer
 var audio_cues: Dictionary = {}
 var run_started_msec := 0
 var first_trade_elapsed_msec := -1
+var active_playtest_path_id := PLAYTEST_PATH_GUIDED
+var pending_new_game_path_id := PLAYTEST_PATH_GUIDED
 var last_input_device := "unknown"
 var map_panel
 var web_accessibility_callback: Variant
@@ -197,7 +233,7 @@ func _build_main_menu() -> void:
 	subtitle.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(subtitle)
 	var preset := Label.new()
-	preset.text = "QUICK PLAYTEST\nAshgate · Day 1 · 120 ashmarks · 12 provisions · empty cargo\nSuggested first move: buy 2 water, then compare the profitable but exposed Old Road to Reedwatch."
+	preset.text = "QUICK PLAYTEST PATHS\nEvery path begins the same canonical Ashgate campaign. Paths only change the opening selections and guidance; every action still uses the normal game rules."
 	preset.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	preset.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
@@ -261,10 +297,26 @@ func _build_main_menu() -> void:
 	binding_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	content.add_child(binding_status_label)
 	start_game_button = Button.new()
-	start_game_button.text = "Start Game"
-	start_game_button.custom_minimum_size = Vector2(0, 48)
-	start_game_button.pressed.connect(_on_start_game_requested)
+	start_game_button.text = "Start Guided Trade — Water to Reedwatch"
+	start_game_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	start_game_button.custom_minimum_size = Vector2(0, 56)
+	start_game_button.tooltip_text = "Start the canonical campaign with the two-Water teaching trade selected."
+	start_game_button.pressed.connect(_on_start_game_requested.bind(PLAYTEST_PATH_GUIDED))
 	content.add_child(start_game_button)
+	start_conflict_button = Button.new()
+	start_conflict_button.text = "Start Conflict & Recovery — Medicine on the Toll Road"
+	start_conflict_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	start_conflict_button.custom_minimum_size = Vector2(0, 56)
+	start_conflict_button.tooltip_text = "Start the same campaign with a deterministic Gatekeeper conflict route selected."
+	start_conflict_button.pressed.connect(_on_start_game_requested.bind(PLAYTEST_PATH_CONFLICT))
+	content.add_child(start_conflict_button)
+	start_campaign_button = Button.new()
+	start_campaign_button.text = "Start Contract & Crew — Reedwatch Relief"
+	start_campaign_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	start_campaign_button.custom_minimum_size = Vector2(0, 56)
+	start_campaign_button.tooltip_text = "Start the same campaign with the relief-contract load selected and local crew offers visible."
+	start_campaign_button.pressed.connect(_on_start_game_requested.bind(PLAYTEST_PATH_CAMPAIGN))
+	content.add_child(start_campaign_button)
 	continue_game_button = Button.new()
 	continue_game_button.text = "Continue saved game"
 	continue_game_button.custom_minimum_size = Vector2(0, 44)
@@ -287,8 +339,10 @@ func _build_main_menu() -> void:
 	quit_button.pressed.connect(_on_quit_pressed)
 	content.add_child(quit_button)
 	content.move_child(start_game_button, 4)
-	content.move_child(continue_game_button, 5)
-	content.move_child(menu_save_status_label, 6)
+	content.move_child(start_conflict_button, 5)
+	content.move_child(start_campaign_button, 6)
+	content.move_child(continue_game_button, 7)
+	content.move_child(menu_save_status_label, 8)
 	_refresh_binding_labels()
 
 func _on_quit_pressed() -> void:
@@ -366,6 +420,19 @@ func _show_main_menu() -> void:
 	_publish_web_ui_state()
 	_queue_web_ui_state_after_layout()
 
+func _refresh_start_button_labels(requires_confirmation: bool) -> void:
+	var prefix := "New" if requires_confirmation else "Start"
+	var confirmation_note := " Existing campaign files remain until the new run's first successful autosave." if requires_confirmation else ""
+	if start_game_button:
+		start_game_button.text = "%s Guided Trade — Water to Reedwatch" % prefix
+		start_game_button.tooltip_text = "Begin the canonical campaign with the two-Water teaching trade selected.%s" % confirmation_note
+	if start_conflict_button:
+		start_conflict_button.text = "%s Conflict & Recovery — Medicine on the Toll Road" % prefix
+		start_conflict_button.tooltip_text = "Begin the same campaign with a deterministic Gatekeeper conflict route selected.%s" % confirmation_note
+	if start_campaign_button:
+		start_campaign_button.text = "%s Contract & Crew — Reedwatch Relief" % prefix
+		start_campaign_button.tooltip_text = "Begin the same campaign with the relief-contract load selected and local crew offers visible.%s" % confirmation_note
+
 func _refresh_continue_availability() -> void:
 	if continue_game_button == null:
 		return
@@ -377,22 +444,18 @@ func _refresh_continue_availability() -> void:
 		backup_preview = bool(preview.get("ok", false))
 	continue_game_button.disabled = not bool(preview.get("ok", false))
 	if continue_game_button.disabled:
-		if start_game_button:
-			var existing_files := FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path)
-			start_game_button.text = "Start new game" if existing_files else "Start Game"
-			start_game_button.tooltip_text = "Requires confirmation because campaign save files already exist." if existing_files else "Begin the deterministic Ashgate day-one campaign."
+		var existing_files := FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path)
+		_refresh_start_button_labels(existing_files)
 		continue_game_button.tooltip_text = "No valid saved campaign is available."
 		if FileAccess.file_exists(save_path) or FileAccess.file_exists(backup_path):
-			save_status_text = "SAVE — Existing files could not be validated. Start Game remains safe."
+			save_status_text = "SAVE — Existing files could not be validated. New campaign paths remain available with confirmation."
 		if menu_save_status_label:
 			menu_save_status_label.text = save_status_text
 		_link_main_menu_focus_cycle()
 		return
 	var saved_world: AshWorldState = preview.world
 	var source_text := "backup" if backup_preview else "primary"
-	if start_game_button:
-		start_game_button.text = "Start new game"
-		start_game_button.tooltip_text = "Requires confirmation because a validated saved campaign is available."
+	_refresh_start_button_labels(true)
 	save_status_text = "CONTINUE — Day %d · %s · %d ashmarks · hold %d/%d · %s save" % [saved_world.day, String(saved_world.settlement(saved_world.current_settlement).get("name", saved_world.current_settlement)), saved_world.money, int(saved_world.cargo.get("weight", 0)), saved_world.cargo_capacity, source_text]
 	continue_game_button.tooltip_text = "Validate and continue this saved campaign."
 	if menu_save_status_label:
@@ -1236,7 +1299,7 @@ func _wrapped_action_button(minimum_height: float = 42.0) -> Button:
 func _link_main_menu_focus_cycle() -> void:
 	if start_game_button == null or continue_game_button == null:
 		return
-	var controls: Array = [start_game_button]
+	var controls: Array = [start_game_button, start_conflict_button, start_campaign_button]
 	if not continue_game_button.disabled:
 		controls.append(continue_game_button)
 	controls.append(reduce_motion_checkbox)
@@ -1310,7 +1373,30 @@ func _selected_id(option: OptionButton) -> String:
 		return ""
 	return String(option.get_item_metadata(option.selected))
 
-func _on_start_game_pressed() -> void:
+func _playtest_path(path_id: String) -> Dictionary:
+	return Dictionary(PLAYTEST_PATHS.get(path_id, PLAYTEST_PATHS[PLAYTEST_PATH_GUIDED]))
+
+func _apply_playtest_path_defaults(path_id: String) -> void:
+	var path := _playtest_path(path_id)
+	active_playtest_path_id = String(path.get("id", path_id))
+	if not PLAYTEST_PATHS.has(active_playtest_path_id):
+		active_playtest_path_id = PLAYTEST_PATH_GUIDED
+		path = _playtest_path(active_playtest_path_id)
+	var destination_id := String(path.get("destination_id", PLAYTEST_DESTINATION))
+	var route_id := String(path.get("route_id", PLAYTEST_ROUTE))
+	var good_id := String(path.get("good_id", PLAYTEST_GOOD))
+	var quantity := int(path.get("quantity", PLAYTEST_QUANTITY))
+	_select_option_by_id(destination_option, destination_id)
+	_populate_route_options()
+	_select_option_by_id(route_option, route_id)
+	_select_option_by_id(cargo_good_option, good_id)
+	_select_option_by_id(shop_good_option, good_id)
+	cargo_quantity.value = quantity
+	shop_quantity.value = quantity
+	playtest_banner.text = String(path.get("banner", "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."))
+	_set_event(String(path.get("opening", "Ashgate market is open. Inspect local prices, load cargo, then plan a route when you are ready.")))
+
+func _on_start_game_pressed(path_id: String = PLAYTEST_PATH_GUIDED) -> void:
 	remapping_action = ""
 	if binding_status_label:
 		binding_status_label.text = ""
@@ -1323,26 +1409,20 @@ func _on_start_game_pressed() -> void:
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
 		map_panel.reset_travel(world.current_settlement)
 	_populate_destination_options()
-	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
 	_populate_route_options()
-	_select_option_by_id(route_option, PLAYTEST_ROUTE)
-	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
-	_select_option_by_id(shop_good_option, PLAYTEST_GOOD)
-	cargo_quantity.value = PLAYTEST_QUANTITY
-	shop_quantity.value = PLAYTEST_QUANTITY
+	_apply_playtest_path_defaults(path_id)
 	guided_test_button.disabled = false
 	arrival_pending = false
 	enter_settlement_button.visible = false
 	commit_departure_button.disabled = false
 	return_to_shop_button.disabled = false
-	playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
-	_set_event("Ashgate market is open. Inspect local prices, load cargo, then plan a route when you are ready.")
 	_show_shop()
 
-func _on_start_game_requested() -> void:
+func _on_start_game_requested(path_id: String = PLAYTEST_PATH_GUIDED) -> void:
+	pending_new_game_path_id = path_id if PLAYTEST_PATHS.has(path_id) else PLAYTEST_PATH_GUIDED
 	var save_files_exist := FileAccess.file_exists(save_path) or FileAccess.file_exists(save_path + ".bak")
 	if not save_files_exist:
-		_on_start_game_pressed()
+		_on_start_game_pressed(pending_new_game_path_id)
 		return
 	if new_game_confirmation_dialog == null:
 		new_game_confirmation_dialog = ConfirmationDialog.new()
@@ -1350,7 +1430,7 @@ func _on_start_game_requested() -> void:
 		new_game_confirmation_dialog.dialog_text = "Campaign save files already exist. They remain untouched until the new run's first successful autosave, which may replace them."
 		new_game_confirmation_dialog.ok_button_text = "Start new campaign"
 		new_game_confirmation_dialog.cancel_button_text = "Keep saved campaign"
-		new_game_confirmation_dialog.confirmed.connect(_on_start_game_pressed)
+		new_game_confirmation_dialog.confirmed.connect(_on_confirm_start_game)
 		new_game_confirmation_dialog.canceled.connect(_on_confirmation_closed)
 		add_child(new_game_confirmation_dialog)
 	new_game_confirmation_dialog.popup_centered(Vector2i(560, 190))
@@ -1358,6 +1438,9 @@ func _on_start_game_requested() -> void:
 	call_deferred("_configure_confirmation_targets", new_game_confirmation_dialog)
 	new_game_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
 	call_deferred("_publish_web_ui_state")
+
+func _on_confirm_start_game() -> void:
+	_on_start_game_pressed(pending_new_game_path_id)
 
 func _configure_confirmation_targets(dialog: ConfirmationDialog) -> void:
 	if dialog == null or not is_instance_valid(dialog):
@@ -1906,6 +1989,8 @@ func _set_web_accessibility_checkbox(control: CheckBox, requested_value: String)
 func _web_accessibility_action_control(action_id: String) -> Variant:
 	match action_id:
 		"start_game": return start_game_button
+		"start_conflict": return start_conflict_button
+		"start_campaign": return start_campaign_button
 		"continue_game": return continue_game_button
 		"shop_buy": return shop_buy_button
 		"shop_sell": return shop_sell_button
@@ -2020,6 +2105,8 @@ func _web_accessibility_actions() -> Array:
 	match _current_ui_state_id():
 		"main_menu":
 			_append_web_accessibility_action(actions, "start_game", start_game_button)
+			_append_web_accessibility_action(actions, "start_conflict", start_conflict_button)
+			_append_web_accessibility_action(actions, "start_campaign", start_campaign_button)
 			_append_web_accessibility_action(actions, "continue_game", continue_game_button)
 			for action_name in REMAPPABLE_ACTIONS:
 				_append_web_accessibility_action(actions, "rebind_%s" % action_name, binding_buttons.get(action_name))
@@ -2061,7 +2148,7 @@ func _web_accessibility_actions() -> Array:
 func _web_accessibility_order(actions: Array, controls: Array) -> Array:
 	var order: Array = []
 	if _current_ui_state_id() == "main_menu":
-		for action_id in ["start_game", "continue_game"]:
+		for action_id in ["start_game", "start_conflict", "start_campaign", "continue_game"]:
 			for action in actions:
 				if action.get("id") == action_id:
 					order.append("action:%s" % action_id)
@@ -2070,7 +2157,7 @@ func _web_accessibility_order(actions: Array, controls: Array) -> Array:
 			order.append("control:%s" % String(control.get("id", "")))
 		for action in actions:
 			var action_id := String(action.get("id", ""))
-			if action_id not in ["start_game", "continue_game"]:
+			if action_id not in ["start_game", "start_conflict", "start_campaign", "continue_game"]:
 				order.append("action:%s" % action_id)
 		return order
 	for control in controls:
@@ -2091,7 +2178,7 @@ func _web_accessibility_announcement() -> String:
 		"main_menu":
 			if not remapping_action.is_empty() and binding_status_label != null:
 				return "Market of Ash input remapping. %s" % binding_status_label.text
-			var menu_announcement := "Market of Ash main menu. Start Game is focused. Accept uses %s or controller %s. Accessibility and input settings follow the launch actions." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
+			var menu_announcement := "Market of Ash main menu. Start Guided Trade is focused, followed by Conflict and Recovery, Contract and Crew, and Continue. Every new path uses the same canonical campaign rules. Accept uses %s or controller %s. Accessibility and input settings follow the launch actions." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
 			if binding_status_label != null and not binding_status_label.text.is_empty():
 				menu_announcement += " %s" % binding_status_label.text
 			return menu_announcement
@@ -2128,6 +2215,8 @@ func _web_ui_state() -> Dictionary:
 		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
 		"targets": {
 			"start_game": _web_control_rect(start_game_button),
+			"start_conflict": _web_control_rect(start_conflict_button),
+			"start_campaign": _web_control_rect(start_campaign_button),
 			"large_text": _web_control_rect(large_text_checkbox),
 			"plan_departure": _web_control_rect(plan_departure_button),
 			"return_to_shop": _web_control_rect(return_to_shop_button),
@@ -2142,6 +2231,7 @@ func _web_ui_state() -> Dictionary:
 		"large_text": large_text_enabled,
 		"reduced_motion": reduce_motion_enabled,
 		"interface_sounds": interface_sounds_enabled,
+		"playtest_path_id": active_playtest_path_id,
 		"remapping_action": remapping_action,
 		"binding_status": binding_status_label.text if binding_status_label != null else "",
 		"input_bindings": _input_bindings_report(),
@@ -2552,9 +2642,7 @@ func _write_save(status_prefix: String) -> bool:
 	if continue_game_button:
 		continue_game_button.disabled = false
 		continue_game_button.tooltip_text = "Validate and continue the saved campaign."
-	if start_game_button:
-		start_game_button.text = "Start new game"
-		start_game_button.tooltip_text = "Requires confirmation because a validated saved campaign is available."
+	_refresh_start_button_labels(true)
 	_link_main_menu_focus_cycle()
 	return true
 
@@ -2645,6 +2733,7 @@ func _confirm_reset() -> void:
 	world = AshWorldState.new(PLAYTEST_SEED)
 	_populate_destination_options()
 	_populate_route_options()
+	_apply_playtest_path_defaults(active_playtest_path_id)
 	map_panel.world = world
 	map_panel.reset_travel(world.current_settlement)
 	_set_event("The caravan has been reset to its first morning. The previous disk save remains available until another command autosaves.")
@@ -2674,11 +2763,22 @@ func _on_map_settlement_selected(settlement_id: String) -> void:
 func _refresh_playtest_status() -> void:
 	if playtest_status_label == null:
 		return
+	if active_playtest_path_id == PLAYTEST_PATH_CONFLICT:
+		_refresh_conflict_playtest_status()
+		return
+	if active_playtest_path_id == PLAYTEST_PATH_CAMPAIGN:
+		_refresh_campaign_playtest_status()
+		return
+	if active_playtest_path_id != PLAYTEST_PATH_GUIDED:
+		if guided_test_button:
+			guided_test_button.visible = false
+		playtest_status_label.text = "FREE PLAY — Use the live market, route, contract, crew, and campaign outlook to choose the next test."
+		return
 	var guided_cargo_held := int(world.cargo.get(PLAYTEST_GOOD, 0))
 	var guided_cargo_bought := _guided_trade_quantity(MarketCommandProcessor.BUY_GOODS)
 	var guided_cargo_sold := _guided_trade_quantity(MarketCommandProcessor.SELL_GOODS, PLAYTEST_DESTINATION)
 	if guided_test_button:
-		guided_test_button.visible = world.current_settlement == "ashgate" and world.day == 1 and guided_cargo_sold < PLAYTEST_QUANTITY
+		guided_test_button.visible = active_playtest_path_id == PLAYTEST_PATH_GUIDED and world.current_settlement == "ashgate" and world.day == 1 and guided_cargo_sold < PLAYTEST_QUANTITY
 		var origin := world.settlement(world.current_settlement)
 		var guided_total := MarketEconomy.price_for(PLAYTEST_GOOD, origin, world.pricing_context()) * PLAYTEST_QUANTITY
 		var guided_validation := MarketEconomy.validate_trade(world.cargo, PLAYTEST_GOOD, PLAYTEST_QUANTITY, world.cargo_capacity)
@@ -2707,6 +2807,34 @@ func _refresh_playtest_status() -> void:
 		playtest_status_label.text = "FREE PLAY — The optional opening example was skipped. Use the live market, route, contract, and campaign outlook to choose the next trade."
 	else:
 		playtest_status_label.text = "STEP 1 OF 3 — Read the Water market price and route forecast. Buy 2 water when you are ready; the marked test button simply executes that normal trade."
+
+func _refresh_conflict_playtest_status() -> void:
+	if guided_test_button:
+		guided_test_button.visible = false
+	if world.has_resolved_event("gatekeepers_chalk"):
+		playtest_status_label.text = "RUN COMPLETE — You resolved the Gatekeeper conflict. Compare Plan vs Actual, follow any recovery guidance, then enter Brine Cross."
+	elif String(world.pending_event.get("id", "")) == "gatekeepers_chalk":
+		playtest_status_label.text = "STEP 3 OF 3 — The Gatekeeper conflict is active. Compare every tactic's certainty, cost, and expected outcome before choosing."
+	elif world.current_settlement == "ashgate" and int(world.cargo.get("medicine", 0)) >= 2:
+		playtest_status_label.text = "STEP 2 OF 3 — Medicine is loaded. Plan Brine Cross by the Toll Road, confirm the exposed unit, then commit."
+	elif world.current_settlement == "ashgate" and world.day == 1:
+		playtest_status_label.text = "STEP 1 OF 3 — Buy 2 Medicine. The selected Toll Road plan will surface a deterministic Gatekeeper conflict without bypassing normal trade rules."
+	else:
+		playtest_status_label.text = "FREE PLAY — The conflict test path was left behind. Use the live market, route, and campaign state to continue."
+
+func _refresh_campaign_playtest_status() -> void:
+	if guided_test_button:
+		guided_test_button.visible = false
+	if _has_completed_contract("reedwatch_water_relief_01"):
+		playtest_status_label.text = "RUN COMPLETE — Reedwatch Water Relief is complete. Review the reward, market response, resilience options, and campaign outlook."
+	elif not world.active_contract("reedwatch_water_relief_01").is_empty() and int(world.cargo.get("water", 0)) >= 4:
+		playtest_status_label.text = "STEP 3 OF 3 — The relief terms and 4 Water are ready. Compare crew-informed routes, then commit to Reedwatch before the deadline."
+	elif not world.active_contract("reedwatch_water_relief_01").is_empty():
+		playtest_status_label.text = "STEP 2 OF 3 — The relief contract is active. Buy enough Water to reach 4/4; crew recruitment remains optional and costs a visit slot."
+	elif world.current_settlement == "ashgate" and world.day == 1:
+		playtest_status_label.text = "STEP 1 OF 3 — Accept Reedwatch Water Relief. Recruit and assign one crew member if their tradeoff fits the plan, then prepare 4 Water."
+	else:
+		playtest_status_label.text = "FREE PLAY — The contract-and-crew test path was left behind. Use the live opportunities and campaign outlook to continue."
 
 func _guided_trade_quantity(command_id: String, settlement_id: String = "") -> int:
 	var total := 0
