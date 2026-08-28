@@ -20,6 +20,25 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
+INPUT_SETTLE_SECONDS = 0.2
+
+
+def send_game_key(driver: webdriver.Chrome, key: str) -> None:
+    """Send one key to the canvas, then allow Godot to process a frame."""
+    canvas = driver.find_element(By.ID, "canvas")
+    driver.execute_script("arguments[0].focus()", canvas)
+    ActionChains(driver).send_keys(key).perform()
+    time.sleep(INPUT_SETTLE_SECONDS)
+
+
+def send_game_shift_tab(driver: webdriver.Chrome) -> None:
+    """Move backward once without batching the following game action."""
+    canvas = driver.find_element(By.ID, "canvas")
+    driver.execute_script("arguments[0].focus()", canvas)
+    ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).perform()
+    time.sleep(INPUT_SETTLE_SECONDS)
+
+
 def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
@@ -192,7 +211,7 @@ def main() -> int:
                     "ui_state": shop_state,
                 }
             )
-            ActionChains(driver).send_keys("p").perform()
+            send_game_key(driver, "p")
             pause_state = wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="ashgate")
             pause_output = args.output_dir / f"pause-{width}x{height}.png"
             pause_bytes = capture_frame(driver, pause_output, (actual_width, actual_height))
@@ -212,12 +231,13 @@ def main() -> int:
             # Chrome consumes Escape in some headless environments before the
             # canvas receives it. Toggle the same in-game Pause action with P
             # so this transition remains a real keyboard-input check.
-            ActionChains(driver).send_keys("p").perform()
+            send_game_key(driver, "p")
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Start focuses the Shop cargo selector. Reverse focus traversal is
             # intentionally wired to the pinned Plan action, so this both opens
             # the next screen and exercises packaged keyboard focus continuity.
-            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            send_game_shift_tab(driver)
+            send_game_key(driver, Keys.ENTER)
             departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
@@ -234,10 +254,9 @@ def main() -> int:
                     "ui_state": departure_state,
                 }
             )
-            return_to_shop_actions = ActionChains(driver)
             for _ in range(5):
-                return_to_shop_actions.send_keys(Keys.TAB)
-            return_to_shop_actions.send_keys(Keys.ENTER).perform()
+                send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.ENTER)
             returned_shop_state = wait_for_ui_state(
                 driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate"
             )
@@ -263,12 +282,12 @@ def main() -> int:
                     "ui_state": returned_shop_state,
                 }
             )
-            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            send_game_shift_tab(driver)
+            send_game_key(driver, Keys.ENTER)
             wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
-            commit_actions = ActionChains(driver)
             for _ in range(4):
-                commit_actions.send_keys(Keys.TAB)
-            commit_actions.send_keys(Keys.ENTER).perform()
+                send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.ENTER)
             arrival_state = wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
             time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
@@ -286,7 +305,7 @@ def main() -> int:
                     "ui_state": arrival_state,
                 }
             )
-            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            send_game_key(driver, Keys.ENTER)
             destination_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
             destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
             destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
@@ -303,14 +322,13 @@ def main() -> int:
                     "ui_state": destination_state,
                 }
             )
-            ActionChains(driver).send_keys("p").perform()
+            send_game_key(driver, "p")
             wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="reedwatch")
-            return_to_menu_actions = ActionChains(driver)
             for _ in range(4):
-                return_to_menu_actions.send_keys(Keys.TAB)
-            return_to_menu_actions.send_keys(Keys.ENTER).perform()
+                send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.ENTER)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False, settlement_id="reedwatch")
-            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            send_game_key(driver, Keys.ENTER)
             confirmation_state = wait_for_ui_state(
                 driver, "new_game_confirmation", args.timeout, large_text=False, settlement_id="reedwatch"
             )
@@ -339,7 +357,9 @@ def main() -> int:
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
             canvas = driver.find_element(By.ID, "canvas")
             driver.execute_script("arguments[0].focus()", canvas)
-            ActionChains(driver).send_keys(Keys.TAB, Keys.TAB, Keys.SPACE).perform()
+            send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.SPACE)
             large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
             large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
@@ -358,7 +378,9 @@ def main() -> int:
                     "ui_state": large_menu_state,
                 }
             )
-            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB, Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            send_game_shift_tab(driver)
+            send_game_shift_tab(driver)
+            send_game_key(driver, Keys.ENTER)
             large_shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
             large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
@@ -377,7 +399,7 @@ def main() -> int:
                     "ui_state": large_shop_state,
                 }
             )
-            ActionChains(driver).send_keys("p").perform()
+            send_game_key(driver, "p")
             large_pause_state = wait_for_ui_state(driver, "pause", args.timeout, large_text=True, settlement_id="ashgate")
             large_pause_output = args.output_dir / f"pause-large-text-{width}x{height}.png"
             large_pause_bytes = capture_frame(driver, large_pause_output, (actual_width, actual_height))
@@ -396,9 +418,10 @@ def main() -> int:
                     "ui_state": large_pause_state,
                 }
             )
-            ActionChains(driver).send_keys("p").perform()
+            send_game_key(driver, "p")
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
-            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            send_game_shift_tab(driver)
+            send_game_key(driver, Keys.ENTER)
             large_departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=True, settlement_id="ashgate")
             large_departure_output = args.output_dir / f"departure-desk-large-text-{width}x{height}.png"
             large_departure_bytes = capture_frame(driver, large_departure_output, (actual_width, actual_height))
@@ -427,24 +450,24 @@ def main() -> int:
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
-            select_medicine = ActionChains(driver)
             for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
-                select_medicine.send_keys(key).pause(0.1)
-            select_medicine.perform()
+                send_game_key(driver, key)
             event_state = wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
                 expected_values={"selected_good_id": "medicine", "selected_quantity": 2},
             )
-            ActionChains(driver).send_keys(Keys.TAB, Keys.TAB, Keys.ENTER).perform()
+            send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.ENTER)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
                 expected_values={"selected_good_id": "medicine", "held_selected_quantity": 2},
             )
-            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            send_game_key(driver, Keys.ENTER)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
@@ -454,20 +477,17 @@ def main() -> int:
                 expected_values={"selected_good_id": "medicine", "selected_destination_id": "reedwatch"},
             )
             # Brine Cross is two entries after the default Reedwatch choice.
-            select_brine_cross = ActionChains(driver)
             for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
-                select_brine_cross.send_keys(key).pause(0.1)
-            select_brine_cross.perform()
+                send_game_key(driver, key)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
                 args.timeout,
                 expected_values={"selected_destination_id": "brine_cross"},
             )
-            event_commit_actions = ActionChains(driver)
             for _ in range(4):
-                event_commit_actions.send_keys(Keys.TAB)
-            event_commit_actions.send_keys(Keys.ENTER).perform()
+                send_game_key(driver, Keys.TAB)
+            send_game_key(driver, Keys.ENTER)
             wait_for_ui_state(
                 driver,
                 "route_event",
@@ -491,7 +511,7 @@ def main() -> int:
                     "ui_state": event_state,
                 }
             )
-            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            send_game_key(driver, Keys.ENTER)
             event_arrival_state = wait_for_ui_state(
                 driver,
                 "arrival_handoff",
