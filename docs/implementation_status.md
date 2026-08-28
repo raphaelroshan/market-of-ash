@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards are configured; the documented hardware/rendered audit remains.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards are configured; the remaining gates require physical hardware, Windows display scaling, assistive technology, or moderated players.
 
 ## Implemented player-facing spine
 
@@ -143,7 +143,7 @@ godot --headless --path . --export-release Web build/web/index.html
 
 `scripts/verify.sh` runs repository policy, every content validator, validator fixtures, and all deterministic Godot suites. The separate editor import remains useful for import/cache validation.
 
-CI run 200 on PR head `c4dc156` passed repository policy, Ubuntu and Windows Godot tests, deterministic review, Windows/Web packaging and smoke checks, and 84 packaged-browser captures across Chrome, Firefox, and Edge. Local results must still be recorded for every subsequent slice.
+CI run 210 on PR head `8d2ed2b` passed repository policy, Ubuntu and Windows Godot tests, deterministic review, Windows/Web packaging and smoke checks, packaged Windows GUI/resource validation, and 84 packaged-browser captures across Chrome, Firefox, and Edge. Local results must still be recorded for every subsequent slice.
 
 ## Baseline verification result
 
@@ -311,9 +311,10 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - A local real-renderer Godot matrix now captures Main Menu, Shop, Pause, Departure, non-mutating return, Gatekeeper event/result, destination Shop, and new-game confirmation, including Large text coverage, at 960×540, 1280×720, and 1920×1080; the current macOS/OpenGL run reports Retina display scale 2.0 for all 42 frames. The validator accepts both Chrome RGB and Godot RGBA screenshots, checks exact dimensions/state/distinct transitions, and verifies that the Departure map remains between its instructions and result text. This audit found and fixed a 960×540 Large text overlap by fitting the map vertically after layout settles. These source-run images complement but do not replace packaged Windows/Web evidence.
 - CI run 205 also executes the same real-renderer journey on Windows through ANGLE at the exact minimum 960×540 viewport, validates all 14 states, and uploads the screenshots and manifest. Larger Windows windows remain a physical-machine gate because the hosted runner's virtual desktop constrains them below their requested dimensions.
 - A dependency-free color-vision evidence tool produces grayscale, protanopia, and deuteranopia approximations for six constrained 960×540 states. The current 18-frame review keeps route identities, current-location/resilience text, focus borders, disabled reasons, and primary actions legible without relying on hue; these approximations remain a supplement to human accessibility testing.
-- The current head cross-exports locally as a 64-bit Windows PE with a structurally verified embedded PCK after installing the matching Godot 4.4.1 x86-64 templates. Windows file/product versions use the numeric `0.9.0.0` required by PE resources while the player-facing project version remains `0.9.0-alpha-roadmap`. Run 195 launched the packaged executable headlessly on a Windows runner; visible resource-metadata inspection, GUI behavior, and OS-scaling checks remain manual Windows gates.
+- The current head cross-exports locally as a 64-bit Windows PE with a structurally verified embedded PCK after installing the matching Godot 4.4.1 x86-64 templates. Windows file/product versions use the numeric `0.9.0.0` required by PE resources while the player-facing project version remains `0.9.0-alpha-roadmap`.
+- CI run 210 installs checksum-pinned `rcedit` before export, launches the packaged executable as a visible Windows GUI, captures only its exact 960×540 client area, and rejects missing/wrong product name, file version, product version, title, bounds, dimensions, or low-detail pixels. The downloaded frame was visually inspected after two iterations fixed off-screen desktop leakage and a stray hover tooltip; it is a clean neutral Main Menu. The 97,848,976-byte x86-64 executable contains a 328,836-byte embedded PCK and all recorded release checksums revalidate.
 - `docs/ux/alpha_accessibility_input_audit.md` separates automated minimum-window evidence from the physical-controller, high-DPI, rendered large-text, color-simulation, and deeper browser checks still requiring human execution. `docs/playtest_feedback_form.md` captures comprehension and causal run stories without personal data.
 
 ## Next permitted task
 
-Run the packaged candidate through the documented rendered browser/Windows, high-DPI, and physical-controller matrix. Keep any resulting fixes narrow; do not broaden into beta content or storefront integration until those observations are recorded.
+Run the packaged candidate on physical Windows hardware through the documented 125%/150%/200% scaling, controller, browser-shortcut, assistive-technology, and clean-install matrix. Keep any resulting fixes narrow; do not broaden into beta content or storefront integration until those observations are recorded.
