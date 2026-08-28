@@ -73,29 +73,6 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
     raise TimeoutError(f"Web UI target {target_name!r} was not available")
 
 
-def reveal_game_target_with_focus(
-    driver: Any, target_name: str, navigation_key: str, maximum_steps: int = 12
-) -> None:
-    """Use Godot focus navigation so its ScrollContainer reveals a canvas target."""
-    for _ in range(maximum_steps + 1):
-        state = driver.execute_script("return window.marketOfAshUiState || null")
-        if isinstance(state, dict):
-            target = state.get("targets", {}).get(target_name, {})
-            viewport = state.get("logical_viewport", {})
-            if isinstance(target, dict) and isinstance(viewport, dict):
-                logical_x = target.get("x", 0) + target.get("width", 0) / 2
-                logical_y = target.get("y", 0) + target.get("height", 0) / 2
-                if (
-                    target.get("width", 0) > 0
-                    and target.get("height", 0) > 0
-                    and 0 <= logical_x < viewport.get("width", 0)
-                    and 0 <= logical_y < viewport.get("height", 0)
-                ):
-                    return
-        send_game_key(driver, navigation_key)
-    raise TimeoutError(f"Web UI target {target_name!r} was not revealed by focus navigation")
-
-
 def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: float = 5.0) -> None:
     """Focus and keyboard-activate one screen-reader-facing HTML action."""
     deadline = time.monotonic() + timeout_seconds
@@ -861,8 +838,7 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            reveal_game_target_with_focus(driver, "large_text", Keys.ARROW_DOWN)
-            click_game_target(driver, "large_text")
+            set_accessibility_checkbox(driver, "large_text", True)
             large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
             large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
@@ -877,7 +853,7 @@ def main() -> int:
                     "file": large_menu_output.name,
                     "bytes": large_menu_bytes,
                     "changed_pixel_ratio": round(large_menu_changed_ratio, 4),
-                    "navigation": "Keyboard reveal, then pointer activation of the published Large text target",
+                    "navigation": "Assistive HTML Large text checkbox",
                     "ui_state": large_menu_state,
                 }
             )
