@@ -111,7 +111,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 - `tests/test_economy.gd`: content loading, prices, crisis modifiers, capacity, route forecasts, command success/failure/history, route topology, travel resources, save normalization, and migration.
 - `tests/test_map_ui.gd`: main-menu start, non-mutating forecast/navigation, guided purchase command use, Shop → Departure Desk transition, legal route filtering, forecast presentation, route geometry, and predictable keyboard/controller focus across screen and event transitions.
-- `tests/test_controller_flow.gd`: dispatches joypad A/B/Menu/D-pad events through Godot to verify Main Menu traversal, controller quantity adjustment, Shop → Departure, Pause/Resume, safe Back, and non-mutating reversible navigation.
+- `tests/test_controller_flow.gd`: dispatches joypad A/B/Menu/D-pad events through Godot to verify Main Menu traversal, controller quantity adjustment, Pause/Resume, safe Back, non-mutating planning, and a complete Medicine → Toll Road → Gatekeeper event → Brine Cross journey.
 - `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and canonical save/load restoration.
 - `tools/simulate_trade_policies.gd`: read-only 100-seed opening-policy simulation through the production command boundary.
 

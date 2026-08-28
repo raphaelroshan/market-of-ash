@@ -68,6 +68,35 @@ func _run() -> void:
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should activate Resume and restore Shop focus")
 
+	ui._on_start_game_pressed()
+	await process_frame
+	await _press_joypad(JOY_BUTTON_A)
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui._selected_id(ui.shop_good_option) == "medicine", "controller option navigation should select Medicine in the Shop")
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "controller focus should reach Buy after cargo and quantity")
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(int(ui.world.cargo.get("medicine", 0)) == 2 and ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "controller Accept should buy Medicine and follow the success handoff to Plan departure")
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "controller Accept should reopen Departure after buying cargo")
+	await _press_joypad(JOY_BUTTON_A)
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "controller option navigation should select Brine Cross and its legal Toll Road")
+	for _step in range(4):
+		await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.commit_departure_button, "controller focus should reach Commit departure")
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui.world.pending_event.get("id", "") == "gatekeepers_chalk" and ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "controller Commit should open Gatekeeper's Chalk and focus its first available response")
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui.world.pending_event.is_empty() and ui.arrival_pending and ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "controller Accept should resolve the route event and focus Enter settlement")
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui.shop_layer.visible and ui.world.current_settlement == "brine_cross" and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should enter Brine Cross and restore Shop focus")
+
 	ui.queue_free()
 	await process_frame
 	if failures.is_empty():
