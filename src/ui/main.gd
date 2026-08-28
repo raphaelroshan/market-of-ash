@@ -2243,10 +2243,10 @@ class MapPanel extends Control:
 
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 30, CELL_SIZE.y + 16))
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 38, CELL_SIZE.y + 16))
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
-		return _settlement_marker_rect(settlement_id).grow_individual(2.0, 10.0, 2.0, 10.0)
+		return _settlement_marker_rect(settlement_id).grow_individual(0.0, 10.0, 0.0, 10.0)
 
 	func _route_points(route_id: String) -> Array[Vector2]:
 		match route_id:
@@ -2379,7 +2379,7 @@ class MapPanel extends Control:
 			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10), Color("#c7b49a"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
 		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
 		if traveling:
 			caravan_position = _polyline_position(travel_points, travel_progress)
