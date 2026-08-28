@@ -1715,14 +1715,20 @@ func _sync_departure_plan_to_shop() -> void:
 func _on_destination_changed(_index: int) -> void:
 	_populate_route_options()
 	_refresh_forecasts()
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _on_forecast_input_changed(_index: int) -> void:
 	_sync_departure_plan_to_shop()
 	_refresh_forecasts()
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _on_forecast_value_changed(_value: float) -> void:
 	_sync_departure_plan_to_shop()
 	_refresh_forecasts()
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _refresh_forecasts() -> void:
 	if market_preview_label == null or route_preview_label == null:

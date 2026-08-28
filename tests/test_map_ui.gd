@@ -488,6 +488,7 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.destination_option, "brine_cross")
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road", "destination selection should expose only the connected Toll Road route")
+	_expect(ui._web_ui_state().get("selected_destination_id") == "brine_cross", "Web diagnostics should republish the selected destination when the forecast changes")
 	ui._select_option_by_id(ui.destination_option, "cinderford")
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road" and ui.route_preview_label.text.contains("Route fee 6") and ui.commit_departure_button.text.contains("6 ashmarks"), "Cinderford should update both the route forecast and pinned Commit action with its segment fee")
