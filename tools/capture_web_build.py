@@ -182,7 +182,8 @@ def main() -> int:
                     "ui_state": main_state,
                 }
             )
-            send_game_key(driver, Keys.ENTER)
+            canvas = driver.find_element(By.ID, "canvas")
+            canvas.click()
             shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
@@ -228,7 +229,7 @@ def main() -> int:
             # to the pinned Plan action, so this both opens the next screen and
             # exercises packaged keyboard focus continuity without browser Tab.
             send_game_key(driver, Keys.ARROW_UP)
-            send_game_key(driver, Keys.ENTER)
+            driver.find_element(By.ID, "canvas").click()
             departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
