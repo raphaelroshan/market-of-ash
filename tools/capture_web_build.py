@@ -236,6 +236,41 @@ def main() -> int:
                     "navigation": "Shift+Tab from cargo selector, then Enter",
                 }
             )
+            commit_actions = ActionChains(driver)
+            for _ in range(4):
+                commit_actions.send_keys(Keys.TAB)
+            commit_actions.send_keys(Keys.ENTER).perform()
+            time.sleep(2.0)
+            arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
+            arrival_bytes = capture_frame(driver, arrival_output, (actual_width, actual_height))
+            arrival_changed_ratio = require_distinct_screen(departure_output, arrival_output, "Commit departure")
+            captures.append(
+                {
+                    "screen": "arrival_handoff",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": arrival_output.name,
+                    "bytes": arrival_bytes,
+                    "changed_pixel_ratio": round(arrival_changed_ratio, 4),
+                    "navigation": "Tab through the explicit departure focus cycle, then Enter",
+                }
+            )
+            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            time.sleep(1.0)
+            destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
+            destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
+            destination_changed_ratio = require_distinct_screen(arrival_output, destination_output, "Enter settlement")
+            captures.append(
+                {
+                    "screen": "destination_shop",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": destination_output.name,
+                    "bytes": destination_bytes,
+                    "changed_pixel_ratio": round(destination_changed_ratio, 4),
+                    "navigation": "Enter on the focused destination-specific arrival action",
+                }
+            )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps({"url": args.url, "loading_overlay_cleared": True, "captures": captures}, indent=2),
