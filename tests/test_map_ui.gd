@@ -686,6 +686,8 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("gatekeepers_chalk", "pay_posted_toll")
 	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "brine_cross", "paying the event toll did not complete arrival")
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
+	_expect(ui.conflict_outcome_panel.visible and ui.conflict_outcome_label.text.contains("PLAN VS ACTUAL") and ui.conflict_outcome_label.text.contains("TACTIC — PAY / CERTAIN") and ui.conflict_outcome_label.text.contains("PLAN — -6 ashmarks") and ui.conflict_outcome_label.text.contains("ACTUAL — -6 ashmarks") and ui.conflict_outcome_label.text.contains("Matched the disclosed plan"), "resolved Gatekeeper choice should compare its disclosed plan with the authoritative actual outcome")
+	_expect(ui._web_accessibility_announcement().contains("PLAN VS ACTUAL") and ui._web_accessibility_announcement().contains("PLAN — -6 ashmarks") and ui._web_accessibility_announcement().contains("ACTUAL — -6 ashmarks"), "arrival announcement should expose the full conflict comparison to Web assistive users")
 	_expect(ui.event_label.text.contains("NEXT — Review the result") and ui.event_label.text.contains("Enter Brine Cross"), "a resolved journey should state the named destination action needed to continue")
 	_expect(ui.destination_option.disabled and ui.route_option.disabled, "an arrival report should keep planning controls locked until the player enters the settlement")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "resolving a route decision should move focus to settlement entry")
@@ -709,6 +711,7 @@ func _initialize() -> void:
 	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "reedwatch", "reserving span materials did not complete arrival")
 	_expect(is_equal_approx(float(ui.world.route("old_road").risk), 0.25), "span event UI choice did not apply the disclosed later-route improvement")
 	_expect(ui.event_label.text.contains("public support") and ui.enter_settlement_button.visible, "arrival report did not explain why the span choice changed the next route decision")
+	_expect(ui.conflict_outcome_label.text.contains("-2 repair materials planned") and ui.conflict_outcome_label.text.contains("Scrap -2") and ui.conflict_outcome_label.text.contains("Cinderford span patched"), "span comparison should distinguish the planned material commitment, actual cargo delta, and persistent route effect")
 
 	ui._on_start_game_pressed()
 	ui.world.crisis_stage = 1
@@ -730,7 +733,9 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("last_clean_barrel", "share_barrels_fairly")
 	_expect(ui.world.current_settlement == "reedwatch" and ui.world.resilience_for("reedwatch") == 2, "fair barrel distribution did not strengthen destination resilience")
 	_expect(ui.event_label.text.contains("resilience is now 2/10"), "barrel arrival report did not explain the persistent settlement result")
+	_expect(ui.conflict_outcome_label.text.contains("-2 Water planned") and ui.conflict_outcome_label.text.contains("Water -2") and ui.conflict_outcome_label.text.contains("settlement resilience 2/10") and ui.conflict_outcome_label.text.contains("Caravans standing +1 to 1"), "barrel comparison should expose planned supply, actual cargo, resilience, and faction effects")
 	ui._on_enter_settlement_pressed()
+	_expect(not ui.conflict_outcome_panel.visible and ui.last_conflict_outcome_text.is_empty(), "entering the settlement should clear the completed conflict comparison")
 	_expect(ui.shop_status_label.text.contains("Settlement resilience: 2/10") and ui.shop_status_label.text.contains("Caravans +1"), "settlement shop did not expose the event's resilience and Caravan-standing results")
 
 	ui._on_start_game_pressed()
@@ -751,8 +756,21 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("three_riders_no_banner", "wait_and_read_the_tracks")
 	_expect(ui.world.known_information.has("three_riders_sponsor_mark") and ui.world.day == 3, "waiting for the riders did not record the sponsor lead and delay")
 	_expect(ui.event_label.text.contains("New information recorded"), "escort arrival report did not name the persistent information result")
+	_expect(ui.conflict_outcome_label.text.contains("PLAN — 0 ashmarks") and ui.conflict_outcome_label.text.contains("+1 days") and ui.conflict_outcome_label.text.contains("information: three riders sponsor mark"), "waiting comparison should show its planned time cost and persistent information result")
 	ui._on_enter_settlement_pressed()
 	_expect(ui.shop_status_label.text.contains("Known leads: 1"), "settlement shop did not expose the persistent information lead")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 5
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	ui._on_event_choice_pressed("three_riders_no_banner", "cross_without_escort")
+	_expect(ui.world.current_settlement == "reedwatch" and int(ui.world.cargo.get("medicine", 0)) == 1, "risk-comparison fixture should realize the deterministic exposed-unit loss")
+	_expect(ui.conflict_outcome_label.text.contains("TACTIC — MANEUVER / 45% RISK") and ui.conflict_outcome_label.text.contains("Medicine -1") and ui.conflict_outcome_label.text.contains("Risk realized: the 24% roll was below 45%"), "risky confrontation comparison should explain the disclosed threshold, actual roll, and realized cargo loss")
 
 	ui._on_start_game_pressed()
 	ui._on_recruit_crew_pressed("nara_vey")

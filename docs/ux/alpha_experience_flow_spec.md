@@ -141,6 +141,8 @@ Travel must be short enough to respect the player’s time and rich enough to ma
 
 For the alpha, confrontations are presented as a **Caravan Conflict Simulation** rather than a separate combat mode. The card names the maximum disclosed cargo-loss chance and exposed asset, counts currently usable tactics, and gives every response a tactic type, certainty or risk roll, exact costs, travel result, and expected consequence. There is no hidden health damage or real-time combat state.
 
+After resolution, the same rail becomes a **Plan vs Actual** report. It compares the selected tactic's frozen resource, cargo, time, risk, and destination commitment with the command result, names whether the risk roll was avoided or realized, and lists any persistent route, settlement, information, contract, or faction effect before the player enters the settlement.
+
 ### 4.5 Arrival and Reinvestment
 
 Arrival should take less than five seconds to comprehend. The player sees: **where they are, what survived, what they gained/lost, what has changed locally, and the primary next action**. Pressing **Enter Settlement** returns to the central shop. A small expandable route report can remain available for players who want exact deltas.
