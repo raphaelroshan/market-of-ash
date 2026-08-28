@@ -108,6 +108,12 @@ func _initialize() -> void:
 	ui.save_path = valid_test_save_path
 	ui.autosave_enabled = false
 	ui._close_pause()
+	ui.save_path = "user://market_of_ash_missing_parent_test/campaign.save"
+	ui.autosave_enabled = true
+	ui._show_command_result({"ok": true, "message": "Test command succeeded."}, "Test")
+	_expect(ui.event_label.text.contains("Test command succeeded") and ui.event_label.text.contains("SAVE WARNING") and ui.event_label.text.contains("temporary save file"), "a successful command with a failed autosave should surface both outcomes in the primary result")
+	ui.save_path = valid_test_save_path
+	ui.autosave_enabled = false
 	_expect(ui.world.current_settlement == "ashgate" and ui.world.day == 1, "Start Game did not load the authored Ashgate day-one preset")
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "water" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")

@@ -1555,10 +1555,14 @@ func _on_depart_pressed() -> void:
 
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
-		_play_ui_cue("travel" if label == "Departure" else "success")
-		_set_event("%s\nNEXT — %s" % [String(result.message), _next_step_text()])
+		var result_text := String(result.message)
+		var save_succeeded := true
 		if autosave_enabled:
-			_write_save("AUTOSAVED")
+			save_succeeded = _write_save("AUTOSAVED")
+		if not save_succeeded:
+			result_text += "\nSAVE WARNING — %s" % save_status_text.trim_prefix("SAVE ERROR — ")
+		_play_ui_cue(("travel" if label == "Departure" else "success") if save_succeeded else "blocked")
+		_set_event("%s\nNEXT — %s" % [result_text, _next_step_text()])
 	else:
 		_play_ui_cue("blocked")
 		_set_event("%s blocked: %s.\nNEXT — %s" % [label, String(result.reason), _next_step_text()])
