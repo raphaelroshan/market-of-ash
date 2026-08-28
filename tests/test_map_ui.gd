@@ -669,6 +669,9 @@ func _initialize() -> void:
 	for route_index in range(ui.map_panel.ROUTE_IDS.size()):
 		route_footer_rects.append(ui.map_panel._route_footer_rect(route_index))
 	_expect(not route_footer_rects[0].intersects(route_footer_rects[1]) and not route_footer_rects[1].intersects(route_footer_rects[2]) and route_footer_rects[2].end.x <= ui.map_panel._board_rect().end.x, "large map route labels should remain separated inside the board width")
+	var map_heading_width: float = ThemeDB.fallback_font.get_string_size(ui.map_panel._map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(16)).x
+	_expect(map_heading_width <= ui.map_panel._board_rect().size.x - 16.0, "large map heading should remain inside the board width")
+	_expect(route_footer_rects[2].end.y <= ui.event_label.get_global_rect().position.y, "large map footer labels should not overlap the journey result text: footer %.1f, result %.1f" % [route_footer_rects[2].end.y, ui.event_label.get_global_rect().position.y])
 	var oversized_settlement_labels: Array[String] = []
 	for settlement_id_value in ui.map_panel.SETTLEMENT_CELLS.keys():
 		var settlement_id := String(settlement_id_value)

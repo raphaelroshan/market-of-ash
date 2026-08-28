@@ -819,7 +819,7 @@ func _build_ui() -> void:
 	left.add_child(status_label)
 
 	var map_hint := Label.new()
-	map_hint.text = "Click a settlement marker to plan a direct journey; route lanes show available corridors. RES means settlement resilience."
+	map_hint.text = "Click a settlement marker to plan a direct journey; route lanes show available corridors. HERE marks the current location; RES means settlement resilience."
 	map_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	map_hint.add_theme_color_override("font_color", Color("#c7b49a"))
 	left.add_child(map_hint)
@@ -2289,7 +2289,7 @@ class MapPanel extends Control:
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
 		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
-		return Rect2(BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y + 12), text_size)
+		return Rect2(BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y - text_size.y - 2.0), text_size)
 
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
@@ -2369,7 +2369,7 @@ class MapPanel extends Control:
 				else:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
 		for route_index in range(ROUTE_IDS.size()):
-			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], board.size.y + 24), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
+			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], board.size.y - 6.0), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
@@ -2385,4 +2385,3 @@ class MapPanel extends Control:
 		draw_circle(caravan_position, 10.0, Color("#17130f"))
 		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
 		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f0d27d"))
-		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "HERE = CURRENT LOCATION", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#c7b49a"))
