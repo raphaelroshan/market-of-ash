@@ -10,6 +10,7 @@ const CAPTURE_SCREENS := [
 	"settlement_shop_large_text",
 	"pause_large_text",
 	"departure_desk_large_text",
+	"route_travel",
 	"route_event",
 	"route_event_large_text",
 	"route_event_result",
@@ -93,6 +94,17 @@ func _run() -> void:
 		push_error("Native capture expected the deterministic Gatekeeper's Chalk event.")
 		quit(1)
 		return
+	ui.map_panel._process(2.0)
+	if ui.map_panel.travel_phase != "road" or not ui.continue_journey_button.visible:
+		push_error("Native capture expected the dedicated road view before the route encounter.")
+		quit(1)
+		return
+	await _capture(ui, "route_travel", "route-travel")
+	ui._on_continue_journey_pressed()
+	if ui.map_panel._caravan_motion_label() != "ENCOUNTER":
+		push_error("Native capture expected the caravan to stop at the route encounter.")
+		quit(1)
+		return
 	await _capture(ui, "route_event", "route-event")
 	ui.large_text_checkbox.set_pressed_no_signal(true)
 	ui._on_large_text_toggled(true)
@@ -121,6 +133,8 @@ func _run() -> void:
 		push_error("Native capture expected the deterministic Three Riders, No Banner event.")
 		quit(1)
 		return
+	ui.map_panel._process(2.0)
+	ui._on_continue_journey_pressed()
 	ui._on_event_choice_pressed("three_riders_no_banner", "cross_without_escort")
 	if int(ui.world.cargo.get("medicine", 0)) != 1 or not ui.conflict_outcome_label.text.contains("RECOVERY —"):
 		push_error("Native capture expected one realized medicine loss and recovery guidance.")

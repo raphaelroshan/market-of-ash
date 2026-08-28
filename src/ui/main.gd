@@ -101,6 +101,9 @@ var shop_sell_button: Button
 var shop_transaction_status_label: Label
 var shop_status_label: Label
 var shop_cargo_label: Label
+var shop_title_label: Label
+var bazaar_navigation_buttons: Array[Button] = []
+var bazaar_outlook_button: Button
 var shop_save_button: Button
 var shop_load_button: Button
 var shop_reset_button: Button
@@ -120,10 +123,12 @@ var plan_departure_button: Button
 var departure_travel_actions: HBoxContainer
 var return_to_shop_button: Button
 var commit_departure_button: Button
+var continue_journey_button: Button
 var enter_settlement_button: Button
 var departure_load_label: Label
 var departure_contract_label: Label
 var departure_status_label: Label
+var departure_planning_panel: VBoxContainer
 var event_card: PanelContainer
 var event_mode_label: Label
 var event_title_label: Label
@@ -136,11 +141,13 @@ var event_choice_reason_labels: Array[Label] = []
 var conflict_outcome_panel: PanelContainer
 var conflict_outcome_label: Label
 var last_conflict_outcome_text := ""
+var committed_journey_message := ""
 var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
 var playtest_status_label: Label
 var status_label: Label
+var caravan_context_label: Label
 var map_hint: Label
 var event_scroll: ScrollContainer
 var event_label: Label
@@ -469,6 +476,9 @@ func _show_shop() -> void:
 	shop_layer.visible = true
 	arrival_pending = false
 	last_conflict_outcome_text = ""
+	committed_journey_message = ""
+	if map_panel:
+		map_panel.reset_travel(world.current_settlement)
 	if conflict_outcome_panel:
 		conflict_outcome_panel.visible = false
 	if enter_settlement_button:
@@ -486,7 +496,7 @@ func _show_departure() -> void:
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
 	commit_departure_button.disabled = journey_locked
 	return_to_shop_button.disabled = journey_locked
-	enter_settlement_button.visible = arrival_pending
+	enter_settlement_button.visible = arrival_pending and map_panel != null and map_panel.travel_phase == "arrived"
 	_refresh_ui()
 	_request_map_layout_update()
 	if not world.pending_event.is_empty():
@@ -500,7 +510,7 @@ func _update_map_layout() -> void:
 	if map_panel == null or map_hint == null or event_label == null or game_layer == null or not game_layer.visible:
 		return
 	map_panel.fit_vertical_space(
-		map_hint.get_global_rect().end.y + 16.0,
+		map_hint.get_global_rect().end.y + 18.0,
 		event_scroll.get_global_rect().position.y - 16.0,
 		event_scroll.get_global_rect().size.x
 	)
@@ -821,6 +831,33 @@ func _build_shop() -> void:
 	var market_shell := VBoxContainer.new()
 	market_shell.add_theme_constant_override("separation", 10)
 	market_card.add_child(market_shell)
+	shop_title_label = Label.new()
+	shop_title_label.text = "SETTLEMENT BAZAAR"
+	shop_title_label.add_theme_font_size_override("font_size", 30)
+	shop_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	market_shell.add_child(shop_title_label)
+	var bazaar_prompt := Label.new()
+	bazaar_prompt.text = "Choose a stall, then return here after each road."
+	bazaar_prompt.add_theme_color_override("font_color", Color("#b5a18b"))
+	market_shell.add_child(bazaar_prompt)
+	var bazaar_navigation := HBoxContainer.new()
+	bazaar_navigation.add_theme_constant_override("separation", 8)
+	market_shell.add_child(bazaar_navigation)
+	for entry in [
+		{"id": "trade", "label": "Market Stall"},
+		{"id": "assignments", "label": "Job Board"},
+		{"id": "information", "label": "Guide / Intel"},
+		{"id": "crew", "label": "Crew Yard"},
+		{"id": "outlook", "label": "Town Outlook"},
+	]:
+		var bazaar_button := Button.new()
+		bazaar_button.text = String(entry.label)
+		bazaar_button.custom_minimum_size = Vector2(0, 46)
+		bazaar_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		bazaar_button.set_meta("web_accessibility_id", "bazaar_%s" % String(entry.id))
+		bazaar_button.pressed.connect(_on_bazaar_navigation_pressed.bind(String(entry.id)))
+		bazaar_navigation.add_child(bazaar_button)
+		bazaar_navigation_buttons.append(bazaar_button)
 	var market_scroll := ScrollContainer.new()
 	market_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	market_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -830,11 +867,6 @@ func _build_shop() -> void:
 	market.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	market.add_theme_constant_override("separation", 14)
 	market_scroll.add_child(market)
-	var title := Label.new()
-	title.text = "SETTLEMENT SHOP"
-	title.add_theme_font_size_override("font_size", 30)
-	title.add_theme_color_override("font_color", Color("#e6c58d"))
-	market.add_child(title)
 	shop_status_label = Label.new()
 	shop_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_status_label.add_theme_color_override("font_color", Color("#f0d2a0"))
@@ -922,7 +954,7 @@ func _build_shop() -> void:
 	actions.add_theme_constant_override("separation", 14)
 	action_scroll.add_child(actions)
 	var caravan_title := Label.new()
-	caravan_title.text = "CARAVAN"
+	caravan_title.text = "BAZAAR STALLS"
 	caravan_title.add_theme_font_size_override("font_size", 20)
 	caravan_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(caravan_title)
@@ -930,7 +962,13 @@ func _build_shop() -> void:
 	campaign_outlook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_outlook_label.add_theme_font_size_override("font_size", 12)
 	campaign_outlook_label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	campaign_outlook_label.visible = false
 	actions.add_child(campaign_outlook_label)
+	bazaar_outlook_button = Button.new()
+	bazaar_outlook_button.text = "Show regional outlook"
+	bazaar_outlook_button.custom_minimum_size = Vector2(0, 42)
+	bazaar_outlook_button.pressed.connect(_on_bazaar_outlook_pressed)
+	actions.add_child(bazaar_outlook_button)
 	recent_conflict_panel = PanelContainer.new()
 	recent_conflict_panel.name = "RecentConflictPanel"
 	recent_conflict_panel.visible = false
@@ -949,7 +987,7 @@ func _build_shop() -> void:
 	ending_label.add_theme_color_override("font_color", Color("#e6c58d"))
 	ending_panel.add_child(ending_label)
 	var opportunity_title := Label.new()
-	opportunity_title.text = "LOCAL OPPORTUNITIES"
+	opportunity_title.text = "LOCAL STALLS & OPPORTUNITIES"
 	opportunity_title.add_theme_font_size_override("font_size", 18)
 	opportunity_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(opportunity_title)
@@ -1025,6 +1063,7 @@ func _build_ui() -> void:
 	map_panel.world = world
 	map_panel.set_text_scale(1.25 if large_text_enabled else 1.0)
 	map_panel.settlement_selected.connect(_on_map_settlement_selected)
+	map_panel.travel_state_changed.connect(_on_map_travel_state_changed)
 	game_layer.add_child(map_panel)
 
 	var margin := MarginContainer.new()
@@ -1063,12 +1102,6 @@ func _build_ui() -> void:
 	playtest_status_label.add_theme_color_override("font_color", Color("#e6c58d"))
 	left.add_child(playtest_status_label)
 
-	status_label = Label.new()
-	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	status_label.add_theme_font_size_override("font_size", 18)
-	status_label.add_theme_color_override("font_color", Color("#f4e6c7"))
-	left.add_child(status_label)
-
 	map_hint = Label.new()
 	map_hint.name = "MapHint"
 	map_hint.text = "Choose a settlement. HERE = current location; RES = resilience."
@@ -1106,6 +1139,27 @@ func _build_ui() -> void:
 	var controls_shell := VBoxContainer.new()
 	controls_shell.add_theme_constant_override("separation", 10)
 	right.add_child(controls_shell)
+	var control_title := Label.new()
+	control_title.text = "DEPARTURE DESK"
+	control_title.add_theme_font_size_override("font_size", 20)
+	control_title.add_theme_color_override("font_color", Color("#e6c58d"))
+	controls_shell.add_child(control_title)
+	var caravan_status_title := Label.new()
+	caravan_status_title.text = "CARAVAN STATUS"
+	caravan_status_title.add_theme_font_size_override("font_size", 13)
+	caravan_status_title.add_theme_color_override("font_color", Color("#d08b62"))
+	controls_shell.add_child(caravan_status_title)
+	status_label = Label.new()
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status_label.add_theme_font_size_override("font_size", 15)
+	status_label.add_theme_color_override("font_color", Color("#f4e6c7"))
+	controls_shell.add_child(status_label)
+	caravan_context_label = Label.new()
+	caravan_context_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	caravan_context_label.add_theme_font_size_override("font_size", 13)
+	caravan_context_label.add_theme_color_override("font_color", Color("#d08b62"))
+	controls_shell.add_child(caravan_context_label)
+	controls_shell.add_child(HSeparator.new())
 	var controls_scroll := ScrollContainer.new()
 	controls_scroll.name = "DepartureControlsScroll"
 	controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -1116,24 +1170,21 @@ func _build_ui() -> void:
 	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	controls.add_theme_constant_override("separation", 10)
 	controls_scroll.add_child(controls)
-
-	var control_title := Label.new()
-	control_title.text = "DEPARTURE DESK"
-	control_title.add_theme_font_size_override("font_size", 20)
-	control_title.add_theme_color_override("font_color", Color("#e6c58d"))
-	controls.add_child(control_title)
+	departure_planning_panel = VBoxContainer.new()
+	departure_planning_panel.add_theme_constant_override("separation", 10)
+	controls.add_child(departure_planning_panel)
 
 	destination_option = OptionButton.new()
 	destination_option.custom_minimum_size = Vector2(0, 44)
 	destination_option.tooltip_text = "Choose a connected settlement for the next journey."
 	_populate_destination_options()
-	controls.add_child(_labeled_control("Destination", destination_option))
+	departure_planning_panel.add_child(_labeled_control("Destination", destination_option))
 
 	route_option = OptionButton.new()
 	route_option.custom_minimum_size = Vector2(0, 44)
 	route_option.tooltip_text = "Choose one legal route to the selected destination."
 	_populate_route_options()
-	controls.add_child(_labeled_control("Route", route_option))
+	departure_planning_panel.add_child(_labeled_control("Route", route_option))
 
 	cargo_good_option = OptionButton.new()
 	cargo_good_option.custom_minimum_size = Vector2(0, 44)
@@ -1141,7 +1192,7 @@ func _build_ui() -> void:
 	for good in MarketContent.good_ids():
 		cargo_good_option.add_item(good.capitalize())
 		cargo_good_option.set_item_metadata(cargo_good_option.item_count - 1, good)
-	controls.add_child(_labeled_control("Forecast cargo", cargo_good_option))
+	departure_planning_panel.add_child(_labeled_control("Forecast cargo", cargo_good_option))
 
 	cargo_quantity = SpinBox.new()
 	cargo_quantity.custom_minimum_size = Vector2(0, 44)
@@ -1150,22 +1201,22 @@ func _build_ui() -> void:
 	cargo_quantity.step = 1
 	cargo_quantity.value = PLAYTEST_QUANTITY
 	cargo_quantity.tooltip_text = "Controller: Left/Right changes forecast quantity."
-	controls.add_child(_labeled_control("Forecast quantity", cargo_quantity))
+	departure_planning_panel.add_child(_labeled_control("Forecast quantity", cargo_quantity))
 
 	departure_load_label = Label.new()
 	departure_load_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_load_label.add_theme_color_override("font_color", Color("#f4e6c7"))
-	controls.add_child(departure_load_label)
+	departure_planning_panel.add_child(departure_load_label)
 	departure_contract_label = Label.new()
 	departure_contract_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_contract_label.add_theme_color_override("font_color", Color("#f0d2a0"))
-	controls.add_child(departure_contract_label)
+	departure_planning_panel.add_child(departure_contract_label)
 
 	market_preview_label = _forecast_label()
 	market_preview_label.visible = false
-	controls.add_child(market_preview_label)
+	departure_planning_panel.add_child(market_preview_label)
 	route_preview_label = _forecast_label()
-	controls.add_child(route_preview_label)
+	departure_planning_panel.add_child(route_preview_label)
 
 	event_card = PanelContainer.new()
 	event_card.visible = false
@@ -1232,6 +1283,15 @@ func _build_ui() -> void:
 	commit_departure_button.pressed.connect(_on_depart_pressed)
 	departure_travel_actions.add_child(commit_departure_button)
 
+	continue_journey_button = Button.new()
+	continue_journey_button.text = "Continue along the road"
+	continue_journey_button.custom_minimum_size = Vector2(0, 52)
+	continue_journey_button.tooltip_text = "Leave the road view and continue to the next encounter or arrival."
+	continue_journey_button.set_meta("web_accessibility_id", "continue_journey")
+	continue_journey_button.pressed.connect(_on_continue_journey_pressed)
+	continue_journey_button.visible = false
+	controls_shell.add_child(continue_journey_button)
+
 	arrival_pending = false
 	enter_settlement_button = Button.new()
 	enter_settlement_button.text = "Enter settlement"
@@ -1296,6 +1356,34 @@ func _wrapped_action_button(minimum_height: float = 42.0) -> Button:
 	button.custom_minimum_size = Vector2(0, minimum_height)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return button
+
+func _on_bazaar_navigation_pressed(section_id: String) -> void:
+	var target: Control
+	match section_id:
+		"trade":
+			target = shop_good_option
+		"assignments":
+			target = contract_buttons[0] if not contract_buttons.is_empty() else null
+		"information":
+			target = opportunity_buttons[0] if not opportunity_buttons.is_empty() else null
+		"crew":
+			target = crew_buttons[0] if not crew_buttons.is_empty() else null
+		"outlook":
+			_on_bazaar_outlook_pressed()
+			return
+	if target != null and _grab_focus_if_available(target):
+		_ensure_focused_control_visible()
+		shop_transaction_status_label.text = "BAZAAR — %s is ready." % section_id.replace("_", " ").capitalize()
+	else:
+		shop_transaction_status_label.text = "BAZAAR — No %s option is available at this settlement today." % section_id.replace("_", " ")
+	_publish_web_ui_state()
+
+func _on_bazaar_outlook_pressed() -> void:
+	campaign_outlook_label.visible = not campaign_outlook_label.visible
+	bazaar_outlook_button.text = "Hide regional outlook" if campaign_outlook_label.visible else "Show regional outlook"
+	shop_transaction_status_label.text = "BAZAAR — Regional outlook %s." % ("opened" if campaign_outlook_label.visible else "closed")
+	_link_shop_focus_cycle()
+	_publish_web_ui_state()
 
 func _link_main_menu_focus_cycle() -> void:
 	if start_game_button == null or continue_game_button == null:
@@ -1679,6 +1767,8 @@ func _current_ui_state_id() -> String:
 	if shop_layer != null and shop_layer.visible:
 		return "settlement_shop"
 	if game_layer != null and game_layer.visible:
+		if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
+			return "route_travel"
 		if not world.pending_event.is_empty():
 			return "route_event"
 		if arrival_pending:
@@ -2012,6 +2102,7 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 		"pause_main_menu": return pause_main_menu_button
 		"return_to_shop": return return_to_shop_button
 		"commit_departure": return commit_departure_button
+		"continue_journey": return continue_journey_button
 		"enter_settlement": return enter_settlement_button
 		"keep_saved_campaign": return new_game_confirmation_dialog.get_cancel_button() if new_game_confirmation_dialog != null else null
 		"start_new_campaign": return new_game_confirmation_dialog.get_ok_button() if new_game_confirmation_dialog != null else null
@@ -2027,7 +2118,7 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 	for control in binding_buttons.values():
 		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 			return control
-	for controls in [contract_buttons, opportunity_buttons, crew_buttons]:
+	for controls in [bazaar_navigation_buttons, contract_buttons, opportunity_buttons, crew_buttons]:
 		for control in controls:
 			if is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 				return control
@@ -2133,9 +2224,12 @@ func _web_accessibility_actions() -> Array:
 			_append_web_accessibility_action(actions, "shop_reset", shop_reset_button)
 			_append_web_accessibility_action(actions, "shop_report", shop_report_button)
 			_append_web_accessibility_action(actions, "plan_departure", plan_departure_button)
+			_append_tagged_web_accessibility_actions(actions, bazaar_navigation_buttons)
 		"departure_desk":
 			_append_web_accessibility_action(actions, "return_to_shop", return_to_shop_button)
 			_append_web_accessibility_action(actions, "commit_departure", commit_departure_button)
+		"route_travel":
+			_append_web_accessibility_action(actions, "continue_journey", continue_journey_button)
 		"route_event":
 			for choice_index in range(event_choice_buttons.size()):
 				_append_web_accessibility_action(actions, "event_choice_%d" % choice_index, event_choice_buttons[choice_index])
@@ -2195,9 +2289,11 @@ func _web_accessibility_announcement() -> String:
 		"settlement_shop":
 			var recent_conflict_text := _latest_conflict_outcome_text()
 			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
-			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
+			return "Settlement Bazaar at %s. Trade, Jobs, Services and Intel, Crew, Outlook, and Departure form the repeatable hub.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
 		"departure_desk":
 			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
+		"route_travel":
+			return "On the road. The committed caravan route is shown before any encounter or arrival. Continue journey is focused when the road observation is ready."
 		"route_event":
 			return "Caravan conflict simulation: %s. Threat, readiness, costs, risk, and expected outcomes are stated before the first available response; unavailable tactics include written reasons." % String(world.pending_event.get("title", "travel event"))
 		"arrival_handoff":
@@ -2231,6 +2327,7 @@ func _web_ui_state() -> Dictionary:
 			"plan_departure": _web_control_rect(plan_departure_button),
 			"return_to_shop": _web_control_rect(return_to_shop_button),
 			"commit_departure": _web_control_rect(commit_departure_button),
+			"continue_journey": _web_control_rect(continue_journey_button),
 			"enter_settlement": _web_control_rect(enter_settlement_button),
 			"pause_main_menu": _web_control_rect(pause_main_menu_button),
 			"shop_good": _web_control_rect(shop_good_option),
@@ -2251,6 +2348,7 @@ func _web_ui_state() -> Dictionary:
 		"provisions": world.provisions if world != null else 0,
 		"cargo_weight": int(world.cargo.get("weight", 0)) if world != null else 0,
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
+		"travel_phase": map_panel.travel_phase if map_panel != null else "rest",
 		"selected_good_id": selected_good_id,
 		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
 		"selected_route_id": _selected_id(route_option) if route_option != null else "",
@@ -2354,6 +2452,8 @@ func _on_event_choice_pressed(event_id: String, choice_id: String) -> void:
 		last_conflict_outcome_text = _conflict_outcome_comparison(result)
 		arrival_pending = true
 		enter_settlement_button.visible = true
+		if map_panel:
+			map_panel.complete_travel()
 		_populate_destination_options()
 		_populate_route_options()
 	_show_command_result(result, "Route decision")
@@ -2402,6 +2502,8 @@ func _refresh_forecasts() -> void:
 	var good_id := _selected_id(cargo_good_option)
 	var destination_id := _selected_id(destination_option)
 	var route_id := _selected_id(route_option)
+	if map_panel:
+		map_panel.set_plan(route_id, destination_id)
 	var quantity := int(cargo_quantity.value)
 	var origin := world.settlement(world.current_settlement)
 	var destination := world.settlement(destination_id)
@@ -2453,7 +2555,7 @@ func _refresh_forecasts() -> void:
 	if commit_departure_button:
 		var provision_count := int(selected_route.get("provisions", 0))
 		var provision_label := "provision" if provision_count == 1 else "provisions"
-		commit_departure_button.text = "Commit — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
+		commit_departure_button.text = "Confirm and set out — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
 	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 
 func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:
@@ -2553,15 +2655,36 @@ func _on_depart_pressed() -> void:
 	})
 	if result.ok:
 		last_conflict_outcome_text = ""
+		committed_journey_message = String(result.get("message", "Journey committed."))
 		arrival_pending = world.pending_event.is_empty()
 		commit_departure_button.disabled = true
 		return_to_shop_button.disabled = true
-		enter_settlement_button.visible = arrival_pending
+		enter_settlement_button.visible = false
 		if map_panel:
 			map_panel.begin_travel(route_id, previous_settlement, destination_id)
 		_populate_destination_options()
 		_populate_route_options()
 	_show_command_result(result, "Departure")
+
+func _on_map_travel_state_changed(_state: String) -> void:
+	if status_label == null or world == null:
+		return
+	_refresh_ui()
+	if map_panel.travel_phase == "road":
+		_grab_focus_if_available(continue_journey_button)
+	elif map_panel.travel_phase == "encounter":
+		_grab_first_enabled(event_choice_buttons)
+	elif map_panel.travel_phase == "arrived":
+		_grab_focus_if_available(enter_settlement_button)
+
+func _on_continue_journey_pressed() -> void:
+	if map_panel == null or map_panel.travel_phase != "road":
+		return
+	map_panel.continue_from_road()
+	if map_panel.travel_phase == "encounter":
+		_set_event("%s — %s\nNEXT — %s" % [String(world.pending_event.get("title", "Route encounter")), String(world.pending_event.get("setup", "The road is blocked.")), _next_step_text()])
+		_refresh_ui()
+		_grab_first_enabled(event_choice_buttons)
 
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
@@ -2579,6 +2702,10 @@ func _show_command_result(result: Dictionary, label: String) -> void:
 	_refresh_ui()
 
 func _next_step_text() -> String:
+	if map_panel != null and map_panel.travel_phase in ["moving_out", "moving_in"]:
+		return "Watch the committed road; the next action appears when the caravan reaches its travel stop."
+	if map_panel != null and map_panel.travel_phase == "road":
+		return "Review the road view, then choose Continue along the road."
 	if not world.pending_event.is_empty():
 		return "Choose one available route response; unavailable prerequisites are listed below their choices."
 	if arrival_pending:
@@ -2692,6 +2819,8 @@ func _on_load_pressed() -> bool:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
 		map_panel.reset_travel(world.current_settlement)
+		if not world.pending_event.is_empty() and not world.journey_context.is_empty():
+			map_panel.restore_pending_travel(String(world.journey_context.get("route_id", "")), String(world.journey_context.get("origin_id", world.current_settlement)), String(world.journey_context.get("destination_id", world.current_settlement)))
 	_populate_destination_options()
 	_populate_route_options()
 	var migrated_from := int(load_result.get("migrated_from", AshWorldState.SAVE_VERSION))
@@ -2776,6 +2905,11 @@ func _on_map_settlement_selected(settlement_id: String) -> void:
 
 func _refresh_playtest_status() -> void:
 	if playtest_status_label == null:
+		return
+	if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
+		if guided_test_button:
+			guided_test_button.visible = false
+		playtest_status_label.text = "ON THE ROAD — Follow the committed route, inspect the travel stop, then continue toward the next event or settlement."
 		return
 	if active_playtest_path_id == PLAYTEST_PATH_CONFLICT:
 		_refresh_conflict_playtest_status()
@@ -3049,8 +3183,10 @@ func _refresh_contract_summary() -> void:
 	contract_ids.sort()
 	if contract_ids.is_empty():
 		active_contract_label.text = "ACTIVE CONTRACT — none. Spot trade remains unrestricted."
+		active_contract_label.visible = false
 		departure_contract_label.text = "ACTIVE CONTRACT — none."
 		return
+	active_contract_label.visible = true
 	var contract_record := world.active_contract(String(contract_ids[0]))
 	var good_id := String(contract_record.get("good_id", ""))
 	var quantity := int(contract_record.get("quantity", 0))
@@ -3071,13 +3207,16 @@ func _refresh_event_card() -> void:
 	event_choice_reason_labels.clear()
 	var enabled_choice_buttons: Array = []
 	var pending := world.pending_event
-	event_card.visible = not pending.is_empty()
+	var event_revealed: bool = not pending.is_empty() and map_panel != null and map_panel.travel_phase == "encounter"
+	event_card.visible = event_revealed
 	if conflict_outcome_panel and conflict_outcome_label:
 		conflict_outcome_panel.visible = pending.is_empty() and arrival_pending and not last_conflict_outcome_text.is_empty()
 		conflict_outcome_label.text = last_conflict_outcome_text
 	if pending.is_empty():
 		if arrival_pending and (pause_layer == null or not pause_layer.visible):
 			_grab_focus_if_available(enter_settlement_button)
+		return
+	if not event_revealed:
 		return
 	event_title_label.text = String(pending.get("title", "Route decision"))
 	event_setup_label.text = String(pending.get("setup", ""))
@@ -3441,10 +3580,35 @@ func _set_event(text: String) -> void:
 		event_scroll.scroll_vertical = 0
 
 func _refresh_ui() -> void:
-	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
+	_refresh_caravan_status()
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
+	var road_waiting: bool = map_panel != null and map_panel.travel_phase == "road"
+	var actively_traveling: bool = map_panel != null and map_panel.travel_phase in ["moving_out", "moving_in"]
+	if map_hint:
+		if actively_traveling:
+			map_hint.text = "The caravan is crossing the committed road. Travel presentation cannot change the resolved costs or risk."
+		elif road_waiting:
+			map_hint.text = "Mid-route view. Continue when you are ready to reveal the next road event or arrival."
+		elif map_panel != null and map_panel.travel_phase == "encounter":
+			map_hint.text = "Road encounter. Review the visible stakes and choose one available response."
+		elif arrival_pending:
+			map_hint.text = "Journey complete. Review the outcome, then enter the destination bazaar."
+		else:
+			map_hint.text = "Choose a settlement. HERE = current location; JOB = available assignment; ASSIGNED = accepted work."
+	if event_label:
+		if actively_traveling:
+			event_label.text = "The caravan is moving through the selected corridor.\nNEXT — Watch for the road stop before any encounter or arrival."
+		elif road_waiting:
+			event_label.text = "MID-ROUTE — The caravan has reached a readable road stop.\nNEXT — Inspect the route, then continue the journey."
+		elif arrival_pending and world.pending_event.is_empty() and last_conflict_outcome_text.is_empty() and not committed_journey_message.is_empty():
+			event_label.text = "%s\nNEXT — Review the result, then choose Enter %s to trade at the destination." % [committed_journey_message, String(world.settlement(world.current_settlement).get("name", "the settlement"))]
 	if departure_travel_actions:
 		departure_travel_actions.visible = not journey_locked
+	if departure_planning_panel:
+		departure_planning_panel.visible = not journey_locked
+	if continue_journey_button:
+		continue_journey_button.visible = road_waiting
+		continue_journey_button.disabled = actively_traveling
 	if destination_option:
 		destination_option.disabled = journey_locked
 	if route_option:
@@ -3456,16 +3620,12 @@ func _refresh_ui() -> void:
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
 		var crisis := MarketContent.crisis_stage(world.crisis_stage)
-		shop_status_label.text = "%s — %s\nDay %d · Crisis %d: %s\nObjective: %s\n%s" % [String(settlement.get("name", "Unknown settlement")), String(settlement.get("role", "market")), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), String(event_label.text if event_label else "Inspect the local need, then load only what your plan can carry.")]
-		shop_status_label.text += "\nSettlement resilience: %d/10" % world.resilience_for(world.current_settlement)
-		if not world.known_information.is_empty():
-			shop_status_label.text += " · Known leads: %d" % world.known_information.size()
-		var warden_status := world.faction_status("wardens")
-		var caravan_status := world.faction_status("caravans")
-		shop_status_label.text += " · Wardens %+d (%s; threshold %+d) · Caravans %+d (%s; threshold %+d)" % [int(world.reputation.get("wardens", 0)), String(warden_status.get("tier", "Unknown")), int(warden_status.get("next_threshold", 0)), int(world.reputation.get("caravans", 0)), String(caravan_status.get("tier", "Unknown")), int(caravan_status.get("next_threshold", 0))]
+		if shop_title_label:
+			shop_title_label.text = "%s BAZAAR" % String(settlement.get("name", "Settlement")).to_upper()
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
-		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
+		var leads_text := " · Leads %d" % world.known_information.size() if not world.known_information.is_empty() else ""
+		shop_status_label.text = "%s · Day %d · Crisis %d: %s\nTODAY'S NEED — %s\nResilience %d/10 · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), world.resilience_for(world.current_settlement), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if ending_panel and ending_label:
@@ -3494,7 +3654,11 @@ func _refresh_ui() -> void:
 	if menu_save_status_label:
 		menu_save_status_label.text = save_status_text
 	if departure_status_label:
-		if not world.pending_event.is_empty():
+		if actively_traveling:
+			departure_status_label.text = "ON THE ROAD — The committed caravan is crossing the selected route. No additional choice is being resolved yet."
+		elif road_waiting:
+			departure_status_label.text = "ROAD VIEW — Inspect the journey, then continue to the next authored encounter or arrival."
+		elif not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."
 		elif arrival_pending:
 			departure_status_label.text = "ARRIVAL REPORT — %s\n%s\nReview what changed, then enter the settlement to trade again." % [String(world.settlement(world.current_settlement).get("name", "Unknown settlement")), String(event_label.text)]
@@ -3502,6 +3666,7 @@ func _refresh_ui() -> void:
 			departure_status_label.text = "COMMITMENT CHECK — The map only shows legal corridors. Returning to the shop preserves this plan and spends nothing."
 	if enter_settlement_button:
 		enter_settlement_button.text = "Enter %s" % String(world.settlement(world.current_settlement).get("name", "settlement"))
+		enter_settlement_button.visible = arrival_pending and map_panel != null and map_panel.travel_phase == "arrived"
 	if playtest_banner and playtest_banner.text.is_empty():
 		playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
 	_refresh_playtest_status()
@@ -3529,8 +3694,20 @@ func _refresh_ui() -> void:
 	_publish_web_ui_state()
 	_queue_web_ui_state_after_layout()
 
+func _refresh_caravan_status() -> void:
+	status_label.text = "%s · %s\nDay %d · Crisis %d\n%d ashmarks · %d provisions\nHold %d/%d" % [String(world.settlement(world.current_settlement).name), map_panel._caravan_motion_label() if map_panel else "AT REST", world.day, world.crisis_stage, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity]
+	if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — ON THE ROAD"
+	elif not world.pending_event.is_empty():
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — %s" % String(world.pending_event.get("title", "Route encounter"))
+	elif arrival_pending:
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — ARRIVAL REPORT"
+	else:
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — PLAN ROUTE"
+
 class MapPanel extends Control:
 	signal settlement_selected(settlement_id: String)
+	signal travel_state_changed(state: String)
 
 	const GRID_SIZE := Vector2i(17, 11)
 	const NORMAL_BOARD_ORIGIN := Vector2(34, 230)
@@ -3540,21 +3717,28 @@ class MapPanel extends Control:
 	const NORMAL_CELL_HEIGHT := 20.0
 	const MIN_CELL_HEIGHT := 14.0
 	const MAP_HEADER_HEIGHT := 30.0
+	const ENCOUNTER_PROGRESS := 0.39
 	const ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
 	const ROUTE_PROFILES := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
 	const SETTLEMENT_CELLS := {
-		"ashgate": Vector2i(2, 7),
+		"ashgate": Vector2i(7, 6),
 		"brine_cross": Vector2i(13, 2),
-		"cinderford": Vector2i(5, 7),
-		"hollow_market": Vector2i(9, 3),
-		"reedwatch": Vector2i(13, 8)
+		"cinderford": Vector2i(11, 6),
+		"hollow_market": Vector2i(4, 3),
+		"reedwatch": Vector2i(14, 9)
 	}
 
 	var world
 	var travel_route_id: String = ""
+	var travel_origin_id: String = ""
+	var travel_destination_id: String = ""
+	var selected_route_id: String = ""
+	var selected_destination_id: String = ""
+	var hovered_settlement_id: String = ""
 	var travel_points: Array[Vector2] = []
 	var travel_progress: float = 1.0
 	var traveling: bool = false
+	var travel_phase: String = "rest"
 	var reduce_motion: bool = false
 	var text_scale: float = 1.0
 	var board_origin: Vector2 = NORMAL_BOARD_ORIGIN
@@ -3567,9 +3751,12 @@ class MapPanel extends Control:
 	func _process(delta: float) -> void:
 		if not traveling:
 			return
-		travel_progress = minf(1.0, travel_progress + delta / 1.8)
-		if is_equal_approx(travel_progress, 1.0):
+		var target_progress: float = ENCOUNTER_PROGRESS if travel_phase == "moving_out" else 1.0
+		travel_progress = minf(target_progress, travel_progress + delta / 1.8)
+		if is_equal_approx(travel_progress, target_progress):
 			traveling = false
+			travel_phase = "road" if travel_phase == "moving_out" else "arrived"
+			travel_state_changed.emit(_caravan_motion_label())
 		queue_redraw()
 
 	func set_text_scale(value: float) -> void:
@@ -3581,6 +3768,11 @@ class MapPanel extends Control:
 		cell_width = clampf((available_width - board_origin.x - 24.0) / float(GRID_SIZE.x), MIN_CELL_WIDTH, MAX_CELL_WIDTH)
 		var available_height := maxf(0.0, bottom - board_origin.y)
 		cell_height = clampf(available_height / float(GRID_SIZE.y), MIN_CELL_HEIGHT, NORMAL_CELL_HEIGHT)
+		queue_redraw()
+
+	func set_plan(route_id: String, destination_id: String) -> void:
+		selected_route_id = route_id
+		selected_destination_id = destination_id
 		queue_redraw()
 
 	func _board_rect() -> Rect2:
@@ -3634,14 +3826,65 @@ class MapPanel extends Control:
 	func _settlement_marker_detail(settlement_id: String) -> String:
 		if world == null:
 			return "Settlement"
-		var location_prefix := "HERE · " if settlement_id == world.current_settlement else ""
-		return "%sRES %d/10" % [location_prefix, world.resilience_for(settlement_id)]
+		var state_prefix := ""
+		if settlement_id == world.current_settlement:
+			state_prefix = "HERE · "
+		elif _assignment_state(settlement_id) == "accepted":
+			state_prefix = "ASSIGNED · "
+		elif _assignment_state(settlement_id) == "available":
+			state_prefix = "JOB · "
+		elif settlement_id == selected_destination_id:
+			state_prefix = "NEXT · "
+		return "%sRES %d/10" % [state_prefix, world.resilience_for(settlement_id)]
+
+	func _assignment_state(settlement_id: String) -> String:
+		if world == null:
+			return ""
+		for contract_id_value in world.active_contracts.keys():
+			var active: Dictionary = world.active_contract(String(contract_id_value))
+			if String(active.get("destination_id", "")) == settlement_id:
+				return "accepted"
+		for contract in MarketContent.contracts_from(world.current_settlement):
+			if String(contract.get("destination_id", "")) == settlement_id and not world.has_contract_outcome(String(contract.get("id", ""))):
+				return "available"
+		return ""
+
+	func _route_to(settlement_id: String) -> String:
+		if world == null:
+			return ""
+		for route_id in ROUTE_IDS:
+			if MarketContent.route_connects(route_id, world.current_settlement, settlement_id):
+				return route_id
+		return ""
+
+	func _hover_text(settlement_id: String) -> String:
+		if world == null or settlement_id.is_empty():
+			return ""
+		var settlement: Dictionary = world.settlement(settlement_id)
+		if settlement_id == world.current_settlement:
+			return "%s\nCurrent bazaar · no travel cost" % String(settlement.get("name", settlement_id))
+		var route_id := _route_to(settlement_id)
+		if route_id.is_empty():
+			return "%s\nNo direct road from %s" % [String(settlement.get("name", settlement_id)), String(world.settlement(world.current_settlement).get("name", "here"))]
+		var route: Dictionary = world.route(route_id, world.current_settlement, settlement_id)
+		var assignment := _assignment_state(settlement_id)
+		var assignment_text := " · accepted assignment" if assignment == "accepted" else " · assignment available" if assignment == "available" else ""
+		return "%s%s · %s\n%s · %d ashmarks · %d provisions · %d day" % [String(settlement.get("name", settlement_id)), assignment_text, String(settlement.get("role", "market")), String(route.get("name", route_id)), int(route.get("cost", 0)), world.route_provision_cost(route_id, settlement_id), int(route.get("days", 0))]
 
 	func _font_size(base_size: int) -> int:
 		return int(round(float(base_size) * text_scale))
 
 	func _caravan_motion_label() -> String:
-		return "MOVING" if traveling else ""
+		match travel_phase:
+			"moving_out", "moving_in":
+				return "MOVING"
+			"road":
+				return "ON ROAD"
+			"encounter":
+				return "ENCOUNTER"
+			"arrived":
+				return "ARRIVED"
+		return "AT REST"
 
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
@@ -3655,13 +3898,18 @@ class MapPanel extends Control:
 
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
+		travel_origin_id = settlement_id
+		travel_destination_id = settlement_id
 		travel_points.clear()
 		travel_progress = 1.0
 		traveling = false
+		travel_phase = "rest"
 		queue_redraw()
 
 	func begin_travel(route_id: String, origin_id: String, destination_id: String) -> void:
 		travel_route_id = route_id
+		travel_origin_id = origin_id
+		travel_destination_id = destination_id
 		var origin: Vector2 = _settlement_point(origin_id)
 		var destination: Vector2 = _settlement_point(destination_id)
 		var route: Array[Vector2] = _route_points(route_id)
@@ -3673,9 +3921,87 @@ class MapPanel extends Control:
 		else:
 			travel_points.append(origin.lerp(destination, 0.5) + Vector2(0, -28))
 		travel_points.append(destination)
-		travel_progress = 1.0 if reduce_motion else 0.0
+		travel_progress = ENCOUNTER_PROGRESS if reduce_motion else 0.0
 		traveling = not reduce_motion
+		travel_phase = "road" if reduce_motion else "moving_out"
+		travel_state_changed.emit(_caravan_motion_label())
 		queue_redraw()
+
+	func continue_from_road() -> void:
+		if travel_phase != "road":
+			return
+		if world != null and not world.pending_event.is_empty():
+			travel_phase = "encounter"
+			traveling = false
+		else:
+			travel_phase = "arrived" if reduce_motion else "moving_in"
+			traveling = not reduce_motion
+			if reduce_motion:
+				travel_progress = 1.0
+		travel_state_changed.emit(_caravan_motion_label())
+		queue_redraw()
+
+	func restore_pending_travel(route_id: String, origin_id: String, destination_id: String) -> void:
+		begin_travel(route_id, origin_id, destination_id)
+		travel_progress = ENCOUNTER_PROGRESS
+		traveling = false
+		travel_phase = "encounter"
+		travel_state_changed.emit(_caravan_motion_label())
+		queue_redraw()
+
+	func complete_travel() -> void:
+		if travel_route_id.is_empty():
+			travel_route_id = "completed_journey"
+		travel_progress = 1.0
+		traveling = false
+		travel_phase = "arrived"
+		travel_state_changed.emit(_caravan_motion_label())
+		queue_redraw()
+
+	func _caravan_position() -> Vector2:
+		if travel_phase in ["moving_out", "road", "moving_in", "encounter"]:
+			return _polyline_position(travel_points, travel_progress)
+		return _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
+
+	func _caravan_heading() -> float:
+		if travel_points.size() < 2:
+			return 0.0
+		var before := _polyline_position(travel_points, maxf(0.0, travel_progress - 0.015))
+		var after := _polyline_position(travel_points, minf(1.0, travel_progress + 0.015))
+		return before.angle_to_point(after)
+
+	func _draw_caravan(position: Vector2) -> void:
+		var state := _caravan_motion_label()
+		var accent := Color("#f0d27d")
+		if state == "ENCOUNTER":
+			accent = Color("#e07151")
+			draw_circle(position, 28.0, Color(0.88, 0.33, 0.22, 0.16))
+			draw_arc(position, 28.0, 0.0, TAU, 32, accent, 3.0, true)
+		elif state == "MOVING":
+			draw_line(position - Vector2(34, 0), position - Vector2(22, 0), Color(0.94, 0.82, 0.49, 0.42), 4.0)
+		else:
+			draw_line(position - Vector2(28, 20), position + Vector2(28, 20), Color("#85694e"), 2.0)
+			draw_line(position + Vector2(28, -20), position - Vector2(28, 20), Color("#85694e"), 2.0)
+
+		draw_set_transform(position, _caravan_heading() if state == "MOVING" else 0.0, Vector2.ONE)
+		draw_colored_polygon(PackedVector2Array([Vector2(-24, 10), Vector2(-20, -9), Vector2(-12, -14), Vector2(13, -14), Vector2(24, -6), Vector2(25, 10)]), Color("#211914"))
+		draw_polyline(PackedVector2Array([Vector2(-24, 10), Vector2(-20, -9), Vector2(-12, -14), Vector2(13, -14), Vector2(24, -6), Vector2(25, 10), Vector2(-24, 10)]), accent, 3.0, true)
+		draw_rect(Rect2(-17, -18, 10, 14), Color("#4b382a"), true)
+		draw_rect(Rect2(6, -20, 11, 16), Color("#4b382a"), true)
+		draw_line(Vector2(-12, -18), Vector2(-12, -24), accent, 2.0)
+		draw_line(Vector2(12, -20), Vector2(12, -27), accent, 2.0)
+		draw_circle(Vector2(-13, 11), 6.0, Color("#17130f"))
+		draw_circle(Vector2(15, 11), 6.0, Color("#17130f"))
+		draw_circle(Vector2(-13, 11), 3.0, accent)
+		draw_circle(Vector2(15, 11), 3.0, accent)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		var label_size := ThemeDB.fallback_font.get_string_size(state, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11))
+		var label_offset_y := -43.0
+		var label_rect := Rect2(position + Vector2(-label_size.x / 2.0 - 5.0, label_offset_y), label_size + Vector2(10.0, 6.0))
+		draw_rect(label_rect, Color("#17130f"), true)
+		draw_rect(label_rect, accent, false, 1.0)
+		draw_string(ThemeDB.fallback_font, label_rect.position + Vector2(5.0, label_size.y + 1.0), state, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), accent)
 
 	func _polyline_position(points: Array[Vector2], progress: float) -> Vector2:
 		if points.is_empty():
@@ -3696,7 +4022,87 @@ class MapPanel extends Control:
 			walked += segment
 		return points.back()
 
+	func _is_road_view() -> bool:
+		return travel_phase in ["moving_out", "road", "moving_in", "encounter"]
+
+	func _draw_road_scene() -> void:
+		var board := _board_rect()
+		draw_rect(board.grow(8), Color("#2a211b"), true)
+		draw_rect(board, Color("#29231d"), true)
+		var horizon_y := board.position.y + board.size.y * 0.43
+		draw_colored_polygon(PackedVector2Array([
+			board.position,
+			board.position + Vector2(board.size.x, 0),
+			Vector2(board.end.x, horizon_y - 8),
+			Vector2(board.position.x, horizon_y + 18),
+		]), Color("#40352b"))
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(board.position.x, horizon_y + 8),
+			Vector2(board.end.x, horizon_y - 16),
+			board.end,
+			Vector2(board.position.x, board.end.y),
+		]), Color("#241c17"))
+		var road_center := board.position.x + board.size.x * 0.52
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(road_center - 26, horizon_y),
+			Vector2(road_center + 26, horizon_y),
+			Vector2(road_center + board.size.x * 0.34, board.end.y),
+			Vector2(road_center - board.size.x * 0.34, board.end.y),
+		]), Color("#594635"))
+		for index in range(7):
+			var drift := fmod(float(index * 149) - travel_progress * 620.0, board.size.x + 100.0) - 50.0
+			var post_x := board.position.x + drift
+			var post_y := horizon_y + 24.0 + float(index % 3) * 22.0
+			draw_line(Vector2(post_x, post_y), Vector2(post_x, post_y - 22), Color("#8d6847"), 3.0)
+			draw_line(Vector2(post_x - 7, post_y - 17), Vector2(post_x + 7, post_y - 17), Color("#8d6847"), 2.0)
+		var route_name := _route_label(travel_route_id).to_upper()
+		var origin_name := String(world.settlement(travel_origin_id).get("name", travel_origin_id)) if world != null else travel_origin_id
+		var destination_name := String(world.settlement(travel_destination_id).get("name", travel_destination_id)) if world != null else travel_destination_id
+		draw_rect(Rect2(board.position, Vector2(board.size.x, MAP_HEADER_HEIGHT + 16.0)), Color("#17130f"), true)
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 21), "ON THE ROAD — %s" % route_name, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16), Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 39), "%s  >  %s" % [origin_name, destination_name], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
+		var progress_y := board.end.y - 18.0
+		draw_line(Vector2(board.position.x + 24, progress_y), Vector2(board.end.x - 24, progress_y), Color("#705746"), 4.0)
+		draw_line(Vector2(board.position.x + 24, progress_y), Vector2(lerpf(board.position.x + 24, board.end.x - 24, travel_progress), progress_y), _route_color(travel_route_id), 4.0)
+		draw_string(ThemeDB.fallback_font, Vector2(board.position.x + 24, progress_y - 7), "DEPART", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10), Color("#c7b49a"))
+		var arrive_text_size := ThemeDB.fallback_font.get_string_size("ARRIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10))
+		draw_string(ThemeDB.fallback_font, Vector2(board.end.x - 24 - arrive_text_size.x, progress_y - 7), "ARRIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10), Color("#c7b49a"))
+		var caravan_position := Vector2(road_center, board.position.y + board.size.y * 0.67)
+		if travel_phase == "encounter":
+			draw_line(caravan_position + Vector2(58, -26), caravan_position + Vector2(58, 22), Color("#d08b62"), 5.0)
+			draw_line(caravan_position + Vector2(42, -18), caravan_position + Vector2(74, -18), Color("#d08b62"), 4.0)
+		_draw_caravan(caravan_position)
+
+	func _draw_hover_card(settlement_id: String) -> void:
+		var text := _hover_text(settlement_id)
+		if text.is_empty():
+			return
+		var board := _board_rect()
+		var marker := _settlement_marker_rect(settlement_id)
+		var card_size := Vector2(minf(290.0, board.size.x * 0.42), 58.0)
+		var card_position := marker.end + Vector2(8, -4)
+		if card_position.x + card_size.x > board.end.x - 8:
+			card_position.x = marker.position.x - card_size.x - 8
+		card_position.y = clampf(card_position.y, board.position.y + MAP_HEADER_HEIGHT + 8.0, board.end.y - 34.0 - card_size.y)
+		var card := Rect2(card_position, card_size)
+		draw_rect(card, Color("#17130f"), true)
+		draw_rect(card, Color("#e6c58d"), false, 2.0)
+		draw_multiline_string(ThemeDB.fallback_font, card.position + Vector2(8, 18), text, HORIZONTAL_ALIGNMENT_LEFT, card.size.x - 16.0, _font_size(11), -1, Color("#f4e6c7"))
+
 	func _gui_input(event: InputEvent) -> void:
+		if _is_road_view():
+			return
+		if event is InputEventMouseMotion:
+			var next_hover := ""
+			for settlement_id_value in SETTLEMENT_CELLS.keys():
+				var candidate_id := String(settlement_id_value)
+				if _settlement_footprint(candidate_id).has_point(event.position):
+					next_hover = candidate_id
+					break
+			if hovered_settlement_id != next_hover:
+				hovered_settlement_id = next_hover
+				queue_redraw()
+			return
 		if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
 			return
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
@@ -3707,6 +4113,9 @@ class MapPanel extends Control:
 				return
 
 	func _draw() -> void:
+		if _is_road_view():
+			_draw_road_scene()
+			return
 		var board := _board_rect()
 		draw_rect(board.grow(8), Color("#2a211b"), true)
 		draw_rect(board, Color("#574437"), true)
@@ -3723,7 +4132,13 @@ class MapPanel extends Control:
 			var route_points: Array[Vector2] = _route_points(route_id)
 			if route_points.size() < 2:
 				continue
-			draw_polyline(PackedVector2Array(route_points), _route_color(route_id), 6.0, true)
+			var is_selected: bool = route_id == selected_route_id
+			var route_color := _route_color(route_id)
+			if not selected_route_id.is_empty() and not is_selected:
+				route_color.a = 0.28
+			if is_selected:
+				draw_polyline(PackedVector2Array(route_points), Color("#17130f"), 11.0, true)
+			draw_polyline(PackedVector2Array(route_points), route_color, 7.0 if is_selected else 4.0, true)
 			for point_index in range(route_points.size() - 1):
 				var midpoint: Vector2 = route_points[point_index].lerp(route_points[point_index + 1], 0.5)
 				if route_id == "old_road":
@@ -3739,16 +4154,20 @@ class MapPanel extends Control:
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
 			var is_current: bool = world != null and settlement_id == world.current_settlement
-			draw_rect(footprint, Color("#5a4027") if is_current else Color("#3b2b24"), true)
-			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
+			var is_selected := settlement_id == selected_destination_id
+			var assignment_state := _assignment_state(settlement_id)
+			var fill := Color("#5a4027") if is_current else Color("#3b2b24")
+			if assignment_state == "available":
+				fill = Color("#34312d")
+			elif assignment_state == "accepted":
+				fill = Color("#28434a")
+			draw_rect(footprint, fill, true)
+			var outline := Color("#f0d27d") if is_current or is_selected else Color("#7d9ca4") if assignment_state == "accepted" else Color("#7b746d") if assignment_state == "available" else Color("#bd8553")
+			draw_rect(footprint, outline, false, 4.0 if is_current or is_selected else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
-		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
-		if traveling:
-			caravan_position = _polyline_position(travel_points, travel_progress)
-		draw_circle(caravan_position, 10.0, Color("#17130f"))
-		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
-		var motion_label := _caravan_motion_label()
-		if not motion_label.is_empty():
-			draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), motion_label, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f0d27d"))
+			var text_inset := 56.0 if is_current else 5.0
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(text_inset, 18), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(text_inset, 35), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
+		_draw_caravan(_caravan_position())
+		var info_settlement := hovered_settlement_id if not hovered_settlement_id.is_empty() else selected_destination_id
+		_draw_hover_card(info_settlement)

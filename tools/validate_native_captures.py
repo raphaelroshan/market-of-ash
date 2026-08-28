@@ -20,6 +20,7 @@ REQUIRED_NATIVE_SCREENS = {
     "settlement_shop_large_text",
     "pause_large_text",
     "departure_desk_large_text",
+    "route_travel",
     "route_event",
     "route_event_large_text",
     "route_event_result",
@@ -117,7 +118,8 @@ def main() -> int:
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
-        require_distinct_screen(screens["departure_desk"], screens["route_event"], f"{viewport} Route event")
+        require_distinct_screen(screens["departure_desk"], screens["route_travel"], f"{viewport} Begin road travel")
+        require_distinct_screen(screens["route_travel"], screens["route_event"], f"{viewport} Reveal route event")
         require_distinct_screen(screens["route_event"], screens["route_event_result"], f"{viewport} Resolve event")
         require_distinct_screen(screens["route_event_result"], screens["route_event_loss_result"], f"{viewport} Realized loss recovery")
         require_distinct_screen(screens["route_event_result"], screens["destination_shop"], f"{viewport} Enter settlement")

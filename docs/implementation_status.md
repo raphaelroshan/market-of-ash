@@ -9,10 +9,10 @@
 - Main Menu starts a deterministic Ashgate day-one playtest state.
 - Main Menu offers Guided Trade, Conflict & Recovery, and Contract & Crew start paths. All three create the same seed-1107 Ashgate world and only change initial cargo quantity, destination, route selection, and guidance; existing saves remain protected by the same confirmation flow.
 - Privacy-safe playtest reports record the selected fresh-run path; Main Menu Continue is identified separately so resumed saves are not misclassified as a guided opening.
-- Settlement Shop owns local price inspection, buying, selling, cargo context, and the handoff to travel planning.
-- Departure Desk owns the regional map, legal destination/route selection, route forecast, return-to-shop navigation, and travel commitment.
-- Successful travel presents an arrival report before the player enters the destination shop.
-- The regional map is a real planning surface rather than a placeholder grid: settlement markers select direct destinations, explain unreachable stops, label the current crisis stage/location and local resilience without relying on color, and visually highlight the caravan's position. Once travel is committed, map clicks and planning selectors lock until the route decision and arrival report are complete.
+- The Settlement Bazaar owns local price inspection, buying, selling, jobs, services/intelligence, crew, optional outlook, and the handoff to travel planning through a stable stall directory.
+- Departure Desk owns the regional map, legal destination/route selection, route forecast, assignment-aware node state, hover/selection briefs, return-to-bazaar navigation, and travel confirmation.
+- Every successful departure enters a dedicated road view before an authored event or arrival can appear; the player explicitly continues from the midpoint observation.
+- The regional map is a real planning surface rather than a placeholder grid: settlement markers select direct destinations, explain unreachable stops, distinguish available and accepted assignment destinations, label the current crisis stage/location and local resilience without relying on color, and emphasize the selected corridor. Once travel is committed, map clicks and planning selectors lock until the road, route decision, and arrival report are complete.
 - The scroll-safe Main Menu keeps fresh-start and validated-continue actions above optional accessibility/input settings, and exposes reduced motion, large text, keyboard/controller button remapping, and default restoration.
 - Desktop builds expose a conventional Main Menu Quit action; Web builds omit it and leave tab lifecycle to the browser.
 - The Main Menu also exposes a persisted Interface Sounds switch. Short generated cues distinguish successful commands, blocked actions, and committed travel without carrying essential information or adding external audio assets.
@@ -126,13 +126,14 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 | From | Action | To | Authoritative mutation |
 | --- | --- | --- | --- |
-| Main Menu | Start Game | Settlement Shop | Creates deterministic fresh world state. |
-| Settlement Shop | Buy / Sell | Settlement Shop | Yes, through command processor. |
-| Settlement Shop | Plan Departure | Departure Desk | None. Planning selection is preserved. |
-| Departure Desk | Return to Shop | Settlement Shop | None. |
-| Departure Desk | Commit Departure | Route Event or Arrival Report on map layer | Yes, through `depart_route`. |
+| Main Menu | Start Game | Settlement Bazaar | Creates deterministic fresh world state. |
+| Settlement Bazaar | Choose stall / Buy / Sell / local action | Settlement Bazaar | Stall navigation is presentation-only; transactions use the command processor. |
+| Settlement Bazaar | Plan Departure | Departure Desk | None. Planning selection is preserved. |
+| Departure Desk | Return to Bazaar | Settlement Bazaar | None. |
+| Departure Desk | Confirm and set out | Road View | Yes, through `depart_route`; presentation cannot alter the result. |
+| Road View | Continue journey | Route Event or Arrival Report | None; reveals the next already-resolved journey phase. |
 | Route Event | Choose response | Arrival/Return Report on map layer | Yes, through `resolve_event`. |
-| Arrival Report | Enter Settlement | Destination Settlement Shop | None beyond the completed departure command. |
+| Arrival Report | Enter Settlement | Destination Settlement Bazaar | None beyond the completed departure command. |
 
 ## Remaining roadmap-to-code mismatches
 

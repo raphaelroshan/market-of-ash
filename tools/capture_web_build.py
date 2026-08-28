@@ -769,6 +769,15 @@ def main() -> int:
             activate_game_action(driver, "plan_departure", use_accessibility_actions)
             wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             activate_game_action(driver, "commit_departure", use_accessibility_actions)
+            wait_for_ui_state(
+                driver,
+                "route_travel",
+                args.timeout,
+                large_text=False,
+                settlement_id="reedwatch",
+                expected_values={"travel_phase": "road"},
+            )
+            activate_game_action(driver, "continue_journey", use_accessibility_actions)
             arrival_state = wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
             time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
@@ -972,6 +981,16 @@ def main() -> int:
                 expected_values={"selected_destination_id": "brine_cross", "selected_route_id": "toll_road"},
             )
             activate_game_action(driver, "commit_departure", use_accessibility_actions)
+            wait_for_ui_state(
+                driver,
+                "route_travel",
+                args.timeout,
+                large_text=False,
+                settlement_id="ashgate",
+                pending_event_id="gatekeepers_chalk",
+                expected_values={"travel_phase": "road"},
+            )
+            activate_game_action(driver, "continue_journey", use_accessibility_actions)
             event_state = wait_for_ui_state(
                 driver,
                 "route_event",
