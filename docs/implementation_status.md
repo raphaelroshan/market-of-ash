@@ -8,6 +8,7 @@
 
 - Main Menu starts a deterministic Ashgate day-one playtest state.
 - Main Menu offers Guided Trade, Conflict & Recovery, and Contract & Crew start paths. All three create the same seed-1107 Ashgate world and only change initial cargo quantity, destination, route selection, and guidance; existing saves remain protected by the same confirmation flow.
+- Privacy-safe playtest reports record the selected fresh-run path; Main Menu Continue is identified separately so resumed saves are not misclassified as a guided opening.
 - Settlement Shop owns local price inspection, buying, selling, cargo context, and the handoff to travel planning.
 - Departure Desk owns the regional map, legal destination/route selection, route forecast, return-to-shop navigation, and travel commitment.
 - Successful travel presents an arrival report before the player enters the destination shop.

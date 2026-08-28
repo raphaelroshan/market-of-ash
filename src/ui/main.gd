@@ -13,6 +13,7 @@ const PLAYTEST_ROUTE := "old_road"
 const PLAYTEST_PATH_GUIDED := "guided_trade"
 const PLAYTEST_PATH_CONFLICT := "conflict_recovery"
 const PLAYTEST_PATH_CAMPAIGN := "contract_crew"
+const PLAYTEST_PATH_CONTINUED := "continued_campaign"
 const PLAYTEST_PATHS := {
 	PLAYTEST_PATH_GUIDED: {
 		"label": "Guided Trade",
@@ -166,7 +167,7 @@ var audio_player: AudioStreamPlayer
 var audio_cues: Dictionary = {}
 var run_started_msec := 0
 var first_trade_elapsed_msec := -1
-var active_playtest_path_id := PLAYTEST_PATH_GUIDED
+var active_playtest_path_id := ""
 var pending_new_game_path_id := PLAYTEST_PATH_GUIDED
 var last_input_device := "unknown"
 var map_panel
@@ -1376,6 +1377,13 @@ func _selected_id(option: OptionButton) -> String:
 func _playtest_path(path_id: String) -> Dictionary:
 	return Dictionary(PLAYTEST_PATHS.get(path_id, PLAYTEST_PATHS[PLAYTEST_PATH_GUIDED]))
 
+func _playtest_path_label(path_id: String) -> String:
+	if path_id == PLAYTEST_PATH_CONTINUED:
+		return "Continued campaign"
+	if PLAYTEST_PATHS.has(path_id):
+		return String(PLAYTEST_PATHS[path_id].get("label", path_id))
+	return "Not selected"
+
 func _apply_playtest_path_defaults(path_id: String) -> void:
 	var path := _playtest_path(path_id)
 	active_playtest_path_id = String(path.get("id", path_id))
@@ -1586,7 +1594,7 @@ func _on_pause_main_menu_pressed() -> void:
 func _on_export_report_pressed() -> void:
 	var viewport_size := _report_viewport_size()
 	var report := {
-		"report_version": 5,
+		"report_version": 6,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
@@ -1600,6 +1608,8 @@ func _on_export_report_pressed() -> void:
 		"presentation": {"large_text": large_text_enabled, "reduced_motion": reduce_motion_enabled, "interface_sounds": interface_sounds_enabled},
 		"session_elapsed_seconds": maxf(0.0, float(Time.get_ticks_msec() - run_started_msec) / 1000.0),
 		"time_to_first_trade_seconds": null if first_trade_elapsed_msec < 0 else float(first_trade_elapsed_msec) / 1000.0,
+		"playtest_path_id": active_playtest_path_id,
+		"playtest_path_label": _playtest_path_label(active_playtest_path_id),
 		"seed": world.seed,
 		"day": world.day,
 		"settlement_id": world.current_settlement,
@@ -1626,7 +1636,7 @@ func _on_export_report_pressed() -> void:
 	var report_json := JSON.stringify(report, "\t")
 	if _download_web_report(report_json):
 		_play_ui_cue("success")
-		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
+		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, entry path, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
 		var file := FileAccess.open(report_path, FileAccess.WRITE)
 		if file == null:
@@ -1643,7 +1653,7 @@ func _on_export_report_pressed() -> void:
 			_set_event("Report export failed. The campaign remains unchanged.")
 		else:
 			_play_ui_cue("success")
-			_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
+			_set_event("REPORT EXPORTED — %s\nBuild, entry path, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
@@ -2647,6 +2657,7 @@ func _write_save(status_prefix: String) -> bool:
 	return true
 
 func _on_load_pressed() -> bool:
+	var loaded_from_main_menu := menu_layer != null and menu_layer.visible
 	var backup_path := save_path + ".bak"
 	if not FileAccess.file_exists(save_path) and not FileAccess.file_exists(backup_path):
 		_play_ui_cue("blocked")
@@ -2672,6 +2683,8 @@ func _on_load_pressed() -> bool:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = candidate
+	if loaded_from_main_menu:
+		active_playtest_path_id = PLAYTEST_PATH_CONTINUED
 	arrival_pending = false
 	last_conflict_outcome_text = ""
 	if map_panel:
@@ -2768,6 +2781,11 @@ func _refresh_playtest_status() -> void:
 		return
 	if active_playtest_path_id == PLAYTEST_PATH_CAMPAIGN:
 		_refresh_campaign_playtest_status()
+		return
+	if active_playtest_path_id == PLAYTEST_PATH_CONTINUED:
+		if guided_test_button:
+			guided_test_button.visible = false
+		playtest_status_label.text = "CONTINUED CAMPAIGN — Resume from the saved market, route, contract, crew, and campaign evidence; no opening-path assumptions are applied."
 		return
 	if active_playtest_path_id != PLAYTEST_PATH_GUIDED:
 		if guided_test_button:
