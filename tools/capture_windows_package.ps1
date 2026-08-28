@@ -20,8 +20,16 @@ using System.Runtime.InteropServices;
 public static class MarketOfAshWindowCapture {
     [StructLayout(LayoutKind.Sequential)]
     public struct RECT { public int Left; public int Top; public int Right; public int Bottom; }
+    [StructLayout(LayoutKind.Sequential)]
+    public struct POINT { public int X; public int Y; }
     [DllImport("user32.dll")]
     public static extern bool GetWindowRect(IntPtr handle, out RECT rectangle);
+    [DllImport("user32.dll")]
+    public static extern bool GetClientRect(IntPtr handle, out RECT rectangle);
+    [DllImport("user32.dll")]
+    public static extern bool ClientToScreen(IntPtr handle, ref POINT point);
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
 }
 "@
 Add-Type -AssemblyName System.Drawing
@@ -46,6 +54,10 @@ try {
     if ($handle -eq [IntPtr]::Zero) {
         throw "Packaged game did not present a window within 30 seconds."
     }
+    $noSizeNoOrderShow = 0x0001 -bor 0x0004 -bor 0x0040
+    if (-not [MarketOfAshWindowCapture]::SetWindowPos($handle, [IntPtr]::Zero, 24, 24, 0, 0, $noSizeNoOrderShow)) {
+        throw "Could not move the packaged game window onto the capture desktop."
+    }
     Start-Sleep -Seconds 2
     $process.Refresh()
     $rectangle = [MarketOfAshWindowCapture+RECT]::new()
@@ -57,10 +69,23 @@ try {
     if ($width -le 0 -or $height -le 0) {
         throw "Packaged game reported invalid window bounds ${width}x${height}."
     }
-    $bitmap = [System.Drawing.Bitmap]::new($width, $height)
+    $clientRectangle = [MarketOfAshWindowCapture+RECT]::new()
+    if (-not [MarketOfAshWindowCapture]::GetClientRect($process.MainWindowHandle, [ref]$clientRectangle)) {
+        throw "Could not read the packaged game client bounds."
+    }
+    $clientOrigin = [MarketOfAshWindowCapture+POINT]::new()
+    if (-not [MarketOfAshWindowCapture]::ClientToScreen($process.MainWindowHandle, [ref]$clientOrigin)) {
+        throw "Could not locate the packaged game client area on screen."
+    }
+    $captureWidth = $clientRectangle.Right - $clientRectangle.Left
+    $captureHeight = $clientRectangle.Bottom - $clientRectangle.Top
+    if ($captureWidth -le 0 -or $captureHeight -le 0 -or $clientOrigin.X -lt 0 -or $clientOrigin.Y -lt 0) {
+        throw "Packaged game reported invalid client capture bounds ${captureWidth}x${captureHeight} at $($clientOrigin.X),$($clientOrigin.Y)."
+    }
+    $bitmap = [System.Drawing.Bitmap]::new($captureWidth, $captureHeight)
     $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
     try {
-        $graphics.CopyFromScreen($rectangle.Left, $rectangle.Top, 0, 0, $bitmap.Size)
+        $graphics.CopyFromScreen($clientOrigin.X, $clientOrigin.Y, 0, 0, $bitmap.Size)
         $bitmap.Save($screenshotPath, [System.Drawing.Imaging.ImageFormat]::Png)
     }
     finally {
@@ -72,6 +97,7 @@ try {
         process_name = $process.ProcessName
         window_title = $process.MainWindowTitle
         window = @{ x = $rectangle.Left; y = $rectangle.Top; width = $width; height = $height }
+        capture = @{ x = $clientOrigin.X; y = $clientOrigin.Y; width = $captureWidth; height = $captureHeight }
         product_name = $version.ProductName
         file_version = $version.FileVersion
         product_version = $version.ProductVersion

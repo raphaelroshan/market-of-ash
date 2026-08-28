@@ -17,14 +17,15 @@ def validate_capture(
     image_path: Path,
     metadata_path: Path,
     *,
-    minimum_width: int = 900,
-    minimum_height: int = 500,
+    expected_width: int = 960,
+    expected_height: int = 540,
     minimum_colors: int = 32,
     minimum_bytes: int = 10_000,
 ) -> dict[str, object]:
     dimensions = png_dimensions(image_path)
-    if dimensions[0] < minimum_width or dimensions[1] < minimum_height:
-        raise AssertionError(f"Windows GUI capture is too small: {dimensions}")
+    expected_dimensions = (expected_width, expected_height)
+    if dimensions != expected_dimensions:
+        raise AssertionError(f"Windows GUI capture is {dimensions}, expected {expected_dimensions}")
     if image_path.stat().st_size < minimum_bytes:
         raise AssertionError("Windows GUI capture is unexpectedly small")
     _, pixels = png_rgb(image_path)
@@ -41,8 +42,19 @@ def validate_capture(
         if metadata.get(field) != "0.9.0.0":
             raise AssertionError(f"unexpected Windows {field}: {metadata.get(field)!r}")
     window = metadata.get("window")
-    if not isinstance(window, dict) or int(window.get("width", 0)) < minimum_width or int(window.get("height", 0)) < minimum_height:
+    if not isinstance(window, dict) or int(window.get("width", 0)) < expected_width or int(window.get("height", 0)) < expected_height:
         raise AssertionError(f"invalid Windows window bounds: {window!r}")
+    capture = metadata.get("capture")
+    if not isinstance(capture, dict):
+        raise AssertionError(f"missing Windows client capture bounds: {capture!r}")
+    capture_bounds = (
+        int(capture.get("x", -1)),
+        int(capture.get("y", -1)),
+        int(capture.get("width", 0)),
+        int(capture.get("height", 0)),
+    )
+    if capture_bounds[0] < 0 or capture_bounds[1] < 0 or capture_bounds[2:] != expected_dimensions:
+        raise AssertionError(f"invalid Windows client capture bounds: {capture!r}")
     if not str(metadata.get("window_title", "")).strip():
         raise AssertionError("packaged Windows game has no visible window title")
     return {"dimensions": dimensions, "sampled_colors": len(colors), "metadata": metadata}

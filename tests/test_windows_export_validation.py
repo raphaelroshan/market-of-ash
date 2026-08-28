@@ -66,6 +66,7 @@ def main() -> int:
                     "product_version": "0.9.0.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
+                    "capture": {"x": 1, "y": 1, "width": 8, "height": 8},
                 }
             ),
             encoding="utf-8",
@@ -73,12 +74,39 @@ def main() -> int:
         gui_details = validate_capture(
             screenshot,
             metadata,
-            minimum_width=8,
-            minimum_height=8,
+            expected_width=8,
+            expected_height=8,
             minimum_colors=32,
             minimum_bytes=1,
         )
         assert gui_details["dimensions"] == (8, 8)
+
+        missing_capture_metadata = root / "windows-version-missing-capture.json"
+        missing_capture_metadata.write_text(
+            json.dumps(
+                {
+                    "product_name": "Market of Ash",
+                    "file_version": "0.9.0.0",
+                    "product_version": "0.9.0.0",
+                    "window_title": "Market of Ash",
+                    "window": {"width": 8, "height": 8},
+                }
+            ),
+            encoding="utf-8",
+        )
+        try:
+            validate_capture(
+                screenshot,
+                missing_capture_metadata,
+                expected_width=8,
+                expected_height=8,
+                minimum_colors=32,
+                minimum_bytes=1,
+            )
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("Windows captures without explicit client bounds should be rejected")
     print("Windows export validator tests: PASS")
     return 0
 
