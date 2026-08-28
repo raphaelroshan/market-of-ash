@@ -13,6 +13,7 @@ const CAPTURE_SCREENS := [
 	"route_event",
 	"route_event_large_text",
 	"route_event_result",
+	"route_event_loss_result",
 	"destination_shop",
 	"new_game_confirmation",
 ]
@@ -108,6 +109,24 @@ func _run() -> void:
 	await _capture(ui, "route_event_result", "route-event-result")
 	ui._on_enter_settlement_pressed()
 	await _capture(ui, "destination_shop", "destination-shop")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 5
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	if ui.world.pending_event.get("id", "") != "three_riders_no_banner":
+		push_error("Native capture expected the deterministic Three Riders, No Banner event.")
+		quit(1)
+		return
+	ui._on_event_choice_pressed("three_riders_no_banner", "cross_without_escort")
+	if int(ui.world.cargo.get("medicine", 0)) != 1 or not ui.conflict_outcome_label.text.contains("RECOVERY —"):
+		push_error("Native capture expected one realized medicine loss and recovery guidance.")
+		quit(1)
+		return
+	await _capture(ui, "route_event_loss_result", "route-event-loss-result")
 	if not ui._write_save("SAVED"):
 		push_error("Native capture could not create its isolated confirmation save.")
 		quit(1)

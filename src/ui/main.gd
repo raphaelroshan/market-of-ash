@@ -3112,6 +3112,9 @@ func _conflict_outcome_comparison_from_event(event_record: Dictionary) -> String
 	]
 	if not persistent_effects.is_empty():
 		comparison += "\nPERSISTENT — %s" % persistent_effects
+	var recovery_text := _conflict_recovery_text(event_record, outcome)
+	if not recovery_text.is_empty():
+		comparison += "\n%s" % recovery_text
 	return comparison
 
 func _event_choice_from_record(event_record: Dictionary, choice_id: String) -> Dictionary:
@@ -3180,6 +3183,91 @@ func _conflict_persistent_effects_text(outcome: Dictionary) -> String:
 	if not contracts.is_empty():
 		parts.append("%d contract result%s" % [contracts.size(), "" if contracts.size() == 1 else "s"])
 	return "; ".join(parts)
+
+func _conflict_recovery_text(event_record: Dictionary, outcome: Dictionary) -> String:
+	var risk := float(outcome.get("cargo_risk", 0.0))
+	var roll := float(outcome.get("resolution_roll", 1.0))
+	if risk <= 0.0 or roll >= risk:
+		return ""
+	var sale := _best_recovery_sale()
+	var recovery_steps: Array[String] = []
+	var available_money := world.money
+	if not sale.is_empty():
+		available_money += int(sale.get("total", 0))
+		recovery_steps.append("%s x%d remains and would sell here for %d ashmarks" % [String(sale.get("name", "Cargo")), int(sale.get("quantity", 0)), int(sale.get("total", 0))])
+	var route_option := _safest_affordable_recovery_route(available_money)
+	if not route_option.is_empty():
+		var funding_basis := "With current funds"
+		if not sale.is_empty():
+			funding_basis = "After that sale"
+		recovery_steps.append("%s, %s to %s is the lowest-risk affordable onward route at %d ashmarks, %d provision%s, and %d%% route risk" % [funding_basis, String(route_option.get("route_name", "Route")), String(route_option.get("destination_name", "destination")), int(route_option.get("money_cost", 0)), int(route_option.get("provision_cost", 0)), "" if int(route_option.get("provision_cost", 0)) == 1 else "s", int(route_option.get("risk_percent", 0))])
+	if recovery_steps.is_empty():
+		var loss_basis: Dictionary = event_record.get("loss_basis", {})
+		var loss_good_id := String(loss_basis.get("loss_good_id", "cargo"))
+		recovery_steps.append("the lost %s leaves no immediately affordable sale or route, so check the visible Local Opportunities and their exact blockers" % loss_good_id.capitalize())
+	return "RECOVERY — %s. No restart is required." % ". ".join(recovery_steps)
+
+func _best_recovery_sale() -> Dictionary:
+	var settlement := world.settlement(world.current_settlement)
+	var context := world.pricing_context()
+	var best: Dictionary = {}
+	for good_id in MarketContent.good_ids():
+		var quantity := _uncommitted_cargo_quantity(good_id)
+		if quantity <= 0:
+			continue
+		var unit_price := MarketEconomy.price_for(good_id, settlement, context)
+		var total := unit_price * quantity
+		if best.is_empty() or total > int(best.get("total", 0)):
+			best = {
+				"good_id": good_id,
+				"name": String(MarketContent.good(good_id).get("name", good_id.capitalize())),
+				"quantity": quantity,
+				"unit_price": unit_price,
+				"total": total,
+			}
+	return best
+
+func _uncommitted_cargo_quantity(good_id: String) -> int:
+	var reserved_quantity := 0
+	for contract_id in world.active_contracts.keys():
+		var contract := world.active_contract(String(contract_id))
+		if String(contract.get("good_id", "")) == good_id:
+			reserved_quantity += int(contract.get("quantity", 0))
+	return maxi(0, int(world.cargo.get(good_id, 0)) - reserved_quantity)
+
+func _safest_affordable_recovery_route(available_money: int) -> Dictionary:
+	var best: Dictionary = {}
+	var destination_ids := MarketContent.destinations_from(world.current_settlement)
+	destination_ids.sort()
+	var route_ids := MarketContent.routes_from(world.current_settlement)
+	route_ids.sort()
+	for destination_id_value in destination_ids:
+		var destination_id := String(destination_id_value)
+		for route_id_value in route_ids:
+			var route_id := String(route_id_value)
+			if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+				continue
+			var route := world.route(route_id, world.current_settlement, destination_id)
+			var money_cost := int(route.get("cost", 0))
+			var provision_cost := world.route_provision_cost(route_id, destination_id)
+			if available_money < money_cost or world.provisions < provision_cost:
+				continue
+			var risk_percent := int(round(float(route.get("risk", 0.0)) * 100.0))
+			if not best.is_empty():
+				var best_risk := int(best.get("risk_percent", 0))
+				var best_cost := int(best.get("money_cost", 0))
+				if risk_percent > best_risk or (risk_percent == best_risk and money_cost >= best_cost):
+					continue
+			best = {
+				"route_id": route_id,
+				"route_name": String(route.get("name", route_id)),
+				"destination_id": destination_id,
+				"destination_name": String(world.settlement(destination_id).get("name", destination_id)),
+				"money_cost": money_cost,
+				"provision_cost": provision_cost,
+				"risk_percent": risk_percent,
+			}
+	return best
 
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
 	for contract_id in world.active_contracts.keys():

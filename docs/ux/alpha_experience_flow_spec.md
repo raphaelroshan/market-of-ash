@@ -169,7 +169,7 @@ Crew and services are settlement-scoped offers. A player opens a compact panel f
 
 ### 5.5 Recovery flow
 
-After an unprofitable trade or route loss, the arrival report highlights **recovery options** that actually exist: sell remaining cargo, take a small local contract, choose a safer return route, ask a contact for information, or wait only when waiting changes something visible. Recovery messaging is concrete: *“You lost 1 water, but Reedwatch still offers two sellable goods and a cheap route back through Hollow Market.”*
+After a route conflict realizes its disclosed cargo risk, the arrival and saved-history reports highlight **recovery options** that actually exist. The current implementation names the highest-value uncommitted surviving cargo stack and its full local sale value, then names the lowest-risk onward route affordable with current funds plus that sale. Contract-reserved cargo is not offered as recovery inventory. If neither option exists, the report points to the visible Local Opportunities blockers instead of implying that the run must restart. Future recovery extensions can add contract, contact, and useful waiting recommendations without changing this deterministic presentation boundary.
 
 ### 5.6 Save, pause, and settings flow
 
