@@ -31,6 +31,38 @@ def send_game_key(driver: webdriver.Chrome, key: str) -> None:
     time.sleep(INPUT_SETTLE_SECONDS)
 
 
+def click_game_target(driver: webdriver.Chrome, target_name: str, timeout_seconds: float = 5.0) -> None:
+    """Click the center of a Godot control described by the Web test state."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(state, dict):
+            target = state.get("targets", {}).get(target_name, {})
+            viewport = state.get("logical_viewport", {})
+            if (
+                isinstance(target, dict)
+                and target.get("width", 0) > 0
+                and target.get("height", 0) > 0
+                and viewport.get("width", 0) > 0
+                and viewport.get("height", 0) > 0
+            ):
+                canvas = driver.find_element(By.ID, "canvas")
+                canvas_rect = driver.execute_script(
+                    "const r=arguments[0].getBoundingClientRect();"
+                    "return {width:r.width,height:r.height};",
+                    canvas,
+                )
+                target_x = (target["x"] + target["width"] / 2) * canvas_rect["width"] / viewport["width"]
+                target_y = (target["y"] + target["height"] / 2) * canvas_rect["height"] / viewport["height"]
+                x_offset = round(target_x - canvas_rect["width"] / 2)
+                y_offset = round(target_y - canvas_rect["height"] / 2)
+                ActionChains(driver).move_to_element_with_offset(canvas, x_offset, y_offset).click().perform()
+                time.sleep(INPUT_SETTLE_SECONDS)
+                return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web UI target {target_name!r} was not available")
+
+
 def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
@@ -182,8 +214,7 @@ def main() -> int:
                     "ui_state": main_state,
                 }
             )
-            canvas = driver.find_element(By.ID, "canvas")
-            canvas.click()
+            click_game_target(driver, "start_game")
             shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
@@ -225,11 +256,7 @@ def main() -> int:
             # so this transition remains a real keyboard-input check.
             send_game_key(driver, "p")
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
-            # Start focuses the Shop cargo selector. Up is intentionally wired
-            # to the pinned Plan action, so this both opens the next screen and
-            # exercises packaged keyboard focus continuity without browser Tab.
-            send_game_key(driver, Keys.ARROW_UP)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "plan_departure")
             departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
@@ -242,13 +269,11 @@ def main() -> int:
                     "file": departure_output.name,
                     "bytes": departure_bytes,
                     "changed_pixel_ratio": round(departure_changed_ratio, 4),
-                    "navigation": "Arrow up from cargo selector, then Enter",
+                    "navigation": "Pointer activation of the published Plan departure target",
                     "ui_state": departure_state,
                 }
             )
-            for _ in range(5):
-                send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "return_to_shop")
             returned_shop_state = wait_for_ui_state(
                 driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate"
             )
@@ -269,17 +294,14 @@ def main() -> int:
                     "file": returned_shop_output.name,
                     "bytes": returned_shop_bytes,
                     "changed_pixel_ratio": round(returned_shop_changed_ratio, 4),
-                    "navigation": "Arrow through the explicit Departure focus cycle, then Enter on Return to shop",
+                    "navigation": "Pointer activation of the published Return to shop target",
                     "unchanged_fields": list(unchanged_fields),
                     "ui_state": returned_shop_state,
                 }
             )
-            send_game_key(driver, Keys.ARROW_UP)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "plan_departure")
             wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
-            for _ in range(4):
-                send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "commit_departure")
             arrival_state = wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
             time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
@@ -293,11 +315,11 @@ def main() -> int:
                     "file": arrival_output.name,
                     "bytes": arrival_bytes,
                     "changed_pixel_ratio": round(arrival_changed_ratio, 4),
-                    "navigation": "Arrow through the explicit departure focus cycle, then Enter",
+                    "navigation": "Pointer activation of the published Commit departure target",
                     "ui_state": arrival_state,
                 }
             )
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "enter_settlement")
             destination_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
             destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
             destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
@@ -310,17 +332,15 @@ def main() -> int:
                     "file": destination_output.name,
                     "bytes": destination_bytes,
                     "changed_pixel_ratio": round(destination_changed_ratio, 4),
-                    "navigation": "Enter on the focused destination-specific arrival action",
+                    "navigation": "Pointer activation of the destination-specific arrival action",
                     "ui_state": destination_state,
                 }
             )
             send_game_key(driver, "p")
             wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="reedwatch")
-            for _ in range(4):
-                send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "pause_main_menu")
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False, settlement_id="reedwatch")
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "start_game")
             confirmation_state = wait_for_ui_state(
                 driver, "new_game_confirmation", args.timeout, large_text=False, settlement_id="reedwatch"
             )
@@ -337,7 +357,7 @@ def main() -> int:
                     "file": confirmation_output.name,
                     "bytes": confirmation_bytes,
                     "changed_pixel_ratio": round(confirmation_changed_ratio, 4),
-                    "navigation": "Pause, Return to main menu, then Enter on Start new game",
+                    "navigation": "Pause, Return to main menu, then activate Start new game",
                     "ui_state": confirmation_state,
                 }
             )
@@ -347,11 +367,7 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            canvas = driver.find_element(By.ID, "canvas")
-            driver.execute_script("arguments[0].focus()", canvas)
-            send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.SPACE)
+            click_game_target(driver, "large_text")
             large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
             large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
@@ -366,13 +382,11 @@ def main() -> int:
                     "file": large_menu_output.name,
                     "bytes": large_menu_bytes,
                     "changed_pixel_ratio": round(large_menu_changed_ratio, 4),
-                    "navigation": "Arrow down from Start to Large text, then Space",
+                    "navigation": "Pointer activation of the published Large text target",
                     "ui_state": large_menu_state,
                 }
             )
-            send_game_key(driver, Keys.ARROW_UP)
-            send_game_key(driver, Keys.ARROW_UP)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "start_game")
             large_shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
             large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
@@ -387,7 +401,7 @@ def main() -> int:
                     "file": large_shop_output.name,
                     "bytes": large_shop_bytes,
                     "changed_pixel_ratio": round(large_shop_changed_ratio, 4),
-                    "navigation": "Arrow up from Large text to Start, then Enter",
+                    "navigation": "Pointer activation of Start with Large text enabled",
                     "ui_state": large_shop_state,
                 }
             )
@@ -412,8 +426,7 @@ def main() -> int:
             )
             send_game_key(driver, "p")
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
-            send_game_key(driver, Keys.ARROW_UP)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "plan_departure")
             large_departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=True, settlement_id="ashgate")
             large_departure_output = args.output_dir / f"departure-desk-large-text-{width}x{height}.png"
             large_departure_bytes = capture_frame(driver, large_departure_output, (actual_width, actual_height))
@@ -428,7 +441,7 @@ def main() -> int:
                     "file": large_departure_output.name,
                     "bytes": large_departure_bytes,
                     "changed_pixel_ratio": round(large_departure_changed_ratio, 4),
-                    "navigation": "Arrow up from cargo selector to Plan, then Enter",
+                    "navigation": "Pointer activation of Plan with Large text enabled",
                     "ui_state": large_departure_state,
                 }
             )
@@ -438,11 +451,12 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            driver.find_element(By.ID, "canvas").click()
+            click_game_target(driver, "start_game")
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
-            for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
+            click_game_target(driver, "shop_good")
+            for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
                 send_game_key(driver, key)
             event_state = wait_for_ui_state(
                 driver,
@@ -450,16 +464,14 @@ def main() -> int:
                 args.timeout,
                 expected_values={"selected_good_id": "medicine", "selected_quantity": 2},
             )
-            send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "shop_buy")
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
                 expected_values={"selected_good_id": "medicine", "held_selected_quantity": 2},
             )
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "plan_departure")
             wait_for_ui_state(
                 driver,
                 "departure_desk",
@@ -469,7 +481,8 @@ def main() -> int:
                 expected_values={"selected_good_id": "medicine", "selected_destination_id": "reedwatch"},
             )
             # Brine Cross is two entries after the default Reedwatch choice.
-            for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
+            click_game_target(driver, "destination")
+            for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
                 send_game_key(driver, key)
             wait_for_ui_state(
                 driver,
@@ -477,9 +490,7 @@ def main() -> int:
                 args.timeout,
                 expected_values={"selected_destination_id": "brine_cross"},
             )
-            for _ in range(4):
-                send_game_key(driver, Keys.ARROW_DOWN)
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "commit_departure")
             wait_for_ui_state(
                 driver,
                 "route_event",
@@ -503,7 +514,7 @@ def main() -> int:
                     "ui_state": event_state,
                 }
             )
-            send_game_key(driver, Keys.ENTER)
+            click_game_target(driver, "event_choice")
             event_arrival_state = wait_for_ui_state(
                 driver,
                 "arrival_handoff",

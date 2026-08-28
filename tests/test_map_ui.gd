@@ -36,6 +36,10 @@ func _initialize() -> void:
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
 	_expect(ui._current_ui_state_id() == "main_menu", "Web diagnostics should identify the Main Menu state")
 	_expect(ui._web_accessibility_announcement().contains("Start Game is focused") and ui._web_accessibility_announcement().contains("Enter / Space") and ui._web_accessibility_announcement().contains("A / Cross"), "Web accessibility fallback should announce the Main Menu's primary action and active accept bindings")
+	var menu_web_state: Dictionary = ui._web_ui_state()
+	var menu_targets: Dictionary = menu_web_state.get("targets", {})
+	var logical_viewport: Dictionary = menu_web_state.get("logical_viewport", {})
+	_expect(float(logical_viewport.get("width", 0)) > 0.0 and float(logical_viewport.get("height", 0)) > 0.0 and not Dictionary(menu_targets.get("start_game", {})).is_empty() and not Dictionary(menu_targets.get("large_text", {})).is_empty(), "Web diagnostics should publish logical viewport and visible Main Menu target geometry")
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")
@@ -140,6 +144,8 @@ func _initialize() -> void:
 	_expect(ui._web_accessibility_announcement().contains("Settlement Shop at Ashgate") and ui._web_accessibility_announcement().contains("Plan departure"), "Web accessibility fallback should announce Shop context and the next major action")
 	var initial_web_state: Dictionary = ui._web_ui_state()
 	_expect(initial_web_state.get("settlement_id") == "ashgate" and initial_web_state.get("day") == 1 and initial_web_state.get("money") == 120 and initial_web_state.get("provisions") == 12 and initial_web_state.get("cargo_weight") == 0 and initial_web_state.get("selected_good_id") == "water" and initial_web_state.get("selected_destination_id") == "reedwatch" and initial_web_state.get("selected_quantity") == 2 and initial_web_state.get("held_selected_quantity") == 0, "Web diagnostics should expose the deterministic visible planning state without personal data")
+	var shop_targets: Dictionary = initial_web_state.get("targets", {})
+	_expect(not Dictionary(shop_targets.get("shop_good", {})).is_empty() and not Dictionary(shop_targets.get("shop_buy", {})).is_empty() and not Dictionary(shop_targets.get("plan_departure", {})).is_empty(), "Web diagnostics should publish visible Shop target geometry for packaged pointer checks")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
 	for shop_control in [ui.shop_good_option, ui.shop_quantity, ui.shop_save_button, ui.shop_load_button, ui.shop_reset_button, ui.shop_report_button]:
 		_expect(shop_control.custom_minimum_size.y >= 44.0, "Shop control %s should expose a comfortable pointer target" % shop_control.get_class())
@@ -147,6 +153,7 @@ func _initialize() -> void:
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "pausing from the shop should stop the tree and focus Resume")
 	_expect(ui._current_ui_state_id() == "pause", "Web diagnostics should identify the modal Pause state")
 	_expect(ui._web_accessibility_announcement().contains("Resume is focused"), "Web accessibility fallback should announce Pause and its primary action")
+	_expect(not Dictionary(ui._web_ui_state().get("targets", {})).get("pause_main_menu", {}).is_empty(), "Web diagnostics should publish the visible Pause exit target")
 	_expect(ui.pause_resume_button.find_next_valid_focus() == ui.pause_save_button and ui.pause_main_menu_button.find_next_valid_focus() == ui.pause_resume_button, "Pause focus should cycle through every modal action and wrap to Resume")
 	for pause_action in [ui.pause_resume_button, ui.pause_save_button, ui.pause_load_button, ui.pause_report_button, ui.pause_main_menu_button]:
 		_expect(pause_action.custom_minimum_size.y >= 44.0, "Pause action %s should expose a comfortable pointer target" % pause_action.text)

@@ -1552,9 +1552,24 @@ func _web_accessibility_announcement() -> String:
 
 func _web_ui_state() -> Dictionary:
 	var selected_good_id := _selected_id(shop_good_option) if shop_good_option != null else ""
+	var logical_size := get_viewport().get_visible_rect().size
 	return {
 		"screen": _current_ui_state_id(),
 		"announcement": _web_accessibility_announcement(),
+		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
+		"targets": {
+			"start_game": _web_control_rect(start_game_button),
+			"large_text": _web_control_rect(large_text_checkbox),
+			"plan_departure": _web_control_rect(plan_departure_button),
+			"return_to_shop": _web_control_rect(return_to_shop_button),
+			"commit_departure": _web_control_rect(commit_departure_button),
+			"enter_settlement": _web_control_rect(enter_settlement_button),
+			"pause_main_menu": _web_control_rect(pause_main_menu_button),
+			"shop_good": _web_control_rect(shop_good_option),
+			"shop_buy": _web_control_rect(shop_buy_button),
+			"destination": _web_control_rect(destination_option),
+			"event_choice": _web_control_rect(_first_available_event_choice()),
+		},
 		"large_text": large_text_enabled,
 		"settlement_id": world.current_settlement if world != null else "",
 		"day": world.day if world != null else 0,
@@ -1567,6 +1582,20 @@ func _web_ui_state() -> Dictionary:
 		"selected_quantity": int(shop_quantity.value) if shop_quantity != null else 0,
 		"held_selected_quantity": int(world.cargo.get(selected_good_id, 0)) if world != null else 0,
 	}
+
+func _web_control_rect(control: Control) -> Dictionary:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree():
+		return {}
+	if control is BaseButton and control.disabled:
+		return {}
+	var rect := control.get_global_rect()
+	return {"x": rect.position.x, "y": rect.position.y, "width": rect.size.x, "height": rect.size.y}
+
+func _first_available_event_choice() -> Control:
+	for button in event_choice_buttons:
+		if button != null and is_instance_valid(button) and button.visible and not button.disabled:
+			return button
+	return null
 
 func _report_viewport_size() -> Vector2i:
 	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
