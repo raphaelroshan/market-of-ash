@@ -174,6 +174,47 @@ def set_accessibility_quantity(driver: Any, control_id: str, value: int) -> None
     time.sleep(INPUT_SETTLE_SECONDS)
 
 
+def set_accessibility_checkbox(
+    driver: Any, control_id: str, checked: bool, timeout_seconds: float = 5.0
+) -> None:
+    """Keyboard-toggle one mirrored checkbox and require a focused state refresh."""
+    control = focus_accessibility_control(driver, control_id, timeout_seconds)
+    if control.is_selected() == checked:
+        return
+    render_sequence = int(
+        driver.execute_script(
+            "return Number(document.getElementById('market-of-ash-actions').dataset.renderSequence || '0')"
+        )
+    )
+    control.send_keys(Keys.SPACE)
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        result = driver.execute_script(
+            """
+            const controlId = arguments[0];
+            const expected = arguments[1];
+            const region = document.getElementById('market-of-ash-actions');
+            const field = region
+              ? Array.from(region.querySelectorAll('[data-control]'))
+                  .find(candidate => candidate.dataset.control === controlId) || null
+              : null;
+            return {
+              checked: field ? field.checked : null,
+              focused: Boolean(field && document.activeElement === field),
+              renderSequence: region ? Number(region.dataset.renderSequence || '0') : 0,
+              matches: Boolean(field && field.checked === expected),
+            };
+            """,
+            control_id,
+            checked,
+        )
+        if result["matches"] and result["focused"] and result["renderSequence"] > render_sequence:
+            time.sleep(INPUT_SETTLE_SECONDS)
+            return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility checkbox {control_id!r} did not become checked={checked}")
+
+
 def wait_for_accessibility_action_state(
     driver: Any, action_id: str, enabled: bool, timeout_seconds: float = 5.0
 ) -> None:
@@ -295,11 +336,18 @@ def wait_for_ui_state(
                   actionRegionRole: actions ? actions.getAttribute('role') : null,
                   actionRegionLabel: actions ? actions.getAttribute('aria-label') : null,
                   actionScreen: actions ? actions.dataset.screen : null,
+                  order: actions ? Array.from(actions.querySelectorAll('[data-control],[data-action]')).map(item =>
+                    item.dataset.control ? `control:${item.dataset.control}` : `action:${item.dataset.action}`
+                  ) : [],
                   controls: actions ? Array.from(actions.querySelectorAll('[data-control]')).map(control => ({
                     id: control.dataset.control,
                     label: document.querySelector(`label[for="${control.id}"]`).textContent,
-                    kind: control.tagName === 'SELECT' ? 'select' : 'number',
-                    value: control.tagName === 'SELECT' ? control.value : Number(control.value),
+                    kind: control.tagName === 'SELECT'
+                      ? 'select'
+                      : control.type === 'checkbox' ? 'checkbox' : 'number',
+                    value: control.tagName === 'SELECT'
+                      ? control.value
+                      : control.type === 'checkbox' ? control.checked : Number(control.value),
                     enabled: !control.disabled,
                     description: control.getAttribute('aria-describedby')
                       ? document.getElementById(control.getAttribute('aria-describedby')).textContent
@@ -307,9 +355,9 @@ def wait_for_ui_state(
                     options: control.tagName === 'SELECT'
                       ? Array.from(control.options).map(option => ({value: option.value, label: option.textContent}))
                       : [],
-                    minimum: control.tagName === 'INPUT' ? Number(control.min) : null,
-                    maximum: control.tagName === 'INPUT' ? Number(control.max) : null,
-                    step: control.tagName === 'INPUT' ? Number(control.step) : null,
+                    minimum: control.type === 'number' ? Number(control.min) : null,
+                    maximum: control.type === 'number' ? Number(control.max) : null,
+                    step: control.type === 'number' ? Number(control.step) : null,
                   })) : [],
                   actions: actions ? Array.from(actions.querySelectorAll('button')).map(button => ({
                     id: button.dataset.action,
@@ -359,6 +407,13 @@ def wait_for_ui_state(
                 "actionRegionRole": "region",
                 "actionRegionLabel": "Available game controls",
                 "actionScreen": expected_screen,
+                "order": (
+                    [f"control:{control['id']}" for control in expected_controls]
+                    + [f"action:{action['id']}" for action in expected_actions]
+                    if last_state.get("accessibility_controls_first", True)
+                    else [f"action:{action['id']}" for action in expected_actions]
+                    + [f"control:{control['id']}" for control in expected_controls]
+                ),
                 "controls": expected_controls,
                 "actions": expected_actions,
             }
@@ -488,6 +543,27 @@ def main() -> int:
                     "ui_state": main_state,
                 }
             )
+            if use_accessibility_actions:
+                set_accessibility_checkbox(driver, "reduce_motion", True)
+                wait_for_ui_state(
+                    driver, "main_menu", args.timeout, large_text=False, expected_values={"reduced_motion": True}
+                )
+                set_accessibility_checkbox(driver, "reduce_motion", False)
+                wait_for_ui_state(
+                    driver, "main_menu", args.timeout, large_text=False, expected_values={"reduced_motion": False}
+                )
+                set_accessibility_checkbox(driver, "large_text", True)
+                wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
+                set_accessibility_checkbox(driver, "large_text", False)
+                wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
+                set_accessibility_checkbox(driver, "interface_sounds", False)
+                wait_for_ui_state(
+                    driver, "main_menu", args.timeout, large_text=False, expected_values={"interface_sounds": False}
+                )
+                set_accessibility_checkbox(driver, "interface_sounds", True)
+                wait_for_ui_state(
+                    driver, "main_menu", args.timeout, large_text=False, expected_values={"interface_sounds": True}
+                )
             activate_game_action(driver, "start_game", use_accessibility_actions)
             shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
@@ -836,13 +912,14 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 5,
+                    "manifest_version": 6,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
                     "assistive_action_bridge": "actions focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
                     "assistive_planning_controls": "Shop and Departure native HTML fields exercised at 960x540",
                     "assistive_dynamic_actions": "Reedwatch Water Relief accepted through its generated semantic button at 960x540",
+                    "assistive_presentation_controls": "Reduce motion, Large text, and Interface sounds toggled through native HTML checkboxes at 960x540",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },

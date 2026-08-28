@@ -1598,13 +1598,15 @@ func _publish_web_ui_state() -> void:
 	summary.id = 'market-of-ash-actions-description';
 	summary.textContent = state.announcement;
 	controlsRegion.appendChild(summary);
+	const controlsContent = document.createDocumentFragment();
+	const actionsContent = document.createDocumentFragment();
 	for (const control of state.accessibility_controls) {
 		const fieldId = 'market-of-ash-control-' + control.id;
 		const label = document.createElement('label');
 		label.htmlFor = fieldId;
 		label.textContent = control.label;
 		label.style.cssText = 'display:block;margin-top:8px;font-weight:600;';
-		controlsRegion.appendChild(label);
+		controlsContent.appendChild(label);
 		let field;
 		if (control.kind === 'select') {
 			field = document.createElement('select');
@@ -1615,6 +1617,10 @@ func _publish_web_ui_state() -> void:
 				field.appendChild(option);
 			}
 			field.value = control.value;
+		} else if (control.kind === 'checkbox') {
+			field = document.createElement('input');
+			field.type = 'checkbox';
+			field.checked = Boolean(control.value);
 		} else {
 			field = document.createElement('input');
 			field.type = 'number';
@@ -1628,18 +1634,19 @@ func _publish_web_ui_state() -> void:
 		field.disabled = !control.enabled;
 		field.setAttribute('aria-disabled', String(!control.enabled));
 		field.style.cssText = 'display:block;width:100%%;min-height:44px;margin:4px 0 8px;box-sizing:border-box;font:inherit;';
-		controlsRegion.appendChild(field);
+		controlsContent.appendChild(field);
 		if (control.description) {
 			const description = document.createElement('p');
 			description.id = 'market-of-ash-control-description-' + control.id;
 			description.textContent = control.description;
 			description.hidden = true;
 			field.setAttribute('aria-describedby', description.id);
-			controlsRegion.appendChild(description);
+			controlsContent.appendChild(description);
 		}
 		field.addEventListener('change', function() {
 			if (typeof window.marketOfAshAccessibilityChange === 'function') {
-				window.marketOfAshAccessibilityChange(control.id, field.value);
+				const value = control.kind === 'checkbox' ? String(field.checked) : field.value;
+				window.marketOfAshAccessibilityChange(control.id, value);
 			}
 		});
 	}
@@ -1651,20 +1658,27 @@ func _publish_web_ui_state() -> void:
 		button.disabled = !action.enabled;
 		button.setAttribute('aria-disabled', String(!action.enabled));
 		button.style.cssText = 'display:block;width:100%%;min-height:44px;margin-top:8px;box-sizing:border-box;font:inherit;';
-		controlsRegion.appendChild(button);
+		actionsContent.appendChild(button);
 		if (action.description) {
 			const description = document.createElement('p');
 			description.id = 'market-of-ash-action-description-' + action.id;
 			description.textContent = action.description;
 			description.hidden = true;
 			button.setAttribute('aria-describedby', description.id);
-			controlsRegion.appendChild(description);
+			actionsContent.appendChild(description);
 		}
 		button.addEventListener('click', function() {
 			if (typeof window.marketOfAshAccessibilityActivate === 'function') {
 				window.marketOfAshAccessibilityActivate(action.id);
 			}
 		});
+	}
+	if (state.accessibility_controls_first) {
+		controlsRegion.appendChild(controlsContent);
+		controlsRegion.appendChild(actionsContent);
+	} else {
+		controlsRegion.appendChild(actionsContent);
+		controlsRegion.appendChild(controlsContent);
 	}
 	let focusTarget = null;
 	if (focusedControlId) {
@@ -1732,6 +1746,12 @@ func _change_web_accessibility_control(control_id: String, value: String) -> voi
 			_select_web_accessibility_option(cargo_good_option, value)
 		"cargo_quantity":
 			_set_web_accessibility_quantity(cargo_quantity, value)
+		"reduce_motion":
+			_set_web_accessibility_checkbox(reduce_motion_checkbox, value)
+		"large_text":
+			_set_web_accessibility_checkbox(large_text_checkbox, value)
+		"interface_sounds":
+			_set_web_accessibility_checkbox(interface_sounds_checkbox, value)
 		_:
 			_publish_web_ui_state()
 
@@ -1752,6 +1772,13 @@ func _set_web_accessibility_quantity(control: SpinBox, requested_value: String) 
 		_publish_web_ui_state()
 		return
 	control.value = clampi(int(requested_value), int(control.min_value), int(control.max_value))
+
+func _set_web_accessibility_checkbox(control: CheckBox, requested_value: String) -> void:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or control.disabled or requested_value not in ["true", "false"]:
+		_publish_web_ui_state()
+		return
+	control.button_pressed = requested_value == "true"
+	_publish_web_ui_state()
 
 func _web_accessibility_action_control(action_id: String) -> Variant:
 	match action_id:
@@ -1833,9 +1860,25 @@ func _web_accessibility_quantity_control(control_id: String, label: String, cont
 		"description": control.tooltip_text,
 	}
 
+func _web_accessibility_checkbox_control(control_id: String, control: CheckBox) -> Dictionary:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree():
+		return {}
+	return {
+		"id": control_id,
+		"label": control.text,
+		"kind": "checkbox",
+		"value": control.button_pressed,
+		"enabled": not control.disabled,
+		"description": control.tooltip_text,
+	}
+
 func _web_accessibility_controls() -> Array:
 	var controls: Array = []
 	match _current_ui_state_id():
+		"main_menu":
+			controls.append(_web_accessibility_checkbox_control("reduce_motion", reduce_motion_checkbox))
+			controls.append(_web_accessibility_checkbox_control("large_text", large_text_checkbox))
+			controls.append(_web_accessibility_checkbox_control("interface_sounds", interface_sounds_checkbox))
 		"settlement_shop":
 			controls.append(_web_accessibility_option_control("shop_good", "Cargo", shop_good_option))
 			controls.append(_web_accessibility_quantity_control("shop_quantity", "Quantity", shop_quantity))
@@ -1921,6 +1964,7 @@ func _web_ui_state() -> Dictionary:
 		"announcement": _web_accessibility_announcement(),
 		"accessibility_actions": _web_accessibility_actions(),
 		"accessibility_controls": _web_accessibility_controls(),
+		"accessibility_controls_first": _current_ui_state_id() != "main_menu",
 		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
 		"targets": {
 			"start_game": _web_control_rect(start_game_button),
@@ -1936,6 +1980,8 @@ func _web_ui_state() -> Dictionary:
 			"event_choice": _web_control_rect(_first_available_event_choice()),
 		},
 		"large_text": large_text_enabled,
+		"reduced_motion": reduce_motion_enabled,
+		"interface_sounds": interface_sounds_enabled,
 		"settlement_id": world.current_settlement if world != null else "",
 		"day": world.day if world != null else 0,
 		"money": world.money if world != null else 0,
