@@ -1666,19 +1666,20 @@ func _publish_web_ui_state() -> void:
 			}
 		});
 	}
+	let focusTarget = null;
 	if (focusedControlId) {
-		const replacement = Array.from(controlsRegion.querySelectorAll('[data-control]'))
-			.find(candidate => candidate.dataset.control === focusedControlId && !candidate.disabled);
-		if (replacement) {
-			replacement.focus();
-		}
-	} else if (focusedActionId) {
-		const matchingAction = Array.from(controlsRegion.querySelectorAll('[data-action]'))
-			.find(candidate => candidate.dataset.action === focusedActionId && !candidate.disabled);
-		const nextControl = controlsRegion.querySelector('[data-control]:not(:disabled),[data-action]:not(:disabled)');
-		if (matchingAction || nextControl) {
-			(matchingAction || nextControl).focus();
-		}
+		focusTarget = Array.from(controlsRegion.querySelectorAll('[data-control]'))
+			.find(candidate => candidate.dataset.control === focusedControlId && !candidate.disabled) || null;
+	}
+	if (!focusTarget && focusedActionId) {
+		focusTarget = Array.from(controlsRegion.querySelectorAll('[data-action]'))
+			.find(candidate => candidate.dataset.action === focusedActionId && !candidate.disabled) || null;
+	}
+	if (!focusTarget && (focusedControlId || focusedActionId)) {
+		focusTarget = controlsRegion.querySelector('[data-control]:not(:disabled),[data-action]:not(:disabled)');
+	}
+	if (focusTarget) {
+		focusTarget.focus();
 	}
 	const canvas = document.getElementById('canvas');
 	if (canvas) {
