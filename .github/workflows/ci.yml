@@ -199,12 +199,21 @@ jobs:
 
   web-render:
     name: Render packaged Web build (${{ matrix.browser }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     needs: [package]
     strategy:
       fail-fast: false
       matrix:
-        browser: [chrome, firefox]
+        include:
+          - browser: chrome
+            os: ubuntu-latest
+          - browser: firefox
+            os: ubuntu-latest
+          - browser: edge
+            os: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout capture tools
         uses: actions/checkout@v7
@@ -222,8 +231,10 @@ jobs:
           if [ "${{ matrix.browser }}" = "firefox" ]; then
             firefox --version
             command -v xvfb-run
-          else
+          elif [ "${{ matrix.browser }}" = "chrome" ]; then
             google-chrome --version
+          else
+            echo "Microsoft Edge will be verified by its WebDriver session."
           fi
       - name: Launch and capture Web build
         run: |

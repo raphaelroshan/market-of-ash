@@ -173,8 +173,8 @@ def wait_for_ui_state(
 
 
 def create_driver(browser: str, width: int, height: int) -> Any:
-    if browser == "chrome":
-        options = webdriver.ChromeOptions()
+    if browser in ("chrome", "edge"):
+        options = webdriver.ChromeOptions() if browser == "chrome" else webdriver.EdgeOptions()
         for option in [
             "--headless=new",
             "--no-sandbox",
@@ -185,7 +185,9 @@ def create_driver(browser: str, width: int, height: int) -> Any:
             "--enable-unsafe-swiftshader",
         ]:
             options.add_argument(option)
-        return webdriver.Chrome(options=options)
+        if browser == "chrome":
+            return webdriver.Chrome(options=options)
+        return webdriver.Edge(options=options)
     if browser == "firefox":
         options = webdriver.FirefoxOptions()
         # In an Xvfb session Firefox reserves 85 pixels for browser chrome.
@@ -205,9 +207,9 @@ def create_driver(browser: str, width: int, height: int) -> Any:
 
 
 def set_viewport_size(driver: Any, browser: str, width: int, height: int) -> None:
-    if browser == "chrome":
-        # Headless Chrome can transiently ignore WebDriver window-resize calls
-        # while its first renderer is starting. CDP applies page viewport
+    if browser in ("chrome", "edge"):
+        # Headless Chromium can transiently ignore WebDriver window-resize
+        # calls while its first renderer is starting. CDP applies page viewport
         # metrics directly, avoiding runner window-manager chrome.
         driver.execute_cdp_cmd(
             "Emulation.setDeviceMetricsOverride",
@@ -254,7 +256,7 @@ def main() -> int:
     parser.add_argument("--url", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--timeout", type=float, default=90.0)
-    parser.add_argument("--browser", choices=("chrome", "firefox"), default="chrome")
+    parser.add_argument("--browser", choices=("chrome", "edge", "firefox"), default="chrome")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
