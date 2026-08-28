@@ -218,10 +218,13 @@ func _initialize() -> void:
 	ui._on_start_game_requested()
 	await process_frame
 	_expect(ui.new_game_confirmation_dialog != null and ui.new_game_confirmation_dialog.visible and JSON.stringify(ui.world.serialize()) == state_before_new_game_prompt, "Start Game should confirm before putting a validated saved campaign at risk")
+	_expect(ui._current_ui_state_id() == "new_game_confirmation" and ui._web_accessibility_announcement().contains("Keep saved campaign is focused"), "Web accessibility fallback should announce the new-game warning and safe focused action")
 	_expect(ui.new_game_confirmation_dialog.get_viewport().gui_get_focus_owner() == ui.new_game_confirmation_dialog.get_cancel_button(), "new-game confirmation should focus the non-destructive Keep saved campaign action")
 	_expect(ui.new_game_confirmation_dialog.get_ok_button().get_global_rect().size.y >= 44.0 and ui.new_game_confirmation_dialog.get_cancel_button().get_global_rect().size.y >= 44.0, "new-game confirmation actions should expose comfortable pointer targets: ok %s, cancel %s" % [ui.new_game_confirmation_dialog.get_ok_button().get_global_rect(), ui.new_game_confirmation_dialog.get_cancel_button().get_global_rect()])
 	ui.new_game_confirmation_dialog.canceled.emit()
 	ui.new_game_confirmation_dialog.hide()
+	await process_frame
+	_expect(ui._current_ui_state_id() == "main_menu", "closing the new-game warning should restore the underlying Main Menu state")
 	ui._show_shop()
 	ui.opportunity_buttons[0].grab_focus()
 	ui._open_pause()
@@ -803,6 +806,7 @@ func _initialize() -> void:
 	ui._on_reset_pressed()
 	await process_frame
 	_expect(ui.reset_confirmation_dialog.position.y >= 0 and ui.reset_confirmation_dialog.position.y + ui.reset_confirmation_dialog.size.y <= int(ui.get_viewport().get_visible_rect().end.y), "large text should keep the reset confirmation fully visible")
+	_expect(ui._current_ui_state_id() == "reset_confirmation" and ui._web_accessibility_announcement().contains("Keep current run is focused"), "Web accessibility fallback should announce the reset warning and safe focused action")
 	_expect(ui.reset_confirmation_dialog.get_ok_button().get_global_rect().size.y >= 44.0 and ui.reset_confirmation_dialog.get_cancel_button().get_global_rect().size.y >= 44.0, "reset confirmation actions should expose comfortable pointer targets: ok %s, cancel %s" % [ui.reset_confirmation_dialog.get_ok_button().get_global_rect(), ui.reset_confirmation_dialog.get_cancel_button().get_global_rect()])
 	ui.reset_confirmation_dialog.canceled.emit()
 	ui.reset_confirmation_dialog.hide()

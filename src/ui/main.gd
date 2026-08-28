@@ -1253,10 +1253,12 @@ func _on_start_game_requested() -> void:
 		new_game_confirmation_dialog.ok_button_text = "Start new campaign"
 		new_game_confirmation_dialog.cancel_button_text = "Keep saved campaign"
 		new_game_confirmation_dialog.confirmed.connect(_on_start_game_pressed)
+		new_game_confirmation_dialog.canceled.connect(_on_confirmation_closed)
 		add_child(new_game_confirmation_dialog)
 	new_game_confirmation_dialog.popup_centered(Vector2i(560, 190))
 	_configure_confirmation_targets(new_game_confirmation_dialog)
 	call_deferred("_configure_confirmation_targets", new_game_confirmation_dialog)
+	call_deferred("_publish_web_ui_state")
 	new_game_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
 
 func _configure_confirmation_targets(dialog: ConfirmationDialog) -> void:
@@ -1266,6 +1268,9 @@ func _configure_confirmation_targets(dialog: ConfirmationDialog) -> void:
 	dialog.get_cancel_button().custom_minimum_size = Vector2(0, 44)
 	dialog.get_ok_button().add_theme_font_size_override("font_size", 28)
 	dialog.get_cancel_button().add_theme_font_size_override("font_size", 28)
+
+func _on_confirmation_closed() -> void:
+	call_deferred("_publish_web_ui_state")
 
 func _select_option_by_id(option: OptionButton, target_id: String) -> void:
 	for index in range(option.item_count):
@@ -1457,6 +1462,10 @@ func _download_web_report(report_json: String) -> bool:
 	return true
 
 func _current_ui_state_id() -> String:
+	if new_game_confirmation_dialog != null and new_game_confirmation_dialog.visible:
+		return "new_game_confirmation"
+	if reset_confirmation_dialog != null and reset_confirmation_dialog.visible:
+		return "reset_confirmation"
 	if pause_layer != null and pause_layer.visible:
 		return "pause"
 	if menu_layer != null and menu_layer.visible:
@@ -1494,6 +1503,10 @@ func _web_accessibility_announcement() -> String:
 			return "Arrival report for %s. Enter settlement is focused." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
 		"pause":
 			return "Game paused. Resume is focused; save, load, report, and main-menu actions follow."
+		"new_game_confirmation":
+			return "Start a new campaign? Existing save files remain until the next successful autosave. Keep saved campaign is focused."
+		"reset_confirmation":
+			return "Reset the current run to Day 1? The existing disk save remains available. Keep current run is focused."
 	return "Market of Ash"
 
 func _web_ui_state() -> Dictionary:
@@ -1956,10 +1969,12 @@ func _on_reset_pressed() -> void:
 		reset_confirmation_dialog.ok_button_text = "Reset to Day 1"
 		reset_confirmation_dialog.cancel_button_text = "Keep current run"
 		reset_confirmation_dialog.confirmed.connect(_confirm_reset)
+		reset_confirmation_dialog.canceled.connect(_on_confirmation_closed)
 		add_child(reset_confirmation_dialog)
 	reset_confirmation_dialog.popup_centered(Vector2i(520, 180))
 	_configure_confirmation_targets(reset_confirmation_dialog)
 	call_deferred("_configure_confirmation_targets", reset_confirmation_dialog)
+	call_deferred("_publish_web_ui_state")
 	reset_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
 
 func _confirm_reset() -> void:

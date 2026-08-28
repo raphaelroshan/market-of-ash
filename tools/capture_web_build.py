@@ -32,6 +32,7 @@ REQUIRED_CAPTURE_SCREENS = {
     "departure_desk_large_text",
     "route_event",
     "route_event_result",
+    "new_game_confirmation",
 }
 
 
@@ -385,6 +386,34 @@ def main() -> int:
                     "changed_pixel_ratio": round(destination_changed_ratio, 4),
                     "navigation": "Enter on the focused destination-specific arrival action",
                     "ui_state": destination_state,
+                }
+            )
+            ActionChains(driver).send_keys("p").perform()
+            wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="reedwatch")
+            return_to_menu_actions = ActionChains(driver)
+            for _ in range(4):
+                return_to_menu_actions.send_keys(Keys.TAB)
+            return_to_menu_actions.send_keys(Keys.ENTER).perform()
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False, settlement_id="reedwatch")
+            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            confirmation_state = wait_for_ui_state(
+                driver, "new_game_confirmation", args.timeout, large_text=False, settlement_id="reedwatch"
+            )
+            confirmation_output = args.output_dir / f"new-game-confirmation-{width}x{height}.png"
+            confirmation_bytes = capture_frame(driver, confirmation_output, (actual_width, actual_height))
+            confirmation_changed_ratio = require_distinct_screen(
+                destination_output, confirmation_output, "Open new-game confirmation"
+            )
+            captures.append(
+                {
+                    "screen": "new_game_confirmation",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": confirmation_output.name,
+                    "bytes": confirmation_bytes,
+                    "changed_pixel_ratio": round(confirmation_changed_ratio, 4),
+                    "navigation": "Pause, Return to main menu, then Enter on Start new game",
+                    "ui_state": confirmation_state,
                 }
             )
             driver.quit()
