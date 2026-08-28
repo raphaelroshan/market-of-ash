@@ -35,6 +35,7 @@ var menu_save_status_label: Label
 var controls_hint_label: Label
 var binding_status_label: Label
 var binding_buttons: Dictionary = {}
+var restore_bindings_button: Button
 var remapping_action: String = ""
 var reset_confirmation_dialog: ConfirmationDialog
 var new_game_confirmation_dialog: ConfirmationDialog
@@ -205,7 +206,7 @@ func _build_main_menu() -> void:
 		binding_button.pressed.connect(_on_rebind_pressed.bind(action_name))
 		binding_row.add_child(binding_button)
 		binding_buttons[action_name] = binding_button
-	var restore_bindings_button := Button.new()
+	restore_bindings_button = Button.new()
 	restore_bindings_button.text = "Restore default keys"
 	restore_bindings_button.pressed.connect(_on_restore_default_bindings)
 	content.add_child(restore_bindings_button)
@@ -333,6 +334,7 @@ func _refresh_continue_availability() -> void:
 			save_status_text = "SAVE — Existing files could not be validated. Start Game remains safe."
 		if menu_save_status_label:
 			menu_save_status_label.text = save_status_text
+		_link_main_menu_focus_cycle()
 		return
 	var saved_world: AshWorldState = preview.world
 	var source_text := "backup" if backup_preview else "primary"
@@ -343,6 +345,7 @@ func _refresh_continue_availability() -> void:
 	continue_game_button.tooltip_text = "Validate and continue this saved campaign."
 	if menu_save_status_label:
 		menu_save_status_label.text = save_status_text
+	_link_main_menu_focus_cycle()
 
 func _show_shop() -> void:
 	menu_layer.visible = false
@@ -1007,6 +1010,22 @@ func _wrapped_action_button(minimum_height: float = 42.0) -> Button:
 	button.custom_minimum_size = Vector2(0, minimum_height)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return button
+
+func _link_main_menu_focus_cycle() -> void:
+	if start_game_button == null or continue_game_button == null:
+		return
+	var controls: Array = [start_game_button]
+	if not continue_game_button.disabled:
+		controls.append(continue_game_button)
+	controls.append(reduce_motion_checkbox)
+	controls.append(large_text_checkbox)
+	controls.append(interface_sounds_checkbox)
+	for action_name in REMAPPABLE_ACTIONS:
+		controls.append(binding_buttons[action_name])
+	controls.append(restore_bindings_button)
+	if quit_button.visible:
+		controls.append(quit_button)
+	_link_focus_cycle(controls)
 
 func _link_focus_cycle(controls: Array) -> void:
 	for index in range(controls.size()):

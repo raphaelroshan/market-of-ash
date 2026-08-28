@@ -108,9 +108,9 @@ def changed_pixel_ratio(before: Path, after: Path, channel_threshold: int = 12) 
     return changed_pixels / (before_size[0] * before_size[1])
 
 
-def require_distinct_screen(before: Path, after: Path, transition: str) -> float:
+def require_distinct_screen(before: Path, after: Path, transition: str, minimum_ratio: float = 0.04) -> float:
     ratio = changed_pixel_ratio(before, after)
-    if ratio < 0.04:
+    if ratio < minimum_ratio:
         raise AssertionError(
             f"{after.name}: {transition} changed only {ratio:.1%} of pixels; "
             "this may be only a focus highlight rather than the requested screen"
@@ -179,8 +179,10 @@ def main() -> int:
     captures: list[dict[str, object]] = []
     driver: webdriver.Chrome | None = None
     try:
-        driver = webdriver.Chrome(options=options)
         for width, height in VIEWPORTS:
+            if driver is not None:
+                driver.quit()
+            driver = webdriver.Chrome(options=options)
             set_viewport_size(driver, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
@@ -269,6 +271,67 @@ def main() -> int:
                     "bytes": destination_bytes,
                     "changed_pixel_ratio": round(destination_changed_ratio, 4),
                     "navigation": "Enter on the focused destination-specific arrival action",
+                }
+            )
+            driver.quit()
+            driver = webdriver.Chrome(options=options)
+            set_viewport_size(driver, width, height)
+            driver.get(args.url)
+            wait_for_game(driver, args.timeout)
+            canvas = driver.find_element(By.ID, "canvas")
+            driver.execute_script("arguments[0].focus()", canvas)
+            ActionChains(driver).send_keys(Keys.TAB, Keys.TAB, Keys.SPACE).perform()
+            time.sleep(1.0)
+            large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
+            large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
+            large_menu_changed_ratio = require_distinct_screen(
+                output, large_menu_output, "Enable large text", minimum_ratio=0.01
+            )
+            captures.append(
+                {
+                    "screen": "main_menu_large_text",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": large_menu_output.name,
+                    "bytes": large_menu_bytes,
+                    "changed_pixel_ratio": round(large_menu_changed_ratio, 4),
+                    "navigation": "Tab from Start to Large text, then Space",
+                }
+            )
+            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB, Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            time.sleep(1.0)
+            large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
+            large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
+            large_shop_changed_ratio = require_distinct_screen(
+                shop_output, large_shop_output, "Start with large text", minimum_ratio=0.01
+            )
+            captures.append(
+                {
+                    "screen": "settlement_shop_large_text",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": large_shop_output.name,
+                    "bytes": large_shop_bytes,
+                    "changed_pixel_ratio": round(large_shop_changed_ratio, 4),
+                    "navigation": "Shift+Tab from Large text to Start, then Enter",
+                }
+            )
+            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            time.sleep(1.0)
+            large_departure_output = args.output_dir / f"departure-desk-large-text-{width}x{height}.png"
+            large_departure_bytes = capture_frame(driver, large_departure_output, (actual_width, actual_height))
+            large_departure_changed_ratio = require_distinct_screen(
+                departure_output, large_departure_output, "Open Departure with large text", minimum_ratio=0.01
+            )
+            captures.append(
+                {
+                    "screen": "departure_desk_large_text",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": large_departure_output.name,
+                    "bytes": large_departure_bytes,
+                    "changed_pixel_ratio": round(large_departure_changed_ratio, 4),
+                    "navigation": "Shift+Tab from cargo selector to Plan, then Enter",
                 }
             )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
