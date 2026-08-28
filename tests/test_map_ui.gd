@@ -84,6 +84,8 @@ func _initialize() -> void:
 	_expect(ui.binding_buttons.size() == 3 and ui.controls_hint_label.text.contains("Enter / Space") and ui.controls_hint_label.text.contains("A / Cross") and ui.controls_hint_label.text.contains("B / Circle"), "main menu should expose the current keyboard and controller bindings")
 	ui._activate_web_accessibility_action("rebind_ui_pause")
 	_expect(ui.remapping_action == "ui_pause" and ui._web_accessibility_announcement().contains("Press one unmodified key"), "The semantic Pause binding action should enter the existing key-capture mode and announce its instructions")
+	ui._capture_web_accessibility_key("r", "KeyR", false, true, false, false)
+	_expect(ui.remapping_action == "ui_pause" and not _action_has_key("ui_pause", KEY_R) and ui.binding_status_label.text.contains("shortcut is reserved"), "Semantic remapping should reject a modified browser shortcut without changing the binding")
 	ui._capture_web_accessibility_key("r", "KeyR", false, false, false, false)
 	_expect(_action_has_key("ui_pause", KEY_R) and _action_has_joypad_button("ui_pause", 6), "rebinding Pause should replace its keyboard key without removing controller Menu")
 	_expect(ui.controls_hint_label.text.contains("Pause: R") and ui.controls_hint_label.text.contains("Menu / Start"), "keyboard remapping should refresh the visible combined control scheme")

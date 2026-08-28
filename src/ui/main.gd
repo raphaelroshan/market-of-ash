@@ -1591,7 +1591,8 @@ func _publish_web_ui_state() -> void:
 			}
 			event.preventDefault();
 			event.stopPropagation();
-			if (!event.repeat && typeof window.marketOfAshAccessibilityKey === 'function') {
+			const modifierOnly = ['Alt', 'Control', 'Meta', 'Shift'].includes(event.key);
+			if (!event.repeat && !modifierOnly && typeof window.marketOfAshAccessibilityKey === 'function') {
 				window.marketOfAshAccessibilityKey(
 					event.key,
 					event.code,

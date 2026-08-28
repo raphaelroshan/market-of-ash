@@ -279,6 +279,69 @@ def remap_accessibility_key(
     raise TimeoutError(f"Web accessibility remap {action_name!r} did not become {expected_label!r}")
 
 
+def reject_and_cancel_accessibility_shortcut(
+    driver: Any,
+    action_name: str,
+    expected_label: str,
+    timeout_seconds: float = 5.0,
+) -> None:
+    """Reject Ctrl+R without a reload, then cancel remapping with Escape."""
+    action_id = f"rebind_{action_name}"
+    activate_accessibility_action(driver, action_id, timeout_seconds)
+    button = driver.execute_script(
+        """
+        const actionId = arguments[0];
+        return Array.from(document.querySelectorAll('#market-of-ash-actions button'))
+          .find(candidate => candidate.dataset.action === actionId) || null;
+        """,
+        action_id,
+    )
+    if button is None:
+        raise RuntimeError(f"Web accessibility remap action {action_id!r} disappeared")
+    ActionChains(driver).key_down(Keys.CONTROL).send_keys("r").key_up(Keys.CONTROL).perform()
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(state, dict):
+            binding = state.get("input_bindings", {}).get(action_name, {})
+            focused_action = driver.execute_script(
+                "return document.activeElement && document.activeElement.dataset.action || ''"
+            )
+            if (
+                state.get("remapping_action") == action_name
+                and "shortcut is reserved" in state.get("binding_status", "").lower()
+                and binding.get("keyboard_label") == expected_label
+                and focused_action == action_id
+            ):
+                break
+        time.sleep(0.1)
+    else:
+        raise TimeoutError(f"Web accessibility remap {action_name!r} did not reject Ctrl+R")
+    button = driver.execute_script(
+        """
+        const actionId = arguments[0];
+        return Array.from(document.querySelectorAll('#market-of-ash-actions button'))
+          .find(candidate => candidate.dataset.action === actionId) || null;
+        """,
+        action_id,
+    )
+    button.send_keys(Keys.ESCAPE)
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(state, dict):
+            binding = state.get("input_bindings", {}).get(action_name, {})
+            if (
+                state.get("remapping_action") == ""
+                and "cancelled" in state.get("binding_status", "").lower()
+                and binding.get("keyboard_label") == expected_label
+            ):
+                time.sleep(INPUT_SETTLE_SECONDS)
+                return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility remap {action_name!r} did not cancel with Escape")
+
+
 def activate_game_action(driver: Any, action_id: str, through_accessibility: bool) -> None:
     if through_accessibility:
         activate_accessibility_action(driver, action_id)
@@ -601,6 +664,7 @@ def main() -> int:
                 wait_for_ui_state(
                     driver, "main_menu", args.timeout, large_text=False, expected_values={"interface_sounds": True}
                 )
+                reject_and_cancel_accessibility_shortcut(driver, "ui_cancel", "Escape")
                 remap_accessibility_key(driver, "ui_pause", "r", "R")
                 activate_accessibility_action(driver, "restore_default_bindings")
                 wait_for_ui_state(
@@ -961,7 +1025,7 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 7,
+                    "manifest_version": 8,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
@@ -970,6 +1034,7 @@ def main() -> int:
                     "assistive_dynamic_actions": "Reedwatch Water Relief accepted through its generated semantic button at 960x540",
                     "assistive_presentation_controls": "Reduce motion, Large text, and Interface sounds toggled through native HTML checkboxes at 960x540",
                     "assistive_input_remapping": "Pause rebound to R and default bindings restored through semantic HTML at 960x540",
+                    "assistive_shortcut_safety": "Ctrl+R rejected without browser navigation and remapping cancelled with Escape at 960x540",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },
