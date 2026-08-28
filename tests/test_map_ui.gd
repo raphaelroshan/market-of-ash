@@ -589,6 +589,10 @@ func _initialize() -> void:
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
 	_expect(ui.event_choice_buttons[0].find_prev_valid_focus() == ui.event_choice_buttons[2] and ui.event_choice_buttons[2].find_next_valid_focus() == ui.event_choice_buttons[0], "enabled route-event choices should form a focus cycle that skips the unavailable crew response")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "a route decision should focus its first available choice")
+	await process_frame
+	await process_frame
+	var normal_departure_scroll: ScrollContainer = ui.find_child("DepartureControlsScroll", true, false)
+	_expect(normal_departure_scroll != null and ui.event_choice_buttons[0].get_global_rect().position.y >= normal_departure_scroll.get_global_rect().position.y and ui.event_choice_buttons[0].get_global_rect().end.y <= normal_departure_scroll.get_global_rect().end.y, "normal text should reveal the focused route choice inside the Departure scroll rail")
 	ui.large_text_checkbox.button_pressed = true
 	await process_frame
 	await process_frame

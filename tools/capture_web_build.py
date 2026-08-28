@@ -48,14 +48,19 @@ def click_game_target(driver: webdriver.Chrome, target_name: str, timeout_second
                 and viewport.get("width", 0) > 0
                 and viewport.get("height", 0) > 0
             ):
+                logical_x = target["x"] + target["width"] / 2
+                logical_y = target["y"] + target["height"] / 2
+                if not (0 <= logical_x < viewport["width"] and 0 <= logical_y < viewport["height"]):
+                    time.sleep(0.1)
+                    continue
                 canvas = driver.find_element(By.ID, "canvas")
                 canvas_rect = driver.execute_script(
                     "const r=arguments[0].getBoundingClientRect();"
                     "return {width:r.width,height:r.height};",
                     canvas,
                 )
-                target_x = (target["x"] + target["width"] / 2) * canvas_rect["width"] / viewport["width"]
-                target_y = (target["y"] + target["height"] / 2) * canvas_rect["height"] / viewport["height"]
+                target_x = logical_x * canvas_rect["width"] / viewport["width"]
+                target_y = logical_y * canvas_rect["height"] / viewport["height"]
                 x_offset = round(target_x - canvas_rect["width"] / 2)
                 y_offset = round(target_y - canvas_rect["height"] / 2)
                 ActionChains(driver).move_to_element_with_offset(canvas, x_offset, y_offset).click().perform()

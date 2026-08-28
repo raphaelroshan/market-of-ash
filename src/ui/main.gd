@@ -462,6 +462,7 @@ func _ensure_focused_control_visible() -> void:
 		if ancestor is ScrollContainer:
 			ancestor.ensure_control_visible(focused)
 		ancestor = ancestor.get_parent()
+	call_deferred("_queue_web_ui_state_after_layout")
 
 func _on_reduce_motion_toggled(enabled: bool) -> void:
 	reduce_motion_enabled = enabled
@@ -2443,7 +2444,8 @@ func _refresh_event_card() -> void:
 	if not enabled_choice_buttons.is_empty():
 		_link_focus_cycle(enabled_choice_buttons)
 	if pause_layer == null or not pause_layer.visible:
-		_grab_first_enabled(event_choice_buttons)
+		if _grab_first_enabled(event_choice_buttons) and not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
+			get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
 
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
 	for contract_id in world.active_contracts.keys():
