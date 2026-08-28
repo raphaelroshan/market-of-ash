@@ -2235,7 +2235,7 @@ class MapPanel extends Control:
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
 		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 20, CELL_SIZE.y + 16))
+		return Rect2(_cell_rect(cell).position - Vector2(12, 18), Vector2(CELL_SIZE.x * 2.0 + 24, CELL_SIZE.y + 36))
 
 	func _route_points(route_id: String) -> Array[Vector2]:
 		match route_id:
