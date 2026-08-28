@@ -113,6 +113,11 @@ func _initialize() -> void:
 	_expect(_action_has_key("ui_accept", KEY_ENTER) and _action_has_key("ui_cancel", KEY_ESCAPE) and _action_has_key("ui_pause", KEY_P) and _action_has_joypad_button("ui_accept", JOY_BUTTON_A) and _action_has_joypad_button("ui_cancel", JOY_BUTTON_B), "invalid persisted input conflicts should fall back to the complete default scheme")
 	var repaired_bindings := ConfigFile.new()
 	_expect(repaired_bindings.load(test_settings_path) == OK and repaired_bindings.get_value("input", "ui_accept", []).has(KEY_ENTER) and repaired_bindings.get_value("input", "ui_cancel", []).has(KEY_ESCAPE) and repaired_bindings.get_value("input", "ui_accept_joypad", []).has(JOY_BUTTON_A) and repaired_bindings.get_value("input", "ui_cancel_joypad", []).has(JOY_BUTTON_B), "invalid persisted bindings should be replaced with a valid default settings file")
+	ui.settings_path = "user://market_of_ash_missing_settings_parent/preferences.cfg"
+	ui._on_interface_sounds_toggled(false)
+	_expect(ui.binding_status_label.text.contains("SETTINGS WARNING") and not ui.interface_sounds_enabled, "preference write failures should remain active for the session and surface a visible warning")
+	ui.settings_path = test_settings_path
+	ui._on_interface_sounds_toggled(true)
 
 	ui._on_start_game_requested()
 	await process_frame

@@ -655,9 +655,9 @@ func _load_presentation_settings() -> void:
 	if not bindings_valid:
 		_save_presentation_settings()
 
-func _save_presentation_settings() -> void:
+func _save_presentation_settings() -> bool:
 	if not settings_persistence_enabled:
-		return
+		return true
 	var config := ConfigFile.new()
 	config.set_value("accessibility", "large_text", large_text_enabled)
 	config.set_value("accessibility", "reduce_motion", reduce_motion_enabled)
@@ -665,7 +665,12 @@ func _save_presentation_settings() -> void:
 	for action_name in REMAPPABLE_ACTIONS:
 		config.set_value("input", action_name, _keyboard_binding_codes(action_name))
 		config.set_value("input", "%s_joypad" % action_name, _controller_binding_codes(action_name))
-	config.save(settings_path)
+	var save_error := config.save(settings_path)
+	if save_error != OK:
+		if binding_status_label:
+			binding_status_label.text = "SETTINGS WARNING — This change is active for the current session but could not be saved."
+		return false
+	return true
 
 func _apply_text_scale(node: Node, scale: float) -> void:
 	if node is Control and node.has_theme_font_size_override("font_size"):
