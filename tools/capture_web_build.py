@@ -236,6 +236,49 @@ def wait_for_accessibility_action_state(
     raise TimeoutError(f"Web accessibility action {action_id!r} did not become enabled={enabled}")
 
 
+def remap_accessibility_key(
+    driver: Any,
+    action_name: str,
+    key: str,
+    expected_label: str,
+    timeout_seconds: float = 5.0,
+) -> None:
+    """Enter semantic remap mode, press one key, and require Godot to publish it."""
+    action_id = f"rebind_{action_name}"
+    activate_accessibility_action(driver, action_id, timeout_seconds)
+    button = driver.execute_script(
+        """
+        const actionId = arguments[0];
+        return Array.from(document.querySelectorAll('#market-of-ash-actions button'))
+          .find(candidate => candidate.dataset.action === actionId) || null;
+        """,
+        action_id,
+    )
+    if button is None or not driver.execute_script(
+        "return typeof window.marketOfAshAccessibilityKey === 'function' && document.activeElement === arguments[0]",
+        button,
+    ):
+        raise RuntimeError(f"Web accessibility remap action {action_id!r} did not retain focus")
+    button.send_keys(key)
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(state, dict):
+            binding = state.get("input_bindings", {}).get(action_name, {})
+            focused_action = driver.execute_script(
+                "return document.activeElement && document.activeElement.dataset.action || ''"
+            )
+            if (
+                state.get("remapping_action") == ""
+                and binding.get("keyboard_label") == expected_label
+                and focused_action == action_id
+            ):
+                time.sleep(INPUT_SETTLE_SECONDS)
+                return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility remap {action_name!r} did not become {expected_label!r}")
+
+
 def activate_game_action(driver: Any, action_id: str, through_accessibility: bool) -> None:
     if through_accessibility:
         activate_accessibility_action(driver, action_id)
@@ -407,13 +450,7 @@ def wait_for_ui_state(
                 "actionRegionRole": "region",
                 "actionRegionLabel": "Available game controls",
                 "actionScreen": expected_screen,
-                "order": (
-                    [f"control:{control['id']}" for control in expected_controls]
-                    + [f"action:{action['id']}" for action in expected_actions]
-                    if last_state.get("accessibility_controls_first", True)
-                    else [f"action:{action['id']}" for action in expected_actions]
-                    + [f"control:{control['id']}" for control in expected_controls]
-                ),
+                "order": list(last_state.get("accessibility_order", [])),
                 "controls": expected_controls,
                 "actions": expected_actions,
             }
@@ -564,6 +601,18 @@ def main() -> int:
                 wait_for_ui_state(
                     driver, "main_menu", args.timeout, large_text=False, expected_values={"interface_sounds": True}
                 )
+                remap_accessibility_key(driver, "ui_pause", "r", "R")
+                activate_accessibility_action(driver, "restore_default_bindings")
+                wait_for_ui_state(
+                    driver,
+                    "main_menu",
+                    args.timeout,
+                    large_text=False,
+                    expected_values={"remapping_action": ""},
+                )
+                restored_bindings = driver.execute_script("return window.marketOfAshUiState.input_bindings")
+                if restored_bindings.get("ui_pause", {}).get("keyboard_label") != "P":
+                    raise AssertionError(f"Restore defaults did not restore Pause to P: {restored_bindings!r}")
             activate_game_action(driver, "start_game", use_accessibility_actions)
             shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
@@ -912,7 +961,7 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 6,
+                    "manifest_version": 7,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
@@ -920,6 +969,7 @@ def main() -> int:
                     "assistive_planning_controls": "Shop and Departure native HTML fields exercised at 960x540",
                     "assistive_dynamic_actions": "Reedwatch Water Relief accepted through its generated semantic button at 960x540",
                     "assistive_presentation_controls": "Reduce motion, Large text, and Interface sounds toggled through native HTML checkboxes at 960x540",
+                    "assistive_input_remapping": "Pause rebound to R and default bindings restored through semantic HTML at 960x540",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },

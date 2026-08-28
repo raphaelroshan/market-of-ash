@@ -129,6 +129,7 @@ var last_input_device := "unknown"
 var map_panel
 var web_accessibility_callback: Variant
 var web_accessibility_control_callback: Variant
+var web_accessibility_key_callback: Variant
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -234,12 +235,16 @@ func _build_main_menu() -> void:
 		binding_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		binding_button.custom_minimum_size = Vector2(0, 72)
 		binding_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		binding_button.tooltip_text = "Change the keyboard or controller binding for %s." % String(ACTION_LABELS.get(action_name, action_name))
+		binding_button.set_meta("web_accessibility_id", "rebind_%s" % action_name)
 		binding_button.pressed.connect(_on_rebind_pressed.bind(action_name))
 		binding_row.add_child(binding_button)
 		binding_buttons[action_name] = binding_button
 	restore_bindings_button = Button.new()
 	restore_bindings_button.text = "Restore default inputs"
 	restore_bindings_button.custom_minimum_size = Vector2(0, 44)
+	restore_bindings_button.tooltip_text = "Restore the default keyboard and controller bindings for Accept, Back, and Pause."
+	restore_bindings_button.set_meta("web_accessibility_id", "restore_default_bindings")
 	restore_bindings_button.pressed.connect(_on_restore_default_bindings)
 	content.add_child(restore_bindings_button)
 	binding_status_label = Label.new()
@@ -1579,6 +1584,24 @@ func _publish_web_ui_state() -> void:
 				}
 			}, 0);
 		});
+		controlsRegion.addEventListener('keydown', function(event) {
+			const currentState = window.marketOfAshUiState || {};
+			if (!currentState.remapping_action) {
+				return;
+			}
+			event.preventDefault();
+			event.stopPropagation();
+			if (!event.repeat && typeof window.marketOfAshAccessibilityKey === 'function') {
+				window.marketOfAshAccessibilityKey(
+					event.key,
+					event.code,
+					event.altKey,
+					event.ctrlKey,
+					event.metaKey,
+					event.shiftKey
+				);
+			}
+		}, true);
 		document.body.appendChild(controlsRegion);
 	}
 	const focusedControlId = document.activeElement && document.activeElement.dataset
@@ -1598,15 +1621,15 @@ func _publish_web_ui_state() -> void:
 	summary.id = 'market-of-ash-actions-description';
 	summary.textContent = state.announcement;
 	controlsRegion.appendChild(summary);
-	const controlsContent = document.createDocumentFragment();
-	const actionsContent = document.createDocumentFragment();
+	const semanticItems = new Map();
 	for (const control of state.accessibility_controls) {
+		const item = document.createDocumentFragment();
 		const fieldId = 'market-of-ash-control-' + control.id;
 		const label = document.createElement('label');
 		label.htmlFor = fieldId;
 		label.textContent = control.label;
 		label.style.cssText = 'display:block;margin-top:8px;font-weight:600;';
-		controlsContent.appendChild(label);
+		item.appendChild(label);
 		let field;
 		if (control.kind === 'select') {
 			field = document.createElement('select');
@@ -1634,14 +1657,14 @@ func _publish_web_ui_state() -> void:
 		field.disabled = !control.enabled;
 		field.setAttribute('aria-disabled', String(!control.enabled));
 		field.style.cssText = 'display:block;width:100%%;min-height:44px;margin:4px 0 8px;box-sizing:border-box;font:inherit;';
-		controlsContent.appendChild(field);
+		item.appendChild(field);
 		if (control.description) {
 			const description = document.createElement('p');
 			description.id = 'market-of-ash-control-description-' + control.id;
 			description.textContent = control.description;
 			description.hidden = true;
 			field.setAttribute('aria-describedby', description.id);
-			controlsContent.appendChild(description);
+			item.appendChild(description);
 		}
 		field.addEventListener('change', function() {
 			if (typeof window.marketOfAshAccessibilityChange === 'function') {
@@ -1649,8 +1672,10 @@ func _publish_web_ui_state() -> void:
 				window.marketOfAshAccessibilityChange(control.id, value);
 			}
 		});
+		semanticItems.set('control:' + control.id, item);
 	}
 	for (const action of state.accessibility_actions) {
+		const item = document.createDocumentFragment();
 		const button = document.createElement('button');
 		button.type = 'button';
 		button.dataset.action = action.id;
@@ -1658,27 +1683,30 @@ func _publish_web_ui_state() -> void:
 		button.disabled = !action.enabled;
 		button.setAttribute('aria-disabled', String(!action.enabled));
 		button.style.cssText = 'display:block;width:100%%;min-height:44px;margin-top:8px;box-sizing:border-box;font:inherit;';
-		actionsContent.appendChild(button);
+		item.appendChild(button);
 		if (action.description) {
 			const description = document.createElement('p');
 			description.id = 'market-of-ash-action-description-' + action.id;
 			description.textContent = action.description;
 			description.hidden = true;
 			button.setAttribute('aria-describedby', description.id);
-			actionsContent.appendChild(description);
+			item.appendChild(description);
 		}
 		button.addEventListener('click', function() {
 			if (typeof window.marketOfAshAccessibilityActivate === 'function') {
 				window.marketOfAshAccessibilityActivate(action.id);
 			}
 		});
+		semanticItems.set('action:' + action.id, item);
 	}
-	if (state.accessibility_controls_first) {
-		controlsRegion.appendChild(controlsContent);
-		controlsRegion.appendChild(actionsContent);
-	} else {
-		controlsRegion.appendChild(actionsContent);
-		controlsRegion.appendChild(controlsContent);
+	for (const itemId of state.accessibility_order) {
+		if (semanticItems.has(itemId)) {
+			controlsRegion.appendChild(semanticItems.get(itemId));
+			semanticItems.delete(itemId);
+		}
+	}
+	for (const item of semanticItems.values()) {
+		controlsRegion.appendChild(item);
 	}
 	let focusTarget = null;
 	if (focusedControlId) {
@@ -1710,10 +1738,12 @@ func _setup_web_accessibility_bridge() -> void:
 		return
 	web_accessibility_callback = JavaScriptBridge.create_callback(_on_web_accessibility_action)
 	web_accessibility_control_callback = JavaScriptBridge.create_callback(_on_web_accessibility_control_change)
+	web_accessibility_key_callback = JavaScriptBridge.create_callback(_on_web_accessibility_key)
 	var browser_window: JavaScriptObject = JavaScriptBridge.get_interface("window")
 	if browser_window != null:
 		browser_window.marketOfAshAccessibilityActivate = web_accessibility_callback
 		browser_window.marketOfAshAccessibilityChange = web_accessibility_control_callback
+		browser_window.marketOfAshAccessibilityKey = web_accessibility_key_callback
 
 func _on_web_accessibility_action(arguments: Array) -> void:
 	if arguments.is_empty():
@@ -1731,6 +1761,50 @@ func _on_web_accessibility_control_change(arguments: Array) -> void:
 	if arguments.size() < 2:
 		return
 	call_deferred("_change_web_accessibility_control", String(arguments[0]), String(arguments[1]))
+
+func _on_web_accessibility_key(arguments: Array) -> void:
+	if arguments.size() < 6:
+		return
+	call_deferred(
+		"_capture_web_accessibility_key",
+		String(arguments[0]),
+		String(arguments[1]),
+		bool(arguments[2]),
+		bool(arguments[3]),
+		bool(arguments[4]),
+		bool(arguments[5]),
+	)
+
+func _capture_web_accessibility_key(key_text: String, code_text: String, alt_pressed: bool, ctrl_pressed: bool, meta_pressed: bool, shift_pressed: bool) -> void:
+	if remapping_action.is_empty():
+		_publish_web_ui_state()
+		return
+	var keycode := _web_accessibility_keycode(key_text, code_text)
+	var key_event := InputEventKey.new()
+	key_event.keycode = keycode
+	key_event.physical_keycode = keycode
+	key_event.alt_pressed = alt_pressed
+	key_event.ctrl_pressed = ctrl_pressed
+	key_event.meta_pressed = meta_pressed
+	key_event.shift_pressed = shift_pressed
+	key_event.pressed = true
+	last_input_device = "keyboard"
+	_capture_keyboard_binding(key_event)
+	_publish_web_ui_state()
+
+func _web_accessibility_keycode(key_text: String, code_text: String) -> int:
+	var key_name := key_text
+	if code_text.begins_with("Key") and code_text.length() == 4:
+		key_name = code_text.substr(3)
+	elif code_text.begins_with("Digit") and code_text.length() == 6:
+		key_name = code_text.substr(5)
+	elif code_text == "Space" or key_text == " ":
+		key_name = "Space"
+	elif code_text == "NumpadEnter":
+		key_name = "Enter"
+	elif key_text.begins_with("Arrow"):
+		key_name = key_text.trim_prefix("Arrow")
+	return int(OS.find_keycode_from_string(key_name))
 
 func _change_web_accessibility_control(control_id: String, value: String) -> void:
 	match control_id:
@@ -1803,7 +1877,10 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 		var choice_index := int(action_id.trim_prefix("event_choice_"))
 		if choice_index >= 0 and choice_index < event_choice_buttons.size():
 			return event_choice_buttons[choice_index]
-	for control in [guided_test_button, shop_save_button, shop_load_button, shop_reset_button, shop_report_button]:
+	for control in [guided_test_button, shop_save_button, shop_load_button, shop_reset_button, shop_report_button, restore_bindings_button]:
+		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
+			return control
+	for control in binding_buttons.values():
 		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 			return control
 	for controls in [contract_buttons, opportunity_buttons, crew_buttons]:
@@ -1895,6 +1972,9 @@ func _web_accessibility_actions() -> Array:
 		"main_menu":
 			_append_web_accessibility_action(actions, "start_game", start_game_button)
 			_append_web_accessibility_action(actions, "continue_game", continue_game_button)
+			for action_name in REMAPPABLE_ACTIONS:
+				_append_web_accessibility_action(actions, "rebind_%s" % action_name, binding_buttons.get(action_name))
+			_append_web_accessibility_action(actions, "restore_default_bindings", restore_bindings_button)
 		"settlement_shop":
 			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
 			_append_web_accessibility_action(actions, "shop_sell", shop_sell_button)
@@ -1929,6 +2009,27 @@ func _web_accessibility_actions() -> Array:
 			_append_web_accessibility_action(actions, "reset_run", reset_confirmation_dialog.get_ok_button())
 	return actions
 
+func _web_accessibility_order(actions: Array, controls: Array) -> Array:
+	var order: Array = []
+	if _current_ui_state_id() == "main_menu":
+		for action_id in ["start_game", "continue_game"]:
+			for action in actions:
+				if action.get("id") == action_id:
+					order.append("action:%s" % action_id)
+					break
+		for control in controls:
+			order.append("control:%s" % String(control.get("id", "")))
+		for action in actions:
+			var action_id := String(action.get("id", ""))
+			if action_id not in ["start_game", "continue_game"]:
+				order.append("action:%s" % action_id)
+		return order
+	for control in controls:
+		order.append("control:%s" % String(control.get("id", "")))
+	for action in actions:
+		order.append("action:%s" % String(action.get("id", "")))
+	return order
+
 func _queue_web_ui_state_after_layout() -> void:
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
 		return
@@ -1939,7 +2040,12 @@ func _web_accessibility_announcement() -> String:
 	var screen_id := _current_ui_state_id()
 	match screen_id:
 		"main_menu":
-			return "Market of Ash main menu. Start Game is focused. Accept uses %s or controller %s. Accessibility and input settings follow the launch actions." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
+			if not remapping_action.is_empty() and binding_status_label != null:
+				return "Market of Ash input remapping. %s" % binding_status_label.text
+			var menu_announcement := "Market of Ash main menu. Start Game is focused. Accept uses %s or controller %s. Accessibility and input settings follow the launch actions." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
+			if binding_status_label != null and not binding_status_label.text.is_empty():
+				menu_announcement += " %s" % binding_status_label.text
+			return menu_announcement
 		"settlement_shop":
 			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
 		"departure_desk":
@@ -1959,12 +2065,14 @@ func _web_accessibility_announcement() -> String:
 func _web_ui_state() -> Dictionary:
 	var selected_good_id := _selected_id(shop_good_option) if shop_good_option != null else ""
 	var logical_size := get_viewport().get_visible_rect().size
+	var accessibility_actions := _web_accessibility_actions()
+	var accessibility_controls := _web_accessibility_controls()
 	return {
 		"screen": _current_ui_state_id(),
 		"announcement": _web_accessibility_announcement(),
-		"accessibility_actions": _web_accessibility_actions(),
-		"accessibility_controls": _web_accessibility_controls(),
-		"accessibility_controls_first": _current_ui_state_id() != "main_menu",
+		"accessibility_actions": accessibility_actions,
+		"accessibility_controls": accessibility_controls,
+		"accessibility_order": _web_accessibility_order(accessibility_actions, accessibility_controls),
 		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
 		"targets": {
 			"start_game": _web_control_rect(start_game_button),
@@ -1982,6 +2090,9 @@ func _web_ui_state() -> Dictionary:
 		"large_text": large_text_enabled,
 		"reduced_motion": reduce_motion_enabled,
 		"interface_sounds": interface_sounds_enabled,
+		"remapping_action": remapping_action,
+		"binding_status": binding_status_label.text if binding_status_label != null else "",
+		"input_bindings": _input_bindings_report(),
 		"settlement_id": world.current_settlement if world != null else "",
 		"day": world.day if world != null else 0,
 		"money": world.money if world != null else 0,
