@@ -411,6 +411,12 @@ func _initialize() -> void:
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		_expect(ui.map_panel._map_heading().contains("ORDINARY PRESSURE") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "map text should identify the crisis stage and current location without relying on color")
 		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size == Vector2(118, 40) and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds")
+		var settlement_ids: Array = ui.map_panel.SETTLEMENT_CELLS.keys()
+		var hit_targets_overlap := false
+		for first_index in range(settlement_ids.size()):
+			for second_index in range(first_index + 1, settlement_ids.size()):
+				hit_targets_overlap = hit_targets_overlap or ui.map_panel._settlement_footprint(String(settlement_ids[first_index])).intersects(ui.map_panel._settlement_footprint(String(settlement_ids[second_index])))
+		_expect(not hit_targets_overlap, "expanded map settlement targets should remain unambiguous")
 		var map_before: String = JSON.stringify(ui.world.serialize())
 		var map_click := InputEventMouseButton.new()
 		map_click.button_index = MOUSE_BUTTON_LEFT
@@ -681,6 +687,9 @@ func _initialize() -> void:
 		var detail_width: float = ThemeDB.fallback_font.get_string_size(ui.map_panel._settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(10)).x
 		if name_width > marker_width or detail_width > marker_width:
 			oversized_settlement_labels.append("%s name %.1f detail %.1f available %.1f" % [settlement_id, name_width, detail_width, marker_width])
+	var worst_marker_detail_width: float = ThemeDB.fallback_font.get_string_size("HERE · RES 10/10", HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(10)).x
+	if worst_marker_detail_width > ui.map_panel._settlement_marker_rect("ashgate").size.x - 10.0:
+		oversized_settlement_labels.append("maximum resilience detail %.1f" % worst_marker_detail_width)
 	_expect(oversized_settlement_labels.is_empty(), "large map settlement names and text status should fit inside every visible marker: %s" % "; ".join(oversized_settlement_labels))
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the pinned departure action inside the game layout")
