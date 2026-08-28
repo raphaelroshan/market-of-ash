@@ -209,7 +209,10 @@ def main() -> int:
                     "ui_state": pause_state,
                 }
             )
-            ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            # Chrome consumes Escape in some headless environments before the
+            # canvas receives it. Toggle the same in-game Pause action with P
+            # so this transition remains a real keyboard-input check.
+            ActionChains(driver).send_keys("p").perform()
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Start focuses the Shop cargo selector. Reverse focus traversal is
             # intentionally wired to the pinned Plan action, so this both opens
@@ -231,7 +234,10 @@ def main() -> int:
                     "ui_state": departure_state,
                 }
             )
-            ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            return_to_shop_actions = ActionChains(driver)
+            for _ in range(5):
+                return_to_shop_actions.send_keys(Keys.TAB)
+            return_to_shop_actions.send_keys(Keys.ENTER).perform()
             returned_shop_state = wait_for_ui_state(
                 driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate"
             )
@@ -252,7 +258,7 @@ def main() -> int:
                     "file": returned_shop_output.name,
                     "bytes": returned_shop_bytes,
                     "changed_pixel_ratio": round(returned_shop_changed_ratio, 4),
-                    "navigation": "Escape from uncommitted Departure",
+                    "navigation": "Tab through the explicit Departure focus cycle, then Enter on Return to shop",
                     "unchanged_fields": list(unchanged_fields),
                     "ui_state": returned_shop_state,
                 }
@@ -390,7 +396,7 @@ def main() -> int:
                     "ui_state": large_pause_state,
                 }
             )
-            ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            ActionChains(driver).send_keys("p").perform()
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
             large_departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=True, settlement_id="ashgate")
