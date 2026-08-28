@@ -334,6 +334,54 @@ def main() -> int:
                     "navigation": "Shift+Tab from cargo selector to Plan, then Enter",
                 }
             )
+            driver.quit()
+            driver = webdriver.Chrome(options=options)
+            set_viewport_size(driver, width, height)
+            driver.get(args.url)
+            wait_for_game(driver, args.timeout)
+            driver.find_element(By.ID, "canvas").click()
+            time.sleep(1.0)
+            # Select Medicine (two entries after Water), buy the default two
+            # units, and use the success focus handoff to open Departure.
+            ActionChains(driver).send_keys(
+                Keys.SPACE,
+                Keys.ARROW_DOWN,
+                Keys.ARROW_DOWN,
+                Keys.ENTER,
+                Keys.TAB,
+                Keys.TAB,
+                Keys.ENTER,
+            ).perform()
+            time.sleep(0.5)
+            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            time.sleep(0.5)
+            # Brine Cross is two entries after the default Reedwatch choice.
+            ActionChains(driver).send_keys(
+                Keys.SPACE,
+                Keys.ARROW_DOWN,
+                Keys.ARROW_DOWN,
+                Keys.ENTER,
+            ).perform()
+            time.sleep(0.5)
+            event_commit_actions = ActionChains(driver)
+            for _ in range(4):
+                event_commit_actions.send_keys(Keys.TAB)
+            event_commit_actions.send_keys(Keys.ENTER).perform()
+            time.sleep(1.0)
+            event_output = args.output_dir / f"route-event-{width}x{height}.png"
+            event_bytes = capture_frame(driver, event_output, (actual_width, actual_height))
+            event_changed_ratio = require_distinct_screen(departure_output, event_output, "Open route event")
+            captures.append(
+                {
+                    "screen": "route_event",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": event_output.name,
+                    "bytes": event_bytes,
+                    "changed_pixel_ratio": round(event_changed_ratio, 4),
+                    "navigation": "Buy Medicine, plan Brine Cross, and commit through keyboard focus",
+                }
+            )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps({"url": args.url, "loading_overlay_cleared": True, "captures": captures}, indent=2),
