@@ -20,21 +20,15 @@ from capture_validation import (
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 
 INPUT_SETTLE_SECONDS = 0.2
+OPTION_ROW_HEIGHT = 28.0
 
 
 def send_game_key(driver: webdriver.Chrome, key: str) -> None:
     """Send one key to the canvas, then allow Godot to process a frame."""
     canvas = driver.find_element(By.ID, "canvas")
     driver.execute_script("arguments[0].focus()", canvas)
-    ActionChains(driver).send_keys(key).perform()
-    time.sleep(INPUT_SETTLE_SECONDS)
-
-
-def send_active_key(driver: webdriver.Chrome, key: str) -> None:
-    """Send one key without changing focus, for an open Godot popup."""
     ActionChains(driver).send_keys(key).perform()
     time.sleep(INPUT_SETTLE_SECONDS)
 
@@ -69,6 +63,39 @@ def click_game_target(driver: webdriver.Chrome, target_name: str, timeout_second
                 return
         time.sleep(0.1)
     raise TimeoutError(f"Web UI target {target_name!r} was not available")
+
+
+def click_game_position(driver: webdriver.Chrome, logical_x: float, logical_y: float) -> None:
+    """Click a logical Godot canvas position with a trusted pointer action."""
+    state = driver.execute_script("return window.marketOfAshUiState || null")
+    if not isinstance(state, dict):
+        raise RuntimeError("Web UI state is unavailable for pointer conversion")
+    viewport = state.get("logical_viewport", {})
+    if viewport.get("width", 0) <= 0 or viewport.get("height", 0) <= 0:
+        raise RuntimeError(f"Web UI logical viewport is invalid: {viewport!r}")
+    canvas = driver.find_element(By.ID, "canvas")
+    canvas_rect = driver.execute_script(
+        "const r=arguments[0].getBoundingClientRect();return {width:r.width,height:r.height};",
+        canvas,
+    )
+    x_offset = round(logical_x * canvas_rect["width"] / viewport["width"] - canvas_rect["width"] / 2)
+    y_offset = round(logical_y * canvas_rect["height"] / viewport["height"] - canvas_rect["height"] / 2)
+    ActionChains(driver).move_to_element_with_offset(canvas, x_offset, y_offset).click().perform()
+    time.sleep(INPUT_SETTLE_SECONDS)
+
+
+def select_game_option(driver: webdriver.Chrome, target_name: str, item_index: int) -> None:
+    """Open a Godot OptionButton and click a known authored item row."""
+    state = driver.execute_script("return window.marketOfAshUiState || null")
+    target = state.get("targets", {}).get(target_name, {}) if isinstance(state, dict) else {}
+    if not target:
+        raise RuntimeError(f"Web UI option target {target_name!r} is unavailable")
+    click_game_target(driver, target_name)
+    click_game_position(
+        driver,
+        target["x"] + target["width"] / 2,
+        target["y"] + target["height"] + (item_index + 0.5) * OPTION_ROW_HEIGHT,
+    )
 
 
 def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
@@ -463,9 +490,7 @@ def main() -> int:
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
-            click_game_target(driver, "shop_good")
-            for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
-                send_active_key(driver, key)
+            select_game_option(driver, "shop_good", 3)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
@@ -489,9 +514,7 @@ def main() -> int:
                 expected_values={"selected_good_id": "medicine", "selected_destination_id": "reedwatch"},
             )
             # Brine Cross is two entries after the default Reedwatch choice.
-            click_game_target(driver, "destination")
-            for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
-                send_active_key(driver, key)
+            select_game_option(driver, "destination", 2)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
