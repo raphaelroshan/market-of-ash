@@ -77,6 +77,8 @@ var contract_buttons: Array[Button] = []
 var crew_buttons: Array[Button] = []
 var active_contract_label: Label
 var campaign_outlook_label: Label
+var recent_conflict_panel: PanelContainer
+var recent_conflict_label: Label
 var ending_panel: PanelContainer
 var ending_label: Label
 var plan_departure_button: Button
@@ -865,6 +867,15 @@ func _build_shop() -> void:
 	campaign_outlook_label.add_theme_font_size_override("font_size", 12)
 	campaign_outlook_label.add_theme_color_override("font_color", Color("#d9c6a2"))
 	actions.add_child(campaign_outlook_label)
+	recent_conflict_panel = PanelContainer.new()
+	recent_conflict_panel.name = "RecentConflictPanel"
+	recent_conflict_panel.visible = false
+	actions.add_child(recent_conflict_panel)
+	recent_conflict_label = Label.new()
+	recent_conflict_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recent_conflict_label.add_theme_font_size_override("font_size", 12)
+	recent_conflict_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	recent_conflict_panel.add_child(recent_conflict_label)
 	ending_panel = PanelContainer.new()
 	ending_panel.visible = false
 	actions.add_child(ending_panel)
@@ -2085,7 +2096,9 @@ func _web_accessibility_announcement() -> String:
 				menu_announcement += " %s" % binding_status_label.text
 			return menu_announcement
 		"settlement_shop":
-			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
+			var recent_conflict_text := _latest_conflict_outcome_text()
+			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
+			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
 		"departure_desk":
 			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
 		"route_event":
@@ -3040,9 +3053,19 @@ func _event_tactic_label(choice: Dictionary, trade_quantity: int, cargo_cost_qua
 
 func _conflict_outcome_comparison(result: Dictionary) -> String:
 	var state_delta: Dictionary = result.get("state_delta", {})
-	var event_record: Dictionary = state_delta.get("event", {})
-	var outcome: Dictionary = state_delta.get("outcome", {})
-	var choice_id := String(state_delta.get("choice_id", ""))
+	var event_record: Dictionary = Dictionary(state_delta.get("event", {})).duplicate(true)
+	event_record["outcome"] = Dictionary(state_delta.get("outcome", {})).duplicate(true)
+	event_record["choice_id"] = String(state_delta.get("choice_id", ""))
+	return _conflict_outcome_comparison_from_event(event_record)
+
+func _latest_conflict_outcome_text() -> String:
+	if world == null or world.event_history.is_empty():
+		return ""
+	return _conflict_outcome_comparison_from_event(Dictionary(world.event_history.back()))
+
+func _conflict_outcome_comparison_from_event(event_record: Dictionary) -> String:
+	var outcome: Dictionary = event_record.get("outcome", {})
+	var choice_id := String(event_record.get("choice_id", ""))
 	if event_record.is_empty() or outcome.is_empty() or choice_id.is_empty():
 		return ""
 	var choice := _event_choice_from_record(event_record, choice_id)
@@ -3217,6 +3240,10 @@ func _refresh_ui() -> void:
 			ending_label.text = "CAMPAIGN CONCLUSION\n%s\n%s\n\nThis outcome is recorded in the save. You may continue trading to inspect the resulting region." % [String(ending.get("title", world.ending_id)), world.ending_summary]
 	if campaign_outlook_label:
 		campaign_outlook_label.text = _campaign_outlook_text()
+	if recent_conflict_panel and recent_conflict_label:
+		var recent_conflict_text := _latest_conflict_outcome_text()
+		recent_conflict_panel.visible = not recent_conflict_text.is_empty()
+		recent_conflict_label.text = "SINCE YOUR LAST VISIT — LAST CONFLICT\n" + recent_conflict_text if not recent_conflict_text.is_empty() else ""
 	if diagnostics_label:
 		var last_command := "none"
 		if not world.command_history.is_empty():

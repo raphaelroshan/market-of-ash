@@ -624,6 +624,7 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	_expect(ui.playtest_status_label.text.contains("FREE PLAY") and not ui.guided_test_button.visible, "skipping the opening example should transition to free play instead of offering the Ashgate helper elsewhere")
 	ui._on_start_game_pressed()
+	_expect(not ui.recent_conflict_panel.visible and ui.recent_conflict_label.text.is_empty(), "a fresh campaign should not invent a previous conflict report")
 	ui._select_option_by_id(ui.shop_good_option, "medicine")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
@@ -692,6 +693,16 @@ func _initialize() -> void:
 	_expect(ui.destination_option.disabled and ui.route_option.disabled, "an arrival report should keep planning controls locked until the player enters the settlement")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "resolving a route decision should move focus to settlement entry")
 	_expect(ui.world.event_history.size() == 1 and ui.world.event_history.back().choice_id == "pay_posted_toll", "event UI did not preserve the chosen outcome")
+	ui._on_enter_settlement_pressed()
+	_expect(not ui.conflict_outcome_panel.visible and ui.last_conflict_outcome_text.is_empty(), "entering the settlement should clear the transient arrival comparison")
+	_expect(ui.recent_conflict_panel.visible and ui.recent_conflict_label.text.contains("SINCE YOUR LAST VISIT — LAST CONFLICT") and ui.recent_conflict_label.text.contains("TACTIC — PAY / CERTAIN") and ui.recent_conflict_label.text.contains("ACTUAL — -6 ashmarks"), "destination shop should preserve the latest conflict report from authoritative event history")
+	_expect(ui._web_accessibility_announcement().contains("Latest conflict report") and ui._web_accessibility_announcement().contains("TACTIC — PAY / CERTAIN"), "shop accessibility announcement should expose the durable conflict report")
+	ui._on_save_pressed()
+	ui._on_start_game_pressed()
+	_expect(not ui.recent_conflict_panel.visible, "starting a fresh campaign should hide the previous save's conflict report")
+	ui._on_load_pressed()
+	_expect(ui.shop_layer.visible and ui.world.current_settlement == "brine_cross" and ui.recent_conflict_panel.visible, "loading a resolved journey should return to the destination shop with its conflict report available")
+	_expect(ui.recent_conflict_label.text.contains("PLAN VS ACTUAL") and ui.recent_conflict_label.text.contains("PLAN — -6 ashmarks") and ui.recent_conflict_label.text.contains("ACTUAL — -6 ashmarks"), "loaded conflict report should reconstruct the same plan and actual values from saved event history")
 
 	ui._on_start_game_pressed()
 	ui._select_option_by_id(ui.shop_good_option, "scrap")
@@ -736,6 +747,7 @@ func _initialize() -> void:
 	_expect(ui.conflict_outcome_label.text.contains("-2 Water planned") and ui.conflict_outcome_label.text.contains("Water -2") and ui.conflict_outcome_label.text.contains("settlement resilience 2/10") and ui.conflict_outcome_label.text.contains("Caravans standing +1 to 1"), "barrel comparison should expose planned supply, actual cargo, resilience, and faction effects")
 	ui._on_enter_settlement_pressed()
 	_expect(not ui.conflict_outcome_panel.visible and ui.last_conflict_outcome_text.is_empty(), "entering the settlement should clear the completed conflict comparison")
+	_expect(ui.recent_conflict_panel.visible and ui.recent_conflict_label.text.contains("settlement resilience 2/10") and ui.recent_conflict_label.text.contains("Caravans standing +1 to 1"), "settlement review should retain the latest conflict's persistent regional effects")
 	_expect(ui.shop_status_label.text.contains("Settlement resilience: 2/10") and ui.shop_status_label.text.contains("Caravans +1"), "settlement shop did not expose the event's resilience and Caravan-standing results")
 
 	ui._on_start_game_pressed()
