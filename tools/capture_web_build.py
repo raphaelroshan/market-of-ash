@@ -10,7 +10,9 @@ import traceback
 from pathlib import Path
 
 from capture_validation import (
+    REQUIRED_CAPTURE_SCREENS,
     VIEWPORTS,
+    changed_pixel_ratio,
     png_dimensions,
     require_distinct_screen,
     validate_capture_matrix,
