@@ -219,7 +219,7 @@ def main() -> int:
             set_viewport_size(driver, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
-            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
+            main_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
             actual_width = int(driver.execute_script("return window.innerWidth"))
             actual_height = int(driver.execute_script("return window.innerHeight"))
             output = args.output_dir / f"main-menu-{width}x{height}.png"
@@ -231,11 +231,12 @@ def main() -> int:
                     "captured_viewport": {"width": actual_width, "height": actual_height},
                     "file": output.name,
                     "bytes": main_bytes,
+                    "ui_state": main_state,
                 }
             )
             canvas = driver.find_element(By.ID, "canvas")
             canvas.click()
-            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
+            shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
             if shop_output.read_bytes() == output.read_bytes():
@@ -251,10 +252,11 @@ def main() -> int:
                     "bytes": shop_bytes,
                     "main_menu_size_ratio": round(size_ratio, 3),
                     "changed_pixel_ratio": round(shop_changed_ratio, 4),
+                    "ui_state": shop_state,
                 }
             )
             ActionChains(driver).send_keys("p").perform()
-            wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="ashgate")
+            pause_state = wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="ashgate")
             pause_output = args.output_dir / f"pause-{width}x{height}.png"
             pause_bytes = capture_frame(driver, pause_output, (actual_width, actual_height))
             pause_changed_ratio = require_distinct_screen(shop_output, pause_output, "Pause")
@@ -267,6 +269,7 @@ def main() -> int:
                     "bytes": pause_bytes,
                     "changed_pixel_ratio": round(pause_changed_ratio, 4),
                     "navigation": "P from the focused Shop cargo selector",
+                    "ui_state": pause_state,
                 }
             )
             ActionChains(driver).send_keys(Keys.ESCAPE).perform()
@@ -275,7 +278,7 @@ def main() -> int:
             # intentionally wired to the pinned Plan action, so this both opens
             # the next screen and exercises packaged keyboard focus continuity.
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
-            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
+            departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
             departure_changed_ratio = require_distinct_screen(shop_output, departure_output, "Plan departure")
@@ -288,13 +291,14 @@ def main() -> int:
                     "bytes": departure_bytes,
                     "changed_pixel_ratio": round(departure_changed_ratio, 4),
                     "navigation": "Shift+Tab from cargo selector, then Enter",
+                    "ui_state": departure_state,
                 }
             )
             commit_actions = ActionChains(driver)
             for _ in range(4):
                 commit_actions.send_keys(Keys.TAB)
             commit_actions.send_keys(Keys.ENTER).perform()
-            wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
+            arrival_state = wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
             time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
             arrival_bytes = capture_frame(driver, arrival_output, (actual_width, actual_height))
@@ -308,10 +312,11 @@ def main() -> int:
                     "bytes": arrival_bytes,
                     "changed_pixel_ratio": round(arrival_changed_ratio, 4),
                     "navigation": "Tab through the explicit departure focus cycle, then Enter",
+                    "ui_state": arrival_state,
                 }
             )
             ActionChains(driver).send_keys(Keys.ENTER).perform()
-            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
+            destination_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
             destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
             destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
             destination_changed_ratio = require_distinct_screen(arrival_output, destination_output, "Enter settlement")
@@ -324,6 +329,7 @@ def main() -> int:
                     "bytes": destination_bytes,
                     "changed_pixel_ratio": round(destination_changed_ratio, 4),
                     "navigation": "Enter on the focused destination-specific arrival action",
+                    "ui_state": destination_state,
                 }
             )
             driver.quit()
@@ -335,7 +341,7 @@ def main() -> int:
             canvas = driver.find_element(By.ID, "canvas")
             driver.execute_script("arguments[0].focus()", canvas)
             ActionChains(driver).send_keys(Keys.TAB, Keys.TAB, Keys.SPACE).perform()
-            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
+            large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
             large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
             large_menu_changed_ratio = require_distinct_screen(
@@ -350,10 +356,11 @@ def main() -> int:
                     "bytes": large_menu_bytes,
                     "changed_pixel_ratio": round(large_menu_changed_ratio, 4),
                     "navigation": "Tab from Start to Large text, then Space",
+                    "ui_state": large_menu_state,
                 }
             )
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB, Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
-            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
+            large_shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
             large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
             large_shop_changed_ratio = require_distinct_screen(
@@ -368,10 +375,32 @@ def main() -> int:
                     "bytes": large_shop_bytes,
                     "changed_pixel_ratio": round(large_shop_changed_ratio, 4),
                     "navigation": "Shift+Tab from Large text to Start, then Enter",
+                    "ui_state": large_shop_state,
                 }
             )
+            ActionChains(driver).send_keys("p").perform()
+            large_pause_state = wait_for_ui_state(driver, "pause", args.timeout, large_text=True, settlement_id="ashgate")
+            large_pause_output = args.output_dir / f"pause-large-text-{width}x{height}.png"
+            large_pause_bytes = capture_frame(driver, large_pause_output, (actual_width, actual_height))
+            large_pause_changed_ratio = require_distinct_screen(
+                pause_output, large_pause_output, "Open Pause with large text", minimum_ratio=0.01
+            )
+            captures.append(
+                {
+                    "screen": "pause_large_text",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": large_pause_output.name,
+                    "bytes": large_pause_bytes,
+                    "changed_pixel_ratio": round(large_pause_changed_ratio, 4),
+                    "navigation": "P from the focused large-text Shop cargo selector",
+                    "ui_state": large_pause_state,
+                }
+            )
+            ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
-            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=True, settlement_id="ashgate")
+            large_departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=True, settlement_id="ashgate")
             large_departure_output = args.output_dir / f"departure-desk-large-text-{width}x{height}.png"
             large_departure_bytes = capture_frame(driver, large_departure_output, (actual_width, actual_height))
             large_departure_changed_ratio = require_distinct_screen(
@@ -386,6 +415,7 @@ def main() -> int:
                     "bytes": large_departure_bytes,
                     "changed_pixel_ratio": round(large_departure_changed_ratio, 4),
                     "navigation": "Shift+Tab from cargo selector to Plan, then Enter",
+                    "ui_state": large_departure_state,
                 }
             )
             driver.quit()
@@ -402,7 +432,7 @@ def main() -> int:
             for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
                 select_medicine.send_keys(key).pause(0.1)
             select_medicine.perform()
-            wait_for_ui_state(
+            event_state = wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
@@ -459,6 +489,7 @@ def main() -> int:
                     "bytes": event_bytes,
                     "changed_pixel_ratio": round(event_changed_ratio, 4),
                     "navigation": "Buy Medicine, plan Brine Cross, and commit through keyboard focus",
+                    "ui_state": event_state,
                 }
             )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
