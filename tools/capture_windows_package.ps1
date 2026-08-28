@@ -30,6 +30,8 @@ public static class MarketOfAshWindowCapture {
     public static extern bool ClientToScreen(IntPtr handle, ref POINT point);
     [DllImport("user32.dll")]
     public static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int width, int height, uint flags);
+    [DllImport("user32.dll")]
+    public static extern bool SetCursorPos(int x, int y);
 }
 "@
 Add-Type -AssemblyName System.Drawing
@@ -57,6 +59,9 @@ try {
     $noSizeNoOrderShow = 0x0001 -bor 0x0004 -bor 0x0040
     if (-not [MarketOfAshWindowCapture]::SetWindowPos($handle, [IntPtr]::Zero, 24, 24, 0, 0, $noSizeNoOrderShow)) {
         throw "Could not move the packaged game window onto the capture desktop."
+    }
+    if (-not [MarketOfAshWindowCapture]::SetCursorPos(1, 1)) {
+        throw "Could not move the pointer outside the packaged game window."
     }
     Start-Sleep -Seconds 2
     $process.Refresh()
