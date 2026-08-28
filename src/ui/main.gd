@@ -1850,6 +1850,14 @@ func _on_save_pressed() -> void:
 func _write_save(status_prefix: String) -> bool:
 	var temporary_path := save_path + ".tmp"
 	var backup_path := save_path + ".bak"
+	var target_absolute := ProjectSettings.globalize_path(save_path)
+	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
+	var backup_absolute := ProjectSettings.globalize_path(backup_path)
+	if FileAccess.file_exists(temporary_path):
+		var stale_remove_error := DirAccess.remove_absolute(temporary_absolute)
+		if stale_remove_error != OK:
+			save_status_text = "SAVE ERROR — Could not clear the stale temporary save file. Current run unchanged."
+			return false
 	var file := FileAccess.open(temporary_path, FileAccess.WRITE)
 	if file == null:
 		save_status_text = "SAVE ERROR — Could not open a temporary save file. Current run unchanged."
@@ -1857,12 +1865,11 @@ func _write_save(status_prefix: String) -> bool:
 	file.store_string(JSON.stringify(world.serialize()))
 	file.flush()
 	if file.get_error() != OK:
+		file = null
+		DirAccess.remove_absolute(temporary_absolute)
 		save_status_text = "SAVE ERROR — Could not finish writing. Current run unchanged."
 		return false
 	file = null
-	var target_absolute := ProjectSettings.globalize_path(save_path)
-	var temporary_absolute := ProjectSettings.globalize_path(temporary_path)
-	var backup_absolute := ProjectSettings.globalize_path(backup_path)
 	if FileAccess.file_exists(save_path):
 		var primary_is_valid := bool(_load_candidate(save_path).get("ok", false))
 		if primary_is_valid:
@@ -1886,6 +1893,8 @@ func _write_save(status_prefix: String) -> bool:
 	if promote_error != OK:
 		if FileAccess.file_exists(backup_path) and not FileAccess.file_exists(save_path):
 			DirAccess.copy_absolute(backup_absolute, target_absolute)
+		if FileAccess.file_exists(temporary_path):
+			DirAccess.remove_absolute(temporary_absolute)
 		save_status_text = "SAVE ERROR — Could not promote the validated save. Previous save preserved when available."
 		return false
 	var settlement_name := String(world.settlement(world.current_settlement).get("name", world.current_settlement))

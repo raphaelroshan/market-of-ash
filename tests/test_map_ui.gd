@@ -155,6 +155,7 @@ func _initialize() -> void:
 	ui.autosave_enabled = true
 	ui._show_command_result({"ok": true, "message": "Test command succeeded."}, "Test")
 	_expect(ui.event_label.text.contains("Test command succeeded") and ui.event_label.text.contains("SAVE WARNING") and ui.event_label.text.contains("temporary save file"), "a successful command with a failed autosave should surface both outcomes in the primary result")
+	_expect(not FileAccess.file_exists(ui.save_path + ".tmp"), "a failed autosave should not strand a temporary generation")
 	_expect(ui.audio_player.stream == ui.audio_cues["blocked"], "a failed autosave should replace the success cue with the warning cue")
 	ui.save_path = valid_test_save_path
 	ui.autosave_enabled = false
@@ -207,8 +208,12 @@ func _initialize() -> void:
 	ui._on_pause_load_pressed()
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.pause_summary_label.text.contains("No saved campaign exists"), "a failed load from Pause should keep the campaign paused with the validation reason visible")
 	ui._close_pause()
+	var stale_temporary := FileAccess.open(test_temporary_path, FileAccess.WRITE)
+	stale_temporary.store_string("stale partial save")
+	stale_temporary = null
 	ui._on_save_pressed()
 	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
+	_expect(not FileAccess.file_exists(test_temporary_path), "successful save should replace and remove any stale temporary generation")
 	_expect(ui.audio_player.stream == ui.audio_cues["success"], "a successful manual save should use the confirmation cue")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
 	_expect(ui.start_game_button.find_next_valid_focus() == ui.continue_game_button and ui.continue_game_button.find_next_valid_focus() == ui.reduce_motion_checkbox, "enabling Continue after a save should rebuild the Main Menu focus cycle")
