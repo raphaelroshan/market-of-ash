@@ -369,3 +369,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The alpha's primary map should support the trade-and-travel decision rather than expose a future-editor placeholder interaction. Reusing the authoritative destination list keeps map clicks equivalent to the Departure Desk selector.
 
 **Trade-off:** Keyboard and controller planning continues through the adjacent destination selector, which has clearer focus behavior than making every drawn marker a custom focus target. The grid remains a restrained visual scaffold rather than a free-movement system.
+
+## ADR-047: Web builds expose a minimal assistive and verification state
+
+**Decision:** The Web UI publishes a small state object containing screen, presentation, settlement/event, planning, and coarse resource context. The same update maintains a visually hidden polite ARIA status region and a descriptive canvas label for major screen transitions. Browser automation waits on this state before capturing evidence.
+
+**Reason:** Godot 4.4 does not expose a native per-Control accessibility tree in this project, while timing-only browser tests can mistake a focus-ring change for successful navigation. A narrow Web bridge improves screen-change announcements and makes packaged evidence deterministic without moving gameplay rules into JavaScript.
+
+**Trade-off:** This is not full control-level screen-reader support, and the exposed state deliberately omits identity, hardware, and detailed history. Manual assistive-technology testing remains an alpha gate.

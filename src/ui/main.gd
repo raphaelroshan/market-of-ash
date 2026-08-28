@@ -1439,12 +1439,32 @@ func _publish_web_ui_state() -> void:
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
 		return
 	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
-	bridge.call("eval", "window.marketOfAshUiState = %s;" % JSON.stringify(_web_ui_state()))
+	var state_json := JSON.stringify(_web_ui_state())
+	var script := "(function(state){window.marketOfAshUiState=state;var region=document.getElementById('market-of-ash-status');if(!region){region=document.createElement('div');region.id='market-of-ash-status';region.setAttribute('role','status');region.setAttribute('aria-live','polite');region.setAttribute('aria-atomic','true');region.style.position='absolute';region.style.left='-10000px';region.style.width='1px';region.style.height='1px';region.style.overflow='hidden';document.body.appendChild(region);}if(region.textContent!==state.announcement){region.textContent=state.announcement;}var canvas=document.getElementById('canvas');if(canvas){canvas.setAttribute('role','application');canvas.setAttribute('aria-label',state.announcement);}})(%s);" % state_json
+	bridge.call("eval", script)
+
+func _web_accessibility_announcement() -> String:
+	var screen_id := _current_ui_state_id()
+	match screen_id:
+		"main_menu":
+			return "Market of Ash main menu. Start Game is focused. Accessibility and input settings follow the launch actions."
+		"settlement_shop":
+			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
+		"departure_desk":
+			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
+		"route_event":
+			return "Route decision: %s. The first available response is focused; unavailable responses include written reasons." % String(world.pending_event.get("title", "travel event"))
+		"arrival_handoff":
+			return "Arrival report for %s. Enter settlement is focused." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
+		"pause":
+			return "Game paused. Resume is focused; save, load, report, and main-menu actions follow."
+	return "Market of Ash"
 
 func _web_ui_state() -> Dictionary:
 	var selected_good_id := _selected_id(shop_good_option) if shop_good_option != null else ""
 	return {
 		"screen": _current_ui_state_id(),
+		"announcement": _web_accessibility_announcement(),
 		"large_text": large_text_enabled,
 		"settlement_id": world.current_settlement if world != null else "",
 		"day": world.day if world != null else 0,
