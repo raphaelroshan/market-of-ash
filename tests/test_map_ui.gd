@@ -366,6 +366,7 @@ func _initialize() -> void:
 	ui._open_pause()
 	ui._on_export_report_pressed()
 	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("Report export failed") and JSON.stringify(ui.world.serialize()) == state_before_report, "a failed report export should stay visible in Pause without mutating the campaign")
+	_expect(ui.audio_player.stream == ui.audio_cues["blocked"], "a failed playtest report export should use the warning cue")
 	ui.report_path = valid_report_path
 	ui._close_pause()
 
