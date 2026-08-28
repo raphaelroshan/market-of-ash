@@ -49,6 +49,8 @@ Pull requests and pushes to `main` produce a release-candidate artifact containi
 
 Runtime exports include the game scenes, scripts, and canonical content but exclude repository-only tests, tools, research, documentation, and workflow files. The separately packaged source snapshot retains those materials for review and reproduction.
 
+Generated `build/` and `artifacts/` directories, plus repository-only `research/`, carry `.gdignore` sentinels so repeated local exports never enter Godot's resource database. Export presets also exclude the exact nested output paths. The repository policy check enforces both safeguards.
+
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 
 ## Local execution

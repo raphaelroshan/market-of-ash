@@ -39,6 +39,22 @@ def main() -> int:
         if not (root / item).exists():
             errors.append(f"required path missing: {item}")
 
+    for generated_directory in ["build", "artifacts", "research"]:
+        directory = root / generated_directory
+        if directory.exists() and not (directory / ".gdignore").is_file():
+            errors.append(f"Godot-excluded directory is missing {generated_directory}/.gdignore")
+
+    export_presets_path = root / "export_presets.cfg"
+    if export_presets_path.is_file():
+        preset_text = export_presets_path.read_text(encoding="utf-8")
+        required_export_exclusions = ["build/*", "build/web/*", "artifacts/*"]
+        for line_number, line in enumerate(preset_text.splitlines(), start=1):
+            if not line.startswith("exclude_filter="):
+                continue
+            for exclusion in required_export_exclusions:
+                if exclusion not in line:
+                    errors.append(f"export preset exclusion missing {exclusion} at export_presets.cfg:{line_number}")
+
     gd_files = list(root.glob("**/*.gd"))
     test_files = list((root / "tests").glob("**/*")) if (root / "tests").exists() else []
     if gd_files and not any(path.suffix == ".gd" for path in test_files):
