@@ -1242,10 +1242,12 @@ func _on_export_report_pressed() -> void:
 	}
 	var report_json := JSON.stringify(report, "\t")
 	if _download_web_report(report_json):
+		_play_ui_cue("success")
 		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
 		var file := FileAccess.open(report_path, FileAccess.WRITE)
 		if file == null:
+			_play_ui_cue("blocked")
 			_set_event("Report export failed. The campaign remains unchanged.")
 			_refresh_ui()
 			if pause_layer != null and pause_layer.visible:
@@ -1254,8 +1256,10 @@ func _on_export_report_pressed() -> void:
 		file.store_string(report_json)
 		file.flush()
 		if file.get_error() != OK:
+			_play_ui_cue("blocked")
 			_set_event("Report export failed. The campaign remains unchanged.")
 		else:
+			_play_ui_cue("success")
 			_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
@@ -1578,7 +1582,9 @@ func _next_step_text() -> String:
 	return "Adjust the destination, route, or forecast load before committing travel."
 
 func _on_save_pressed() -> void:
-	if _write_save("SAVED"):
+	var save_succeeded := _write_save("SAVED")
+	_play_ui_cue("success" if save_succeeded else "blocked")
+	if save_succeeded:
 		_set_event("Versioned prototype state saved. Command history is included for deterministic review.")
 	else:
 		_set_event("Save failed. The current run remains active and unchanged.")
@@ -1640,6 +1646,7 @@ func _write_save(status_prefix: String) -> bool:
 func _on_load_pressed() -> bool:
 	var backup_path := save_path + ".bak"
 	if not FileAccess.file_exists(save_path) and not FileAccess.file_exists(backup_path):
+		_play_ui_cue("blocked")
 		save_status_text = "LOAD BLOCKED — No saved campaign exists yet. Current run unchanged."
 		_set_event(save_status_text)
 		_refresh_ui()
@@ -1650,6 +1657,7 @@ func _on_load_pressed() -> bool:
 		load_attempt = _load_candidate(backup_path)
 		recovered_backup = bool(load_attempt.get("ok", false))
 	if not bool(load_attempt.get("ok", false)):
+		_play_ui_cue("blocked")
 		save_status_text = "LOAD BLOCKED — %s. Current run unchanged." % String(load_attempt.get("reason", "Save validation failed"))
 		_set_event(save_status_text)
 		_refresh_ui()
@@ -1673,6 +1681,7 @@ func _on_load_pressed() -> bool:
 	var status_prefix := "RECOVERED BACKUP" if recovered_backup else "LOADED"
 	save_status_text = "%s — Day %d · %s · %d ashmarks · hold %d/%d · save v%d%s" % [status_prefix, world.day, String(world.settlement(world.current_settlement).get("name", world.current_settlement)), world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity, AshWorldState.SAVE_VERSION, migration_text]
 	_set_event("Saved campaign loaded after validation. Seed %d and command history are restored." % world.seed)
+	_play_ui_cue("success")
 	if world.pending_event.is_empty():
 		_show_shop()
 	else:
