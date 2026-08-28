@@ -7,6 +7,7 @@ import struct
 import sys
 import tempfile
 import json
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -14,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from tools.validate_windows_export import inspect_windows_export
 from tools.capture_validation import write_rgb_png
 from tools.validate_windows_gui_capture import validate_capture
+from tools.validate_windows_distribution import inspect_windows_distribution
 
 
 def write_fixture(path: Path, machine: int = 0x8664) -> None:
@@ -51,6 +53,23 @@ def main() -> int:
             pass
         else:
             raise AssertionError("Windows exports without the embedded PCK footer should be rejected")
+
+        portable_archive = root / "market-of-ash-windows.zip"
+        with zipfile.ZipFile(portable_archive, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.write(valid, "Market of Ash/market-of-ash.exe")
+        portable_details = inspect_windows_distribution(portable_archive, minimum_executable_size=1)
+        assert portable_details["executable_bytes"] == valid.stat().st_size
+
+        extra_file_archive = root / "market-of-ash-windows-extra.zip"
+        with zipfile.ZipFile(extra_file_archive, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.write(valid, "Market of Ash/market-of-ash.exe")
+            archive.writestr("unexpected.txt", "not part of the portable contract")
+        try:
+            inspect_windows_distribution(extra_file_archive, minimum_executable_size=1)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("Windows portable archives with unexpected files should be rejected")
 
         screenshot = root / "windows-main-menu.png"
         pixels = bytearray()

@@ -202,7 +202,7 @@ jobs:
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi
-      - name: Smoke test exported builds
+      - name: Validate exported build payloads
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           test -s "build/${slug}.exe"
@@ -212,12 +212,27 @@ jobs:
           test -s build/web/index.wasm
           generated_import=$(find build -type f -name '*.import' -print -quit)
           test -z "$generated_import"
-          "./build/${slug}.exe" --headless --quit-after 2
+      - name: Package and clean-smoke Windows portable build
+        shell: pwsh
+        run: |
+          $cleanDirectory = Join-Path $env:RUNNER_TEMP "market-of-ash-clean-$env:GITHUB_RUN_ID"
+          ./tools/package_windows_portable.ps1 `
+            -Executable build/market-of-ash.exe `
+            -Archive artifacts/market-of-ash-windows.zip `
+            -ExtractDirectory $cleanDirectory
+          $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
+          python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
+          python tools/validate_windows_export.py $cleanExecutable
+          & $cleanExecutable --headless --quit-after 2
+          if ($LASTEXITCODE -ne 0) {
+            throw "Clean-extracted Windows package exited with code $LASTEXITCODE"
+          }
+          "MARKET_CLEAN_WINDOWS_EXE=$cleanExecutable" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Capture packaged Windows GUI and metadata
         shell: pwsh
         run: |
           ./tools/capture_windows_package.ps1 `
-            -Executable build/market-of-ash.exe `
+            -Executable $env:MARKET_CLEAN_WINDOWS_EXE `
             -Screenshot artifacts/windows-main-menu.png `
             -Metadata artifacts/windows-version.json
       - name: Validate packaged Windows GUI and metadata
@@ -238,10 +253,13 @@ jobs:
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           sha256sum \
             "build/${slug}.exe" \
+            artifacts/market-of-ash-windows.zip \
             build/web/index.html \
             build/web/index.pck \
             build/web/index.wasm \
             "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            artifacts/windows-main-menu.png \
+            artifacts/windows-version.json \
             artifacts/release_manifest.json > artifacts/SHA256SUMS.txt
           test -s artifacts/SHA256SUMS.txt
           sha256sum -c artifacts/SHA256SUMS.txt

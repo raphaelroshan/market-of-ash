@@ -28,6 +28,21 @@ jobs:
           version: 4.4.1
           use-dotnet: false
           include-templates: true
+      - name: Setup Windows resource editor
+        shell: pwsh
+        run: |
+          $toolDirectory = Join-Path $env:RUNNER_TEMP "rcedit-v2.0.0"
+          $toolPath = Join-Path $toolDirectory "rcedit.exe"
+          $expectedHash = "3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+          New-Item -ItemType Directory -Path $toolDirectory -Force | Out-Null
+          Invoke-WebRequest `
+            -Uri "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe" `
+            -OutFile $toolPath
+          $actualHash = (Get-FileHash -Path $toolPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) {
+            throw "rcedit checksum mismatch: expected $expectedHash, got $actualHash"
+          }
+          $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Run deterministic tests
         run: bash scripts/verify.sh
       - name: Require export presets for release builds
@@ -43,7 +58,7 @@ jobs:
           godot --headless --path . --export-release "Windows Desktop" "build/${slug}.exe"
           mkdir -p build/web
           godot --headless --path . --export-release "Web" "build/web/index.html"
-      - name: Smoke test exported builds
+      - name: Validate exported build payloads
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           test -s "build/${slug}.exe"
@@ -53,7 +68,34 @@ jobs:
           test -s build/web/index.wasm
           generated_import=$(find build -type f -name '*.import' -print -quit)
           test -z "$generated_import"
-          "./build/${slug}.exe" --headless --quit-after 2
+      - name: Package and clean-smoke Windows portable build
+        shell: pwsh
+        run: |
+          $cleanDirectory = Join-Path $env:RUNNER_TEMP "market-of-ash-clean-$env:GITHUB_RUN_ID"
+          ./tools/package_windows_portable.ps1 `
+            -Executable build/market-of-ash.exe `
+            -Archive artifacts/market-of-ash-windows.zip `
+            -ExtractDirectory $cleanDirectory
+          $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
+          python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
+          python tools/validate_windows_export.py $cleanExecutable
+          & $cleanExecutable --headless --quit-after 2
+          if ($LASTEXITCODE -ne 0) {
+            throw "Clean-extracted Windows package exited with code $LASTEXITCODE"
+          }
+          "MARKET_CLEAN_WINDOWS_EXE=$cleanExecutable" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Capture packaged Windows GUI and metadata
+        shell: pwsh
+        run: |
+          ./tools/capture_windows_package.ps1 `
+            -Executable $env:MARKET_CLEAN_WINDOWS_EXE `
+            -Screenshot artifacts/windows-main-menu.png `
+            -Metadata artifacts/windows-version.json
+      - name: Validate packaged Windows GUI and metadata
+        run: |
+          python tools/validate_windows_gui_capture.py \
+            --image artifacts/windows-main-menu.png \
+            --metadata artifacts/windows-version.json
       - name: Create release manifest
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
@@ -64,10 +106,13 @@ jobs:
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           sha256sum \
             "build/${slug}.exe" \
+            artifacts/market-of-ash-windows.zip \
             build/web/index.html \
             build/web/index.pck \
             build/web/index.wasm \
             "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            artifacts/windows-main-menu.png \
+            artifacts/windows-version.json \
             artifacts/release_manifest.json > artifacts/SHA256SUMS.txt
           test -s artifacts/SHA256SUMS.txt
           sha256sum -c artifacts/SHA256SUMS.txt
