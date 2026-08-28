@@ -2286,6 +2286,9 @@ class MapPanel extends Control:
 	func _font_size(base_size: int) -> int:
 		return int(round(float(base_size) * text_scale))
 
+	func _caravan_motion_label() -> String:
+		return "MOVING" if traveling else ""
+
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
 		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
@@ -2385,4 +2388,6 @@ class MapPanel extends Control:
 			caravan_position = _polyline_position(travel_points, travel_progress)
 		draw_circle(caravan_position, 10.0, Color("#17130f"))
 		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
-		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f0d27d"))
+		var motion_label := _caravan_motion_label()
+		if not motion_label.is_empty():
+			draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), motion_label, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f0d27d"))

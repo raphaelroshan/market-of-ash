@@ -411,6 +411,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel.GRID_SIZE == Vector2i(17, 11), "map grid size is not the stable 17x11 contract")
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		_expect(ui.map_panel._map_heading().contains("ORDINARY PRESSURE") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "map text should identify the crisis stage and current location without relying on color")
+		_expect(ui.map_panel._caravan_motion_label().is_empty(), "the stationary caravan should rely on the marker's HERE text instead of overlapping its label")
 		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size == Vector2(126, 40) and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds")
 		var settlement_ids: Array = ui.map_panel.SETTLEMENT_CELLS.keys()
 		var hit_targets_overlap := false
@@ -433,6 +434,7 @@ func _initialize() -> void:
 			failures.append("map destination selection mutated authoritative world state")
 		ui._on_depart_pressed()
 		_expect(ui.map_panel.traveling, "successful departure did not start presentation traversal")
+		_expect(ui.map_panel._caravan_motion_label() == "MOVING", "active travel should expose a concise motion label")
 		_expect(ui.map_panel.travel_points.size() == 3, "travel traversal did not create origin, waypoint, destination")
 		_expect(ui.enter_settlement_button.visible and ui.enter_settlement_button.text == "Enter Reedwatch" and ui.commit_departure_button.disabled and not ui.departure_travel_actions.visible, "arrival state should replace the planning actions with a destination-specific settlement-entry action")
 		_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "an uninterrupted arrival should focus the settlement-entry action")
