@@ -2253,6 +2253,7 @@ func _web_ui_state() -> Dictionary:
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
 		"selected_good_id": selected_good_id,
 		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
+		"selected_route_id": _selected_id(route_option) if route_option != null else "",
 		"selected_quantity": int(shop_quantity.value) if shop_quantity != null else 0,
 		"held_selected_quantity": int(world.cargo.get(selected_good_id, 0)) if world != null else 0,
 	}

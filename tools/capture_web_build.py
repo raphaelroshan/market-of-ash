@@ -922,22 +922,20 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            click_game_target(driver, "start_game")
-            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
-            # Select Medicine (two entries after Water), buy the default two
-            # units, and use the success focus handoff to open Departure.
-            if use_accessibility_actions:
-                set_accessibility_quantity(driver, "shop_quantity", 3)
-                wait_for_ui_state(driver, "settlement_shop", args.timeout, expected_values={"selected_quantity": 3})
-                set_accessibility_quantity(driver, "shop_quantity", 2)
-                select_accessibility_option(driver, "shop_good", "medicine")
-            else:
-                select_game_option(driver, "shop_good", 3)
+            activate_game_action(driver, "start_conflict", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
-                expected_values={"selected_good_id": "medicine", "selected_quantity": 2},
+                large_text=False,
+                settlement_id="ashgate",
+                expected_values={
+                    "playtest_path_id": "conflict_recovery",
+                    "selected_good_id": "medicine",
+                    "selected_quantity": 2,
+                    "selected_destination_id": "brine_cross",
+                    "selected_route_id": "toll_road",
+                },
             )
             activate_game_action(driver, "shop_buy", use_accessibility_actions)
             wait_for_ui_state(
@@ -953,9 +951,13 @@ def main() -> int:
                 args.timeout,
                 large_text=False,
                 settlement_id="ashgate",
-                expected_values={"selected_good_id": "medicine", "selected_destination_id": "reedwatch"},
+                expected_values={
+                    "playtest_path_id": "conflict_recovery",
+                    "selected_good_id": "medicine",
+                    "selected_destination_id": "brine_cross",
+                    "selected_route_id": "toll_road",
+                },
             )
-            # Brine Cross is two entries after the default Reedwatch choice.
             if use_accessibility_actions:
                 select_accessibility_option(driver, "cargo_good", "water")
                 wait_for_ui_state(driver, "departure_desk", args.timeout, expected_values={"selected_good_id": "water"})
@@ -963,14 +965,11 @@ def main() -> int:
                 set_accessibility_quantity(driver, "cargo_quantity", 3)
                 wait_for_ui_state(driver, "departure_desk", args.timeout, expected_values={"selected_quantity": 3})
                 set_accessibility_quantity(driver, "cargo_quantity", 2)
-                select_accessibility_option(driver, "destination", "brine_cross")
-            else:
-                select_game_option(driver, "destination", 2)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
                 args.timeout,
-                expected_values={"selected_destination_id": "brine_cross"},
+                expected_values={"selected_destination_id": "brine_cross", "selected_route_id": "toll_road"},
             )
             activate_game_action(driver, "commit_departure", use_accessibility_actions)
             event_state = wait_for_ui_state(
@@ -1020,18 +1019,40 @@ def main() -> int:
                     "ui_state": event_arrival_state,
                 }
             )
+            driver.quit()
+            driver = create_driver(args.browser, width, height)
+            set_viewport_size(driver, args.browser, width, height)
+            driver.get(args.url)
+            wait_for_game(driver, args.timeout)
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
+            activate_game_action(driver, "start_campaign", use_accessibility_actions)
+            wait_for_ui_state(
+                driver,
+                "settlement_shop",
+                args.timeout,
+                large_text=False,
+                settlement_id="ashgate",
+                expected_values={
+                    "playtest_path_id": "contract_crew",
+                    "selected_good_id": "water",
+                    "selected_quantity": 4,
+                    "selected_destination_id": "reedwatch",
+                    "selected_route_id": "old_road",
+                },
+            )
         validate_capture_matrix(captures)
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 8,
+                    "manifest_version": 9,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
                     "assistive_action_bridge": "actions focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
                     "assistive_planning_controls": "Shop and Departure native HTML fields exercised at 960x540",
                     "assistive_dynamic_actions": "Reedwatch Water Relief accepted through its generated semantic button at 960x540",
+                    "playtest_path_coverage": "Guided Trade, Conflict & Recovery, and Contract & Crew launched through semantic actions at 960x540 and canvas pointer actions at 1280x720",
                     "assistive_presentation_controls": "Reduce motion, Large text, and Interface sounds toggled through native HTML checkboxes at 960x540",
                     "assistive_input_remapping": "Pause rebound to R and default bindings restored through semantic HTML at 960x540",
                     "assistive_shortcut_safety": "Ctrl+R rejected without browser navigation and remapping cancelled with Escape at 960x540",
