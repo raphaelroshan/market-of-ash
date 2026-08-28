@@ -664,6 +664,7 @@ func _initialize() -> void:
 	ui.large_text_checkbox.button_pressed = true
 	await process_frame
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
+	_expect(is_equal_approx(ui.map_panel.text_scale, 1.25) and ui.map_panel._font_size(12) == 15, "large text should also scale custom-drawn map labels")
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the pinned departure action inside the game layout")
 	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the primary Buy action inside the game layout")

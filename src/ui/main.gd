@@ -391,6 +391,9 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	large_text_enabled = enabled
 	theme.default_font_size = 20 if enabled else 16
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
+	if map_panel:
+		map_panel.text_scale = 1.25 if enabled else 1.0
+		map_panel.queue_redraw()
 	_save_presentation_settings()
 	if not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 		get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
@@ -772,6 +775,7 @@ func _build_ui() -> void:
 	map_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	map_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	map_panel.world = world
+	map_panel.text_scale = 1.25 if large_text_enabled else 1.0
 	map_panel.settlement_selected.connect(_on_map_settlement_selected)
 	game_layer.add_child(map_panel)
 
@@ -2209,6 +2213,7 @@ class MapPanel extends Control:
 	var travel_progress: float = 1.0
 	var traveling: bool = false
 	var reduce_motion: bool = false
+	var text_scale: float = 1.0
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
@@ -2275,6 +2280,9 @@ class MapPanel extends Control:
 		var location_prefix := "HERE · " if settlement_id == world.current_settlement else ""
 		return "%sResilience %d/10" % [location_prefix, world.resilience_for(settlement_id)]
 
+	func _font_size(base_size: int) -> int:
+		return int(round(float(base_size) * text_scale))
+
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
 		travel_points.clear()
@@ -2338,7 +2346,7 @@ class MapPanel extends Control:
 				var fill := Color("#332820") if (x + y) % 2 == 0 else Color("#382c23")
 				draw_rect(_cell_rect(cell), fill, true)
 				draw_rect(_cell_rect(cell), Color("#5c4838"), false, 1.0)
-		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), _map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), _map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16), Color("#e6c58d"))
 		var route_ids := ["old_road", "toll_road", "dry_cut"]
 		for route_id in route_ids:
 			var route_points: Array[Vector2] = _route_points(route_id)
@@ -2354,9 +2362,9 @@ class MapPanel extends Control:
 				else:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
 		var route_profiles := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
-		var route_footer_x := [8.0, 166.0, 344.0]
+		var route_footer_x := [8.0, 235.0, 470.0]
 		for route_index in range(route_ids.size()):
-			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(route_footer_x[route_index], board.size.y + 24), "%s: %s" % [_route_label(route_ids[route_index]), route_profiles[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, 11, _route_color(route_ids[route_index]))
+			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(route_footer_x[route_index], board.size.y + 24), "%s: %s" % [_route_label(route_ids[route_index]), route_profiles[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(route_ids[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
@@ -2364,12 +2372,12 @@ class MapPanel extends Control:
 			draw_rect(footprint, Color("#5a4027") if is_current else Color("#3b2b24"), true)
 			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#f4e6c7"))
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#c7b49a"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10), Color("#c7b49a"))
 		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
 		if traveling:
 			caravan_position = _polyline_position(travel_points, travel_progress)
 		draw_circle(caravan_position, 10.0, Color("#17130f"))
 		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
-		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#f0d27d"))
-		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "HERE = CURRENT LOCATION", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#c7b49a"))
+		draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), "CARAVAN" if not traveling else "MOVING", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f0d27d"))
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(board.size.x - 185, board.size.y + 24), "HERE = CURRENT LOCATION", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#c7b49a"))
