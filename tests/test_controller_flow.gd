@@ -6,6 +6,7 @@ func _initialize() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	_expect(_input_action_has_key("ui_cancel", KEY_ESCAPE) and not _input_action_has_key("ui_cancel", KEY_BACKSPACE), "the shipped Back binding should match the documented and restorable Escape default")
 	var scene: PackedScene = load("res://scenes/Main.tscn")
 	var ui: Control = scene.instantiate()
 	root.add_child(ui)
@@ -118,6 +119,12 @@ func _press_joypad(button_index: int) -> void:
 	released.pressed = false
 	Input.parse_input_event(released)
 	await process_frame
+
+func _input_action_has_key(action_name: String, keycode: int) -> bool:
+	for event in InputMap.action_get_events(action_name):
+		if event is InputEventKey and int(event.physical_keycode if event.physical_keycode != KEY_NONE else event.keycode) == keycode:
+			return true
+	return false
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
