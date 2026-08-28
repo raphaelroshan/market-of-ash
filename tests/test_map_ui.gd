@@ -92,6 +92,7 @@ func _initialize() -> void:
 	_expect(repaired_bindings.load(test_settings_path) == OK and repaired_bindings.get_value("input", "ui_accept", []).has(KEY_ENTER) and repaired_bindings.get_value("input", "ui_cancel", []).has(KEY_ESCAPE), "invalid persisted bindings should be replaced with a valid default settings file")
 
 	ui._on_start_game_requested()
+	await process_frame
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
 	ui._open_pause()
@@ -119,7 +120,8 @@ func _initialize() -> void:
 	_expect(ui.world.money == 120 and ui.world.provisions == 12 and int(ui.world.cargo.get("weight", 0)) == 0, "Start Game did not restore the authored resource preset")
 	_expect(ui._selected_id(ui.shop_good_option) == "water" and int(ui.shop_quantity.value) == 2, "shop did not select the authored first market example")
 	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text.contains("Plan Water x2 to Reedwatch"), "shop did not expose the selected cargo and destination on the plan-departure handoff")
-	_expect(not _has_scroll_ancestor(ui.plan_departure_button) and ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "Plan departure should remain pinned outside the long action rail and visible without scrolling")
+	var plan_departure_rect: Rect2 = ui.plan_departure_button.get_global_rect()
+	_expect(not _has_scroll_ancestor(ui.plan_departure_button) and ui.shop_layer.get_global_rect().encloses(plan_departure_rect) and plan_departure_rect.size.x >= 300.0 and plan_departure_rect.size.y >= 56.0, "Plan departure should remain a full-width pinned action inside the Shop layout: layer %s, action %s" % [ui.shop_layer.get_global_rect(), plan_departure_rect])
 	var buy_cargo_button: Button = ui.find_child("BuyCargoButton", true, false)
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
@@ -373,6 +375,7 @@ func _initialize() -> void:
 
 	var shop_state: String = JSON.stringify(ui.world.serialize())
 	ui._on_plan_departure_pressed()
+	await process_frame
 	_expect(not ui.shop_layer.visible and ui.game_layer.visible, "Plan departure should open the dedicated departure map")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "opening departure planning should focus the destination control")
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
@@ -382,7 +385,9 @@ func _initialize() -> void:
 	_expect(ui.commit_departure_button.text.contains("4 ashmarks") and ui.commit_departure_button.text.contains("1 provision"), "the pinned Commit action should repeat the current route cost, got %s" % ui.commit_departure_button.text)
 	_expect(ui.cargo_quantity.get_line_edit().find_next_valid_focus() == ui.commit_departure_button and ui.commit_departure_button.find_next_valid_focus() == ui.return_to_shop_button, "Departure Tab order should reach Commit and Return before utility actions")
 	_expect(not _has_scroll_ancestor(ui.commit_departure_button) and not _has_scroll_ancestor(ui.return_to_shop_button), "the primary departure actions should remain pinned outside the long planning rail")
-	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "Commit departure and Return to shop should remain visible without scrolling")
+	var commit_departure_rect: Rect2 = ui.commit_departure_button.get_global_rect()
+	var return_to_shop_rect: Rect2 = ui.return_to_shop_button.get_global_rect()
+	_expect(ui.game_layer.get_global_rect().encloses(commit_departure_rect) and ui.game_layer.get_global_rect().encloses(return_to_shop_rect) and commit_departure_rect.size.x >= 170.0 and return_to_shop_rect.size.x >= 170.0, "Commit departure and Return to shop should remain substantial visible actions without scrolling: layer %s, commit %s, return %s" % [ui.game_layer.get_global_rect(), commit_departure_rect, return_to_shop_rect])
 	_expect(ui.departure_contract_label.text.contains("CONTRACT PIN") and ui.departure_contract_label.text.contains("Held 2/4"), "departure desk did not pin the active contract and cargo shortfall")
 	_expect(ui.route_preview_label.text.contains("1 Water unit at risk"), "departure desk did not disclose the one-unit cargo risk basis")
 	_expect(ui.route_preview_label.text.contains("Risk source:"), "departure desk did not disclose the authored route-risk source")
