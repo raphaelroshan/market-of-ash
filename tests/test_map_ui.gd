@@ -809,6 +809,10 @@ func _initialize() -> void:
 	ui._on_guided_test_action()
 	ui._on_plan_departure_pressed()
 	await process_frame
+	var scaled_map_hint: Label = ui.find_child("MapHint", true, false)
+	var scaled_board_rect: Rect2 = ui.map_panel._board_rect().grow(8.0)
+	_expect(scaled_map_hint != null and scaled_board_rect.position.y >= scaled_map_hint.get_global_rect().end.y + 8.0, "large text should reserve vertical space between the departure summary and map: hint %s, board %s" % [scaled_map_hint.get_global_rect() if scaled_map_hint else Rect2(), scaled_board_rect])
+	_expect(scaled_board_rect.end.y <= ui.event_label.get_global_rect().position.y - 8.0, "large text should keep the map above the route result text: board %s, result %s" % [scaled_board_rect, ui.event_label.get_global_rect()])
 	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "large text should keep Commit departure and Return to shop visible outside the planning rail: commit %s, return %s, layer %s" % [ui.commit_departure_button.get_global_rect(), ui.return_to_shop_button.get_global_rect(), ui.game_layer.get_global_rect()])
 	ui._on_depart_pressed()
 	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")

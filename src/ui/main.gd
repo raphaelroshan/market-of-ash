@@ -99,6 +99,7 @@ var guided_test_button: Button
 var playtest_banner: Label
 var playtest_status_label: Label
 var status_label: Label
+var map_hint: Label
 var event_label: Label
 var destination_option: OptionButton
 var route_option: OptionButton
@@ -403,12 +404,25 @@ func _show_departure() -> void:
 	return_to_shop_button.disabled = journey_locked
 	enter_settlement_button.visible = arrival_pending
 	_refresh_ui()
+	_request_map_layout_update()
 	if not world.pending_event.is_empty():
 		_grab_first_enabled(event_choice_buttons)
 	elif arrival_pending:
 		_grab_focus_if_available(enter_settlement_button)
 	else:
 		_grab_focus_if_available(destination_option)
+
+func _update_map_layout() -> void:
+	if map_panel == null or map_hint == null or event_label == null or game_layer == null or not game_layer.visible:
+		return
+	map_panel.fit_vertical_space(
+		map_hint.get_global_rect().end.y + 16.0,
+		event_label.get_global_rect().position.y - 16.0
+	)
+
+func _request_map_layout_update() -> void:
+	if not get_tree().process_frame.is_connected(_update_map_layout):
+		get_tree().process_frame.connect(_update_map_layout, CONNECT_ONE_SHOT)
 
 func _grab_focus_if_available(control: Variant) -> bool:
 	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or control.focus_mode == Control.FOCUS_NONE:
@@ -429,8 +443,8 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	theme.default_font_size = 20 if enabled else 16
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
 	if map_panel:
-		map_panel.text_scale = 1.25 if enabled else 1.0
-		map_panel.queue_redraw()
+		map_panel.set_text_scale(1.25 if enabled else 1.0)
+	_request_map_layout_update()
 	_save_presentation_settings()
 	_publish_web_ui_state()
 	if not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
@@ -900,7 +914,7 @@ func _build_ui() -> void:
 	map_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
 	map_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	map_panel.world = world
-	map_panel.text_scale = 1.25 if large_text_enabled else 1.0
+	map_panel.set_text_scale(1.25 if large_text_enabled else 1.0)
 	map_panel.settlement_selected.connect(_on_map_settlement_selected)
 	game_layer.add_child(map_panel)
 
@@ -943,7 +957,7 @@ func _build_ui() -> void:
 	status_label.add_theme_color_override("font_color", Color("#f4e6c7"))
 	left.add_child(status_label)
 
-	var map_hint := Label.new()
+	map_hint = Label.new()
 	map_hint.name = "MapHint"
 	map_hint.text = "Choose a settlement. HERE = current location; RES = resilience."
 	map_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -951,7 +965,7 @@ func _build_ui() -> void:
 	left.add_child(map_hint)
 
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 198)
+	spacer.custom_minimum_size = Vector2(0, 230)
 	left.add_child(spacer)
 
 	event_label = Label.new()
@@ -2463,14 +2477,18 @@ func _refresh_ui() -> void:
 		map_panel.queue_redraw()
 	if large_text_checkbox and large_text_checkbox.button_pressed:
 		_apply_text_scale(self, 1.25)
+	if game_layer != null and game_layer.visible:
+		_request_map_layout_update()
 	_publish_web_ui_state()
 
 class MapPanel extends Control:
 	signal settlement_selected(settlement_id: String)
 
 	const GRID_SIZE := Vector2i(17, 11)
-	const BOARD_ORIGIN := Vector2(34, 230)
-	const CELL_SIZE := Vector2(44, 20)
+	const NORMAL_BOARD_ORIGIN := Vector2(34, 230)
+	const CELL_WIDTH := 44.0
+	const NORMAL_CELL_HEIGHT := 20.0
+	const MIN_CELL_HEIGHT := 14.0
 	const MAP_HEADER_HEIGHT := 30.0
 	const ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
 	const ROUTE_PROFILES := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
@@ -2490,6 +2508,8 @@ class MapPanel extends Control:
 	var traveling: bool = false
 	var reduce_motion: bool = false
 	var text_scale: float = 1.0
+	var board_origin: Vector2 = NORMAL_BOARD_ORIGIN
+	var cell_height: float = NORMAL_CELL_HEIGHT
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
@@ -2502,11 +2522,21 @@ class MapPanel extends Control:
 			traveling = false
 		queue_redraw()
 
+	func set_text_scale(value: float) -> void:
+		text_scale = value
+		queue_redraw()
+
+	func fit_vertical_space(top: float, bottom: float) -> void:
+		board_origin = Vector2(NORMAL_BOARD_ORIGIN.x, maxf(NORMAL_BOARD_ORIGIN.y, top))
+		var available_height := maxf(0.0, bottom - board_origin.y)
+		cell_height = clampf(available_height / float(GRID_SIZE.y), MIN_CELL_HEIGHT, NORMAL_CELL_HEIGHT)
+		queue_redraw()
+
 	func _board_rect() -> Rect2:
-		return Rect2(BOARD_ORIGIN, Vector2(GRID_SIZE.x * CELL_SIZE.x, GRID_SIZE.y * CELL_SIZE.y))
+		return Rect2(board_origin, Vector2(GRID_SIZE.x * CELL_WIDTH, GRID_SIZE.y * cell_height))
 
 	func _cell_rect(cell: Vector2i) -> Rect2:
-		return Rect2(BOARD_ORIGIN + Vector2(cell.x * CELL_SIZE.x, cell.y * CELL_SIZE.y), CELL_SIZE)
+		return Rect2(board_origin + Vector2(cell.x * CELL_WIDTH, cell.y * cell_height), Vector2(CELL_WIDTH, cell_height))
 
 	func _cell_center(cell: Vector2i) -> Vector2:
 		return _cell_rect(cell).get_center()
@@ -2516,7 +2546,7 @@ class MapPanel extends Control:
 
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 38, 40))
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_WIDTH * 2.0 + 38, 40))
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
 		return _settlement_marker_rect(settlement_id).grow_individual(0.0, 10.0, 0.0, 10.0)
@@ -2565,11 +2595,11 @@ class MapPanel extends Control:
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
 		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
-		return Rect2(BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y - text_size.y - 6.0), text_size)
+		return Rect2(board_origin + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y - text_size.y - 6.0), text_size)
 
 	func _map_heading_rect() -> Rect2:
 		var text_size := ThemeDB.fallback_font.get_string_size(_map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16))
-		return Rect2(BOARD_ORIGIN + Vector2(8, (MAP_HEADER_HEIGHT - text_size.y) / 2.0), text_size)
+		return Rect2(board_origin + Vector2(8, (MAP_HEADER_HEIGHT - text_size.y) / 2.0), text_size)
 
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
@@ -2652,7 +2682,7 @@ class MapPanel extends Control:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
 		draw_rect(Rect2(board.position + Vector2(0, board.size.y - 28), Vector2(board.size.x, 28)), Color("#231b16"), true)
 		for route_index in range(ROUTE_IDS.size()):
-			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], board.size.y - 10.0), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
+			draw_string(ThemeDB.fallback_font, board_origin + Vector2(ROUTE_FOOTER_X[route_index], board.size.y - 10.0), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)

@@ -37,15 +37,29 @@ def write_rgb_png(path: Path, width: int, height: int, color: tuple[int, int, in
     )
 
 
+def write_rgba_png(path: Path, width: int, height: int, color: tuple[int, int, int, int]) -> None:
+    scanline = bytes(color) * width
+    raw = b"".join(b"\x00" + scanline for _ in range(height))
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + png_chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
+        + png_chunk(b"IDAT", zlib.compress(raw))
+        + png_chunk(b"IEND", b"")
+    )
+
+
 def main() -> int:
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
         dark = root / "dark.png"
         light = root / "light.png"
+        light_rgba = root / "light-rgba.png"
         write_rgb_png(dark, 4, 3, (10, 10, 10))
         write_rgb_png(light, 4, 3, (240, 240, 240))
+        write_rgba_png(light_rgba, 4, 3, (240, 240, 240, 128))
         assert png_dimensions(dark) == (4, 3)
         assert changed_pixel_ratio(dark, light) == 1.0
+        assert changed_pixel_ratio(light, light_rgba) == 0.0
         assert require_distinct_screen(dark, light, "test transition") == 1.0
         try:
             require_distinct_screen(dark, dark, "identity")
@@ -66,6 +80,11 @@ def main() -> int:
         pass
     else:
         raise AssertionError("incomplete capture matrix should be rejected")
+    validate_capture_matrix(
+        [{"screen": "menu", "requested_window": {"width": 320, "height": 180}}],
+        required_screens={"menu"},
+        viewports=((320, 180),),
+    )
     print("Browser capture validation: PASS")
     return 0
 

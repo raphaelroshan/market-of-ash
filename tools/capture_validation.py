@@ -35,7 +35,7 @@ def png_dimensions(path: Path) -> tuple[int, int]:
 
 
 def png_rgb(path: Path) -> tuple[tuple[int, int], bytes]:
-    """Decode Chrome's non-interlaced 8-bit RGB screenshots without Pillow."""
+    """Decode non-interlaced 8-bit RGB/RGBA screenshots without Pillow."""
     data = path.read_bytes()
     position = 8
     image_data: list[bytes] = []
@@ -54,9 +54,12 @@ def png_rgb(path: Path) -> tuple[tuple[int, int], bytes]:
             image_data.append(chunk_data)
         elif chunk_type == b"IEND":
             break
-    if (bit_depth, color_type, compression, filter_method, interlace) != (8, 2, 0, 0, 0):
+    if (bit_depth, color_type, compression, filter_method, interlace) not in {
+        (8, 2, 0, 0, 0),
+        (8, 6, 0, 0, 0),
+    }:
         raise ValueError(f"unsupported screenshot PNG format: {path}")
-    bytes_per_pixel = 3
+    bytes_per_pixel = 3 if color_type == 2 else 4
     stride = width * bytes_per_pixel
     raw = zlib.decompress(b"".join(image_data))
     expected_length = height * (stride + 1)
@@ -93,7 +96,11 @@ def png_rgb(path: Path) -> tuple[tuple[int, int], bytes]:
                 row[index] = (row[index] + predictor) & 0xFF
             elif filter_type != 0:
                 raise ValueError(f"unsupported PNG row filter {filter_type} in {path}")
-        decoded.extend(row)
+        if bytes_per_pixel == 3:
+            decoded.extend(row)
+        else:
+            for pixel_offset in range(0, len(row), bytes_per_pixel):
+                decoded.extend(row[pixel_offset : pixel_offset + 3])
         previous = row
     return (width, height), bytes(decoded)
 
@@ -120,13 +127,18 @@ def require_distinct_screen(before: Path, after: Path, transition: str, minimum_
     return ratio
 
 
-def validate_capture_matrix(captures: list[dict[str, object]]) -> None:
-    for width, height in VIEWPORTS:
+def validate_capture_matrix(
+    captures: list[dict[str, object]],
+    *,
+    required_screens: set[str] = REQUIRED_CAPTURE_SCREENS,
+    viewports: tuple[tuple[int, int], ...] = VIEWPORTS,
+) -> None:
+    for width, height in viewports:
         captured_screens = {
             str(capture.get("screen", ""))
             for capture in captures
             if capture.get("requested_window") == {"width": width, "height": height}
         }
-        missing = sorted(REQUIRED_CAPTURE_SCREENS - captured_screens)
+        missing = sorted(required_screens - captured_screens)
         if missing:
             raise AssertionError(f"{width}x{height}: missing required captures: {', '.join(missing)}")
