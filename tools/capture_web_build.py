@@ -33,6 +33,12 @@ def send_game_key(driver: webdriver.Chrome, key: str) -> None:
     time.sleep(INPUT_SETTLE_SECONDS)
 
 
+def send_active_key(driver: webdriver.Chrome, key: str) -> None:
+    """Send one key without changing focus, for an open Godot popup."""
+    ActionChains(driver).send_keys(key).perform()
+    time.sleep(INPUT_SETTLE_SECONDS)
+
+
 def click_game_target(driver: webdriver.Chrome, target_name: str, timeout_seconds: float = 5.0) -> None:
     """Click the center of a Godot control described by the Web test state."""
     deadline = time.monotonic() + timeout_seconds
@@ -459,7 +465,7 @@ def main() -> int:
             # units, and use the success focus handoff to open Departure.
             click_game_target(driver, "shop_good")
             for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
-                send_game_key(driver, key)
+                send_active_key(driver, key)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
@@ -485,7 +491,7 @@ def main() -> int:
             # Brine Cross is two entries after the default Reedwatch choice.
             click_game_target(driver, "destination")
             for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
-                send_game_key(driver, key)
+                send_active_key(driver, key)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
