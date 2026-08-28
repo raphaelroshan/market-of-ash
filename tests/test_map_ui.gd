@@ -410,7 +410,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel.GRID_SIZE == Vector2i(17, 11), "map grid size is not the stable 17x11 contract")
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		_expect(ui.map_panel._map_heading().contains("ORDINARY PRESSURE") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "map text should identify the crisis stage and current location without relying on color")
-		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size == Vector2(108, 40) and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0, "map settlement markers should enlarge their pointer target without changing visible geometry")
+		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size == Vector2(118, 40) and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds")
 		var map_before: String = JSON.stringify(ui.world.serialize())
 		var map_click := InputEventMouseButton.new()
 		map_click.button_index = MOUSE_BUTTON_LEFT
@@ -665,6 +665,20 @@ func _initialize() -> void:
 	await process_frame
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(is_equal_approx(ui.map_panel.text_scale, 1.25) and ui.map_panel._font_size(12) == 15, "large text should also scale custom-drawn map labels")
+	var route_footer_rects: Array[Rect2] = []
+	for route_index in range(ui.map_panel.ROUTE_IDS.size()):
+		route_footer_rects.append(ui.map_panel._route_footer_rect(route_index))
+	_expect(not route_footer_rects[0].intersects(route_footer_rects[1]) and not route_footer_rects[1].intersects(route_footer_rects[2]) and route_footer_rects[2].end.x <= ui.map_panel._board_rect().end.x, "large map route labels should remain separated inside the board width")
+	var oversized_settlement_labels: Array[String] = []
+	for settlement_id_value in ui.map_panel.SETTLEMENT_CELLS.keys():
+		var settlement_id := String(settlement_id_value)
+		var marker_width: float = ui.map_panel._settlement_marker_rect(settlement_id).size.x - 10.0
+		var marker_name := settlement_id.replace("_", " ").capitalize()
+		var name_width: float = ThemeDB.fallback_font.get_string_size(marker_name, HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(12)).x
+		var detail_width: float = ThemeDB.fallback_font.get_string_size(ui.map_panel._settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(10)).x
+		if name_width > marker_width or detail_width > marker_width:
+			oversized_settlement_labels.append("%s name %.1f detail %.1f available %.1f" % [settlement_id, name_width, detail_width, marker_width])
+	_expect(oversized_settlement_labels.is_empty(), "large map settlement names and text status should fit inside every visible marker: %s" % "; ".join(oversized_settlement_labels))
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the pinned departure action inside the game layout")
 	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the primary Buy action inside the game layout")

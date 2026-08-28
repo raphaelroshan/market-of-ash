@@ -819,7 +819,7 @@ func _build_ui() -> void:
 	left.add_child(status_label)
 
 	var map_hint := Label.new()
-	map_hint.text = "Click a settlement marker to plan a direct journey; route lanes show the available regional corridors."
+	map_hint.text = "Click a settlement marker to plan a direct journey; route lanes show available corridors. RES means settlement resilience."
 	map_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	map_hint.add_theme_color_override("font_color", Color("#c7b49a"))
 	left.add_child(map_hint)
@@ -2199,6 +2199,9 @@ class MapPanel extends Control:
 	const GRID_SIZE := Vector2i(17, 11)
 	const BOARD_ORIGIN := Vector2(34, 200)
 	const CELL_SIZE := Vector2(44, 24)
+	const ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
+	const ROUTE_PROFILES := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
+	const ROUTE_FOOTER_X := [8.0, 235.0, 470.0]
 	const SETTLEMENT_CELLS := {
 		"ashgate": Vector2i(2, 7),
 		"brine_cross": Vector2i(13, 2),
@@ -2240,7 +2243,7 @@ class MapPanel extends Control:
 
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 20, CELL_SIZE.y + 16))
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_SIZE.x * 2.0 + 30, CELL_SIZE.y + 16))
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
 		return _settlement_marker_rect(settlement_id).grow_individual(2.0, 10.0, 2.0, 10.0)
@@ -2278,10 +2281,15 @@ class MapPanel extends Control:
 		if world == null:
 			return "Settlement"
 		var location_prefix := "HERE · " if settlement_id == world.current_settlement else ""
-		return "%sResilience %d/10" % [location_prefix, world.resilience_for(settlement_id)]
+		return "%sRES %d/10" % [location_prefix, world.resilience_for(settlement_id)]
 
 	func _font_size(base_size: int) -> int:
 		return int(round(float(base_size) * text_scale))
+
+	func _route_footer_rect(route_index: int) -> Rect2:
+		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
+		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
+		return Rect2(BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y + 12), text_size)
 
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
@@ -2347,8 +2355,7 @@ class MapPanel extends Control:
 				draw_rect(_cell_rect(cell), fill, true)
 				draw_rect(_cell_rect(cell), Color("#5c4838"), false, 1.0)
 		draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(8, -12), _map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16), Color("#e6c58d"))
-		var route_ids := ["old_road", "toll_road", "dry_cut"]
-		for route_id in route_ids:
+		for route_id in ROUTE_IDS:
 			var route_points: Array[Vector2] = _route_points(route_id)
 			if route_points.size() < 2:
 				continue
@@ -2361,10 +2368,8 @@ class MapPanel extends Control:
 					draw_rect(Rect2(midpoint - Vector2(5, 5), Vector2(10, 10)), Color("#f0dca8"), false, 2.0)
 				else:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
-		var route_profiles := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
-		var route_footer_x := [8.0, 235.0, 470.0]
-		for route_index in range(route_ids.size()):
-			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(route_footer_x[route_index], board.size.y + 24), "%s: %s" % [_route_label(route_ids[route_index]), route_profiles[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(route_ids[route_index]))
+		for route_index in range(ROUTE_IDS.size()):
+			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], board.size.y + 24), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
