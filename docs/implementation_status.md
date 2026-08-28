@@ -129,7 +129,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 ## Remaining roadmap-to-code mismatches
 
 1. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
-2. **Local Web export now passes, but local Chrome cannot start inside the host sandbox.** Matching Godot 4.4.1 Web templates are installed and the current head exports the complete payload. Selenium still fails before session creation because Chrome's Mach-port bootstrap is denied; Linux CI remains the runnable packaged-browser environment once the account billing gate is cleared.
+2. **Local repeated Web export passes, but local Chrome cannot start inside the host sandbox.** Matching Godot 4.4.1 Web templates are installed and the current head exports the complete payload without recursively importing prior build outputs. Selenium still fails before session creation because Chrome's Mach-port bootstrap is denied; Linux CI remains the runnable packaged-browser environment once the account billing gate is cleared.
 
 ## Baseline verification commands
 
