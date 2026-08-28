@@ -492,6 +492,30 @@ def main() -> int:
                     "ui_state": event_state,
                 }
             )
+            ActionChains(driver).send_keys(Keys.ENTER).perform()
+            event_arrival_state = wait_for_ui_state(
+                driver,
+                "arrival_handoff",
+                args.timeout,
+                large_text=False,
+                settlement_id="brine_cross",
+                pending_event_id="",
+            )
+            event_arrival_output = args.output_dir / f"route-event-result-{width}x{height}.png"
+            event_arrival_bytes = capture_frame(driver, event_arrival_output, (actual_width, actual_height))
+            event_arrival_changed_ratio = require_distinct_screen(event_output, event_arrival_output, "Resolve route event")
+            captures.append(
+                {
+                    "screen": "route_event_result",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": event_arrival_output.name,
+                    "bytes": event_arrival_bytes,
+                    "changed_pixel_ratio": round(event_arrival_changed_ratio, 4),
+                    "navigation": "Enter on the focused first available route-event response",
+                    "ui_state": event_arrival_state,
+                }
+            )
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps({"url": args.url, "loading_overlay_cleared": True, "captures": captures}, indent=2),

@@ -2166,6 +2166,7 @@ func _refresh_event_card() -> void:
 		child.queue_free()
 	event_choice_buttons.clear()
 	event_choice_reason_labels.clear()
+	var enabled_choice_buttons: Array = []
 	var pending := world.pending_event
 	event_card.visible = not pending.is_empty()
 	if pending.is_empty():
@@ -2244,6 +2245,8 @@ func _refresh_event_card() -> void:
 		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
 		event_choice_list.add_child(button)
 		event_choice_buttons.append(button)
+		if not button.disabled:
+			enabled_choice_buttons.append(button)
 		if button.disabled:
 			var reason_label := Label.new()
 			reason_label.text = "Unavailable: %s" % blocked_reason
@@ -2252,6 +2255,8 @@ func _refresh_event_card() -> void:
 			reason_label.add_theme_color_override("font_color", Color("#b5a18b"))
 			event_choice_list.add_child(reason_label)
 			event_choice_reason_labels.append(reason_label)
+	if not enabled_choice_buttons.is_empty():
+		_link_focus_cycle(enabled_choice_buttons)
 	if pause_layer == null or not pause_layer.visible:
 		_grab_first_enabled(event_choice_buttons)
 

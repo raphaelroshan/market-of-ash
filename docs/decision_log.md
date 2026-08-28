@@ -268,11 +268,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 
 ## ADR-034: Primary screen transitions restore predictable focus
 
-**Decision:** Opening the Settlement Shop focuses the cargo selector, opening the Departure Desk focuses the destination selector, a pending route event focuses its first enabled response, and a completed journey focuses `Enter settlement`. Returning with `ui_cancel` restores the shop target. Main Menu, Shop, Departure, and Pause expose explicit cyclic focus order for their primary and utility controls; rebuilt Shop cycles omit disabled actions. Focus changes occur only at navigation/command boundaries, not during ordinary forecast refreshes.
+**Decision:** Opening the Settlement Shop focuses the cargo selector, opening the Departure Desk focuses the destination selector, a pending route event focuses its first enabled response, and a completed journey focuses `Enter settlement`. Returning with `ui_cancel` restores the shop target. Main Menu, Shop, Departure, Pause, and enabled event responses expose explicit cyclic focus order; rebuilt dynamic cycles omit disabled actions. Focus changes occur only at navigation/command boundaries, not during ordinary forecast refreshes.
 
 **Reason:** Mouse, keyboard, and controller players need the same primary path without guessing which control owns input after a layer change or dynamically rebuilt event card. Explicit transition focus is small, deterministic, and regression-testable.
 
-**Trade-off:** Directional geometry within dynamic event lists still uses Godot's traversal. Disabled event choices cannot receive focus, so their prerequisites are repeated as persistent text directly below the control; a manual controller and assistive-readability audit is still required before external alpha distribution.
+**Trade-off:** Disabled event choices cannot receive focus, so their prerequisites are repeated as persistent text directly below the control; a manual controller and assistive-readability audit is still required before external alpha distribution.
 
 ## ADR-035: Save files are validated before replacing the active campaign
 

@@ -533,6 +533,7 @@ func _initialize() -> void:
 	_expect(ui.event_choice_buttons[3].disabled and ui.event_choice_buttons[3].tooltip_text.contains("Tess Oryn"), "Tess's Gatekeeper option should remain visible with its assignment prerequisite")
 	_expect(ui.event_choice_reason_labels.size() == 1 and ui.event_choice_reason_labels[0].text.contains("Tess Oryn"), "disabled event prerequisites should remain readable without hovering or focusing the unavailable control")
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
+	_expect(ui.event_choice_buttons[0].find_prev_valid_focus() == ui.event_choice_buttons[2] and ui.event_choice_buttons[2].find_next_valid_focus() == ui.event_choice_buttons[0], "enabled route-event choices should form a focus cycle that skips the unavailable crew response")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "a route decision should focus its first available choice")
 	ui.large_text_checkbox.button_pressed = true
 	await process_frame
