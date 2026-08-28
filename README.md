@@ -60,7 +60,7 @@ The preferred unit of work is one vertical slice. For example: “Add the toll d
 
 ## Implemented roadmap sequence
 
-The implementation has completed roadmap slices A0–A1 and B0–B10’s automated scope. Packaged Main Menu and initial Shop renders now cover the 960×540 and 1280×720 browser baselines, and optional interface cues are implemented. The remaining alpha gates are deeper rendered browser states, physical-controller coverage, high-DPI/large-text review, controller-remapping and screen-reader work, and eventual storefront integration. See `docs/implementation_status.md` for exact evidence and current limitations.
+The implementation has completed roadmap slices A0–A1 and B0–B10’s automated scope. Packaged Main Menu and initial Shop renders now cover the 960×540 and 1280×720 browser baselines, and optional interface cues plus keyboard/controller remapping are implemented. The remaining alpha gates are inspection of the newly expanded rendered browser states, physical-controller coverage, high-DPI review, screen-reader work, and eventual storefront integration. See `docs/implementation_status.md` for exact evidence and current limitations.
 
 ## Definition of done for an agent task
 

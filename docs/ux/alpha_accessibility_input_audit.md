@@ -8,8 +8,8 @@
 
 | Area | Current behavior | Evidence |
 | --- | --- | --- |
-| Keyboard | Tab/directional navigation uses Godot focus traversal. Accept, Back, and Pause keys can be rebound from the Main Menu; conflicting or modified shortcuts are rejected and defaults can be restored. | UI smoke exercises remapping, conflict rejection, persistence, and default restoration. |
-| Controller | D-pad/stick focus traversal uses Godot UI actions; A accepts, B goes back/pauses, and Menu pauses during play. | Controller bindings are source controlled and asserted by the UI smoke test. |
+| Keyboard | Tab/directional navigation uses explicit primary-screen cycles plus Godot focus traversal. Accept, Back, and Pause keys can be rebound from the Main Menu; conflicting or modified shortcuts are rejected and defaults can be restored. | UI smoke exercises focus order, remapping, conflict rejection, persistence, and default restoration. |
+| Controller | D-pad/stick focus traversal uses Godot UI actions. Accept, Back, and Pause controller buttons can be rebound independently from keyboard keys; conflicting buttons and D-pad directions are rejected. | UI smoke exercises controller remapping, conflict/navigation reservation, persistence, keyboard preservation, and default restoration. Physical-device verification remains open. |
 | Pointer targets | Primary trade/journey controls use enlarged wrapped buttons, while settlement markers keep separate visible and expanded hit rectangles. | UI smoke asserts action minimum sizes, non-overlapping marker label bounds, and a 60-logical-pixel marker hit height, which scales to 45 px at the 960×540 browser target. |
 | Focus continuity | Shop, Departure Desk, route decisions, and arrival each establish a predictable enabled focus target. Pause owns focus while open; Resume restores the prior control when it still exists and falls back safely when a save/load refresh rebuilt it. Changing text size re-reveals the currently focused control inside its scroll rail. | UI smoke assertions cover every transition, modal focus isolation, the dynamic-control lifetime case, and a large-text event-choice visibility regression. |
 | Reduced motion | A persisted Main Menu option skips caravan interpolation and presents the completed route immediately without changing simulation time or outcome. | UI smoke test checks completed progress, no active animation, and settings-file round trip. |
@@ -28,7 +28,7 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 | Flow | Mouse | Keyboard | Controller | Pass condition |
 | --- | --- | --- | --- | --- |
 | Main Menu → Start | Click | Tab, Enter/Space | D-pad/stick, A | Starts in Shop with cargo selector focused. |
-| Remap keyboard | Click a binding, press a key | Focus a binding, Enter/Space, then press an unmodified key | Controller remains available but is not remapped | New label and controls hint update; conflict/navigation keys are rejected; Restore Defaults repairs the original scheme. |
+| Remap input | Click a binding, press a key or controller button | Focus a binding, accept, then press an unmodified key | Focus a binding, A, then press a non-D-pad button | The relevant keyboard or controller binding changes independently; conflicts and navigation inputs are rejected; Restore Defaults repairs both schemes. |
 | Shop trade | Click selectors/buttons | Tab/arrows, Enter/Space | D-pad/stick, A | Price explanation remains visible; buy/sell result and autosave status update. |
 | Shop → Departure | Click | Focus Plan departure, Enter/Space | Focus Plan departure, A | Destination receives focus; no resources change. |
 | Departure edit/back | Click / Return button | Selectors; Escape | Selectors; B | Legal routes update; back restores Shop focus and does not mutate state. P/Menu opens Pause. |
@@ -52,11 +52,11 @@ Run this against the packaged Windows build before sharing an alpha. Record devi
 
 1. The last successful CI run captures the packaged Web Main Menu and initial Settlement Shop at 960×540 and 1280×720 after confirming the loading overlay clears and the canvas accepts the Start action. The current workflow also drives Plan, Commit, Enter Settlement, the Large text setting, and a cargo-gated Toll Road event by keyboard; captures normal Main Menu/Shop/Departure/arrival/destination-Shop states, a route-event card, and large-text Main Menu/Shop/Departure states; and uses decoded-pixel comparison to reject focus-only transitions. That extension awaits a runner after the account billing/spend gate is cleared. The headless UI path separately asserts meaningful pinned Buy, Plan, Commit, and Return geometry. High OS scaling still needs human review.
 2. Controller behavior is configured and headlessly asserted but has not been exercised on physical Windows hardware.
-3. Controller remapping and screen-reader semantics are not implemented; essential information and fixed controller bindings remain available as text. Interface cues are supplementary and can be disabled.
+3. Screen-reader semantics are not implemented. Controller remapping is automated but still needs physical-device verification; essential information remains available as text, and interface cues are supplementary and can be disabled.
 
 ## Remapping plan
 
-Gameplay code remains bound only to named actions. The current Main Menu remapper changes keyboard bindings, rejects modifier/reserved/conflicting shortcuts, preserves controller mappings and at least one key for every required action, writes mappings to the separate user settings file, and offers Restore Defaults. Campaign saves never contain device-specific mappings. A later settings screen can expand this to controller rebinding without changing gameplay code.
+Gameplay code remains bound only to named actions. The Main Menu remapper changes either the keyboard or controller binding for Accept, Back, and Pause while preserving the other input family. It rejects modified/reserved/conflicting keys, conflicting controller buttons, and D-pad directions; writes both mappings to the separate user settings file; and offers Restore default inputs. Invalid persisted sets fall back atomically to the complete defaults. Campaign saves never contain device-specific mappings.
 
 ## Release-candidate record
 

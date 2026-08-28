@@ -59,7 +59,7 @@ Every response should acknowledge cause and effect in the same format: an outcom
 | --- | --- | --- | --- |
 | **Start Game / Continue** | Enter a deterministic first-run preset or validate and restore an existing campaign. | Starts Ashgate, day one, 120 ashmarks, 12 provisions, and empty cargo; Continue is separately enabled when a save exists and shows save status. | Add multiple save slots only if playtesting demonstrates a need. |
 | **Quick Playtest card** | Explain the test state and avoid false promises. | States the first-run preset and optional two-water learning move, whose forecast remains positive after disclosed route costs and expected loss. | Shows estimated loop length and what feedback is being tested. |
-| **Settings** | Make comfort and control discoverable before play. | Main Menu exposes persisted large text, reduced motion, interface-sound, and keyboard-remapping controls alongside mouse/keyboard/controller guidance. | Add controller remapping and deeper assistive-technology semantics only after hardware testing. |
+| **Settings** | Make comfort and control discoverable before play. | Main Menu exposes persisted large text, reduced motion, interface-sound, and keyboard/controller-remapping controls alongside mouse/keyboard/controller guidance. | Validate controller remapping on physical hardware and add deeper assistive-technology semantics after the alpha audit. |
 | **Quit** | Give a conventional, safe exit. | Desktop-only. | Confirms only if unsaved changes exist; never presents an intrusive quit prompt during the first minute. |
 
 ### 4.2 Settlement Shop — the central screen

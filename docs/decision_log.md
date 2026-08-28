@@ -284,11 +284,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 
 ## ADR-036: Accessibility options change presentation, never simulation
 
-**Decision:** Restore controller A/B bindings alongside keyboard Accept/Cancel, expose runtime keyboard remapping for Accept/Back/Pause with conflict and reserved-shortcut rejection, preserve controller bindings, expose a 25% large-text option, place both Shop columns and the Departure action rail in vertical scroll containers, and offer reduced travel motion. Input, large-text, and reduced-motion preferences persist in a separate user settings file and do not enter campaign state or command history. Invalid persisted binding sets fall back atomically to the complete defaults.
+**Decision:** Expose independent runtime keyboard-key and controller-button remapping for Accept/Back/Pause. Reject keyboard modifiers, focus-navigation keys, controller D-pad directions, and any binding already claimed by another required action. Preserve the untouched input family, expose the complete current scheme in the Main Menu, and restore both default families together. Also expose a 25% large-text option, place both Shop columns and the Departure action rail in vertical scroll containers, and offer reduced travel motion. Input, large-text, and reduced-motion preferences persist in a separate user settings file and do not enter campaign state or command history. Invalid persisted binding sets fall back atomically to the complete defaults.
 
 **Reason:** The alpha's core route can be made substantially more usable without introducing a settings framework into the deterministic simulation. Scrollable rails let text reflow instead of clipping, while reduced motion preserves immediate access to the same resolved outcome.
 
-**Trade-off:** Directional focus still relies on Godot's default traversal, controller remapping is not yet exposed, and physical-controller/high-DPI verification remains a manual release gate.
+**Trade-off:** Custom controller-axis remapping is intentionally excluded so analog sticks remain reliable navigation inputs. Physical-controller, screen-reader, and high-DPI verification remain manual release gates.
 
 ## ADR-037: Ending selection is ordered and supports faction-specific conclusions
 

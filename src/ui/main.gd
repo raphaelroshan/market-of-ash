@@ -18,7 +18,19 @@ const MAX_SAVE_BYTES := 5 * 1024 * 1024
 const REMAPPABLE_ACTIONS := ["ui_accept", "ui_cancel", "ui_pause"]
 const ACTION_LABELS := {"ui_accept": "Accept", "ui_cancel": "Back", "ui_pause": "Pause"}
 const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel": [KEY_ESCAPE], "ui_pause": [KEY_P]}
+const DEFAULT_CONTROLLER_BINDINGS := {"ui_accept": [JOY_BUTTON_A], "ui_cancel": [JOY_BUTTON_B], "ui_pause": [JOY_BUTTON_START]}
 const RESERVED_REMAP_KEYS := [KEY_TAB, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
+const RESERVED_CONTROLLER_BUTTONS := [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]
+const CONTROLLER_BUTTON_LABELS := {
+	JOY_BUTTON_A: "A / Cross",
+	JOY_BUTTON_B: "B / Circle",
+	JOY_BUTTON_X: "X / Square",
+	JOY_BUTTON_Y: "Y / Triangle",
+	JOY_BUTTON_BACK: "Back / Select",
+	JOY_BUTTON_START: "Menu / Start",
+	JOY_BUTTON_LEFT_SHOULDER: "Left bumper",
+	JOY_BUTTON_RIGHT_SHOULDER: "Right bumper",
+}
 
 var world: AshWorldState
 var game_layer: Control
@@ -193,7 +205,7 @@ func _build_main_menu() -> void:
 	interface_sounds_checkbox.toggled.connect(_on_interface_sounds_toggled)
 	content.add_child(interface_sounds_checkbox)
 	var bindings_title := Label.new()
-	bindings_title.text = "KEYBOARD BINDINGS"
+	bindings_title.text = "INPUT BINDINGS"
 	bindings_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bindings_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	content.add_child(bindings_title)
@@ -207,7 +219,7 @@ func _build_main_menu() -> void:
 		binding_row.add_child(binding_button)
 		binding_buttons[action_name] = binding_button
 	restore_bindings_button = Button.new()
-	restore_bindings_button.text = "Restore default keys"
+	restore_bindings_button.text = "Restore default inputs"
 	restore_bindings_button.pressed.connect(_on_restore_default_bindings)
 	content.add_child(restore_bindings_button)
 	binding_status_label = Label.new()
@@ -458,15 +470,34 @@ func _play_ui_cue(cue_id: String) -> void:
 
 func _on_rebind_pressed(action_name: String) -> void:
 	remapping_action = action_name
-	binding_status_label.text = "Press one unmodified key for %s. Escape cancels." % String(ACTION_LABELS.get(action_name, action_name))
+	binding_status_label.text = "Press one unmodified key or controller button for %s. Escape cancels." % String(ACTION_LABELS.get(action_name, action_name))
 	_refresh_binding_labels()
 
 func _on_restore_default_bindings() -> void:
 	for action_name in REMAPPABLE_ACTIONS:
 		_replace_keyboard_bindings(action_name, DEFAULT_KEY_BINDINGS[action_name])
+		_replace_controller_bindings(action_name, DEFAULT_CONTROLLER_BINDINGS[action_name])
 	remapping_action = ""
 	if binding_status_label:
-		binding_status_label.text = "Default keyboard bindings restored."
+		binding_status_label.text = "Default keyboard and controller bindings restored."
+	_refresh_binding_labels()
+	_save_presentation_settings()
+
+func _capture_controller_binding(event: InputEventJoypadButton) -> void:
+	var pressed_button := int(event.button_index)
+	if RESERVED_CONTROLLER_BUTTONS.has(pressed_button):
+		binding_status_label.text = "D-pad directions are reserved for focus navigation. Press another controller button, or Escape to cancel."
+		return
+	for action_name in REMAPPABLE_ACTIONS:
+		if action_name == remapping_action:
+			continue
+		if _controller_binding_codes(action_name).has(pressed_button):
+			binding_status_label.text = "%s is already assigned to %s. Choose a different controller button." % [_controller_button_text(pressed_button), String(ACTION_LABELS.get(action_name, action_name))]
+			return
+	_replace_controller_bindings(remapping_action, [pressed_button])
+	var updated_action := remapping_action
+	remapping_action = ""
+	binding_status_label.text = "%s now uses controller %s. Keyboard bindings are unchanged." % [String(ACTION_LABELS.get(updated_action, updated_action)), _controller_binding_text(updated_action)]
 	_refresh_binding_labels()
 	_save_presentation_settings()
 
@@ -511,19 +542,44 @@ func _keyboard_binding_codes(action_name: String) -> Array:
 				keycodes.append(keycode)
 	return keycodes
 
+func _replace_controller_bindings(action_name: String, button_indices: Array) -> void:
+	for input_event in InputMap.action_get_events(action_name):
+		if input_event is InputEventJoypadButton:
+			InputMap.action_erase_event(action_name, input_event)
+	for button_index_value in button_indices:
+		var button_event := InputEventJoypadButton.new()
+		button_event.button_index = int(button_index_value)
+		InputMap.action_add_event(action_name, button_event)
+
+func _controller_binding_codes(action_name: String) -> Array:
+	var button_indices: Array = []
+	for input_event in InputMap.action_get_events(action_name):
+		if input_event is InputEventJoypadButton and not button_indices.has(input_event.button_index):
+			button_indices.append(input_event.button_index)
+	return button_indices
+
 func _keyboard_binding_text(action_name: String) -> String:
 	var labels: Array[String] = []
 	for keycode in _keyboard_binding_codes(action_name):
 		labels.append(OS.get_keycode_string(int(keycode)))
 	return " / ".join(labels) if not labels.is_empty() else "Unbound"
 
+func _controller_button_text(button_index: int) -> String:
+	return String(CONTROLLER_BUTTON_LABELS.get(button_index, "Button %d" % button_index))
+
+func _controller_binding_text(action_name: String) -> String:
+	var labels: Array[String] = []
+	for button_index in _controller_binding_codes(action_name):
+		labels.append(_controller_button_text(int(button_index)))
+	return " / ".join(labels) if not labels.is_empty() else "Unbound"
+
 func _refresh_binding_labels() -> void:
 	for action_name in REMAPPABLE_ACTIONS:
 		var button: Button = binding_buttons.get(action_name)
 		if button:
-			button.text = "Press a key…" if remapping_action == action_name else "%s: %s" % [String(ACTION_LABELS.get(action_name, action_name)), _keyboard_binding_text(action_name)]
+			button.text = "Press a key or controller button…" if remapping_action == action_name else "%s: %s · Pad %s" % [String(ACTION_LABELS.get(action_name, action_name)), _keyboard_binding_text(action_name), _controller_binding_text(action_name)]
 	if controls_hint_label:
-		controls_hint_label.text = "Controls: mouse, keyboard arrows/Tab + %s to accept, or controller D-pad/stick + A. %s/B goes back or pauses; %s/Menu always pauses during play." % [_keyboard_binding_text("ui_accept"), _keyboard_binding_text("ui_cancel"), _keyboard_binding_text("ui_pause")]
+		controls_hint_label.text = "Controls: arrows/Tab or controller D-pad/stick move focus. Accept: %s / %s. Back: %s / %s. Pause: %s / %s." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept"), _keyboard_binding_text("ui_cancel"), _controller_binding_text("ui_cancel"), _keyboard_binding_text("ui_pause"), _controller_binding_text("ui_pause")]
 
 func _load_presentation_settings() -> void:
 	var config := ConfigFile.new()
@@ -533,7 +589,9 @@ func _load_presentation_settings() -> void:
 	reduce_motion_enabled = bool(config.get_value("accessibility", "reduce_motion", false))
 	interface_sounds_enabled = bool(config.get_value("audio", "interface_sounds", true))
 	var requested_bindings: Dictionary = {}
+	var requested_controller_bindings: Dictionary = {}
 	var claimed_keys: Array = []
+	var claimed_controller_buttons: Array = []
 	var bindings_valid := true
 	for action_name in REMAPPABLE_ACTIONS:
 		var saved_codes: Variant = config.get_value("input", action_name, DEFAULT_KEY_BINDINGS[action_name])
@@ -550,9 +608,25 @@ func _load_presentation_settings() -> void:
 		if not bindings_valid:
 			break
 		requested_bindings[action_name] = validated_codes
+		var saved_buttons: Variant = config.get_value("input", "%s_joypad" % action_name, DEFAULT_CONTROLLER_BINDINGS[action_name])
+		if typeof(saved_buttons) != TYPE_ARRAY or saved_buttons.is_empty():
+			bindings_valid = false
+			break
+		var validated_buttons: Array = []
+		for button_value in saved_buttons:
+			if (typeof(button_value) != TYPE_INT and typeof(button_value) != TYPE_FLOAT) or int(button_value) < 0 or int(button_value) >= JOY_BUTTON_MAX or RESERVED_CONTROLLER_BUTTONS.has(int(button_value)) or claimed_controller_buttons.has(int(button_value)):
+				bindings_valid = false
+				break
+			validated_buttons.append(int(button_value))
+			claimed_controller_buttons.append(int(button_value))
+		if not bindings_valid:
+			break
+		requested_controller_bindings[action_name] = validated_buttons
 	for action_name in REMAPPABLE_ACTIONS:
 		var keycodes: Array = requested_bindings.get(action_name, DEFAULT_KEY_BINDINGS[action_name]) if bindings_valid else DEFAULT_KEY_BINDINGS[action_name]
+		var controller_buttons: Array = requested_controller_bindings.get(action_name, DEFAULT_CONTROLLER_BINDINGS[action_name]) if bindings_valid else DEFAULT_CONTROLLER_BINDINGS[action_name]
 		_replace_keyboard_bindings(action_name, keycodes)
+		_replace_controller_bindings(action_name, controller_buttons)
 	if not bindings_valid:
 		_save_presentation_settings()
 
@@ -565,6 +639,7 @@ func _save_presentation_settings() -> void:
 	config.set_value("audio", "interface_sounds", interface_sounds_enabled)
 	for action_name in REMAPPABLE_ACTIONS:
 		config.set_value("input", action_name, _keyboard_binding_codes(action_name))
+		config.set_value("input", "%s_joypad" % action_name, _controller_binding_codes(action_name))
 	config.save(settings_path)
 
 func _apply_text_scale(node: Node, scale: float) -> void:
@@ -1163,6 +1238,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not remapping_action.is_empty():
 		if event is InputEventKey and event.pressed and not event.echo:
 			_capture_keyboard_binding(event)
+			get_viewport().set_input_as_handled()
+		elif event is InputEventJoypadButton and event.pressed:
+			_capture_controller_binding(event)
 			get_viewport().set_input_as_handled()
 		return
 	if pause_layer != null and pause_layer.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_pause")):
