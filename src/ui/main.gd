@@ -100,6 +100,7 @@ var playtest_banner: Label
 var playtest_status_label: Label
 var status_label: Label
 var map_hint: Label
+var event_scroll: ScrollContainer
 var event_label: Label
 var destination_option: OptionButton
 var route_option: OptionButton
@@ -417,7 +418,7 @@ func _update_map_layout() -> void:
 		return
 	map_panel.fit_vertical_space(
 		map_hint.get_global_rect().end.y + 16.0,
-		event_label.get_global_rect().position.y - 16.0
+		event_scroll.get_global_rect().position.y - 16.0
 	)
 
 func _request_map_layout_update() -> void:
@@ -969,11 +970,18 @@ func _build_ui() -> void:
 	spacer.custom_minimum_size = Vector2(0, 230)
 	left.add_child(spacer)
 
+	event_scroll = ScrollContainer.new()
+	event_scroll.name = "JourneyResultScroll"
+	event_scroll.custom_minimum_size = Vector2(660, 76)
+	event_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	event_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	left.add_child(event_scroll)
 	event_label = Label.new()
 	event_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	event_label.custom_minimum_size = Vector2(660, 76)
+	event_label.custom_minimum_size = Vector2(660, 0)
+	event_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	event_label.add_theme_color_override("font_color", Color("#f0d2a0"))
-	left.add_child(event_label)
+	event_scroll.add_child(event_label)
 
 	log_label = Label.new()
 	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -2413,6 +2421,8 @@ func _campaign_outlook_text() -> String:
 
 func _set_event(text: String) -> void:
 	event_label.text = text
+	if event_scroll:
+		event_scroll.scroll_vertical = 0
 
 func _refresh_ui() -> void:
 	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]

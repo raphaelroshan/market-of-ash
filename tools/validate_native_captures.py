@@ -15,12 +15,37 @@ REQUIRED_NATIVE_SCREENS = {
     "settlement_shop",
     "pause",
     "departure_desk",
+    "returned_shop",
     "main_menu_large_text",
     "settlement_shop_large_text",
     "pause_large_text",
     "departure_desk_large_text",
+    "route_event",
+    "route_event_large_text",
+    "route_event_result",
+    "destination_shop",
+    "new_game_confirmation",
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1920, 1080))
+EXPECTED_UI_STATE = {
+    "returned_shop": "settlement_shop",
+    "destination_shop": "settlement_shop",
+    "route_event_large_text": "route_event",
+    "route_event_result": "arrival_handoff",
+}
+
+
+def rect_encloses(outer: dict[str, object], inner: dict[str, object]) -> bool:
+    outer_left = float(outer.get("x", 0.0))
+    outer_top = float(outer.get("y", 0.0))
+    inner_left = float(inner.get("x", 0.0))
+    inner_top = float(inner.get("y", 0.0))
+    return (
+        inner_left >= outer_left
+        and inner_top >= outer_top
+        and inner_left + float(inner.get("width", 0.0)) <= outer_left + float(outer.get("width", 0.0))
+        and inner_top + float(inner.get("height", 0.0)) <= outer_top + float(outer.get("height", 0.0))
+    )
 
 
 def main() -> int:
@@ -66,7 +91,7 @@ def main() -> int:
         ui_state = capture.get("ui_state")
         if not isinstance(ui_state, dict):
             raise AssertionError(f"{file_name}: missing UI state")
-        expected_state_screen = screen.removesuffix("_large_text")
+        expected_state_screen = EXPECTED_UI_STATE.get(screen, screen.removesuffix("_large_text"))
         if ui_state.get("screen") != expected_state_screen:
             raise AssertionError(f"{file_name}: UI state does not match {expected_state_screen}")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
@@ -77,6 +102,10 @@ def main() -> int:
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
+        require_distinct_screen(screens["departure_desk"], screens["route_event"], f"{viewport} Route event")
+        require_distinct_screen(screens["route_event"], screens["route_event_result"], f"{viewport} Resolve event")
+        require_distinct_screen(screens["route_event_result"], screens["destination_shop"], f"{viewport} Enter settlement")
+        require_distinct_screen(screens["main_menu"], screens["new_game_confirmation"], f"{viewport} New game confirmation", minimum_ratio=0.01)
         for screen in ("main_menu", "settlement_shop", "pause", "departure_desk"):
             require_distinct_screen(
                 screens[screen],
@@ -84,6 +113,12 @@ def main() -> int:
                 f"{viewport} {screen} large text",
                 minimum_ratio=0.01,
             )
+        require_distinct_screen(
+            screens["route_event"],
+            screens["route_event_large_text"],
+            f"{viewport} route event large text",
+            minimum_ratio=0.01,
+        )
         for screen in ("departure_desk", "departure_desk_large_text"):
             capture = next(
                 item
@@ -105,6 +140,25 @@ def main() -> int:
                 raise AssertionError(f"{viewport} {screen}: map overlaps its instructions")
             if board_bottom > result_top - 8.0:
                 raise AssertionError(f"{viewport} {screen}: map overlaps the journey result")
+        event_capture = next(
+            item
+            for item in captures
+            if item.get("requested_window") == {"width": viewport[0], "height": viewport[1]}
+            and item.get("screen") == "route_event_large_text"
+        )
+        event_layout = event_capture.get("layout")
+        if not isinstance(event_layout, dict):
+            raise AssertionError(f"{viewport} route_event_large_text: missing layout evidence")
+        game_layer = event_layout.get("game_layer", {})
+        departure_scroll = event_layout.get("departure_scroll", {})
+        focused = event_layout.get("focused", {})
+        result = event_layout.get("result", {})
+        if not rect_encloses(game_layer, departure_scroll):
+            raise AssertionError(f"{viewport} route_event_large_text: Departure scroll rail leaves the viewport")
+        if not rect_encloses(departure_scroll, focused):
+            raise AssertionError(f"{viewport} route_event_large_text: focused response is clipped")
+        if not rect_encloses(game_layer, result):
+            raise AssertionError(f"{viewport} route_event_large_text: journey result scroll leaves the viewport")
     print("Native UI render validation: PASS")
     return 0
 

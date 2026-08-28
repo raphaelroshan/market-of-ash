@@ -585,8 +585,10 @@ func _initialize() -> void:
 	await process_frame
 	await process_frame
 	var departure_scroll: ScrollContainer = ui.find_child("DepartureControlsScroll", true, false)
+	var journey_result_scroll: ScrollContainer = ui.find_child("JourneyResultScroll", true, false)
 	var focused_event_choice: Control = ui.get_viewport().gui_get_focus_owner()
-	_expect(departure_scroll != null and focused_event_choice == ui.event_choice_buttons[0] and focused_event_choice.get_global_rect().position.y >= departure_scroll.get_global_rect().position.y and focused_event_choice.get_global_rect().end.y <= departure_scroll.get_global_rect().end.y, "large text should scroll the first enabled route choice fully into view: choice %s, scroll %s" % [focused_event_choice.get_global_rect(), departure_scroll.get_global_rect()])
+	_expect(departure_scroll != null and ui.game_layer.get_global_rect().encloses(departure_scroll.get_global_rect()) and focused_event_choice == ui.event_choice_buttons[0] and focused_event_choice.get_global_rect().position.y >= departure_scroll.get_global_rect().position.y and focused_event_choice.get_global_rect().end.y <= departure_scroll.get_global_rect().end.y, "large text should keep the Departure scroll rail on-screen and reveal the first enabled route choice: choice %s, scroll %s" % [focused_event_choice.get_global_rect(), departure_scroll.get_global_rect()])
+	_expect(journey_result_scroll != null and ui.game_layer.get_global_rect().encloses(journey_result_scroll.get_global_rect()), "large text should keep the scrollable journey result inside the game layout: result %s, layer %s" % [journey_result_scroll.get_global_rect(), ui.game_layer.get_global_rect()])
 	ui.large_text_checkbox.button_pressed = false
 	await process_frame
 	ui._on_save_pressed()
@@ -772,7 +774,7 @@ func _initialize() -> void:
 	var map_heading_rect: Rect2 = ui.map_panel._map_heading_rect()
 	_expect(map_hint.get_global_rect().end.y <= map_heading_rect.position.y, "large map instructions should not overlap the custom-drawn heading: instructions %.1f, heading %.1f" % [map_hint.get_global_rect().end.y, map_heading_rect.position.y])
 	_expect(map_heading_rect.position.y >= ui.map_panel._board_rect().position.y and map_heading_rect.end.y <= ui.map_panel._board_rect().position.y + ui.map_panel.MAP_HEADER_HEIGHT, "large map heading should remain inside its reserved board strip")
-	_expect(route_footer_rects[2].end.y <= ui.event_label.get_global_rect().position.y, "large map footer labels should not overlap the journey result text: footer %.1f, result %.1f" % [route_footer_rects[2].end.y, ui.event_label.get_global_rect().position.y])
+	_expect(route_footer_rects[2].end.y <= ui.event_scroll.get_global_rect().position.y, "large map footer labels should not overlap the journey result text: footer %.1f, result %.1f" % [route_footer_rects[2].end.y, ui.event_scroll.get_global_rect().position.y])
 	var oversized_settlement_labels: Array[String] = []
 	for settlement_id_value in ui.map_panel.SETTLEMENT_CELLS.keys():
 		var settlement_id := String(settlement_id_value)
@@ -812,7 +814,7 @@ func _initialize() -> void:
 	var scaled_map_hint: Label = ui.find_child("MapHint", true, false)
 	var scaled_board_rect: Rect2 = ui.map_panel._board_rect().grow(8.0)
 	_expect(scaled_map_hint != null and scaled_board_rect.position.y >= scaled_map_hint.get_global_rect().end.y + 8.0, "large text should reserve vertical space between the departure summary and map: hint %s, board %s" % [scaled_map_hint.get_global_rect() if scaled_map_hint else Rect2(), scaled_board_rect])
-	_expect(scaled_board_rect.end.y <= ui.event_label.get_global_rect().position.y - 8.0, "large text should keep the map above the route result text: board %s, result %s" % [scaled_board_rect, ui.event_label.get_global_rect()])
+	_expect(scaled_board_rect.end.y <= ui.event_scroll.get_global_rect().position.y - 8.0, "large text should keep the map above the route result text: board %s, result %s" % [scaled_board_rect, ui.event_scroll.get_global_rect()])
 	_expect(ui.commit_departure_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y and ui.return_to_shop_button.get_global_rect().end.y <= ui.game_layer.get_global_rect().end.y, "large text should keep Commit departure and Return to shop visible outside the planning rail: commit %s, return %s, layer %s" % [ui.commit_departure_button.get_global_rect(), ui.return_to_shop_button.get_global_rect(), ui.game_layer.get_global_rect()])
 	ui._on_depart_pressed()
 	_expect(not ui.map_panel.traveling and is_equal_approx(ui.map_panel.travel_progress, 1.0), "reduced motion should present the completed route immediately without changing its outcome")
