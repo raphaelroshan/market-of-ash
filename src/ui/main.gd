@@ -1627,7 +1627,7 @@ func _publish_web_ui_state() -> void:
 		field.dataset.control = control.id;
 		field.disabled = !control.enabled;
 		field.setAttribute('aria-disabled', String(!control.enabled));
-		field.style.cssText = 'display:block;width:100%;min-height:44px;margin:4px 0 8px;box-sizing:border-box;font:inherit;';
+		field.style.cssText = 'display:block;width:100%%;min-height:44px;margin:4px 0 8px;box-sizing:border-box;font:inherit;';
 		controlsRegion.appendChild(field);
 		if (control.description) {
 			const description = document.createElement('p');
@@ -1650,7 +1650,7 @@ func _publish_web_ui_state() -> void:
 		button.textContent = action.label;
 		button.disabled = !action.enabled;
 		button.setAttribute('aria-disabled', String(!action.enabled));
-		button.style.cssText = 'display:block;width:100%;min-height:44px;margin-top:8px;box-sizing:border-box;font:inherit;';
+		button.style.cssText = 'display:block;width:100%%;min-height:44px;margin-top:8px;box-sizing:border-box;font:inherit;';
 		controlsRegion.appendChild(button);
 		if (action.description) {
 			const description = document.createElement('p');
