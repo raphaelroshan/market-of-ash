@@ -20,9 +20,13 @@ func _run() -> void:
 	ui._show_main_menu()
 	await process_frame
 
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_game_button, "Main Menu should start controller navigation on Start Game")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_game_button, "Main Menu should start controller navigation on Guided Trade")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.reduce_motion_checkbox, "D-pad Down should follow the Main Menu focus cycle when Continue is unavailable")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_conflict_button, "D-pad Down should reach the Conflict & Recovery path")
+	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_campaign_button, "D-pad Down should reach the Contract & Crew path")
+	await _press_joypad(JOY_BUTTON_DPAD_UP)
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_conflict_button, "D-pad Up should reverse through the playtest paths")
 	await _press_joypad(JOY_BUTTON_DPAD_UP)
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_game_button, "D-pad Up should reverse the Main Menu focus cycle")
 	await _press_joypad(JOY_BUTTON_A)

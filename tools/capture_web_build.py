@@ -838,7 +838,7 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            click_game_target(driver, "large_text")
+            set_accessibility_checkbox(driver, "large_text", True)
             large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
             large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
@@ -853,7 +853,7 @@ def main() -> int:
                     "file": large_menu_output.name,
                     "bytes": large_menu_bytes,
                     "changed_pixel_ratio": round(large_menu_changed_ratio, 4),
-                    "navigation": "Pointer activation of the published Large text target",
+                    "navigation": "Assistive HTML Large text checkbox",
                     "ui_state": large_menu_state,
                 }
             )
