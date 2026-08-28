@@ -71,6 +71,42 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
     raise TimeoutError(f"Web UI target {target_name!r} was not available")
 
 
+def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: float = 5.0) -> None:
+    """Activate one screen-reader-facing HTML action and let Godot handle it."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        activated = driver.execute_script(
+            """
+            const actionId = arguments[0];
+            const button = Array.from(document.querySelectorAll('#market-of-ash-actions button'))
+              .find(candidate => candidate.dataset.action === actionId);
+            if (!button || button.disabled || typeof window.marketOfAshAccessibilityActivate !== 'function') {
+              return false;
+            }
+            button.click();
+            return true;
+            """,
+            action_id,
+        )
+        if activated:
+            time.sleep(INPUT_SETTLE_SECONDS)
+            return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility action {action_id!r} was not available")
+
+
+def activate_game_action(driver: Any, action_id: str, through_accessibility: bool) -> None:
+    if through_accessibility:
+        activate_accessibility_action(driver, action_id)
+    else:
+        click_game_target(driver, action_id if not action_id.startswith("event_choice_") else "event_choice")
+
+
+def activation_path(through_accessibility: bool, action: str) -> str:
+    method = "Assistive HTML action" if through_accessibility else "Canvas pointer action"
+    return f"{method}: {action}"
+
+
 def click_game_position(driver: Any, logical_x: float, logical_y: float) -> None:
     """Click a logical Godot canvas position with a trusted pointer action."""
     state = driver.execute_script("return window.marketOfAshUiState || null")
@@ -148,22 +184,46 @@ def wait_for_ui_state(
                 """
                 const canvas = document.getElementById('canvas');
                 const region = document.getElementById('market-of-ash-status');
+                const actions = document.getElementById('market-of-ash-actions');
                 return {
                   canvasRole: canvas ? canvas.getAttribute('role') : null,
                   canvasLabel: canvas ? canvas.getAttribute('aria-label') : null,
+                  canvasDescribedBy: canvas ? canvas.getAttribute('aria-describedby') : null,
                   regionRole: region ? region.getAttribute('role') : null,
                   regionLive: region ? region.getAttribute('aria-live') : null,
                   regionText: region ? region.textContent : null,
+                  actionRegionRole: actions ? actions.getAttribute('role') : null,
+                  actionRegionLabel: actions ? actions.getAttribute('aria-label') : null,
+                  actionScreen: actions ? actions.dataset.screen : null,
+                  actions: actions ? Array.from(actions.querySelectorAll('button')).map(button => ({
+                    id: button.dataset.action,
+                    label: button.textContent,
+                    enabled: !button.disabled,
+                  })) : [],
                 };
                 """
             )
-            if assistive_state != {
+            expected_actions = [
+                {
+                    "id": str(action.get("id", "")),
+                    "label": str(action.get("label", "")),
+                    "enabled": bool(action.get("enabled", False)),
+                }
+                for action in state.get("accessibility_actions", [])
+            ]
+            expected_assistive_state = {
                 "canvasRole": "application",
                 "canvasLabel": announcement,
+                "canvasDescribedBy": "market-of-ash-status market-of-ash-actions-description",
                 "regionRole": "status",
                 "regionLive": "polite",
                 "regionText": announcement,
-            }:
+                "actionRegionRole": "region",
+                "actionRegionLabel": "Available game actions",
+                "actionScreen": expected_screen,
+                "actions": expected_actions,
+            }
+            if assistive_state != expected_assistive_state:
                 time.sleep(0.1)
                 continue
             time.sleep(0.2)
@@ -264,6 +324,7 @@ def main() -> int:
     driver: Any | None = None
     try:
         for width, height in VIEWPORTS:
+            use_accessibility_actions = (width, height) == VIEWPORTS[0]
             if driver is not None:
                 driver.quit()
             driver = create_driver(args.browser, width, height)
@@ -285,7 +346,7 @@ def main() -> int:
                     "ui_state": main_state,
                 }
             )
-            click_game_target(driver, "start_game")
+            activate_game_action(driver, "start_game", use_accessibility_actions)
             shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
@@ -327,7 +388,7 @@ def main() -> int:
             # so this transition remains a real keyboard-input check.
             send_game_key(driver, "p")
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
-            click_game_target(driver, "plan_departure")
+            activate_game_action(driver, "plan_departure", use_accessibility_actions)
             departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
@@ -340,11 +401,11 @@ def main() -> int:
                     "file": departure_output.name,
                     "bytes": departure_bytes,
                     "changed_pixel_ratio": round(departure_changed_ratio, 4),
-                    "navigation": "Pointer activation of the published Plan departure target",
+                    "navigation": activation_path(use_accessibility_actions, "Plan departure"),
                     "ui_state": departure_state,
                 }
             )
-            click_game_target(driver, "return_to_shop")
+            activate_game_action(driver, "return_to_shop", use_accessibility_actions)
             returned_shop_state = wait_for_ui_state(
                 driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate"
             )
@@ -365,14 +426,14 @@ def main() -> int:
                     "file": returned_shop_output.name,
                     "bytes": returned_shop_bytes,
                     "changed_pixel_ratio": round(returned_shop_changed_ratio, 4),
-                    "navigation": "Pointer activation of the published Return to shop target",
+                    "navigation": activation_path(use_accessibility_actions, "Return to shop"),
                     "unchanged_fields": list(unchanged_fields),
                     "ui_state": returned_shop_state,
                 }
             )
-            click_game_target(driver, "plan_departure")
+            activate_game_action(driver, "plan_departure", use_accessibility_actions)
             wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
-            click_game_target(driver, "commit_departure")
+            activate_game_action(driver, "commit_departure", use_accessibility_actions)
             arrival_state = wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
             time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
@@ -386,11 +447,11 @@ def main() -> int:
                     "file": arrival_output.name,
                     "bytes": arrival_bytes,
                     "changed_pixel_ratio": round(arrival_changed_ratio, 4),
-                    "navigation": "Pointer activation of the published Commit departure target",
+                    "navigation": activation_path(use_accessibility_actions, "Commit departure"),
                     "ui_state": arrival_state,
                 }
             )
-            click_game_target(driver, "enter_settlement")
+            activate_game_action(driver, "enter_settlement", use_accessibility_actions)
             destination_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
             destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
             destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
@@ -403,15 +464,15 @@ def main() -> int:
                     "file": destination_output.name,
                     "bytes": destination_bytes,
                     "changed_pixel_ratio": round(destination_changed_ratio, 4),
-                    "navigation": "Pointer activation of the destination-specific arrival action",
+                    "navigation": activation_path(use_accessibility_actions, "Enter settlement"),
                     "ui_state": destination_state,
                 }
             )
             send_game_key(driver, "p")
             wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="reedwatch")
-            click_game_target(driver, "pause_main_menu")
+            activate_game_action(driver, "pause_main_menu", use_accessibility_actions)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False, settlement_id="reedwatch")
-            click_game_target(driver, "start_game")
+            activate_game_action(driver, "start_game", use_accessibility_actions)
             confirmation_state = wait_for_ui_state(
                 driver, "new_game_confirmation", args.timeout, large_text=False, settlement_id="reedwatch"
             )
@@ -428,7 +489,11 @@ def main() -> int:
                     "file": confirmation_output.name,
                     "bytes": confirmation_bytes,
                     "changed_pixel_ratio": round(confirmation_changed_ratio, 4),
-                    "navigation": "Pause, Return to main menu, then activate Start new game",
+                    "navigation": "Pause, then %s and %s"
+                    % (
+                        activation_path(use_accessibility_actions, "Return to main menu"),
+                        activation_path(use_accessibility_actions, "Start new game"),
+                    ),
                     "ui_state": confirmation_state,
                 }
             )
@@ -457,7 +522,7 @@ def main() -> int:
                     "ui_state": large_menu_state,
                 }
             )
-            click_game_target(driver, "start_game")
+            activate_game_action(driver, "start_game", use_accessibility_actions)
             large_shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
             large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
@@ -472,7 +537,7 @@ def main() -> int:
                     "file": large_shop_output.name,
                     "bytes": large_shop_bytes,
                     "changed_pixel_ratio": round(large_shop_changed_ratio, 4),
-                    "navigation": "Pointer activation of Start with Large text enabled",
+                    "navigation": activation_path(use_accessibility_actions, "Start with Large text enabled"),
                     "ui_state": large_shop_state,
                 }
             )
@@ -533,14 +598,14 @@ def main() -> int:
                 args.timeout,
                 expected_values={"selected_good_id": "medicine", "selected_quantity": 2},
             )
-            click_game_target(driver, "shop_buy")
+            activate_game_action(driver, "shop_buy", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
                 expected_values={"selected_good_id": "medicine", "held_selected_quantity": 2},
             )
-            click_game_target(driver, "plan_departure")
+            activate_game_action(driver, "plan_departure", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
@@ -557,7 +622,7 @@ def main() -> int:
                 args.timeout,
                 expected_values={"selected_destination_id": "brine_cross"},
             )
-            click_game_target(driver, "commit_departure")
+            activate_game_action(driver, "commit_departure", use_accessibility_actions)
             event_state = wait_for_ui_state(
                 driver,
                 "route_event",
@@ -577,11 +642,11 @@ def main() -> int:
                     "file": event_output.name,
                     "bytes": event_bytes,
                     "changed_pixel_ratio": round(event_changed_ratio, 4),
-                    "navigation": "Buy Medicine, plan Brine Cross, and commit through published pointer targets",
+                    "navigation": "Buy Medicine, plan Brine Cross, and commit using the assistive HTML actions at the minimum viewport and canvas pointer actions at the standard viewport",
                     "ui_state": event_state,
                 }
             )
-            click_game_target(driver, "event_choice")
+            activate_game_action(driver, "event_choice_0", use_accessibility_actions)
             event_arrival_state = wait_for_ui_state(
                 driver,
                 "arrival_handoff",
@@ -601,7 +666,7 @@ def main() -> int:
                     "file": event_arrival_output.name,
                     "bytes": event_arrival_bytes,
                     "changed_pixel_ratio": round(event_arrival_changed_ratio, 4),
-                    "navigation": "Pointer activation of the first available route-event response",
+                    "navigation": activation_path(use_accessibility_actions, "first available route-event response"),
                     "ui_state": event_arrival_state,
                 }
             )
@@ -610,10 +675,11 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 2,
+                    "manifest_version": 3,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
+                    "assistive_action_bridge": "activated at 960x540; canvas pointer retained at 1280x720",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },

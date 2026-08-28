@@ -127,6 +127,7 @@ var run_started_msec := 0
 var first_trade_elapsed_msec := -1
 var last_input_device := "unknown"
 var map_panel
+var web_accessibility_callback: Variant
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -146,6 +147,7 @@ func _ready() -> void:
 	_refresh_continue_availability()
 	if large_text_enabled:
 		_apply_text_scale(self, 1.25)
+	_setup_web_accessibility_bridge()
 	_show_main_menu()
 
 func _build_main_menu() -> void:
@@ -1531,8 +1533,96 @@ func _publish_web_ui_state() -> void:
 		return
 	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
 	var state_json := JSON.stringify(_web_ui_state())
-	var script := "(function(state){window.marketOfAshUiState=state;var region=document.getElementById('market-of-ash-status');if(!region){region=document.createElement('div');region.id='market-of-ash-status';region.setAttribute('role','status');region.setAttribute('aria-live','polite');region.setAttribute('aria-atomic','true');region.style.position='absolute';region.style.left='-10000px';region.style.width='1px';region.style.height='1px';region.style.overflow='hidden';document.body.appendChild(region);}if(region.textContent!==state.announcement){region.textContent=state.announcement;}var canvas=document.getElementById('canvas');if(canvas){canvas.setAttribute('role','application');canvas.setAttribute('aria-label',state.announcement);}})(%s);" % state_json
+	var script := "(function(state){window.marketOfAshUiState=state;var hidden='position:absolute;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;';var region=document.getElementById('market-of-ash-status');if(!region){region=document.createElement('div');region.id='market-of-ash-status';region.setAttribute('role','status');region.setAttribute('aria-live','polite');region.setAttribute('aria-atomic','true');region.style.cssText=hidden;document.body.appendChild(region);}if(region.textContent!==state.announcement){region.textContent=state.announcement;}var actions=document.getElementById('market-of-ash-actions');if(!actions){actions=document.createElement('section');actions.id='market-of-ash-actions';actions.setAttribute('role','region');actions.setAttribute('aria-label','Available game actions');actions.style.cssText=hidden;actions.addEventListener('focusin',function(){actions.style.cssText='position:fixed;left:8px;top:8px;width:360px;max-height:calc(100vh - 16px);overflow:auto;padding:12px;background:#17130f;color:#f4d69a;border:2px solid #f4d69a;z-index:2147483647;';});actions.addEventListener('focusout',function(){setTimeout(function(){if(!actions.contains(document.activeElement)){actions.style.cssText=hidden;}},0);});document.body.appendChild(actions);}actions.dataset.screen=state.screen;actions.replaceChildren();var heading=document.createElement('h2');heading.id='market-of-ash-actions-heading';heading.textContent='Market of Ash — '+state.screen.replaceAll('_',' ');actions.appendChild(heading);var summary=document.createElement('p');summary.id='market-of-ash-actions-description';summary.textContent=state.announcement;actions.appendChild(summary);for(const action of state.accessibility_actions){var button=document.createElement('button');button.type='button';button.dataset.action=action.id;button.textContent=action.label;button.disabled=!action.enabled;button.setAttribute('aria-disabled',String(!action.enabled));if(action.description){button.setAttribute('aria-description',action.description);}button.addEventListener('click',function(){if(typeof window.marketOfAshAccessibilityActivate==='function'){window.marketOfAshAccessibilityActivate(action.id);}});actions.appendChild(button);}var canvas=document.getElementById('canvas');if(canvas){canvas.setAttribute('role','application');canvas.setAttribute('aria-label',state.announcement);canvas.setAttribute('aria-describedby','market-of-ash-status market-of-ash-actions-description');}})(%s);" % state_json
 	bridge.call("eval", script)
+
+func _setup_web_accessibility_bridge() -> void:
+	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
+		return
+	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+	web_accessibility_callback = bridge.call("create_callback", Callable(self, "_on_web_accessibility_action"))
+	var browser_window: Variant = bridge.call("get_interface", "window")
+	if browser_window != null:
+		browser_window.set("marketOfAshAccessibilityActivate", web_accessibility_callback)
+
+func _on_web_accessibility_action(arguments: Array) -> void:
+	if arguments.is_empty():
+		return
+	call_deferred("_activate_web_accessibility_action", String(arguments[0]))
+
+func _activate_web_accessibility_action(action_id: String) -> void:
+	var control: Variant = _web_accessibility_action_control(action_id)
+	if not _grab_focus_if_available(control) or not (control is BaseButton):
+		_publish_web_ui_state()
+		return
+	control.emit_signal("pressed")
+
+func _web_accessibility_action_control(action_id: String) -> Variant:
+	match action_id:
+		"start_game": return start_game_button
+		"continue_game": return continue_game_button
+		"shop_buy": return shop_buy_button
+		"shop_sell": return shop_sell_button
+		"plan_departure": return plan_departure_button
+		"pause_resume": return pause_resume_button
+		"pause_save": return pause_save_button
+		"pause_load": return pause_load_button
+		"pause_report": return pause_report_button
+		"pause_main_menu": return pause_main_menu_button
+		"return_to_shop": return return_to_shop_button
+		"commit_departure": return commit_departure_button
+		"enter_settlement": return enter_settlement_button
+		"keep_saved_campaign": return new_game_confirmation_dialog.get_cancel_button() if new_game_confirmation_dialog != null else null
+		"start_new_campaign": return new_game_confirmation_dialog.get_ok_button() if new_game_confirmation_dialog != null else null
+		"keep_current_run": return reset_confirmation_dialog.get_cancel_button() if reset_confirmation_dialog != null else null
+		"reset_run": return reset_confirmation_dialog.get_ok_button() if reset_confirmation_dialog != null else null
+	if action_id.begins_with("event_choice_"):
+		var choice_index := int(action_id.trim_prefix("event_choice_"))
+		if choice_index >= 0 and choice_index < event_choice_buttons.size():
+			return event_choice_buttons[choice_index]
+	return null
+
+func _append_web_accessibility_action(actions: Array, action_id: String, control: Variant) -> void:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or not (control is BaseButton):
+		return
+	actions.append({
+		"id": action_id,
+		"label": String(control.text),
+		"enabled": not control.disabled,
+		"description": String(control.tooltip_text),
+	})
+
+func _web_accessibility_actions() -> Array:
+	var actions: Array = []
+	match _current_ui_state_id():
+		"main_menu":
+			_append_web_accessibility_action(actions, "start_game", start_game_button)
+			_append_web_accessibility_action(actions, "continue_game", continue_game_button)
+		"settlement_shop":
+			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
+			_append_web_accessibility_action(actions, "shop_sell", shop_sell_button)
+			_append_web_accessibility_action(actions, "plan_departure", plan_departure_button)
+		"departure_desk":
+			_append_web_accessibility_action(actions, "return_to_shop", return_to_shop_button)
+			_append_web_accessibility_action(actions, "commit_departure", commit_departure_button)
+		"route_event":
+			for choice_index in range(event_choice_buttons.size()):
+				_append_web_accessibility_action(actions, "event_choice_%d" % choice_index, event_choice_buttons[choice_index])
+		"arrival_handoff":
+			_append_web_accessibility_action(actions, "enter_settlement", enter_settlement_button)
+		"pause":
+			_append_web_accessibility_action(actions, "pause_resume", pause_resume_button)
+			_append_web_accessibility_action(actions, "pause_save", pause_save_button)
+			_append_web_accessibility_action(actions, "pause_load", pause_load_button)
+			_append_web_accessibility_action(actions, "pause_report", pause_report_button)
+			_append_web_accessibility_action(actions, "pause_main_menu", pause_main_menu_button)
+		"new_game_confirmation":
+			_append_web_accessibility_action(actions, "keep_saved_campaign", new_game_confirmation_dialog.get_cancel_button())
+			_append_web_accessibility_action(actions, "start_new_campaign", new_game_confirmation_dialog.get_ok_button())
+		"reset_confirmation":
+			_append_web_accessibility_action(actions, "keep_current_run", reset_confirmation_dialog.get_cancel_button())
+			_append_web_accessibility_action(actions, "reset_run", reset_confirmation_dialog.get_ok_button())
+	return actions
 
 func _queue_web_ui_state_after_layout() -> void:
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
@@ -1567,6 +1657,7 @@ func _web_ui_state() -> Dictionary:
 	return {
 		"screen": _current_ui_state_id(),
 		"announcement": _web_accessibility_announcement(),
+		"accessibility_actions": _web_accessibility_actions(),
 		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
 		"targets": {
 			"start_game": _web_control_rect(start_game_button),

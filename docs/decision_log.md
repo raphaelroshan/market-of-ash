@@ -377,3 +377,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Godot 4.4 does not expose a native per-Control accessibility tree in this project, while timing-only browser tests can mistake a focus-ring change for successful navigation. A narrow Web bridge improves screen-change announcements and makes packaged evidence deterministic without moving gameplay rules into JavaScript.
 
 **Trade-off:** This is not full control-level screen-reader support, and the exposed state deliberately omits identity, hardware, and detailed history. Manual assistive-technology testing remains an alpha gate.
+
+## ADR-048: Web primary actions have a semantic HTML mirror
+
+**Decision:** The Web build mirrors each active screen's primary and safety-critical buttons into a visually hidden HTML region. Each mirror entry preserves its current label, enabled state, and concise description and invokes the corresponding Godot `BaseButton`; existing UI handlers and the command processor remain the only gameplay mutation path. The mirror becomes visibly discoverable when browser focus enters it, while the canvas keeps its application role, current-screen label, and live-region description.
+
+**Reason:** A canvas-only interface can announce screen changes but cannot expose actionable controls to browser accessibility APIs. A bounded mirror makes Start/Continue, trade, departure, event, arrival, Pause, and destructive-confirmation actions discoverable and operable without duplicating simulation rules in JavaScript.
+
+**Trade-off:** Selectors, quantities, remapping controls, and dynamically listed settlement actions still rely on the Godot canvas. Browser automation verifies the mirrored action inventory and uses it through the minimum-viewport journey, but hands-on screen-reader testing remains required before claiming full control-level accessibility.
