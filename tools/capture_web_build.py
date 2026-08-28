@@ -37,6 +37,7 @@ def wait_for_ui_state(
     large_text: bool | None = None,
     settlement_id: str | None = None,
     pending_event_id: str | None = None,
+    expected_values: dict[str, object] | None = None,
 ) -> dict[str, object]:
     deadline = time.monotonic() + timeout_seconds
     last_state: object = None
@@ -50,6 +51,9 @@ def wait_for_ui_state(
                 time.sleep(0.1)
                 continue
             if pending_event_id is not None and last_state.get("pending_event_id") != pending_event_id:
+                time.sleep(0.1)
+                continue
+            if expected_values is not None and any(last_state.get(key) != value for key, value in expected_values.items()):
                 time.sleep(0.1)
                 continue
             time.sleep(0.2)
@@ -376,26 +380,43 @@ def main() -> int:
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
-            ActionChains(driver).send_keys(
-                Keys.SPACE,
-                Keys.ARROW_DOWN,
-                Keys.ARROW_DOWN,
-                Keys.ENTER,
-                Keys.TAB,
-                Keys.TAB,
-                Keys.ENTER,
-            ).perform()
-            time.sleep(0.2)
+            select_medicine = ActionChains(driver)
+            for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
+                select_medicine.send_keys(key).pause(0.1)
+            select_medicine.perform()
+            wait_for_ui_state(
+                driver,
+                "settlement_shop",
+                args.timeout,
+                expected_values={"selected_good_id": "medicine", "selected_quantity": 2},
+            )
+            ActionChains(driver).send_keys(Keys.TAB, Keys.TAB, Keys.ENTER).perform()
+            wait_for_ui_state(
+                driver,
+                "settlement_shop",
+                args.timeout,
+                expected_values={"selected_good_id": "medicine", "held_selected_quantity": 2},
+            )
             ActionChains(driver).send_keys(Keys.ENTER).perform()
-            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
+            wait_for_ui_state(
+                driver,
+                "departure_desk",
+                args.timeout,
+                large_text=False,
+                settlement_id="ashgate",
+                expected_values={"selected_good_id": "medicine", "selected_destination_id": "reedwatch"},
+            )
             # Brine Cross is two entries after the default Reedwatch choice.
-            ActionChains(driver).send_keys(
-                Keys.SPACE,
-                Keys.ARROW_DOWN,
-                Keys.ARROW_DOWN,
-                Keys.ENTER,
-            ).perform()
-            time.sleep(0.2)
+            select_brine_cross = ActionChains(driver)
+            for key in [Keys.SPACE, Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
+                select_brine_cross.send_keys(key).pause(0.1)
+            select_brine_cross.perform()
+            wait_for_ui_state(
+                driver,
+                "departure_desk",
+                args.timeout,
+                expected_values={"selected_destination_id": "brine_cross"},
+            )
             event_commit_actions = ActionChains(driver)
             for _ in range(4):
                 event_commit_actions.send_keys(Keys.TAB)

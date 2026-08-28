@@ -1419,13 +1419,20 @@ func _publish_web_ui_state() -> void:
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
 		return
 	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
-	var state := {
+	bridge.call("eval", "window.marketOfAshUiState = %s;" % JSON.stringify(_web_ui_state()))
+
+func _web_ui_state() -> Dictionary:
+	var selected_good_id := _selected_id(shop_good_option) if shop_good_option != null else ""
+	return {
 		"screen": _current_ui_state_id(),
 		"large_text": large_text_enabled,
 		"settlement_id": world.current_settlement if world != null else "",
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
+		"selected_good_id": selected_good_id,
+		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
+		"selected_quantity": int(shop_quantity.value) if shop_quantity != null else 0,
+		"held_selected_quantity": int(world.cargo.get(selected_good_id, 0)) if world != null else 0,
 	}
-	bridge.call("eval", "window.marketOfAshUiState = %s;" % JSON.stringify(state))
 
 func _report_viewport_size() -> Vector2i:
 	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
