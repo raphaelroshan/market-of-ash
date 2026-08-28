@@ -384,4 +384,4 @@ The objective is presentation state derived from serialized successful buy/sell 
 
 **Reason:** A canvas-only interface can announce screen changes but cannot expose actionable controls to browser accessibility APIs. A bounded mirror makes Start/Continue, trade, departure, event, arrival, Pause, and destructive-confirmation actions discoverable and operable without duplicating simulation rules in JavaScript.
 
-**Trade-off:** Selectors, quantities, remapping controls, and dynamically listed settlement actions still rely on the Godot canvas. Browser automation verifies the mirrored action inventory and uses it through the minimum-viewport journey, but hands-on screen-reader testing remains required before claiming full control-level accessibility.
+**Trade-off:** Shop and Departure selectors/quantities now have semantic form mirrors, but presentation/remapping controls and dynamically listed settlement actions still rely on the Godot canvas. Browser automation verifies and operates the mirrored controls through the minimum-viewport journey, but hands-on screen-reader testing remains required before claiming full control-level accessibility.

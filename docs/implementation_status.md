@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards, including keyboard-operated semantic Web actions, are configured; the remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards, including keyboard-operated semantic Web actions and planning fields, are configured; the remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
 
 ## Implemented player-facing spine
 
@@ -143,7 +143,7 @@ godot --headless --path . --export-release Web build/web/index.html
 
 `scripts/verify.sh` runs repository policy, every content validator, validator fixtures, and all deterministic Godot suites. The separate editor import remains useful for import/cache validation.
 
-CI run 217 on PR head `c207161` passed repository policy, Ubuntu and Windows Godot tests, deterministic review, Windows/Web packaging and smoke checks, packaged Windows GUI/resource validation, and 84 packaged-browser captures across Chrome, Firefox, and Edge. Local results must still be recorded for every subsequent slice.
+CI run 220 on PR head `f6ddf4a` passed repository policy, Ubuntu and Windows Godot tests, deterministic review, Windows/Web packaging and smoke checks, packaged Windows GUI/resource validation, and 84 packaged-browser captures across Chrome, Firefox, and Edge. Local results must still be recorded for every subsequent slice.
 
 ## Baseline verification result
 
@@ -292,7 +292,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Rebuilding contract, local-opportunity, or crew controls after a result restores focus to the first remaining enabled Shop action, falling back to Plan departure when none remain.
 - Main Menu, Shop, Departure, Pause, and route-event choices use explicit cyclic focus order. Dynamic Shop and event cycles skip disabled actions while leaving their reasons visible.
 - Selectors and utility actions maintain a 44-logical-pixel minimum target; primary trade, journey, binding, and event actions remain larger where labels need wrapping.
-- Web builds mirror the active screen into a polite ARIA live region and descriptive canvas label. A visually hidden, focus-revealed HTML region exposes current primary and safety-critical actions as real buttons with their exact labels, enabled states, and Godot tooltip descriptions; activation emits the existing Godot button signal, so JavaScript owns no gameplay rule.
+- Web builds mirror the active screen into a polite ARIA live region and descriptive canvas label. A visually hidden, focus-revealed HTML region exposes current primary and safety-critical actions as real buttons and the Shop/Departure planning fields as native select/number controls, preserving exact labels, options, values, bounds, enabled states, and Godot tooltip descriptions. Interaction emits the existing Godot signals, so JavaScript owns no gameplay rule.
 - Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. Explicit vertical focus neighbors prevent D-pad traps, and controller Left/Right changes focused quantities. The Main Menu explains both schemes.
 - The Main Menu can independently remap keyboard keys and controller buttons for Accept, Back, and Pause, rejects modifier/reserved/conflicting inputs, reserves D-pad directions for focus navigation, persists mappings outside campaign saves, and restores both input families in one action.
 - If the separate presentation-settings file cannot be written, the chosen option remains active for the current session and the Main Menu shows an explicit persistence warning.
@@ -314,7 +314,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The current head cross-exports locally as a 64-bit Windows PE with a structurally verified embedded PCK after installing the matching Godot 4.4.1 x86-64 templates. Windows file/product versions use the numeric `0.9.0.0` required by PE resources while the player-facing project version remains `0.9.0-alpha-roadmap`.
 - CI run 210 installs checksum-pinned `rcedit` before export, launches the packaged executable as a visible Windows GUI, captures only its exact 960×540 client area, and rejects missing/wrong product name, file version, product version, title, bounds, dimensions, or low-detail pixels. The downloaded frame was visually inspected after two iterations fixed off-screen desktop leakage and a stray hover tooltip; it is a clean neutral Main Menu. The 97,848,976-byte x86-64 executable contains a 328,836-byte embedded PCK and all recorded release checksums revalidate.
 - CI run 212 packages that executable as a 34,567,550-byte `market-of-ash-windows.zip` containing exactly `Market of Ash/market-of-ash.exe`, rejects unexpected or unsafe archive members, clean-extracts it outside the checkout, and uses the extracted copy for both launch smoke tests and the inspected GUI capture. The separately dispatched release workflow run `33149086304` passed the same resource stamping, portable-package, clean-extraction, GUI, provenance, and checksum path from branch head `8922a9e`.
-- CI run 217 (`33151258079`) passed all nine jobs at `c207161`. Its Chrome, Firefox, and Edge manifests are version 4, each contains 28 captures and 38 minimum-viewport semantic-action instances, and each verifies labels, enabled states, descriptions, focus visibility, and Enter-key routing through the Godot callback. Downloaded Chrome and Edge frames were visually checked after the run and show the unchanged unobscured game canvas.
+- CI run 220 (`33152425997`) passed all nine jobs at `f6ddf4a`. Its Chrome, Firefox, and Edge manifests are version 5, each contains 28 captures, 38 minimum-viewport semantic-action instances, and 16 published Shop/Departure form snapshots. The browser flow changes cargo, destination, and integer quantities through native HTML fields, verifies exact labels/options/values/bounds/descriptions after each update, and still routes all actions through the Godot callback. Downloaded constrained Shop evidence shows the semantic overlay hides before capture and leaves the game canvas unobscured.
 - `docs/ux/alpha_accessibility_input_audit.md` separates automated minimum-window evidence from the physical-controller, high-DPI, rendered large-text, color-simulation, and deeper browser checks still requiring human execution. `docs/playtest_feedback_form.md` captures comprehension and causal run stories without personal data.
 
 ## Next permitted task
