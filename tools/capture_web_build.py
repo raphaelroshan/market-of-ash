@@ -172,7 +172,7 @@ def wait_for_ui_state(
     raise TimeoutError(f"expected Web UI state {expected_screen!r}; last state was {last_state!r}")
 
 
-def create_driver(browser: str) -> Any:
+def create_driver(browser: str, width: int, height: int) -> Any:
     if browser == "chrome":
         options = webdriver.ChromeOptions()
         for option in [
@@ -188,6 +188,11 @@ def create_driver(browser: str) -> Any:
         return webdriver.Chrome(options=options)
     if browser == "firefox":
         options = webdriver.FirefoxOptions()
+        # In an Xvfb session Firefox reserves 85 pixels for browser chrome.
+        # Supplying the outer size at process start is reliable where Gecko's
+        # later set-window-rect calls are ignored without a window manager.
+        options.add_argument(f"--width={width}")
+        options.add_argument(f"--height={height + 85}")
         options.set_preference("browser.startup.page", 0)
         options.set_preference("media.autoplay.default", 0)
         options.set_preference("webgl.disabled", False)
@@ -213,10 +218,6 @@ def set_viewport_size(driver: Any, browser: str, width: int, height: int) -> Non
                 "mobile": False,
             },
         )
-    else:
-        # Firefox exposes only the W3C window rectangle. Compensate for its
-        # headless window frame until the content viewport is exact.
-        driver.set_window_rect(width=width, height=height)
     deadline = time.monotonic() + 5.0
     actual = (0, 0)
     while time.monotonic() < deadline:
@@ -263,7 +264,7 @@ def main() -> int:
         for width, height in VIEWPORTS:
             if driver is not None:
                 driver.quit()
-            driver = create_driver(args.browser)
+            driver = create_driver(args.browser, width, height)
             set_viewport_size(driver, args.browser, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
@@ -430,7 +431,7 @@ def main() -> int:
                 }
             )
             driver.quit()
-            driver = create_driver(args.browser)
+            driver = create_driver(args.browser, width, height)
             set_viewport_size(driver, args.browser, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
@@ -514,7 +515,7 @@ def main() -> int:
                 }
             )
             driver.quit()
-            driver = create_driver(args.browser)
+            driver = create_driver(args.browser, width, height)
             set_viewport_size(driver, args.browser, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
