@@ -2289,7 +2289,7 @@ class MapPanel extends Control:
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
 		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
-		return Rect2(BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y - text_size.y - 2.0), text_size)
+		return Rect2(BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y - text_size.y - 6.0), text_size)
 
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
@@ -2368,8 +2368,9 @@ class MapPanel extends Control:
 					draw_rect(Rect2(midpoint - Vector2(5, 5), Vector2(10, 10)), Color("#f0dca8"), false, 2.0)
 				else:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
+		draw_rect(Rect2(board.position + Vector2(0, board.size.y - 28), Vector2(board.size.x, 28)), Color("#231b16"), true)
 		for route_index in range(ROUTE_IDS.size()):
-			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], board.size.y - 6.0), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
+			draw_string(ThemeDB.fallback_font, BOARD_ORIGIN + Vector2(ROUTE_FOOTER_X[route_index], board.size.y - 10.0), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
