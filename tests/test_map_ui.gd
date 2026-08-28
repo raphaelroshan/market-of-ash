@@ -32,6 +32,8 @@ func _initialize() -> void:
 	ui.report_path = test_report_path
 	ui.settings_persistence_enabled = true
 	ui._refresh_continue_availability()
+	_expect(int(ProjectSettings.get_setting("display/window/size/viewport_width", 0)) == 1280 and int(ProjectSettings.get_setting("display/window/size/viewport_height", 0)) == 720, "the logical design viewport should remain 1280x720 so smaller windows reflow at the established scale")
+	_expect(int(ProjectSettings.get_setting("display/window/size/window_width_override", 0)) == 1600 and int(ProjectSettings.get_setting("display/window/size/window_height_override", 0)) == 900, "desktop builds should open in a larger 1600x900 window")
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
 	_expect(ui._current_ui_state_id() == "main_menu", "Web diagnostics should identify the Main Menu state")
@@ -561,7 +563,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		_expect(ui.map_panel._map_heading().contains("ORDINARY PRESSURE") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "map text should identify the crisis stage and current location without relying on color")
 		_expect(ui.map_panel._caravan_motion_label().is_empty(), "the stationary caravan should rely on the marker's HERE text instead of overlapping its label")
-		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size == Vector2(126, 40) and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds")
+		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size.x >= 126.0 and ui.map_panel._settlement_marker_rect("brine_cross").size.y == 40.0 and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds while scaling horizontally")
 		var settlement_ids: Array = ui.map_panel.SETTLEMENT_CELLS.keys()
 		var hit_targets_overlap := false
 		for first_index in range(settlement_ids.size()):
@@ -634,7 +636,7 @@ func _initialize() -> void:
 	ui._on_depart_pressed()
 	_expect(not ui.world.pending_event.is_empty() and ui.world.pending_event.id == "gatekeepers_chalk", "eligible Toll Road trip did not present Gatekeeper's Chalk")
 	_expect(ui._current_ui_state_id() == "route_event", "Web diagnostics should identify a pending route event")
-	_expect(ui._web_accessibility_announcement().contains("The Gatekeeper's Chalk") and ui._web_accessibility_announcement().contains("first available response is focused"), "Web accessibility fallback should announce the route event and response focus")
+	_expect(ui._web_accessibility_announcement().contains("Caravan conflict simulation") and ui._web_accessibility_announcement().contains("The Gatekeeper's Chalk") and ui._web_accessibility_announcement().contains("first available response"), "Web accessibility fallback should announce the conflict model, route event, and response focus")
 	var event_accessibility_actions: Array = ui._web_ui_state().get("accessibility_actions", [])
 	_expect(event_accessibility_actions.size() == 4 and event_accessibility_actions[0].get("id") == "event_choice_0" and event_accessibility_actions[0].get("enabled") and event_accessibility_actions[3].get("id") == "event_choice_3" and not event_accessibility_actions[3].get("enabled"), "Web accessibility actions should preserve every event response and its enabled state")
 	_expect(ui.event_card.visible and not ui.enter_settlement_button.visible and not ui.departure_travel_actions.visible, "pending route event should replace planning actions with the event card")
@@ -644,9 +646,12 @@ func _initialize() -> void:
 	ui._on_map_settlement_selected("reedwatch")
 	_expect(ui._selected_id(ui.destination_option) == committed_destination and ui.event_label.text.contains("journey is already committed"), "map clicks should not rewrite the displayed plan during a committed journey")
 	_expect(ui.event_title_label.text == "The Gatekeeper's Chalk", "event card did not render the authored title")
-	_expect(ui.event_stakes_label.text.contains("Toll Road") and ui.event_stakes_label.text.contains("1 Medicine unit valued at 44"), "event card did not expose route and cargo context")
+	_expect(ui.event_mode_label.text == "CARAVAN CONFLICT SIMULATION", "event card should identify the abstract conflict layer")
+	_expect(ui.event_stakes_label.text.contains("Highest disclosed cargo-loss chance: 25%") and ui.event_stakes_label.text.contains("Toll Road") and ui.event_stakes_label.text.contains("1 Medicine unit valued at 44") and ui.event_stakes_label.text.contains("no hidden health damage"), "event card did not expose the threat model, route, cargo basis, and non-hidden resolution contract")
+	_expect(ui.event_readiness_label.text.contains("3 of 4 tactics ready"), "event card should summarize how many responses are currently usable")
 	_expect(ui.event_choice_buttons.size() == 4, "Gatekeeper's Chalk should expose its three base choices and Tess's visible negotiation option")
-	_expect(ui.event_choice_buttons[0].autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.event_choice_buttons[0].custom_minimum_size.y >= 58.0, "long event choices should wrap instead of clipping their costs and consequences")
+	_expect(ui.event_choice_buttons[0].text.contains("PAY / CERTAIN") and ui.event_choice_buttons[0].text.contains("EXPECTED") and ui.event_choice_buttons[1].text.contains("MANEUVER / RISK ROLL 25%"), "event choices should distinguish tactical posture, certainty, and expected consequence before commitment")
+	_expect(ui.event_choice_buttons[0].autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.event_choice_buttons[0].custom_minimum_size.y >= 92.0, "long event choices should wrap instead of clipping their costs and consequences")
 	_expect(ui.event_choice_buttons[3].disabled and ui.event_choice_buttons[3].tooltip_text.contains("Tess Oryn"), "Tess's Gatekeeper option should remain visible with its assignment prerequisite")
 	_expect(ui.event_choice_reason_labels.size() == 1 and ui.event_choice_reason_labels[0].text.contains("Tess Oryn"), "disabled event prerequisites should remain readable without hovering or focusing the unavailable control")
 	_expect(ui.event_choice_buttons[0].focus_mode != Control.FOCUS_NONE, "event choices should remain keyboard/controller focusable")
@@ -740,6 +745,7 @@ func _initialize() -> void:
 	_expect(ui.event_stakes_label.text.contains("1 Medicine unit") and ui.event_stakes_label.text.contains("Old Road"), "escort event did not expose its route and loss basis")
 	_expect(ui.event_choice_buttons.size() == 4, "escort event should expose all four authored choices")
 	_expect(ui.event_choice_buttons[0].text.contains("10 ashmarks") and ui.event_choice_buttons[1].text.contains("45% cargo risk"), "escort choices did not disclose payment and solo-crossing risk")
+	_expect(ui.event_choice_buttons[1].text.contains("MANEUVER / RISK ROLL 45%") and ui.event_stakes_label.text.contains("Highest disclosed cargo-loss chance: 45%"), "escort confrontation should expose its maximum threat and risky tactic consistently")
 	_expect(ui.event_choice_buttons[2].text.contains("1 medicine") and not ui.event_choice_buttons[2].disabled, "medicine-for-passage choice did not expose its real cargo prerequisite")
 	_expect(ui.event_choice_buttons[3].focus_mode != Control.FOCUS_NONE, "information recovery choice should remain focusable")
 	ui._on_event_choice_pressed("three_riders_no_banner", "wait_and_read_the_tracks")

@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUTPUT_DIR="${1:-$ROOT/artifacts/native-render}"
 MARKET_GODOT_BIN="${MARKET_GODOT_BIN:-godot}"
-CAPTURE_GEOMETRIES="${MARKET_CAPTURE_GEOMETRIES:-960x540 1280x720 1920x1080}"
+CAPTURE_GEOMETRIES="${MARKET_CAPTURE_GEOMETRIES:-960x540 1280x720 1600x900 1920x1080}"
 
 mkdir -p "$OUTPUT_DIR"
 validator_args=()

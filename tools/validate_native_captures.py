@@ -26,7 +26,7 @@ REQUIRED_NATIVE_SCREENS = {
     "destination_shop",
     "new_game_confirmation",
 }
-NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1920, 1080))
+NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
 EXPECTED_UI_STATE = {
     "returned_shop": "settlement_shop",
     "destination_shop": "settlement_shop",

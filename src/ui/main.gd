@@ -88,9 +88,11 @@ var departure_load_label: Label
 var departure_contract_label: Label
 var departure_status_label: Label
 var event_card: PanelContainer
+var event_mode_label: Label
 var event_title_label: Label
 var event_setup_label: Label
 var event_stakes_label: Label
+var event_readiness_label: Label
 var event_choice_list: VBoxContainer
 var event_choice_buttons: Array[Button] = []
 var event_choice_reason_labels: Array[Label] = []
@@ -427,7 +429,8 @@ func _update_map_layout() -> void:
 		return
 	map_panel.fit_vertical_space(
 		map_hint.get_global_rect().end.y + 16.0,
-		event_scroll.get_global_rect().position.y - 16.0
+		event_scroll.get_global_rect().position.y - 16.0,
+		event_scroll.get_global_rect().size.x
 	)
 
 func _request_map_layout_update() -> void:
@@ -735,10 +738,13 @@ func _build_shop() -> void:
 	shop_layer.add_child(margin)
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 28)
+	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(columns)
 
 	var market_card := PanelContainer.new()
 	market_card.custom_minimum_size = Vector2(690, 0)
+	market_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	market_card.size_flags_stretch_ratio = 1.8
 	columns.add_child(market_card)
 	var market_shell := VBoxContainer.new()
 	market_shell.add_theme_constant_override("separation", 10)
@@ -828,6 +834,8 @@ func _build_shop() -> void:
 	var action_card := PanelContainer.new()
 	action_card.name = "ShopActionCard"
 	action_card.custom_minimum_size = Vector2(360, 0)
+	action_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	action_card.size_flags_stretch_ratio = 1.0
 	columns.add_child(action_card)
 	var action_shell := VBoxContainer.new()
 	action_shell.add_theme_constant_override("separation", 10)
@@ -948,10 +956,13 @@ func _build_ui() -> void:
 
 	var columns := HBoxContainer.new()
 	columns.add_theme_constant_override("separation", 24)
+	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(columns)
 
 	var left := VBoxContainer.new()
 	left.custom_minimum_size = Vector2(700, 0)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_stretch_ratio = 1.7
 	left.add_theme_constant_override("separation", 12)
 	columns.add_child(left)
 
@@ -1008,6 +1019,8 @@ func _build_ui() -> void:
 
 	var right := PanelContainer.new()
 	right.custom_minimum_size = Vector2(360, 0)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_stretch_ratio = 1.0
 	columns.add_child(right)
 	var controls_shell := VBoxContainer.new()
 	controls_shell.add_theme_constant_override("separation", 10)
@@ -1077,8 +1090,13 @@ func _build_ui() -> void:
 	event_card.visible = false
 	controls.add_child(event_card)
 	var event_content := VBoxContainer.new()
-	event_content.add_theme_constant_override("separation", 6)
+	event_content.add_theme_constant_override("separation", 8)
 	event_card.add_child(event_content)
+	event_mode_label = Label.new()
+	event_mode_label.text = "CARAVAN CONFLICT SIMULATION"
+	event_mode_label.add_theme_font_size_override("font_size", 12)
+	event_mode_label.add_theme_color_override("font_color", Color("#d08b62"))
+	event_content.add_child(event_mode_label)
 	event_title_label = Label.new()
 	event_title_label.add_theme_font_size_override("font_size", 18)
 	event_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
@@ -1091,8 +1109,13 @@ func _build_ui() -> void:
 	event_stakes_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	event_stakes_label.add_theme_color_override("font_color", Color("#c7b49a"))
 	event_content.add_child(event_stakes_label)
+	event_readiness_label = Label.new()
+	event_readiness_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_readiness_label.add_theme_font_size_override("font_size", 12)
+	event_readiness_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	event_content.add_child(event_readiness_label)
 	event_choice_list = VBoxContainer.new()
-	event_choice_list.add_theme_constant_override("separation", 6)
+	event_choice_list.add_theme_constant_override("separation", 10)
 	event_content.add_child(event_choice_list)
 
 	destination_option.item_selected.connect(_on_destination_changed)
@@ -2052,7 +2075,7 @@ func _web_accessibility_announcement() -> String:
 		"departure_desk":
 			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
 		"route_event":
-			return "Route decision: %s. The first available response is focused; unavailable responses include written reasons." % String(world.pending_event.get("title", "travel event"))
+			return "Caravan conflict simulation: %s. Threat, readiness, costs, risk, and expected outcomes are stated before the first available response; unavailable tactics include written reasons." % String(world.pending_event.get("title", "travel event"))
 		"arrival_handoff":
 			return "Arrival report for %s. Enter settlement is focused." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
 		"pause":
@@ -2892,12 +2915,18 @@ func _refresh_event_card() -> void:
 	var trade_context := ""
 	if not trade_basis.is_empty():
 		trade_context = " Shortage basis: %d %s at %d each, plus %d premium each." % [int(trade_basis.get("quantity", 0)), String(trade_basis.get("good_id", "cargo")).capitalize(), int(trade_basis.get("unit_price", 0)), int(trade_basis.get("premium_per_unit", 0))]
-	event_stakes_label.text = "Route context: %s to %s via %s; exposed cargo: %s.%s%s\nWhat is at stake: %s" % [String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), cargo_context, material_context, trade_context, String(pending.get("stakes", ""))]
+	var maximum_cargo_risk := 0.0
+	for raw_choice in pending.get("choices", []):
+		if typeof(raw_choice) == TYPE_DICTIONARY:
+			maximum_cargo_risk = maxf(maximum_cargo_risk, float(raw_choice.get("cargo_risk", 0.0)))
+	var maximum_risk_percent := int(round(maximum_cargo_risk * 100.0))
+	var threat_summary := "No tactic uses a cargo-loss roll." if maximum_risk_percent == 0 else "Highest disclosed cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
+	event_stakes_label.text = "THREAT — %s\nROUTE — %s to %s via %s.%s%s\nAT STAKE — %s\nMODEL — This is an abstract caravan conflict: outcomes spend only the resources, time, cargo, or standing written below; there is no hidden health damage." % [threat_summary, String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), material_context, trade_context, String(pending.get("stakes", ""))]
 	for raw_choice in pending.get("choices", []):
 		if typeof(raw_choice) != TYPE_DICTIONARY:
 			continue
 		var choice: Dictionary = raw_choice
-		var button := _wrapped_action_button(58.0)
+		var button := _wrapped_action_button(92.0)
 		var money_cost := int(choice.get("money_cost", 0))
 		var money_reward := int(choice.get("money_reward", 0))
 		var trade_mode := String(choice.get("trade_mode", "none"))
@@ -2911,12 +2940,18 @@ func _refresh_event_card() -> void:
 		var cargo_cost_good_id := String(cargo_cost.get("good_id", ""))
 		var days := int(choice.get("days", 0))
 		var cargo_risk := int(round(float(choice.get("cargo_risk", 0.0)) * 100.0))
-		var money_text := "%d ashmarks" % money_cost if money_reward == 0 else "+%d ashmarks" % money_reward
+		var money_text := "no ashmark change"
+		if money_reward > 0:
+			money_text = "+%d ashmarks" % money_reward
+		elif money_cost > 0:
+			money_text = "-%d ashmarks" % money_cost
 		var arrival_text := "return to origin" if String(choice.get("arrival_target", "destination")) == "origin" else "continue to destination"
-		var cargo_cost_text := "%d %s" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else "%d materials" % material_quantity
+		var cargo_cost_text := "%d %s" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else "%d materials" % material_quantity if material_quantity > 0 else "no cargo spent"
 		if cargo_cost_quantity > 0:
 			cargo_cost_text = "%d %s" % [cargo_cost_quantity, cargo_cost_good_id]
-		button.text = "%s — %s · %d provisions · %s · %d days · %d%% cargo risk · %s" % [String(choice.get("label", "Choose")), money_text, provision_cost, cargo_cost_text, days, cargo_risk, arrival_text]
+		var tactic_label := _event_tactic_label(choice, trade_quantity, cargo_cost_quantity)
+		var certainty_label := "CERTAIN" if cargo_risk == 0 else "RISK ROLL %d%% cargo risk" % cargo_risk
+		button.text = "%s / %s — %s\nCOST — %s · %d provisions · %s · %d days\nRESULT — %s · %s\nEXPECTED — %s" % [tactic_label, certainty_label, String(choice.get("label", "Choose")), money_text, provision_cost, cargo_cost_text, days, arrival_text, "no cargo-loss roll" if cargo_risk == 0 else "up to %s exposed" % cargo_context, String(choice.get("outcome", "Resolve the confrontation."))]
 		var blocked_reason := ""
 		if world.money < money_cost:
 			button.disabled = true
@@ -2959,9 +2994,28 @@ func _refresh_event_card() -> void:
 			event_choice_reason_labels.append(reason_label)
 	if not enabled_choice_buttons.is_empty():
 		_link_focus_cycle(enabled_choice_buttons)
+	if event_readiness_label:
+		event_readiness_label.text = "READINESS — %d of %d tactics ready. Disabled tactics remain visible and name the missing money, cargo, provisions, contract, or crew leverage." % [enabled_choice_buttons.size(), event_choice_buttons.size()]
 	if pause_layer == null or not pause_layer.visible:
 		if _grab_first_enabled(event_choice_buttons) and not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 			get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
+
+func _event_tactic_label(choice: Dictionary, trade_quantity: int, cargo_cost_quantity: int) -> String:
+	if String(choice.get("arrival_target", "destination")) == "origin":
+		return "RETREAT"
+	if not String(choice.get("requires_assigned_crew_id", "")).is_empty():
+		return "CREW LEVERAGE"
+	if float(choice.get("cargo_risk", 0.0)) > 0.0:
+		return "MANEUVER"
+	if int(choice.get("money_cost", 0)) > 0:
+		return "PAY"
+	if trade_quantity > 0 or int(choice.get("material_quantity", 0)) > 0 or cargo_cost_quantity > 0:
+		return "TRADE"
+	if int(choice.get("days", 0)) > 0:
+		return "WAIT"
+	if not Dictionary(choice.get("reputation_delta", {})).is_empty() or not String(choice.get("information_id", "")).is_empty():
+		return "NEGOTIATE"
+	return "COMMIT"
 
 func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
 	for contract_id in world.active_contracts.keys():
@@ -3077,13 +3131,14 @@ class MapPanel extends Control:
 
 	const GRID_SIZE := Vector2i(17, 11)
 	const NORMAL_BOARD_ORIGIN := Vector2(34, 230)
-	const CELL_WIDTH := 44.0
+	const NORMAL_CELL_WIDTH := 44.0
+	const MIN_CELL_WIDTH := 44.0
+	const MAX_CELL_WIDTH := 56.0
 	const NORMAL_CELL_HEIGHT := 20.0
 	const MIN_CELL_HEIGHT := 14.0
 	const MAP_HEADER_HEIGHT := 30.0
 	const ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
 	const ROUTE_PROFILES := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
-	const ROUTE_FOOTER_X := [8.0, 235.0, 470.0]
 	const SETTLEMENT_CELLS := {
 		"ashgate": Vector2i(2, 7),
 		"brine_cross": Vector2i(13, 2),
@@ -3100,6 +3155,7 @@ class MapPanel extends Control:
 	var reduce_motion: bool = false
 	var text_scale: float = 1.0
 	var board_origin: Vector2 = NORMAL_BOARD_ORIGIN
+	var cell_width: float = NORMAL_CELL_WIDTH
 	var cell_height: float = NORMAL_CELL_HEIGHT
 
 	func _ready() -> void:
@@ -3117,17 +3173,18 @@ class MapPanel extends Control:
 		text_scale = value
 		queue_redraw()
 
-	func fit_vertical_space(top: float, bottom: float) -> void:
+	func fit_vertical_space(top: float, bottom: float, available_width: float) -> void:
 		board_origin = Vector2(NORMAL_BOARD_ORIGIN.x, maxf(NORMAL_BOARD_ORIGIN.y, top))
+		cell_width = clampf((available_width - board_origin.x - 24.0) / float(GRID_SIZE.x), MIN_CELL_WIDTH, MAX_CELL_WIDTH)
 		var available_height := maxf(0.0, bottom - board_origin.y)
 		cell_height = clampf(available_height / float(GRID_SIZE.y), MIN_CELL_HEIGHT, NORMAL_CELL_HEIGHT)
 		queue_redraw()
 
 	func _board_rect() -> Rect2:
-		return Rect2(board_origin, Vector2(GRID_SIZE.x * CELL_WIDTH, GRID_SIZE.y * cell_height))
+		return Rect2(board_origin, Vector2(GRID_SIZE.x * cell_width, GRID_SIZE.y * cell_height))
 
 	func _cell_rect(cell: Vector2i) -> Rect2:
-		return Rect2(board_origin + Vector2(cell.x * CELL_WIDTH, cell.y * cell_height), Vector2(CELL_WIDTH, cell_height))
+		return Rect2(board_origin + Vector2(cell.x * cell_width, cell.y * cell_height), Vector2(cell_width, cell_height))
 
 	func _cell_center(cell: Vector2i) -> Vector2:
 		return _cell_rect(cell).get_center()
@@ -3137,7 +3194,7 @@ class MapPanel extends Control:
 
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(CELL_WIDTH * 2.0 + 38, 40))
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 38, 40))
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
 		return _settlement_marker_rect(settlement_id).grow_individual(0.0, 10.0, 0.0, 10.0)
@@ -3186,7 +3243,8 @@ class MapPanel extends Control:
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
 		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
-		return Rect2(board_origin + Vector2(ROUTE_FOOTER_X[route_index], _board_rect().size.y - text_size.y - 6.0), text_size)
+		var footer_x: float = float([8.0, cell_width * 5.3, cell_width * 10.7][route_index])
+		return Rect2(board_origin + Vector2(footer_x, _board_rect().size.y - text_size.y - 6.0), text_size)
 
 	func _map_heading_rect() -> Rect2:
 		var text_size := ThemeDB.fallback_font.get_string_size(_map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16))
@@ -3273,7 +3331,7 @@ class MapPanel extends Control:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
 		draw_rect(Rect2(board.position + Vector2(0, board.size.y - 28), Vector2(board.size.x, 28)), Color("#231b16"), true)
 		for route_index in range(ROUTE_IDS.size()):
-			draw_string(ThemeDB.fallback_font, board_origin + Vector2(ROUTE_FOOTER_X[route_index], board.size.y - 10.0), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
+			draw_string(ThemeDB.fallback_font, _route_footer_rect(route_index).position + Vector2(0, _font_size(12)), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
