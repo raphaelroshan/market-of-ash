@@ -13,6 +13,7 @@ VIEWPORTS = ((960, 540), (1280, 720))
 REQUIRED_CAPTURE_SCREENS = {
     "main_menu",
     "settlement_shop",
+    "bazaar_jobs",
     "pause",
     "departure_desk",
     "returned_shop",

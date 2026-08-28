@@ -385,3 +385,35 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A canvas-only interface can announce screen changes but cannot expose actionable controls to browser accessibility APIs. A bounded mirror makes Start/Continue, trade, contracts, settlement opportunities, crew, departure, event, arrival, Pause, destructive-confirmation, planning, and presentation controls discoverable and operable without duplicating simulation rules in JavaScript.
 
 **Trade-off:** Browser keyboard remapping now uses the semantic HTML action region and the same Godot validation path, including modifier-aware shortcut rejection and Escape cancellation, but physical controller remapping still requires a real device. Browser automation verifies and operates the mirrored actions, planning fields, presentation checkboxes, and keyboard remapping through the minimum-viewport journey; hands-on screen-reader and broader browser-shortcut testing remain required before claiming full control-level accessibility.
+
+## ADR-049: The caravan is the persistent travel viewpoint
+
+**Decision:** Replace the route map's anonymous dot with a readable caravan silhouette and explicit `AT REST`, `MOVING`, `ENCOUNTER`, and `ARRIVED` presentation states. Move the key caravan resources into the side rail, while the regional network remains the central stage and the right rail changes from planning to encounter and arrival details. Encounter travel stops at a fixed visual point; command results remain the only authority for costs, events, and destination changes.
+
+**Reason:** The player needs to understand that one persistent caravan connects settlement trade, travel risk, crew, and the regional crisis. Frontier's repeatable settlement-to-navigation-to-road-to-arrival path makes the initial vertical slice easier to read and gives every journey a visible middle instead of jumping directly from commitment to an event or destination.
+
+**Trade-off:** This first pass uses a code-drawn silhouette, one road scene, and one fixed encounter stop rather than multiple biomes, caravan modules, or a freely pannable map. Those additions should only arrive with new trade, travel, or negotiation decisions; this decision does not create a combat subsystem.
+
+## ADR-050: Settlement interaction is organized as a bazaar directory
+
+**Decision:** Present each settlement as a repeatable bazaar hub with direct entries for Trade, Jobs, Services / Intel, Crew, Outlook, and Departure. Keep the default settlement summary compact, hide the full campaign outlook until requested, and route every entry to the existing command-backed controls rather than duplicating actions.
+
+**Reason:** Showing market details, campaign goals, contracts, local services, crew, save tools, and departure guidance at once makes the settlement feel like a report. A stable directory makes the place feel inhabited and teaches a reusable navigation path without obscuring the economy.
+
+**Trade-off:** The alpha uses typographic stall buttons rather than illustrated characters or a spatial bazaar scene. Character art and richer stall presentation can replace those buttons later without changing the underlying actions or navigation contract.
+
+## ADR-051: Bazaar stalls replace the active work surface
+
+**Decision:** Keep Trade as the default settlement action, but make the five Bazaar directory buttons the first navigation layer. Selecting Jobs, Services / Intel, Crew, or Outlook hides the market ledger and transaction row, shows only that stall's authoritative actions, and presents a settlement-tinted illustrated row of keepers with the active stall emphasized. Departure remains pinned and available from every stall.
+
+**Reason:** A directory that leaves the entire trade form visible still reads as one dense report. Replacing the work surface gives each visit action a legible place, makes the Bazaar feel inhabited, and preserves the repeatable Trade → stall → Departure rhythm without creating new simulation state.
+
+**Trade-off:** The keepers are deliberately code-drawn silhouettes rather than final character art, and the scene is not a free-roaming environment. It can later receive authored portraits or settlement art without changing commands, save data, input flow, or accessibility semantics.
+
+## ADR-052: Every route has a stable in-between visual identity
+
+**Decision:** Render the Old Road, Toll Road, and Dry Cut as distinct side-on travel environments derived from their stable route IDs. Each scene names its corridor and current travel beat, keeps the origin and destination visible as horizon anchors, and repeats the route's authored risk description. The Old Road uses ruined milestones, the Toll Road uses maintained paving and inspection posts, and the Dry Cut uses exposed saltwind ridges and navigation markers.
+
+**Reason:** A mandatory road stop is only meaningful if the player can recognize which road they chose and connect its atmosphere to the disclosed tradeoff. Frontier's useful lesson is the repeated sense of leaving one place, occupying transit, and approaching another—not a generic loading screen.
+
+**Trade-off:** Route scenes remain lightweight code-drawn presentations and share one caravan camera. They add no new random rolls, intermediate map nodes, travel commands, or simulation state; authored roadside locations should only become gameplay nodes when they support a real trade, information, or event decision.

@@ -697,8 +697,33 @@ def main() -> int:
                     "ui_state": shop_state,
                 }
             )
+            activate_game_action(driver, "bazaar_assignments", use_accessibility_actions)
+            bazaar_jobs_state = wait_for_ui_state(
+                driver,
+                "settlement_shop",
+                args.timeout,
+                large_text=False,
+                settlement_id="ashgate",
+                expected_values={"bazaar_section": "assignments"},
+            )
+            bazaar_jobs_output = args.output_dir / f"bazaar-jobs-{width}x{height}.png"
+            bazaar_jobs_bytes = capture_frame(driver, bazaar_jobs_output, (actual_width, actual_height))
+            bazaar_jobs_changed_ratio = require_distinct_screen(shop_output, bazaar_jobs_output, "Open Job Board")
+            captures.append(
+                {
+                    "screen": "bazaar_jobs",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": bazaar_jobs_output.name,
+                    "bytes": bazaar_jobs_bytes,
+                    "changed_pixel_ratio": round(bazaar_jobs_changed_ratio, 4),
+                    "navigation": activation_path(use_accessibility_actions, "Job Board"),
+                    "ui_state": bazaar_jobs_state,
+                }
+            )
             if use_accessibility_actions:
                 contract_action_id = "accept_contract_reedwatch_water_relief_01"
+                wait_for_accessibility_action_state(driver, contract_action_id, True)
                 activate_accessibility_action(driver, contract_action_id)
                 wait_for_accessibility_action_state(driver, contract_action_id, False)
             send_game_key(driver, "p")
@@ -769,6 +794,19 @@ def main() -> int:
             activate_game_action(driver, "plan_departure", use_accessibility_actions)
             wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             activate_game_action(driver, "commit_departure", use_accessibility_actions)
+            wait_for_ui_state(
+                driver,
+                "route_travel",
+                args.timeout,
+                large_text=False,
+                settlement_id="reedwatch",
+                expected_values={
+                    "travel_phase": "road",
+                    "road_scene_id": "ashen_milestones",
+                    "road_waypoint": "ROAD STOP — THE BROKEN MILEPOSTS",
+                },
+            )
+            activate_game_action(driver, "continue_journey", use_accessibility_actions)
             arrival_state = wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
             time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
@@ -972,6 +1010,20 @@ def main() -> int:
                 expected_values={"selected_destination_id": "brine_cross", "selected_route_id": "toll_road"},
             )
             activate_game_action(driver, "commit_departure", use_accessibility_actions)
+            wait_for_ui_state(
+                driver,
+                "route_travel",
+                args.timeout,
+                large_text=False,
+                settlement_id="ashgate",
+                pending_event_id="gatekeepers_chalk",
+                expected_values={
+                    "travel_phase": "road",
+                    "road_scene_id": "warden_causeway",
+                    "road_waypoint": "ROAD STOP — THE NEXT INSPECTION POST",
+                },
+            )
+            activate_game_action(driver, "continue_journey", use_accessibility_actions)
             event_state = wait_for_ui_state(
                 driver,
                 "route_event",
@@ -1045,7 +1097,7 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 9,
+                    "manifest_version": 10,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
