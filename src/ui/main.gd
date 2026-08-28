@@ -349,6 +349,7 @@ func _show_main_menu() -> void:
 	if start_game_button:
 		start_game_button.grab_focus()
 	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _refresh_continue_availability() -> void:
 	if continue_game_button == null:
@@ -448,6 +449,7 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	_request_map_layout_update()
 	_save_presentation_settings()
 	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 	if not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 		get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
 
@@ -1387,6 +1389,7 @@ func _open_pause() -> void:
 	get_tree().paused = true
 	pause_resume_button.grab_focus()
 	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _refresh_pause_summary(feedback_text: String = "") -> void:
 	if pause_summary_label == null:
@@ -1398,6 +1401,7 @@ func _close_pause() -> void:
 	get_tree().paused = false
 	pause_layer.visible = false
 	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 	if _grab_focus_if_available(focus_before_pause):
 		return
 	if shop_layer.visible:
@@ -1528,6 +1532,12 @@ func _publish_web_ui_state() -> void:
 	var state_json := JSON.stringify(_web_ui_state())
 	var script := "(function(state){window.marketOfAshUiState=state;var region=document.getElementById('market-of-ash-status');if(!region){region=document.createElement('div');region.id='market-of-ash-status';region.setAttribute('role','status');region.setAttribute('aria-live','polite');region.setAttribute('aria-atomic','true');region.style.position='absolute';region.style.left='-10000px';region.style.width='1px';region.style.height='1px';region.style.overflow='hidden';document.body.appendChild(region);}if(region.textContent!==state.announcement){region.textContent=state.announcement;}var canvas=document.getElementById('canvas');if(canvas){canvas.setAttribute('role','application');canvas.setAttribute('aria-label',state.announcement);}})(%s);" % state_json
 	bridge.call("eval", script)
+
+func _queue_web_ui_state_after_layout() -> void:
+	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
+		return
+	if not get_tree().process_frame.is_connected(_publish_web_ui_state):
+		get_tree().process_frame.connect(_publish_web_ui_state, CONNECT_ONE_SHOT)
 
 func _web_accessibility_announcement() -> String:
 	var screen_id := _current_ui_state_id()
@@ -2536,6 +2546,7 @@ func _refresh_ui() -> void:
 	if game_layer != null and game_layer.visible:
 		_request_map_layout_update()
 	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 class MapPanel extends Control:
 	signal settlement_selected(settlement_id: String)
