@@ -6,6 +6,8 @@ cd "$ROOT"
 
 python3 tools/policy_check.py --repo "$ROOT"
 python3 -m py_compile tools/*.py tests/*.py
+python3 tests/test_policy_check.py
+python3 tests/test_windows_export_validation.py
 python3 tools/validate_content.py --manifest content/content_manifest.json
 python3 tools/validate_political_geography.py --data content/political_geography.json
 python3 tools/validate_tribal_conflict.py --data content/tribal_conflict.json

@@ -15,6 +15,11 @@ SECRET_PATTERNS = [
     re.compile(r"(?:ghp_|github_pat_|sk-)[A-Za-z0-9_-]{16,}"),
     re.compile(r"BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY", re.I),
 ]
+WINDOWS_VERSION_PATTERN = re.compile(r"^[0-9]+(?:\.[0-9]+){0,3}$")
+
+
+def valid_windows_version(value: str) -> bool:
+    return bool(WINDOWS_VERSION_PATTERN.fullmatch(value))
 
 
 def git_diff_names(base: str, root: Path) -> list[str]:
@@ -54,6 +59,10 @@ def main() -> int:
             for exclusion in required_export_exclusions:
                 if exclusion not in line:
                     errors.append(f"export preset exclusion missing {exclusion} at export_presets.cfg:{line_number}")
+        for setting in ("application/file_version", "application/product_version"):
+            match = re.search(rf'^{re.escape(setting)}="([^"]*)"$', preset_text, re.MULTILINE)
+            if match is None or not valid_windows_version(match.group(1)):
+                errors.append(f"Windows export requires a numeric {setting} with at most four components")
 
     gd_files = list(root.glob("**/*.gd"))
     test_files = list((root / "tests").glob("**/*")) if (root / "tests").exists() else []
