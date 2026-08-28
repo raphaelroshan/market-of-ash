@@ -198,6 +198,18 @@ jobs:
           generated_import=$(find build -type f -name '*.import' -print -quit)
           test -z "$generated_import"
           "./build/${slug}.exe" --headless --quit-after 2
+      - name: Capture packaged Windows GUI and metadata
+        shell: pwsh
+        run: |
+          ./tools/capture_windows_package.ps1 `
+            -Executable build/market-of-ash.exe `
+            -Screenshot artifacts/windows-main-menu.png `
+            -Metadata artifacts/windows-version.json
+      - name: Validate packaged Windows GUI and metadata
+        run: |
+          python tools/validate_windows_gui_capture.py \
+            --image artifacts/windows-main-menu.png \
+            --metadata artifacts/windows-version.json
       - name: Package source snapshot
         run: |
           mkdir -p artifacts

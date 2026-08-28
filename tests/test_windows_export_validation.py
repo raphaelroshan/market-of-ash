@@ -6,11 +6,14 @@ from __future__ import annotations
 import struct
 import sys
 import tempfile
+import json
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.validate_windows_export import inspect_windows_export
+from tools.capture_validation import write_rgb_png
+from tools.validate_windows_gui_capture import validate_capture
 
 
 def write_fixture(path: Path, machine: int = 0x8664) -> None:
@@ -48,6 +51,34 @@ def main() -> int:
             pass
         else:
             raise AssertionError("Windows exports without the embedded PCK footer should be rejected")
+
+        screenshot = root / "windows-main-menu.png"
+        pixels = bytearray()
+        for index in range(64):
+            pixels.extend((index * 3 % 256, index * 5 % 256, index * 7 % 256))
+        write_rgb_png(screenshot, (8, 8), bytes(pixels))
+        metadata = root / "windows-version.json"
+        metadata.write_text(
+            json.dumps(
+                {
+                    "product_name": "Market of Ash",
+                    "file_version": "0.9.0.0",
+                    "product_version": "0.9.0.0",
+                    "window_title": "Market of Ash",
+                    "window": {"width": 8, "height": 8},
+                }
+            ),
+            encoding="utf-8",
+        )
+        gui_details = validate_capture(
+            screenshot,
+            metadata,
+            minimum_width=8,
+            minimum_height=8,
+            minimum_colors=32,
+            minimum_bytes=1,
+        )
+        assert gui_details["dimensions"] == (8, 8)
     print("Windows export validator tests: PASS")
     return 0
 
