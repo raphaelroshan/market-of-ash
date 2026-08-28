@@ -69,6 +69,35 @@ jobs:
       - name: Run deterministic tests
         run: bash scripts/verify.sh
 
+  native-render-windows:
+    name: Windows native render matrix
+    runs-on: windows-latest
+    needs: [policy, tests]
+    if: needs.policy.result == 'success' && needs.tests.result == 'success'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+      - name: Capture and validate Windows UI
+        run: bash scripts/capture_native_ui.sh artifacts/native-render-windows
+      - name: Upload Windows render evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-render-windows-${{ github.run_number }}
+          path: artifacts/native-render-windows/
+          if-no-files-found: error
+          retention-days: 30
+
   ai-review:
     name: Multi-agent AI review
     runs-on: ubuntu-latest
