@@ -42,6 +42,7 @@ func _initialize() -> void:
 	var logical_viewport: Dictionary = menu_web_state.get("logical_viewport", {})
 	_expect(float(logical_viewport.get("width", 0)) > 0.0 and float(logical_viewport.get("height", 0)) > 0.0 and not Dictionary(menu_targets.get("start_game", {})).is_empty() and not Dictionary(menu_targets.get("large_text", {})).is_empty(), "Web diagnostics should publish logical viewport and visible Main Menu target geometry")
 	_expect(menu_accessibility_actions.size() == 2 and menu_accessibility_actions[0].get("id") == "start_game" and menu_accessibility_actions[0].get("enabled") and menu_accessibility_actions[1].get("id") == "continue_game" and not menu_accessibility_actions[1].get("enabled"), "Web accessibility actions should expose enabled Start and disabled Continue without inventing a second game rule")
+	_expect(menu_accessibility_actions[0].get("description") == ui.start_game_button.tooltip_text and not String(menu_accessibility_actions[0].get("description", "")).is_empty(), "Web accessibility actions should preserve the Godot control description for assistive HTML")
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")

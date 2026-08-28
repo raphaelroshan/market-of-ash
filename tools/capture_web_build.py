@@ -21,6 +21,7 @@ from capture_validation import (
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.keys import Keys
 
 INPUT_SETTLE_SECONDS = 0.2
 OPTION_ROW_HEIGHT = 28.0
@@ -72,23 +73,35 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
 
 
 def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: float = 5.0) -> None:
-    """Activate one screen-reader-facing HTML action and let Godot handle it."""
+    """Focus and keyboard-activate one screen-reader-facing HTML action."""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        activated = driver.execute_script(
+        button = driver.execute_script(
             """
             const actionId = arguments[0];
-            const button = Array.from(document.querySelectorAll('#market-of-ash-actions button'))
-              .find(candidate => candidate.dataset.action === actionId);
-            if (!button || button.disabled || typeof window.marketOfAshAccessibilityActivate !== 'function') {
-              return false;
-            }
-            button.click();
-            return true;
+            return Array.from(document.querySelectorAll('#market-of-ash-actions button'))
+              .find(candidate => candidate.dataset.action === actionId) || null;
             """,
             action_id,
         )
-        if activated:
+        if button is not None and button.is_enabled():
+            ready = driver.execute_script(
+                """
+                const button = arguments[0];
+                const actions = document.getElementById('market-of-ash-actions');
+                if (!actions || typeof window.marketOfAshAccessibilityActivate !== 'function') {
+                  return false;
+                }
+                button.focus();
+                const bounds = actions.getBoundingClientRect();
+                return document.activeElement === button && bounds.left >= 0 && bounds.width > 1;
+                """,
+                button,
+            )
+            if not ready:
+                time.sleep(0.1)
+                continue
+            button.send_keys(Keys.ENTER)
             time.sleep(INPUT_SETTLE_SECONDS)
             return
         time.sleep(0.1)
@@ -199,6 +212,9 @@ def wait_for_ui_state(
                     id: button.dataset.action,
                     label: button.textContent,
                     enabled: !button.disabled,
+                    description: button.getAttribute('aria-describedby')
+                      ? document.getElementById(button.getAttribute('aria-describedby')).textContent
+                      : '',
                   })) : [],
                 };
                 """
@@ -208,6 +224,7 @@ def wait_for_ui_state(
                     "id": str(action.get("id", "")),
                     "label": str(action.get("label", "")),
                     "enabled": bool(action.get("enabled", False)),
+                    "description": str(action.get("description", "")),
                 }
                 for action in last_state.get("accessibility_actions", [])
             ]
@@ -675,11 +692,11 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 3,
+                    "manifest_version": 4,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
-                    "assistive_action_bridge": "activated at 960x540; canvas pointer retained at 1280x720",
+                    "assistive_action_bridge": "focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },
