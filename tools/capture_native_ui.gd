@@ -38,11 +38,6 @@ func _run() -> void:
 	var ui: Control = scene.instantiate()
 	root.add_child(ui)
 	await process_frame
-	if OS.get_name() == "Windows":
-		var viewport_ready: bool = await _fit_requested_viewport()
-		if not viewport_ready:
-			quit(1)
-			return
 	var capture_user_prefix := "user://market_of_ash_native_capture_%d" % OS.get_process_id()
 	ui.settings_persistence_enabled = false
 	ui.autosave_enabled = false
@@ -59,6 +54,11 @@ func _run() -> void:
 	ui._on_large_text_toggled(false)
 	ui._refresh_continue_availability()
 	ui._show_main_menu()
+	if OS.get_name() == "Windows":
+		var viewport_ready: bool = await _fit_requested_viewport()
+		if not viewport_ready:
+			quit(1)
+			return
 	await _capture(ui, "main_menu", "main-menu")
 
 	ui._on_start_game_requested()
