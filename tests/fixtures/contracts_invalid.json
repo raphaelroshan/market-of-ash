@@ -1,0 +1,21 @@
+{
+  "max_history": 0,
+  "records": [
+    {
+      "id": "Bad Contract ID",
+      "name": "",
+      "sponsor": "",
+      "origin_id": "missing",
+      "destination_id": "missing",
+      "good_id": "missing",
+      "quantity": 0,
+      "deadline_days": 0,
+      "reward": 0,
+      "failure_penalty": -1,
+      "service_slots": 0,
+      "description": "",
+      "tradeoff": "",
+      "failure_recovery": ""
+    }
+  ]
+}

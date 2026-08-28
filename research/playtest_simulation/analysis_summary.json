@@ -1,0 +1,245 @@
+{
+  "seed_count": 100,
+  "row_count": 500,
+  "summary": [
+    {
+      "policy": "guided_water_delivery",
+      "policy_label": "Guided water delivery",
+      "runs": 100,
+      "completion_rate": 1.0,
+      "incident_rate": 0.35,
+      "mean_forecast_net_profit": 14.0,
+      "mean_realized_cash_profit": 18.8,
+      "mean_realized_economic_profit": 13.8,
+      "median_realized_economic_profit": 25.0,
+      "p10_realized_economic_profit": -7.0,
+      "p90_realized_economic_profit": 25.0,
+      "loss_rate": 0.35,
+      "mean_forecast_error": -0.2,
+      "mean_quantity": 2.0,
+      "mean_provisions_remaining": 11.0
+    },
+    {
+      "policy": "forecast_maximizer",
+      "policy_label": "Forecast maximizer",
+      "runs": 100,
+      "completion_rate": 1.0,
+      "incident_rate": 0.15,
+      "mean_forecast_net_profit": 99.0,
+      "mean_realized_cash_profit": 104.7,
+      "mean_realized_economic_profit": 99.7,
+      "median_realized_economic_profit": 100.0,
+      "p10_realized_economic_profit": 78.0,
+      "p90_realized_economic_profit": 110.0,
+      "loss_rate": 0.0,
+      "mean_forecast_error": 0.7,
+      "mean_quantity": 7.0,
+      "mean_provisions_remaining": 11.0
+    },
+    {
+      "policy": "gross_margin_chaser",
+      "policy_label": "Gross-margin chaser",
+      "runs": 100,
+      "completion_rate": 1.0,
+      "incident_rate": 0.15,
+      "mean_forecast_net_profit": 99.0,
+      "mean_realized_cash_profit": 104.7,
+      "mean_realized_economic_profit": 99.7,
+      "median_realized_economic_profit": 100.0,
+      "p10_realized_economic_profit": 78.0,
+      "p90_realized_economic_profit": 110.0,
+      "loss_rate": 0.0,
+      "mean_forecast_error": 0.7,
+      "mean_quantity": 7.0,
+      "mean_provisions_remaining": 11.0
+    },
+    {
+      "policy": "toll_road_only",
+      "policy_label": "Toll-road-only",
+      "runs": 100,
+      "completion_rate": 1.0,
+      "incident_rate": 0.03,
+      "mean_forecast_net_profit": 17.0,
+      "mean_realized_cash_profit": 25.62,
+      "mean_realized_economic_profit": 20.62,
+      "median_realized_economic_profit": 19.0,
+      "p10_realized_economic_profit": 19.0,
+      "p90_realized_economic_profit": 25.0,
+      "loss_rate": 0.0,
+      "mean_forecast_error": 3.62,
+      "mean_quantity": 9.0,
+      "mean_provisions_remaining": 11.0
+    },
+    {
+      "policy": "no_trade",
+      "policy_label": "No trade baseline",
+      "runs": 100,
+      "completion_rate": 0.0,
+      "incident_rate": 0.0,
+      "mean_forecast_net_profit": 0.0,
+      "mean_realized_cash_profit": 0.0,
+      "mean_realized_economic_profit": 0.0,
+      "median_realized_economic_profit": 0.0,
+      "p10_realized_economic_profit": 0.0,
+      "p90_realized_economic_profit": 0.0,
+      "loss_rate": 0.0,
+      "mean_forecast_error": 0.0,
+      "mean_quantity": 0.0,
+      "mean_provisions_remaining": 12.0
+    }
+  ],
+  "choice_mix": [
+    {
+      "policy": "forecast_maximizer",
+      "policy_label": "Forecast maximizer",
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "policy": "gross_margin_chaser",
+      "policy_label": "Gross-margin chaser",
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "policy": "guided_water_delivery",
+      "policy_label": "Guided water delivery",
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "policy": "no_trade",
+      "policy_label": "No trade baseline",
+      "choice": "No trade",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "policy": "toll_road_only",
+      "policy_label": "Toll-road-only",
+      "choice": "grain \u2192 cinderford / toll_road",
+      "runs": 100,
+      "share": 1.0
+    }
+  ],
+  "calibration": [
+    {
+      "policy": "guided_water_delivery",
+      "policy_label": "Guided water delivery",
+      "forecast_net": 14.0,
+      "realized_economic": 13.8,
+      "mean_error": -0.2,
+      "mean_absolute_error": 14.5
+    },
+    {
+      "policy": "forecast_maximizer",
+      "policy_label": "Forecast maximizer",
+      "forecast_net": 99.0,
+      "realized_economic": 99.7,
+      "mean_error": 0.7,
+      "mean_absolute_error": 7.0
+    },
+    {
+      "policy": "gross_margin_chaser",
+      "policy_label": "Gross-margin chaser",
+      "forecast_net": 99.0,
+      "realized_economic": 99.7,
+      "mean_error": 0.7,
+      "mean_absolute_error": 7.0
+    },
+    {
+      "policy": "toll_road_only",
+      "policy_label": "Toll-road-only",
+      "forecast_net": 17.0,
+      "realized_economic": 20.62,
+      "mean_error": 3.62,
+      "mean_absolute_error": 4.1
+    }
+  ],
+  "multi_trip_choice_mix": [
+    {
+      "delivery_index": 1,
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "delivery_index": 2,
+      "choice": "water \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    },
+    {
+      "delivery_index": 3,
+      "choice": "medicine \u2192 reedwatch / old_road",
+      "runs": 100,
+      "share": 1.0
+    }
+  ],
+  "market_memory_probe": {
+    "baseline_price": 32,
+    "initial_pressure": 0.16,
+    "post_delivery_price": 27,
+    "recovery_days": 6,
+    "sale_ok": true,
+    "saturated_pressure": 0.35
+  },
+  "event_summary": [
+    {
+      "policy_label": "Toll-road-only",
+      "event_id": "gatekeepers_chalk",
+      "event_choice_id": "pay_posted_toll",
+      "runs": 65,
+      "share_of_policy_runs": 0.65
+    },
+    {
+      "policy_label": "Forecast maximizer",
+      "event_id": "three_riders_no_banner",
+      "event_choice_id": "pay_for_escort",
+      "runs": 55,
+      "share_of_policy_runs": 0.55
+    },
+    {
+      "policy_label": "Gross-margin chaser",
+      "event_id": "three_riders_no_banner",
+      "event_choice_id": "pay_for_escort",
+      "runs": 55,
+      "share_of_policy_runs": 0.55
+    },
+    {
+      "policy_label": "Span material-reserve probe",
+      "event_id": "span_at_cinderford",
+      "event_choice_id": "reserve_materials_for_span",
+      "runs": 70,
+      "share_of_policy_runs": 0.7
+    },
+    {
+      "policy_label": "Last Barrel fair-share probe",
+      "event_id": "last_clean_barrel",
+      "event_choice_id": "share_barrels_fairly",
+      "runs": 60,
+      "share_of_policy_runs": 0.6
+    }
+  ],
+  "arms_policy_summary": [
+    {
+      "policy": "arms_broker_sale",
+      "runs": 100,
+      "completion_rate": 1.0,
+      "median_economic_profit": 37.0,
+      "mean_economic_profit": 37.0,
+      "mean_escalation": 2.0
+    },
+    {
+      "policy": "non_arms_relief",
+      "runs": 100,
+      "completion_rate": 0.85,
+      "median_economic_profit": 71.0,
+      "mean_economic_profit": 53.0,
+      "mean_escalation": 0.0
+    }
+  ]
+}

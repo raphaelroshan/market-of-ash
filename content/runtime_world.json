@@ -1,0 +1,647 @@
+{
+  "schema_version": 1,
+  "content_version": "1.15.0",
+  "goods": [
+    {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
+    {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
+    {"id": "scrap", "name": "Scrap", "base_price": 9, "weight": 1},
+    {"id": "medicine", "name": "Medicine", "base_price": 32, "weight": 1},
+    {"id": "charcoal", "name": "Charcoal", "base_price": 14, "weight": 1},
+    {"id": "cloth", "name": "Dyed Cloth", "base_price": 24, "weight": 1},
+    {"id": "sealed_arms_crate", "name": "Sealed Arms Crate", "base_price": 45, "weight": 2, "tags": ["arms", "regulated", "high_value"]}
+  ],
+  "planning_assumptions": {
+    "provision_value": 3,
+    "time_opportunity_cost_per_day": 2
+  },
+  "market_memory": {
+    "pressure_min": 0.0,
+    "pressure_max": 0.35,
+    "sale_impact_per_unit": 0.04,
+    "daily_decay_per_day": 0.03,
+    "crisis_effectiveness": {"0": 1.0, "1": 0.85, "2": 0.7, "3": 0.55},
+    "max_delivery_history": 12
+  },
+  "settlement_actions": {
+    "visit_slots_per_arrival": 2,
+    "actions": [
+      {
+        "id": "ashgate_provision_bundle",
+        "settlement_id": "ashgate",
+        "name": "Pack Warden rations",
+        "category": "logistics",
+        "available": true,
+        "cost": 6,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"provisions": 4, "reputation": {"wardens": 1}},
+        "description": "Pay the Ashgate stores to seal four route-ready provision packs.",
+        "tradeoff": "More travel flexibility now, but six fewer ashmarks for cargo.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "brine_cross_cistern_queue",
+        "settlement_id": "brine_cross",
+        "name": "Join the cistern queue",
+        "category": "information",
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"information_id": "brine_pump_failures", "settlement_resilience": {"settlement_id": "brine_cross", "delta": 1}},
+        "description": "Wait with the wellkeepers to learn which pumps are failing.",
+        "tradeoff": "Gain a durable pump-failure lead and strengthen the local reserve by one, but spend a day.",
+        "result": "The queue maps the failing pumps and organizes a protected reserve. Brine Cross resilience rises by one and the pump-failure lead is recorded.",
+        "unavailable_reason": "Available when Thin Wells begins at crisis stage 1."
+      },
+      {
+        "id": "ashgate_cinder_rider_arms_sale",
+        "settlement_id": "ashgate",
+        "name": "Sell a sealed crate to the Cinder Rider broker",
+        "category": "arms_trade",
+        "available": true,
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {
+          "arms_sale": {"good_id": "sealed_arms_crate", "quantity": 1, "payout": 82, "escalation_delta": 2, "reputation": {"wardens": -1, "caravans": -1}, "alternative_contract_id": "reedwatch_water_relief_01"}
+        },
+        "description": "A Cinder Rider broker offers 82 ashmarks for one sealed arms crate.",
+        "tradeoff": "Raises arms escalation to the first inspection threshold and costs standing with both road networks.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "ashgate_public_manifest_audit",
+        "settlement_id": "ashgate",
+        "name": "Fund a public manifest audit",
+        "category": "arms_recovery",
+        "available": true,
+        "cost": 12,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"arms_recovery": {"escalation_delta": -1, "information_id": "public_manifest_audit"}},
+        "description": "Pay neutral clerks to reconcile sealed-cargo manifests and publish the discrepancies.",
+        "tradeoff": "Costs money, one day, and a visit slot to reduce arms pressure by one stage.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "cinderford_repair_bench",
+        "settlement_id": "cinderford",
+        "name": "Reserve the repair bench",
+        "category": "logistics",
+        "available": true,
+        "once_per_campaign": true,
+        "cost": 14,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"information_id": "cinderford_repair_ledger", "route_condition": {"route_id": "toll_road", "id": "cinderford_road_repaired", "label": "Cinderford road repaired", "risk_delta": -0.03, "cost_delta": 0, "description": "Reserved foundry time reinforces the Toll Road approach through Cinderford."}},
+        "description": "Set aside foundry time for caravan repairs.",
+        "tradeoff": "Lower Toll Road exposure by three points in exchange for fourteen ashmarks and one day.",
+        "result": "The repair crew braces the Cinderford approach. Toll Road exposure falls by three points and the public ledger records the work.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "hollow_market_route_rumor",
+        "settlement_id": "hollow_market",
+        "name": "Buy a route rumor",
+        "category": "information",
+        "available": true,
+        "once_per_campaign": true,
+        "cost": 6,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "dry_cut_water_cache", "route_condition": {"route_id": "dry_cut", "id": "water_cache_marked", "label": "Water cache marked", "risk_delta": -0.05, "cost_delta": 0, "description": "A paid Hollow Market report marks a dependable water cache and narrows the exposed crossing."}},
+        "description": "Pay a broker for a recent route report of uncertain quality.",
+        "tradeoff": "Lower Dry Cut exposure by five points, but the report costs six ashmarks and never guarantees safety.",
+        "result": "The broker marks a dependable water cache. Dry Cut exposure falls by five points and the route lead is recorded.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "reedwatch_supply_shelter",
+        "settlement_id": "reedwatch",
+        "name": "Open the supply shelter",
+        "category": "relief",
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
+        "requires_completed_contract_id": "reedwatch_water_relief_01",
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"information_id": "reedwatch_supply_shelter_open", "settlement_resilience": {"settlement_id": "reedwatch", "delta": 1}, "reputation": {"caravans": 1}},
+        "description": "Reserve delivered goods for a protected local supply point.",
+        "tradeoff": "Spend one day to add one local resilience and one Free Caravan standing after completing water relief.",
+        "result": "The relief stores open as a protected public shelter. Reedwatch resilience and Free Caravan standing each rise by one.",
+        "unavailable_reason": "Requires completed Reedwatch Water Relief during crisis stage 1 or later."
+      }
+    ]
+  },
+  "contracts": {
+    "max_history": 20,
+    "records": [
+      {
+        "id": "reedwatch_water_relief_01",
+        "name": "Reedwatch Water Relief",
+        "sponsor": "Reedwatch Wellkeepers",
+        "origin_id": "ashgate",
+        "destination_id": "reedwatch",
+        "good_id": "water",
+        "quantity": 4,
+        "deadline_days": 2,
+        "reward": 150,
+        "failure_penalty": 8,
+        "service_slots": 1,
+        "description": "Carry four sealed water units from Ashgate to Reedwatch before the public reserve is rationed.",
+        "tradeoff": "A guaranteed premium and visible relief, but four hold spaces and a short deadline are committed.",
+        "failure_recovery": "Late cargo remains yours to sell, and the penalty never takes more ashmarks than you hold."
+      }
+    ]
+  },
+  "crew": {
+    "records": [
+      {
+        "id": "nara_vey",
+        "name": "Nara Vey",
+        "role": "Scout",
+        "personality": "Patient with evidence, impatient with official certainty.",
+        "recruit_settlement_id": "ashgate",
+        "recruit_cost": 20,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "provision_discount": 0,
+        "limitation": "Nara's report covers routes leaving the current settlement and becomes stale after the day advances.",
+        "hook": "A same-day assignment adds scout confidence and a route-specific warning without removing uncertainty.",
+        "route_notes": {
+          "old_road": "Fresh wheel cuts leave room for improvised blocks and unmarked riders.",
+          "toll_road": "The road surface is sound; queues, chalk marks, and inspections remain the uncertainty.",
+          "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours."
+        }
+      },
+      {
+        "id": "jorun_pale",
+        "name": "Jorun Pale",
+        "role": "Quartermaster",
+        "personality": "Dry, exacting, and unwilling to call an overloaded wagon brave.",
+        "recruit_settlement_id": "ashgate",
+        "recruit_cost": 18,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "provision_discount": 1,
+        "limitation": "Jorun's packing plan covers routes leaving the current settlement and expires after the day advances.",
+        "hook": "A same-day assignment reduces the selected route's provision use by one, never below one, and states the saving before departure.",
+        "route_notes": {
+          "old_road": "Jorun shifts the dense crates over the rear axle and seals one ration pack for later.",
+          "toll_road": "Jorun matches the manifest order to the gate queue and avoids opening a second ration pack.",
+          "dry_cut": "Jorun portions the water stops precisely; the cut still consumes at least one provision."
+        }
+      },
+      {
+        "id": "tess_oryn",
+        "name": "Tess Oryn",
+        "role": "Fixer",
+        "personality": "Warm in public, exact about who benefits from every stamped exception.",
+        "recruit_settlement_id": "ashgate",
+        "recruit_cost": 22,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "provision_discount": 0,
+        "limitation": "Tess opens negotiation responses only while assigned; using them may create visible political costs.",
+        "hook": "Assignment exposes a ledger challenge during Gatekeeper's Chalk without making the route automatically safe.",
+        "route_notes": {
+          "old_road": "Tess names the brokers who profit when official traffic abandons the road.",
+          "toll_road": "Tess recognizes which seal numbers force a clerk to defend the posted rate.",
+          "dry_cut": "Tess knows who sells passage claims, but not whether the markers still exist."
+        }
+      }
+    ]
+  },
+  "factions": {
+    "wardens": {
+      "name": "Ash Wardens",
+      "minimum": -10,
+      "maximum": 10,
+      "trusted_threshold": 2,
+      "toll_route_id": "toll_road",
+      "toll_discount": 3,
+      "below_label": "Unregistered",
+      "trusted_label": "Recognized carrier",
+      "effect": "Recognized carriers pay 3 fewer ashmarks on the Toll Road.",
+      "tradeoff": "The discount comes with a named manifest and greater official visibility."
+    },
+    "caravans": {
+      "name": "Free Caravans",
+      "minimum": -10,
+      "maximum": 10,
+      "trusted_threshold": 2,
+      "toll_route_id": "old_road",
+      "toll_discount": 2,
+      "below_label": "Unknown trader",
+      "trusted_label": "Known road-sharer",
+      "effect": "Known road-sharers pay 2 fewer ashmarks in Old Road guide and camp fees.",
+      "tradeoff": "The informal discount does not reduce the route's exposed cargo risk."
+    }
+  },
+  "events": {
+    "max_history": 20,
+    "records": [
+      {
+        "id": "gatekeepers_chalk",
+        "title": "The Gatekeeper's Chalk",
+        "category": "travel_decision",
+        "route_ids": ["toll_road"],
+        "trigger_chance": 0.65,
+        "trigger_roll_salt": 17,
+        "minimum_cargo_value": 60,
+        "active_contract_relevant": true,
+        "setup": "An Ash Warden clerk marks the caravan wheels with fresh chalk and disputes the posted passage rate.",
+        "stakes": "Pay for certainty, spend time and provisions on an exposed detour, or wait for a stamped review.",
+        "choices": [
+          {
+            "id": "pay_posted_toll",
+            "label": "Pay 6 ashmarks",
+            "money_cost": 6,
+            "reputation_delta": {"wardens": 1},
+            "provision_cost": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "outcome": "The clerk clears the chalk and records the caravan's passage."
+          },
+          {
+            "id": "take_dust_detour",
+            "label": "Take the dust detour",
+            "money_cost": 0,
+            "provision_cost": 1,
+            "days": 1,
+            "cargo_risk": 0.25,
+            "outcome": "The caravan avoids the gate but spends another day and provision on exposed ground."
+          },
+          {
+            "id": "wait_for_stamped_review",
+            "label": "Wait for stamped review",
+            "money_cost": 0,
+            "provision_cost": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "outcome": "The office confirms the original fare after a full day of delay."
+          },
+          {
+            "id": "challenge_chalk_ledger",
+            "label": "Let Tess challenge the ledger",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "requires_assigned_crew_id": "tess_oryn",
+            "information_id": "gatekeeper_invented_tolls",
+            "reputation_delta": {"wardens": -1},
+            "outcome": "Tess forces the clerk to expose a pattern of invented tolls, but the Wardens record the challenge."
+          }
+        ]
+      },
+      {
+        "id": "span_at_cinderford",
+        "title": "The Span at Cinderford",
+        "category": "travel_decision",
+        "route_ids": ["old_road"],
+        "trigger_chance": 0.70,
+        "trigger_roll_salt": 29,
+        "minimum_cargo_value": 0,
+        "active_contract_relevant": false,
+        "trigger_good_ids_any": ["scrap", "charcoal"],
+        "minimum_trigger_good_quantity": 2,
+        "setup": "A Cinderford bridge crew has shored up a failed support and recognizes repair stock in the caravan.",
+        "stakes": "Trade the material for immediate margin, reserve it for a safer public span, carry the measurements onward, or turn back with the load intact.",
+        "choices": [
+          {
+            "id": "sell_materials_at_premium",
+            "label": "Sell 2 repair materials for 30 ashmarks",
+            "money_cost": 0,
+            "money_reward": 30,
+            "provision_cost": 0,
+            "material_quantity": 2,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "outcome": "The crew buys the stock for private repair work; the public span remains exposed."
+          },
+          {
+            "id": "reserve_materials_for_span",
+            "label": "Reserve 2 materials for the public span",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 2,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "route_condition": {
+              "route_id": "old_road",
+              "id": "cinderford_span_patched",
+              "label": "Cinderford span patched",
+              "risk_delta": -0.10,
+              "cost_delta": 0,
+              "description": "Reserved repair stock has lowered the chance of a load failure at the Cinderford span."
+            },
+            "outcome": "The crew bolts the reserved stock into the public support and reopens a steadier crossing."
+          },
+          {
+            "id": "carry_repair_message",
+            "label": "Carry the repair measurements onward",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "route_condition": {
+              "route_id": "old_road",
+              "id": "cinderford_span_surveyed",
+              "label": "Cinderford span surveyed",
+              "risk_delta": -0.05,
+              "cost_delta": 0,
+              "description": "Delivered measurements let the road crews mark a safer load line across the span."
+            },
+            "outcome": "The next road crew receives exact measurements and marks a safer load line."
+          },
+          {
+            "id": "turn_back_with_cargo",
+            "label": "Turn back with the cargo intact",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "origin",
+            "outcome": "The caravan reverses before the failed support and preserves the full load."
+          }
+        ]
+      },
+      {
+        "id": "last_clean_barrel",
+        "title": "The Last Clean Barrel",
+        "category": "travel_decision",
+        "route_ids": ["old_road", "toll_road", "dry_cut"],
+        "destination_ids": ["reedwatch", "brine_cross"],
+        "crisis_stage_min": 1,
+        "trigger_chance": 0.60,
+        "trigger_roll_salt": 19,
+        "minimum_cargo_value": 0,
+        "active_contract_relevant": false,
+        "trigger_good_ids_any": ["water"],
+        "minimum_trigger_good_quantity": 2,
+        "trade_quantity": 2,
+        "premium_per_unit": 6,
+        "setup": "The destination's public water queue is down to its last sealed barrel when the caravan reaches the ration line.",
+        "stakes": "Take the scarcity premium, strengthen the public queue, honor a relief commitment, or keep the load for an ordinary market sale.",
+        "choices": [
+          {
+            "id": "sell_barrels_at_peak",
+            "label": "Sell 2 water at the emergency premium",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "premium_sale",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "Private buyers take the sealed barrels at the posted emergency premium."
+          },
+          {
+            "id": "share_barrels_fairly",
+            "label": "Share 2 water through the public queue",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "fair_share",
+            "requires_active_contract": false,
+            "resilience_delta": 2,
+            "reputation_delta": {"caravans": 1},
+            "outcome": "The queue stewards ration both barrels and add the caravan's name to the public reserve ledger."
+          },
+          {
+            "id": "honor_relief_commitment",
+            "label": "Keep the load for the relief commitment",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": true,
+            "resilience_delta": 0,
+            "outcome": "The queue stands aside while the caravan reports directly to the named contract sponsor."
+          },
+          {
+            "id": "keep_barrels_sealed",
+            "label": "Keep the barrels sealed for the market",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The caravan keeps control of the load and enters the ordinary market."
+          }
+        ]
+      },
+      {
+        "id": "three_riders_no_banner",
+        "title": "Three Riders, No Banner",
+        "category": "travel_decision",
+        "route_ids": ["old_road", "dry_cut"],
+        "trigger_chance": 0.55,
+        "trigger_roll_salt": 29,
+        "minimum_cargo_value": 70,
+        "active_contract_relevant": false,
+        "setup": "Three unmarked riders match the caravan's pace and offer to guarantee the exposed crossing for a price.",
+        "stakes": "Buy certainty, risk one disclosed cargo unit, trade medicine for passage, or wait long enough to identify their sponsor mark.",
+        "choices": [
+          {
+            "id": "pay_for_escort",
+            "label": "Pay 10 ashmarks for escort",
+            "money_cost": 10,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The riders form a close screen around the caravan until the destination markers appear."
+          },
+          {
+            "id": "cross_without_escort",
+            "label": "Refuse and cross alone",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.45,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The caravan keeps its money and accepts the disclosed exposed-unit risk."
+          },
+          {
+            "id": "trade_medicine_for_passage",
+            "label": "Trade 1 medicine for passage",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "cargo_cost": {"good_id": "medicine", "quantity": 1},
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "One rider pockets the sealed medicine and leads the caravan through a screened cut."
+          },
+          {
+            "id": "wait_and_read_the_tracks",
+            "label": "Wait and read the riders' tracks",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "three_riders_sponsor_mark",
+            "reputation_delta": {"caravans": 1},
+            "outcome": "At dusk the riders leave; their tack has pressed a repeated sponsor mark into the ash."
+          }
+        ]
+      }
+    ]
+  },
+  "settlements": {
+    "ashgate": {
+      "name": "Ashgate",
+      "role": "regulated hub",
+      "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
+      "faction_price_modifier": 1.0
+    },
+    "brine_cross": {
+      "name": "Brine Cross",
+      "role": "water market",
+      "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
+      "faction_price_modifier": 1.0
+    },
+    "cinderford": {
+      "name": "Cinderford",
+      "role": "foundry town",
+      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0, "sealed_arms_crate": 1.0},
+      "faction_price_modifier": 1.0
+    },
+    "hollow_market": {
+      "name": "Hollow Market",
+      "role": "free-trade bazaar",
+      "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8, "sealed_arms_crate": 1.0},
+      "faction_price_modifier": 0.95
+    },
+    "reedwatch": {
+      "name": "Reedwatch",
+      "role": "frontier settlement",
+      "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9, "sealed_arms_crate": 1.0},
+      "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0},
+      "faction_price_modifier": 1.05
+    }
+  },
+  "arms_trade": {
+    "minimum": 0,
+    "maximum": 6,
+    "inspection_threshold": 2,
+    "inspection_route_id": "toll_road",
+    "inspection_surcharge": 5,
+    "quiet_label": "Quiet manifests",
+    "noticed_label": "Noticed traffic",
+    "warning": "This sale raises arms escalation to a visible Warden inspection threshold.",
+    "recovery": "Public route support and verified warning-sharing will provide later de-escalation paths."
+  },
+  "crisis": {
+    "stages": [
+      {"id": 0, "label": "Ordinary pressure", "starts_day": 1, "objective": "Compare markets and prepare a first route.", "route_effects": {}},
+      {"id": 1, "label": "Thin wells", "starts_day": 4, "objective": "Move water or medicine before local reserves harden.", "route_effects": {"old_road": {"risk_delta": 0.05, "cost_delta": 0, "description": "Thin wells draw more opportunists to the unguarded crossings."}}},
+      {"id": 2, "label": "Empty reservoir", "starts_day": 7, "objective": "Build resilience while routes and factions compete for supply.", "route_effects": {"old_road": {"risk_delta": 0.10, "cost_delta": 0, "description": "Water convoys crowd the exposed road and make ambushes easier."}, "toll_road": {"risk_delta": 0.0, "cost_delta": 2, "description": "Emergency inspections add two ashmarks to the regulated corridor."}}},
+      {"id": 3, "label": "Settlement decision", "starts_day": 10, "objective": "Secure a durable relief outcome without letting arms pressure dominate the roads.", "route_effects": {"old_road": {"risk_delta": 0.15, "cost_delta": 0, "description": "The final water rush leaves the open road at its most exposed."}, "toll_road": {"risk_delta": 0.0, "cost_delta": 4, "description": "Cistern controls add four ashmarks to every official passage."}}}
+    ],
+    "endings": [
+      {
+        "id": "open_routes_relief",
+        "title": "Open Routes, Shared Wells",
+        "required_contract_id": "reedwatch_water_relief_01",
+        "minimum_reedwatch_resilience": 2,
+        "maximum_arms_escalation": 1,
+        "summary": "Reedwatch's public reserve holds, relief caravans retain access, and the basin enters the next season without armed traffic controlling the roads. The caravan chose accountable supply over a single controlling buyer."
+      },
+      {
+        "id": "ending_warden_reserve",
+        "title": "Order at the Cistern",
+        "minimum_warden_reputation": 3,
+        "maximum_caravan_reputation": 1,
+        "maximum_arms_escalation": 1,
+        "summary": "Public water reserves remain uneven, but the Ash Wardens secure the cistern roads under permits. Arms traffic stays contained; the caravan chose predictable access and regulated margins over an open network."
+      },
+      {
+        "id": "ending_free_caravan_routes",
+        "title": "No Road Owns the Sky",
+        "minimum_caravan_reputation": 2,
+        "maximum_warden_reputation": 1,
+        "maximum_arms_escalation": 1,
+        "summary": "Shared water reaches exposed settlements through independent caravans, keeping access open without Warden permits. Arms traffic stays contained; the caravan chose volatile margins, public information, and risk shared across the road network."
+      },
+      {
+        "id": "ending_ash_merchant",
+        "title": "The Best Margin",
+        "minimum_money": 220,
+        "maximum_reedwatch_resilience": 1,
+        "maximum_arms_escalation": 1,
+        "summary": "The caravan becomes the basin's indispensable broker while Reedwatch's public reserve remains fragile. Access follows purchasing power, arms traffic stays contained, and the player chose concentrated profit over shared recovery."
+      }
+    ]
+  },
+  "routes": {
+    "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
+    "toll_road": {"name": "Toll Road", "endpoints": ["ashgate", "brine_cross"], "stops": ["ashgate", "cinderford", "brine_cross"], "segments": [{"endpoints": ["ashgate", "cinderford"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["cinderford", "brine_cross"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.10}], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
+    "dry_cut": {"name": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."}
+  }
+}

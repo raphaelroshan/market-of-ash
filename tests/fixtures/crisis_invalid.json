@@ -1,0 +1,37 @@
+{
+  "stages": [
+    {"id": 2, "label": "", "starts_day": 0, "objective": ""}
+  ],
+  "endings": [
+    {
+      "id": "open_routes_relief",
+      "title": "",
+      "required_contract_id": "",
+      "minimum_reedwatch_resilience": -1,
+      "maximum_arms_escalation": -1,
+      "summary": ""
+    },
+    {
+      "id": "open_routes_relief",
+      "title": "Duplicate",
+      "maximum_arms_escalation": 0,
+      "summary": "Duplicate ID"
+    },
+    {
+      "id": "ending_free_caravan_routes",
+      "title": "No Road Owns the Sky",
+      "minimum_caravan_reputation": 2,
+      "maximum_warden_reputation": 1,
+      "maximum_arms_escalation": 1,
+      "summary": "Valid control record"
+    },
+    {
+      "id": "ending_ash_merchant",
+      "title": "The Best Margin",
+      "minimum_money": 220,
+      "maximum_reedwatch_resilience": 1,
+      "maximum_arms_escalation": 1,
+      "summary": "Valid control record"
+    }
+  ]
+}

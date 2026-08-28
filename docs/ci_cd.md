@@ -20,7 +20,8 @@ The pipeline is designed to catch defects before visual polish or storefront pac
 | AI gameplay review | Player-facing behavior, fairness, onboarding, failure states, design fit | Reports; blocks on critical findings. |
 | AI QA review | Edge cases, test gaps, input paths, save/load, reproducibility | Reports; blocks on critical findings. |
 | AI security review | Credential exposure, unsafe process behavior, dependency and prompt-injection risks | Reports; blocks on critical findings. |
-| Packaging | Project import, source snapshot, and Windows export when presets exist | Blocks only when release workflow requires export presets. |
+| Packaging | Project import, source snapshot, Windows/Web export, checksum-pinned Windows resource stamping, exact portable-archive contents, clean extraction, and headless/visible launch of the extracted executable | Blocks after export presets are present. |
+| Web render | Launches the packaged Web build in Linux Chrome/Firefox and Windows Edge, verifies the loading overlay clears, drives semantic HTML actions, generated Shop actions, planning fields, presentation checkboxes, keyboard remapping, modified-shortcut rejection, and Escape cancellation at the minimum viewport, retains real-canvas pointer traversal at the standard viewport, validates the canvas label/live region/control region and semantic order, and captures a declared normal journey, route-event, Pause, confirmation, and large-text matrix. | Blocks on browser startup, unexpected browser navigation, an unexpected app-published/assistive state, mismatched action/control semantics, failed keyboard/form/remapping activation or focus continuity, superficial pixel changes, an incomplete per-viewport matrix, invalid PNGs, or unexpected dimensions. |
 
 ## Multi-agent model
 
@@ -44,22 +45,19 @@ Reviewers should read the artifact, fix blocking findings, and either resolve wa
 
 ## Release behavior
 
-Pushes to `main` produce a release-candidate artifact containing a source snapshot and, once `export_presets.cfg` exists, a Windows build. Version tags such as `v0.1.0` invoke the guarded release workflow. The tag workflow requires deterministic tests and a Windows export preset, then uploads the Windows candidate and a release manifest.
+Pull requests and pushes to `main` produce a release-candidate artifact containing a source snapshot plus Windows and Web builds. Packaging verifies that the Windows output is an x86-64 PE with a structurally valid embedded PCK, stamps and checks its product/version resources, creates a portable ZIP with exactly one expected executable, extracts it into a clean runner directory, and launches that extracted copy both headlessly and as a visible 960×540 GUI before upload. Dependent jobs serve the packaged Web files with Godot's requested isolation headers in Linux Chrome/Firefox and Windows Edge, wait on a deliberately exposed non-personal UI-state object, and upload 960×540 and 1280×720 rendered screenshots. The state object contains only the current screen ID, presentation flags, input bindings, settlement/event IDs, selected/held planning quantities, coarse campaign resources, semantic action labels/enabled states/descriptions, and form labels/options/values/bounds needed to verify deterministic browser behavior. At 960×540 the harness focuses real HTML buttons and presses Enter, exercises a generated contract button, changes native select/number fields, toggles native presentation checkboxes, rebinds Pause to `R`, restores defaults, and checks that Godot publishes the expected state while preserving semantic focus; at 1280×720 it retains canvas pointer traversal. Every candidate includes a machine-readable manifest with the game/content versions, exact commit and ref, workflow run ID/number, repository identity, and target platforms, plus `SHA256SUMS.txt` covering the executable, portable ZIP, core Web payload, Windows GUI evidence, source snapshot, and manifest. Version tags such as `v0.1.0` or manual dispatch invoke the guarded release workflow with the same clean-extraction smoke test, GUI/resource verification, provenance record, and checksums.
+
+Runtime exports include the game scenes, scripts, and canonical content but exclude repository-only tests, tools, research, documentation, and workflow files. The separately packaged source snapshot retains those materials for review and reproduction.
+
+Generated `build/` and `artifacts/` directories, plus repository-only `research/`, carry `.gdignore` sentinels so repeated local exports never enter Godot's resource database. Export presets also exclude the exact nested output paths. The repository policy check enforces both safeguards.
 
 Publishing to Steam or Epic Games Store remains a deliberate human-controlled step. Add store upload credentials only after the build has passed a release review, and use protected environments with required reviewers for actual deployment.
 
 ## Local execution
 
-Run the deterministic project-specific test and policy checks locally:
+Run the complete local policy, content-validation, and deterministic Godot suite:
 
 ```bash
-python tools/policy_check.py --repo local
-python tools/validate_content.py --manifest content/content_manifest.json
-python tools/validate_political_geography.py --data content/political_geography.json
-python tools/validate_tribal_conflict.py --data content/tribal_conflict.json
-python tools/validate_economy_and_settlements.py \
-  --economy content/economy_framework.json \
-  --settlements content/settlement_actions.json
 bash scripts/verify.sh
 ```
 
@@ -84,6 +82,8 @@ If Godot is not installed, `scripts/verify.sh` exits with a clear setup error. D
 | `AI_REVIEW_REQUIRED` | `false` | Whether missing LLM access should block CI. |
 
 The workflow deliberately does not provide an automatic production deploy. Storefront release should remain gated by a clean tag, human review, and platform-specific credentials.
+
+Workflow plumbing uses the current Node 24-based major versions of GitHub's checkout, Python setup, and artifact upload actions so release evidence is not produced through deprecated action runtimes.
 
 ## All-games validation
 

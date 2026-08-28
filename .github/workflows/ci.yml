@@ -19,12 +19,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Policy checks
@@ -40,6 +40,8 @@ jobs:
           python tools/validate_economy_and_settlements.py \
             --economy content/economy_framework.json \
             --settlements content/settlement_actions.json
+      - name: Validate runtime world content
+        run: python tools/validate_runtime_world.py --data content/runtime_world.json
 
   tests:
     name: Godot headless tests (${{ matrix.os }})
@@ -53,7 +55,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -67,6 +69,37 @@ jobs:
       - name: Run deterministic tests
         run: bash scripts/verify.sh
 
+  native-render-windows:
+    name: Windows minimum native render
+    runs-on: windows-latest
+    needs: [policy, tests]
+    if: needs.policy.result == 'success' && needs.tests.result == 'success'
+    env:
+      MARKET_CAPTURE_GEOMETRIES: 960x540
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+      - name: Capture and validate Windows UI
+        run: bash scripts/capture_native_ui.sh artifacts/native-render-windows
+      - name: Upload Windows render evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-render-windows-${{ github.run_number }}
+          path: artifacts/native-render-windows/
+          if-no-files-found: error
+          retention-days: 30
+
   ai-review:
     name: Multi-agent AI review
     runs-on: ubuntu-latest
@@ -78,12 +111,12 @@ jobs:
       AI_REVIEW_REQUIRED: ${{ vars.AI_REVIEW_REQUIRED || 'false' }}
     steps:
       - name: Checkout full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install AI client when enabled
@@ -111,7 +144,7 @@ jobs:
             --fail-on critical
       - name: Upload review report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ai-review-${{ github.run_number }}
           path: artifacts/
@@ -128,7 +161,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           filter: tree:0
@@ -138,28 +171,176 @@ jobs:
           version: 4.4.1
           use-dotnet: false
           include-templates: true
+      - name: Setup Windows resource editor
+        shell: pwsh
+        run: |
+          $toolDirectory = Join-Path $env:RUNNER_TEMP "rcedit-v2.0.0"
+          $toolPath = Join-Path $toolDirectory "rcedit.exe"
+          $expectedHash = "3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+          New-Item -ItemType Directory -Path $toolDirectory -Force | Out-Null
+          Invoke-WebRequest `
+            -Uri "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe" `
+            -OutFile $toolPath
+          $actualHash = (Get-FileHash -Path $toolPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) {
+            throw "rcedit checksum mismatch: expected $expectedHash, got $actualHash"
+          }
+          $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Stamp build provenance
+        run: |
+          python -c "import os; from pathlib import Path; p=Path('project.godot'); s=p.read_text(encoding='utf-8'); assert 'build_commit=\"development\"' in s and 'build_run=\"local\"' in s; s=s.replace('build_commit=\"development\"', 'build_commit=\"'+os.environ['GITHUB_SHA']+'\"').replace('build_run=\"local\"', 'build_run=\"'+os.environ['GITHUB_RUN_ID']+'\"'); p.write_text(s, encoding='utf-8')"
       - name: Import and validate project
         run: godot --headless --path . --editor --quit
-      - name: Export Windows build when presets exist
+      - name: Export Windows and Web builds when presets exist
         run: |
           mkdir -p build artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           if [ -f export_presets.cfg ]; then
             godot --headless --path . --export-release "Windows Desktop" "build/${slug}.exe"
+            mkdir -p build/web
+            godot --headless --path . --export-release "Web" "build/web/index.html"
           else
             echo "No export_presets.cfg yet; packaging source and test evidence only."
           fi
+      - name: Validate exported build payloads
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          test -s "build/${slug}.exe"
+          python tools/validate_windows_export.py "build/${slug}.exe"
+          test -s build/web/index.html
+          test -s build/web/index.pck
+          test -s build/web/index.wasm
+          generated_import=$(find build -type f -name '*.import' -print -quit)
+          test -z "$generated_import"
+      - name: Package and clean-smoke Windows portable build
+        shell: pwsh
+        run: |
+          $cleanDirectory = Join-Path $env:RUNNER_TEMP "market-of-ash-clean-$env:GITHUB_RUN_ID"
+          ./tools/package_windows_portable.ps1 `
+            -Executable build/market-of-ash.exe `
+            -Archive artifacts/market-of-ash-windows.zip `
+            -ExtractDirectory $cleanDirectory
+          $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
+          python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
+          python tools/validate_windows_export.py $cleanExecutable
+          & $cleanExecutable --headless --quit-after 2
+          if ($LASTEXITCODE -ne 0) {
+            throw "Clean-extracted Windows package exited with code $LASTEXITCODE"
+          }
+          "MARKET_CLEAN_WINDOWS_EXE=$cleanExecutable" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Capture packaged Windows GUI and metadata
+        shell: pwsh
+        run: |
+          ./tools/capture_windows_package.ps1 `
+            -Executable $env:MARKET_CLEAN_WINDOWS_EXE `
+            -Screenshot artifacts/windows-main-menu.png `
+            -Metadata artifacts/windows-version.json
+      - name: Validate packaged Windows GUI and metadata
+        run: |
+          python tools/validate_windows_gui_capture.py \
+            --image artifacts/windows-main-menu.png \
+            --metadata artifacts/windows-version.json
       - name: Package source snapshot
         run: |
           mkdir -p artifacts
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
+      - name: Create release manifest
+        run: |
+          python -c "import json, os, re; m=json.load(open('tools/ci_manifest.json')); p=open('project.godot', encoding='utf-8').read(); c=json.load(open('content/runtime_world.json')); m.update({'game_version': re.search(r'^config/version=\"([^\"]+)\"', p, re.M).group(1), 'content_version': c['content_version'], 'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'], 'run_id': os.environ['GITHUB_RUN_ID'], 'run_number': os.environ['GITHUB_RUN_NUMBER']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2); print(json.dumps(m, indent=2))"
+      - name: Record release checksums
+        run: |
+          slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
+          sha256sum \
+            "build/${slug}.exe" \
+            artifacts/market-of-ash-windows.zip \
+            build/web/index.html \
+            build/web/index.pck \
+            build/web/index.wasm \
+            "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
+            artifacts/windows-main-menu.png \
+            artifacts/windows-version.json \
+            artifacts/release_manifest.json > artifacts/SHA256SUMS.txt
+          test -s artifacts/SHA256SUMS.txt
+          sha256sum -c artifacts/SHA256SUMS.txt
       - name: Upload release candidate
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-candidate-${{ github.run_number }}
           path: |
             build/
             artifacts/
+          if-no-files-found: error
+          retention-days: 30
+
+  web-render:
+    name: Render packaged Web build (${{ matrix.browser }})
+    runs-on: ${{ matrix.os }}
+    needs: [package]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chrome
+            os: ubuntu-latest
+          - browser: firefox
+            os: ubuntu-latest
+          - browser: edge
+            os: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout capture tools
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Download release candidate
+        uses: actions/download-artifact@v7
+        with:
+          name: release-candidate-${{ github.run_number }}
+          path: candidate
+      - name: Install browser capture driver
+        run: python -m pip install --disable-pip-version-check selenium==4.29.0
+      - name: Verify browser binary
+        run: |
+          if [ "${{ matrix.browser }}" = "firefox" ]; then
+            firefox --version
+            command -v xvfb-run
+          elif [ "${{ matrix.browser }}" = "chrome" ]; then
+            google-chrome --version
+          else
+            echo "Microsoft Edge will be verified by its WebDriver session."
+          fi
+      - name: Launch and capture Web build
+        run: |
+          mkdir -p "artifacts/web-render-${{ matrix.browser }}"
+          python tools/serve_web_build.py --directory candidate/build/web --port 8765 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null
+          capture_args=(
+            --browser "${{ matrix.browser }}"
+            --url http://127.0.0.1:8765/index.html
+            --output-dir "artifacts/web-render-${{ matrix.browser }}"
+          )
+          if [ "${{ matrix.browser }}" = "firefox" ]; then
+            MOZ_WEBRENDER=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a \
+              python tools/capture_web_build.py "${capture_args[@]}"
+          else
+            python tools/capture_web_build.py "${capture_args[@]}"
+          fi
+      - name: Upload rendered browser evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-render-${{ matrix.browser }}-${{ github.run_number }}
+          path: artifacts/web-render-${{ matrix.browser }}/
           if-no-files-found: error
           retention-days: 30

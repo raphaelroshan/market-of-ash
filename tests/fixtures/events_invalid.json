@@ -1,0 +1,54 @@
+{
+  "max_history": 0,
+  "records": [
+    {
+      "id": "Bad Event ID",
+      "title": "",
+      "category": "",
+      "route_ids": ["missing"],
+      "destination_ids": ["missing"],
+      "crisis_stage_min": 4,
+      "trigger_chance": 2.0,
+      "trigger_roll_salt": -1,
+      "minimum_cargo_value": -1,
+      "active_contract_relevant": "yes",
+      "trigger_good_ids_any": ["missing_good"],
+      "minimum_trigger_good_quantity": -1,
+      "trade_quantity": -1,
+      "premium_per_unit": -1,
+      "setup": "",
+      "stakes": "",
+      "choices": [
+        {
+          "id": "only_choice",
+          "label": "",
+          "money_cost": -1,
+          "money_reward": -1,
+          "provision_cost": -1,
+          "material_quantity": -1,
+          "days": -1,
+          "cargo_risk": 2.0,
+          "arrival_target": "nowhere",
+          "trade_mode": "magic",
+          "requires_active_contract": "yes",
+          "resilience_delta": 11,
+          "cargo_cost": "bad",
+          "information_id": "Bad Lead",
+          "requires_assigned_crew_id": "Bad Crew",
+          "reputation_delta": "bad",
+          "route_condition": "bad",
+          "outcome": ""
+        },
+        {
+          "id": "second_choice",
+          "label": "Wait",
+          "money_cost": 0,
+          "provision_cost": 0,
+          "days": 0,
+          "cargo_risk": 0.0,
+          "outcome": "Wait safely."
+        }
+      ]
+    }
+  ]
+}

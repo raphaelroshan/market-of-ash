@@ -1,15 +1,17 @@
 .godot/
 *.import
+*.translation
 export.cfg
-export_presets.cfg
 user://
 *.save
 *.log
-build/
+build/*
+!build/.gdignore
 market_of_ash_agent_package.zip
 .DS_Store
 Thumbs.db
-artifacts/
+artifacts/*
+!artifacts/.gdignore
 
 __pycache__/
 *.pyc

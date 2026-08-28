@@ -15,6 +15,11 @@ SECRET_PATTERNS = [
     re.compile(r"(?:ghp_|github_pat_|sk-)[A-Za-z0-9_-]{16,}"),
     re.compile(r"BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY", re.I),
 ]
+WINDOWS_VERSION_PATTERN = re.compile(r"^[0-9]+(?:\.[0-9]+){0,3}$")
+
+
+def valid_windows_version(value: str) -> bool:
+    return bool(WINDOWS_VERSION_PATTERN.fullmatch(value))
 
 
 def git_diff_names(base: str, root: Path) -> list[str]:
@@ -39,6 +44,26 @@ def main() -> int:
         if not (root / item).exists():
             errors.append(f"required path missing: {item}")
 
+    for generated_directory in ["build", "artifacts", "research"]:
+        directory = root / generated_directory
+        if directory.exists() and not (directory / ".gdignore").is_file():
+            errors.append(f"Godot-excluded directory is missing {generated_directory}/.gdignore")
+
+    export_presets_path = root / "export_presets.cfg"
+    if export_presets_path.is_file():
+        preset_text = export_presets_path.read_text(encoding="utf-8")
+        required_export_exclusions = ["build/*", "build/web/*", "artifacts/*"]
+        for line_number, line in enumerate(preset_text.splitlines(), start=1):
+            if not line.startswith("exclude_filter="):
+                continue
+            for exclusion in required_export_exclusions:
+                if exclusion not in line:
+                    errors.append(f"export preset exclusion missing {exclusion} at export_presets.cfg:{line_number}")
+        for setting in ("application/file_version", "application/product_version"):
+            match = re.search(rf'^{re.escape(setting)}="([^"]*)"$', preset_text, re.MULTILINE)
+            if match is None or not valid_windows_version(match.group(1)):
+                errors.append(f"Windows export requires a numeric {setting} with at most four components")
+
     gd_files = list(root.glob("**/*.gd"))
     test_files = list((root / "tests").glob("**/*")) if (root / "tests").exists() else []
     if gd_files and not any(path.suffix == ".gd" for path in test_files):
@@ -48,11 +73,12 @@ def main() -> int:
     if changed and any(path.endswith(".gd") for path in changed) and not any("test" in path.lower() for path in changed):
         warnings.append("GDScript changed without a changed test file; review coverage manually")
 
+    ignored_directories = {".git", ".godot", "artifacts", "build", "__pycache__"}
     for path in root.rglob("*"):
-        if not path.is_file() or ".git" in path.parts:
+        if not path.is_file() or any(part in ignored_directories for part in path.parts):
             continue
         relative = str(path.relative_to(root))
-        if ".godot" in path.parts or path.suffix in {".save", ".log"} or "user://" in relative:
+        if path.suffix in {".save", ".log"} or "user://" in relative:
             warnings.append(f"generated/local-looking file present: {relative}")
         if path.stat().st_size > 5_000_000:
             errors.append(f"large artifact exceeds 5 MB: {relative}")
