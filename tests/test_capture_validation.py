@@ -15,9 +15,12 @@ from tools.capture_validation import (
     REQUIRED_CAPTURE_SCREENS,
     VIEWPORTS,
     changed_pixel_ratio,
+    apply_color_matrix,
     png_dimensions,
+    png_rgb,
     require_distinct_screen,
     validate_capture_matrix,
+    write_rgb_png,
 )
 
 
@@ -26,7 +29,7 @@ def png_chunk(chunk_type: bytes, payload: bytes) -> bytes:
     return struct.pack(">I", len(payload)) + chunk_type + payload + struct.pack(">I", checksum)
 
 
-def write_rgb_png(path: Path, width: int, height: int, color: tuple[int, int, int]) -> None:
+def write_solid_rgb_png(path: Path, width: int, height: int, color: tuple[int, int, int]) -> None:
     scanline = bytes(color) * width
     raw = b"".join(b"\x00" + scanline for _ in range(height))
     path.write_bytes(
@@ -54,12 +57,18 @@ def main() -> int:
         dark = root / "dark.png"
         light = root / "light.png"
         light_rgba = root / "light-rgba.png"
-        write_rgb_png(dark, 4, 3, (10, 10, 10))
-        write_rgb_png(light, 4, 3, (240, 240, 240))
+        write_solid_rgb_png(dark, 4, 3, (10, 10, 10))
+        write_solid_rgb_png(light, 4, 3, (240, 240, 240))
         write_rgba_png(light_rgba, 4, 3, (240, 240, 240, 128))
         assert png_dimensions(dark) == (4, 3)
         assert changed_pixel_ratio(dark, light) == 1.0
         assert changed_pixel_ratio(light, light_rgba) == 0.0
+        round_trip = root / "round-trip.png"
+        source_size, source_rgb = png_rgb(dark)
+        write_rgb_png(round_trip, source_size, source_rgb)
+        assert png_rgb(round_trip) == (source_size, source_rgb)
+        grayscale = apply_color_matrix(bytes((255, 0, 0)), ((0.2126, 0.7152, 0.0722),) * 3)
+        assert grayscale == bytes((54, 54, 54))
         assert require_distinct_screen(dark, light, "test transition") == 1.0
         try:
             require_distinct_screen(dark, dark, "identity")

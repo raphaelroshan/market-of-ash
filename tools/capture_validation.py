@@ -107,6 +107,35 @@ def png_rgb(path: Path) -> tuple[tuple[int, int], bytes]:
     return (width, height), bytes(decoded)
 
 
+def write_rgb_png(path: Path, size: tuple[int, int], rgb: bytes) -> None:
+    width, height = size
+    expected_length = width * height * 3
+    if len(rgb) != expected_length:
+        raise ValueError(f"RGB payload length is {len(rgb)}, expected {expected_length}")
+
+    def chunk(chunk_type: bytes, payload: bytes) -> bytes:
+        checksum = zlib.crc32(chunk_type + payload) & 0xFFFFFFFF
+        return struct.pack(">I", len(payload)) + chunk_type + payload + struct.pack(">I", checksum)
+
+    raw = b"".join(b"\x00" + rgb[offset : offset + width * 3] for offset in range(0, len(rgb), width * 3))
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(raw))
+        + chunk(b"IEND", b"")
+    )
+
+
+def apply_color_matrix(rgb: bytes, matrix: tuple[tuple[float, float, float], ...]) -> bytes:
+    transformed = bytearray(len(rgb))
+    for offset in range(0, len(rgb), 3):
+        red, green, blue = rgb[offset : offset + 3]
+        for channel, coefficients in enumerate(matrix):
+            value = red * coefficients[0] + green * coefficients[1] + blue * coefficients[2]
+            transformed[offset + channel] = max(0, min(255, int(round(value))))
+    return bytes(transformed)
+
+
 def changed_pixel_ratio(before: Path, after: Path, channel_threshold: int = 12) -> float:
     before_size, before_rgb = png_rgb(before)
     after_size, after_rgb = png_rgb(after)
