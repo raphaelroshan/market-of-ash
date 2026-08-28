@@ -1255,7 +1255,17 @@ func _on_start_game_requested() -> void:
 		new_game_confirmation_dialog.confirmed.connect(_on_start_game_pressed)
 		add_child(new_game_confirmation_dialog)
 	new_game_confirmation_dialog.popup_centered(Vector2i(560, 190))
+	_configure_confirmation_targets(new_game_confirmation_dialog)
+	call_deferred("_configure_confirmation_targets", new_game_confirmation_dialog)
 	new_game_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
+
+func _configure_confirmation_targets(dialog: ConfirmationDialog) -> void:
+	if dialog == null or not is_instance_valid(dialog):
+		return
+	dialog.get_ok_button().custom_minimum_size = Vector2(0, 44)
+	dialog.get_cancel_button().custom_minimum_size = Vector2(0, 44)
+	dialog.get_ok_button().add_theme_font_size_override("font_size", 28)
+	dialog.get_cancel_button().add_theme_font_size_override("font_size", 28)
 
 func _select_option_by_id(option: OptionButton, target_id: String) -> void:
 	for index in range(option.item_count):
@@ -1948,6 +1958,8 @@ func _on_reset_pressed() -> void:
 		reset_confirmation_dialog.confirmed.connect(_confirm_reset)
 		add_child(reset_confirmation_dialog)
 	reset_confirmation_dialog.popup_centered(Vector2i(520, 180))
+	_configure_confirmation_targets(reset_confirmation_dialog)
+	call_deferred("_configure_confirmation_targets", reset_confirmation_dialog)
 	reset_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
 
 func _confirm_reset() -> void:
