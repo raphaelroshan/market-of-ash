@@ -48,6 +48,8 @@ func _initialize() -> void:
 	_expect(ui.reduce_motion_checkbox != null and ui.reduce_motion_checkbox.text == "Reduce travel motion", "main menu should expose a reduced-motion option")
 	_expect(ui.large_text_checkbox != null and ui.large_text_checkbox.text == "Large text", "main menu should expose a large-text option")
 	_expect(ui.interface_sounds_checkbox != null and ui.interface_sounds_checkbox.text == "Interface sounds" and ui.interface_sounds_checkbox.button_pressed, "main menu should expose enabled-by-default nonessential interface sounds")
+	for menu_control in [ui.start_game_button, ui.continue_game_button, ui.reduce_motion_checkbox, ui.large_text_checkbox, ui.interface_sounds_checkbox, ui.restore_bindings_button, ui.quit_button]:
+		_expect(menu_control.custom_minimum_size.y >= 44.0, "Main Menu control %s should expose a comfortable pointer target" % menu_control.get_class())
 	_expect(ui.audio_player != null and ui.audio_cues.size() == 3, "the UI should prepare distinct success, blocked-action, and travel cues")
 	ui._play_ui_cue("success")
 	var enabled_audio_stream: AudioStream = ui.audio_player.stream
@@ -59,7 +61,6 @@ func _initialize() -> void:
 	_expect(_action_has_joypad_button("ui_cancel", 1), "ui_cancel should retain the secondary controller button")
 	_expect(_action_has_joypad_button("ui_pause", 6), "ui_pause should expose the controller menu button")
 	_expect(ui.binding_buttons.size() == 3 and ui.controls_hint_label.text.contains("Enter / Space") and ui.controls_hint_label.text.contains("A / Cross") and ui.controls_hint_label.text.contains("B / Circle"), "main menu should expose the current keyboard and controller bindings")
-	_expect(ui.restore_bindings_button.custom_minimum_size.y >= 44.0 and ui.quit_button.custom_minimum_size.y >= 44.0, "Main Menu utility buttons should expose comfortable pointer targets")
 	ui._on_rebind_pressed("ui_pause")
 	var rebind_pause := InputEventKey.new()
 	rebind_pause.physical_keycode = KEY_R

@@ -196,18 +196,21 @@ func _build_main_menu() -> void:
 	content.add_child(controls_hint_label)
 	reduce_motion_checkbox = CheckBox.new()
 	reduce_motion_checkbox.text = "Reduce travel motion"
+	reduce_motion_checkbox.custom_minimum_size = Vector2(0, 44)
 	reduce_motion_checkbox.tooltip_text = "Show the caravan at its destination immediately; route outcomes and timing are unchanged."
 	reduce_motion_checkbox.button_pressed = reduce_motion_enabled
 	reduce_motion_checkbox.toggled.connect(_on_reduce_motion_toggled)
 	content.add_child(reduce_motion_checkbox)
 	large_text_checkbox = CheckBox.new()
 	large_text_checkbox.text = "Large text"
+	large_text_checkbox.custom_minimum_size = Vector2(0, 44)
 	large_text_checkbox.tooltip_text = "Increase interface text by 25%. Long shop and route panels remain scrollable."
 	large_text_checkbox.button_pressed = large_text_enabled
 	large_text_checkbox.toggled.connect(_on_large_text_toggled)
 	content.add_child(large_text_checkbox)
 	interface_sounds_checkbox = CheckBox.new()
 	interface_sounds_checkbox.text = "Interface sounds"
+	interface_sounds_checkbox.custom_minimum_size = Vector2(0, 44)
 	interface_sounds_checkbox.tooltip_text = "Play restrained confirmation, blocked-action, and travel cues. All essential feedback remains visible as text."
 	interface_sounds_checkbox.button_pressed = interface_sounds_enabled
 	interface_sounds_checkbox.toggled.connect(_on_interface_sounds_toggled)
@@ -247,7 +250,7 @@ func _build_main_menu() -> void:
 	content.add_child(start_game_button)
 	continue_game_button = Button.new()
 	continue_game_button.text = "Continue saved game"
-	continue_game_button.custom_minimum_size = Vector2(0, 42)
+	continue_game_button.custom_minimum_size = Vector2(0, 44)
 	continue_game_button.disabled = not FileAccess.file_exists(save_path)
 	continue_game_button.tooltip_text = "No saved campaign exists yet." if continue_game_button.disabled else "Validate and continue the saved campaign."
 	continue_game_button.pressed.connect(_on_load_pressed)
