@@ -680,6 +680,10 @@ func _initialize() -> void:
 	_expect(not route_footer_rects[0].intersects(route_footer_rects[1]) and not route_footer_rects[1].intersects(route_footer_rects[2]) and route_footer_rects[2].end.x <= ui.map_panel._board_rect().end.x and route_footer_rects[0].position.y >= ui.map_panel._board_rect().end.y - 28.0, "large map route labels should remain separated inside the board footer strip")
 	var map_heading_width: float = ThemeDB.fallback_font.get_string_size(ui.map_panel._map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(16)).x
 	_expect(map_heading_width <= ui.map_panel._board_rect().size.x - 16.0, "large map heading should remain inside the board width")
+	var map_hint: Label = ui.find_child("MapHint", true, false)
+	var map_heading_rect: Rect2 = ui.map_panel._map_heading_rect()
+	_expect(map_hint.get_global_rect().end.y <= map_heading_rect.position.y, "large map instructions should not overlap the custom-drawn heading: instructions %.1f, heading %.1f" % [map_hint.get_global_rect().end.y, map_heading_rect.position.y])
+	_expect(map_heading_rect.position.y >= ui.map_panel._board_rect().position.y and map_heading_rect.end.y <= ui.map_panel._board_rect().position.y + ui.map_panel.MAP_HEADER_HEIGHT, "large map heading should remain inside its reserved board strip")
 	_expect(route_footer_rects[2].end.y <= ui.event_label.get_global_rect().position.y, "large map footer labels should not overlap the journey result text: footer %.1f, result %.1f" % [route_footer_rects[2].end.y, ui.event_label.get_global_rect().position.y])
 	var oversized_settlement_labels: Array[String] = []
 	for settlement_id_value in ui.map_panel.SETTLEMENT_CELLS.keys():
