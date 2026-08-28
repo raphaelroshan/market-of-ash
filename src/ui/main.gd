@@ -62,6 +62,10 @@ var shop_sell_button: Button
 var shop_transaction_status_label: Label
 var shop_status_label: Label
 var shop_cargo_label: Label
+var shop_save_button: Button
+var shop_load_button: Button
+var shop_reset_button: Button
+var shop_report_button: Button
 var opportunity_status_label: Label
 var opportunity_list: VBoxContainer
 var opportunity_buttons: Array[Button] = []
@@ -814,29 +818,29 @@ func _build_shop() -> void:
 	plan_departure_button.tooltip_text = "Open the regional map, choose a legal corridor, and inspect the full route forecast."
 	plan_departure_button.pressed.connect(_on_plan_departure_pressed)
 	action_shell.add_child(plan_departure_button)
-	var save_button := Button.new()
-	save_button.text = "Save prototype state"
-	save_button.pressed.connect(_on_save_pressed)
-	actions.add_child(save_button)
-	var load_button := Button.new()
-	load_button.text = "Load saved state"
-	load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
-	load_button.pressed.connect(_on_load_pressed)
-	actions.add_child(load_button)
+	shop_save_button = Button.new()
+	shop_save_button.text = "Save prototype state"
+	shop_save_button.pressed.connect(_on_save_pressed)
+	actions.add_child(shop_save_button)
+	shop_load_button = Button.new()
+	shop_load_button.text = "Load saved state"
+	shop_load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
+	shop_load_button.pressed.connect(_on_load_pressed)
+	actions.add_child(shop_load_button)
 	save_status_label = Label.new()
 	save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	save_status_label.add_theme_font_size_override("font_size", 11)
 	save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	actions.add_child(save_status_label)
-	var reset_button := Button.new()
-	reset_button.text = "Reset run"
-	reset_button.pressed.connect(_on_reset_pressed)
-	actions.add_child(reset_button)
-	var report_button := Button.new()
-	report_button.text = "Export playtest report"
-	report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
-	report_button.pressed.connect(_on_export_report_pressed)
-	actions.add_child(report_button)
+	shop_reset_button = Button.new()
+	shop_reset_button.text = "Reset run"
+	shop_reset_button.pressed.connect(_on_reset_pressed)
+	actions.add_child(shop_reset_button)
+	shop_report_button = Button.new()
+	shop_report_button.text = "Export playtest report"
+	shop_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
+	shop_report_button.pressed.connect(_on_export_report_pressed)
+	actions.add_child(shop_report_button)
 	diagnostics_label = Label.new()
 	diagnostics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	diagnostics_label.add_theme_font_size_override("font_size", 11)
@@ -1100,6 +1104,21 @@ func _link_main_menu_focus_cycle() -> void:
 	controls.append(restore_bindings_button)
 	if quit_button.visible:
 		controls.append(quit_button)
+	_link_focus_cycle(controls)
+
+func _link_shop_focus_cycle() -> void:
+	if shop_good_option == null or plan_departure_button == null:
+		return
+	var controls: Array = [shop_good_option, shop_quantity.get_line_edit()]
+	for control in [shop_buy_button, shop_sell_button, guided_test_button]:
+		if control.visible and not control.disabled:
+			controls.append(control)
+	for group in [contract_buttons, opportunity_buttons, crew_buttons]:
+		for control in group:
+			if control.visible and not control.disabled:
+				controls.append(control)
+	for control in [shop_save_button, shop_load_button, shop_reset_button, shop_report_button, plan_departure_button]:
+		controls.append(control)
 	_link_focus_cycle(controls)
 
 func _link_focus_cycle(controls: Array) -> void:
@@ -2285,6 +2304,7 @@ func _refresh_ui() -> void:
 	_refresh_opportunities()
 	_refresh_event_card()
 	_refresh_forecasts()
+	_link_shop_focus_cycle()
 	if map_panel:
 		map_panel.world = world
 		map_panel.queue_redraw()

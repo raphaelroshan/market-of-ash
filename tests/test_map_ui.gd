@@ -143,7 +143,7 @@ func _initialize() -> void:
 	_expect(ui.plan_departure_button != null and ui.plan_departure_button.text.contains("Plan Water x2 to Reedwatch"), "shop did not expose the selected cargo and destination on the plan-departure handoff")
 	var plan_departure_rect: Rect2 = ui.plan_departure_button.get_global_rect()
 	_expect(not _has_scroll_ancestor(ui.plan_departure_button) and ui.shop_layer.get_global_rect().encloses(plan_departure_rect) and plan_departure_rect.size.x >= 300.0 and plan_departure_rect.size.y >= 56.0, "Plan departure should remain a full-width pinned action inside the Shop layout: layer %s, action %s" % [ui.shop_layer.get_global_rect(), plan_departure_rect])
-	_expect(ui.shop_good_option.find_prev_valid_focus() == ui.plan_departure_button, "reverse focus traversal from the first Shop control should reach the pinned Plan action")
+	_expect(ui.shop_good_option.find_prev_valid_focus() == ui.plan_departure_button and ui.plan_departure_button.find_next_valid_focus() == ui.shop_good_option, "Shop focus should wrap between the first cargo control and pinned Plan action")
 	var buy_cargo_button: Button = ui.find_child("BuyCargoButton", true, false)
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
@@ -156,6 +156,7 @@ func _initialize() -> void:
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	_expect(buy_cargo_button.disabled and buy_cargo_button.tooltip_text.contains("costs 180 ashmarks") and buy_cargo_button.tooltip_text.contains("has 120"), "Buy should explain when the selected load is unaffordable")
 	_expect(ui.shop_transaction_status_label.text.contains("need 180 ashmarks") and ui.shop_transaction_status_label.text.contains("have 120"), "a blocked purchase should expose its cash shortfall as persistent text")
+	_expect(ui.shop_quantity.get_line_edit().find_next_valid_focus() == ui.guided_test_button, "Shop focus should skip disabled Buy and Sell actions")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
