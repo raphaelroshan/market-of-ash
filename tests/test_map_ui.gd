@@ -118,7 +118,7 @@ func _initialize() -> void:
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
 	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should identify the Settlement Shop state")
 	var initial_web_state: Dictionary = ui._web_ui_state()
-	_expect(initial_web_state.get("settlement_id") == "ashgate" and initial_web_state.get("selected_good_id") == "water" and initial_web_state.get("selected_destination_id") == "reedwatch" and initial_web_state.get("selected_quantity") == 2 and initial_web_state.get("held_selected_quantity") == 0, "Web diagnostics should expose the deterministic visible planning state without personal data")
+	_expect(initial_web_state.get("settlement_id") == "ashgate" and initial_web_state.get("day") == 1 and initial_web_state.get("money") == 120 and initial_web_state.get("provisions") == 12 and initial_web_state.get("cargo_weight") == 0 and initial_web_state.get("selected_good_id") == "water" and initial_web_state.get("selected_destination_id") == "reedwatch" and initial_web_state.get("selected_quantity") == 2 and initial_web_state.get("held_selected_quantity") == 0, "Web diagnostics should expose the deterministic visible planning state without personal data")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
 	ui._open_pause()
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "pausing from the shop should stop the tree and focus Resume")

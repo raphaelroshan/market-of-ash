@@ -294,6 +294,34 @@ def main() -> int:
                     "ui_state": departure_state,
                 }
             )
+            ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            returned_shop_state = wait_for_ui_state(
+                driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate"
+            )
+            unchanged_fields = ("day", "money", "provisions", "cargo_weight", "held_selected_quantity")
+            changed_fields = [
+                field for field in unchanged_fields if returned_shop_state.get(field) != shop_state.get(field)
+            ]
+            if changed_fields:
+                raise AssertionError(f"Return to Shop changed authoritative fields: {changed_fields}")
+            returned_shop_output = args.output_dir / f"returned-shop-{width}x{height}.png"
+            returned_shop_bytes = capture_frame(driver, returned_shop_output, (actual_width, actual_height))
+            returned_shop_changed_ratio = changed_pixel_ratio(shop_output, returned_shop_output)
+            captures.append(
+                {
+                    "screen": "returned_shop",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": returned_shop_output.name,
+                    "bytes": returned_shop_bytes,
+                    "changed_pixel_ratio": round(returned_shop_changed_ratio, 4),
+                    "navigation": "Escape from uncommitted Departure",
+                    "unchanged_fields": list(unchanged_fields),
+                    "ui_state": returned_shop_state,
+                }
+            )
+            ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
+            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             commit_actions = ActionChains(driver)
             for _ in range(4):
                 commit_actions.send_keys(Keys.TAB)
