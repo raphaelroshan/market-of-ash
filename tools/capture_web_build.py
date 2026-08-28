@@ -60,6 +60,10 @@ def wait_for_ui_state(
     while time.monotonic() < deadline:
         last_state = driver.execute_script("return window.marketOfAshUiState || null")
         if isinstance(last_state, dict) and last_state.get("screen") == expected_screen:
+            announcement = last_state.get("announcement")
+            if not isinstance(announcement, str) or not announcement.strip():
+                time.sleep(0.1)
+                continue
             if large_text is not None and last_state.get("large_text") is not large_text:
                 time.sleep(0.1)
                 continue
@@ -70,6 +74,28 @@ def wait_for_ui_state(
                 time.sleep(0.1)
                 continue
             if expected_values is not None and any(last_state.get(key) != value for key, value in expected_values.items()):
+                time.sleep(0.1)
+                continue
+            assistive_state = driver.execute_script(
+                """
+                const canvas = document.getElementById('canvas');
+                const region = document.getElementById('market-of-ash-status');
+                return {
+                  canvasRole: canvas ? canvas.getAttribute('role') : null,
+                  canvasLabel: canvas ? canvas.getAttribute('aria-label') : null,
+                  regionRole: region ? region.getAttribute('role') : null,
+                  regionLive: region ? region.getAttribute('aria-live') : null,
+                  regionText: region ? region.textContent : null,
+                };
+                """
+            )
+            if assistive_state != {
+                "canvasRole": "application",
+                "canvasLabel": announcement,
+                "regionRole": "status",
+                "regionLive": "polite",
+                "regionText": announcement,
+            }:
                 time.sleep(0.1)
                 continue
             time.sleep(0.2)
