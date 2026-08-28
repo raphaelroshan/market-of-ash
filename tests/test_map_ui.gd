@@ -307,6 +307,7 @@ func _initialize() -> void:
 		failures.append("shop forecast changes mutated authoritative world state")
 	if not ui.shop_market_preview_label.text.contains("load total"):
 		failures.append("shop market preview did not refresh selected load total")
+	_expect(ui.plan_departure_button.text.contains("Water x3 to Reedwatch"), "the pinned departure handoff should track the edited planning quantity")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 
@@ -400,7 +401,7 @@ func _initialize() -> void:
 	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road", "destination selection should expose only the connected Toll Road route")
 	ui._select_option_by_id(ui.destination_option, "cinderford")
 	ui._on_destination_changed(ui.destination_option.selected)
-	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road" and ui.route_preview_label.text.contains("Route fee 6"), "Cinderford should be selectable as the nearer Toll Road stop with its segment fee")
+	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "toll_road" and ui.route_preview_label.text.contains("Route fee 6") and ui.commit_departure_button.text.contains("6 ashmarks"), "Cinderford should update both the route forecast and pinned Commit action with its segment fee")
 	ui._select_option_by_id(ui.destination_option, "reedwatch")
 	ui._on_destination_changed(ui.destination_option.selected)
 	_expect(ui.route_option.item_count == 1 and ui._selected_id(ui.route_option) == "old_road", "destination selection should restore the connected Old Road route")
