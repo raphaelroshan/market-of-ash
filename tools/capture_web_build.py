@@ -209,7 +209,7 @@ def wait_for_ui_state(
                     "label": str(action.get("label", "")),
                     "enabled": bool(action.get("enabled", False)),
                 }
-                for action in state.get("accessibility_actions", [])
+                for action in last_state.get("accessibility_actions", [])
             ]
             expected_assistive_state = {
                 "canvasRole": "application",
