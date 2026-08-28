@@ -22,6 +22,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import Select
 
 INPUT_SETTLE_SECONDS = 0.2
 OPTION_ROW_HEIGHT = 28.0
@@ -106,6 +107,52 @@ def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: 
             return
         time.sleep(0.1)
     raise TimeoutError(f"Web accessibility action {action_id!r} was not available")
+
+
+def focus_accessibility_control(driver: Any, control_id: str, timeout_seconds: float = 5.0) -> Any:
+    """Focus one mirrored form control and verify its discoverable region is visible."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        control = driver.execute_script(
+            """
+            const controlId = arguments[0];
+            return Array.from(document.querySelectorAll('#market-of-ash-actions [data-control]'))
+              .find(candidate => candidate.dataset.control === controlId) || null;
+            """,
+            control_id,
+        )
+        if control is not None and control.is_enabled():
+            ready = driver.execute_script(
+                """
+                const control = arguments[0];
+                const region = document.getElementById('market-of-ash-actions');
+                if (!region || typeof window.marketOfAshAccessibilityChange !== 'function') {
+                  return false;
+                }
+                control.focus();
+                const bounds = region.getBoundingClientRect();
+                return document.activeElement === control && bounds.left >= 0 && bounds.width > 1;
+                """,
+                control,
+            )
+            if ready:
+                return control
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility control {control_id!r} was not available")
+
+
+def select_accessibility_option(driver: Any, control_id: str, value: str) -> None:
+    control = focus_accessibility_control(driver, control_id)
+    Select(control).select_by_value(value)
+    time.sleep(INPUT_SETTLE_SECONDS)
+
+
+def set_accessibility_quantity(driver: Any, control_id: str, value: int) -> None:
+    control = focus_accessibility_control(driver, control_id)
+    control.send_keys(Keys.CONTROL, "a")
+    control.send_keys(str(value))
+    control.send_keys(Keys.TAB)
+    time.sleep(INPUT_SETTLE_SECONDS)
 
 
 def activate_game_action(driver: Any, action_id: str, through_accessibility: bool) -> None:
@@ -208,6 +255,22 @@ def wait_for_ui_state(
                   actionRegionRole: actions ? actions.getAttribute('role') : null,
                   actionRegionLabel: actions ? actions.getAttribute('aria-label') : null,
                   actionScreen: actions ? actions.dataset.screen : null,
+                  controls: actions ? Array.from(actions.querySelectorAll('[data-control]')).map(control => ({
+                    id: control.dataset.control,
+                    label: document.querySelector(`label[for="${control.id}"]`).textContent,
+                    kind: control.tagName === 'SELECT' ? 'select' : 'number',
+                    value: control.tagName === 'SELECT' ? control.value : Number(control.value),
+                    enabled: !control.disabled,
+                    description: control.getAttribute('aria-describedby')
+                      ? document.getElementById(control.getAttribute('aria-describedby')).textContent
+                      : '',
+                    options: control.tagName === 'SELECT'
+                      ? Array.from(control.options).map(option => ({value: option.value, label: option.textContent}))
+                      : [],
+                    minimum: control.tagName === 'INPUT' ? Number(control.min) : null,
+                    maximum: control.tagName === 'INPUT' ? Number(control.max) : null,
+                    step: control.tagName === 'INPUT' ? Number(control.step) : null,
+                  })) : [],
                   actions: actions ? Array.from(actions.querySelectorAll('button')).map(button => ({
                     id: button.dataset.action,
                     label: button.textContent,
@@ -228,6 +291,24 @@ def wait_for_ui_state(
                 }
                 for action in last_state.get("accessibility_actions", [])
             ]
+            expected_controls = [
+                {
+                    "id": str(control.get("id", "")),
+                    "label": str(control.get("label", "")),
+                    "kind": str(control.get("kind", "")),
+                    "value": control.get("value"),
+                    "enabled": bool(control.get("enabled", False)),
+                    "description": str(control.get("description", "")),
+                    "options": [
+                        {"value": str(option.get("value", "")), "label": str(option.get("label", ""))}
+                        for option in control.get("options", [])
+                    ],
+                    "minimum": control.get("minimum") if control.get("kind") == "number" else None,
+                    "maximum": control.get("maximum") if control.get("kind") == "number" else None,
+                    "step": control.get("step") if control.get("kind") == "number" else None,
+                }
+                for control in last_state.get("accessibility_controls", [])
+            ]
             expected_assistive_state = {
                 "canvasRole": "application",
                 "canvasLabel": announcement,
@@ -236,8 +317,9 @@ def wait_for_ui_state(
                 "regionLive": "polite",
                 "regionText": announcement,
                 "actionRegionRole": "region",
-                "actionRegionLabel": "Available game actions",
+                "actionRegionLabel": "Available game controls",
                 "actionScreen": expected_screen,
+                "controls": expected_controls,
                 "actions": expected_actions,
             }
             if assistive_state != expected_assistive_state:
@@ -317,6 +399,9 @@ def set_viewport_size(driver: Any, browser: str, width: int, height: int) -> Non
 
 
 def capture_frame(driver: Any, output: Path, expected_size: tuple[int, int]) -> int:
+    canvas = driver.find_element(By.ID, "canvas")
+    driver.execute_script("arguments[0].focus()", canvas)
+    time.sleep(0.05)
     if not driver.save_screenshot(str(output)):
         raise RuntimeError(f"Browser did not save {output}")
     image_size = png_dimensions(output)
@@ -608,7 +693,13 @@ def main() -> int:
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
-            select_game_option(driver, "shop_good", 3)
+            if use_accessibility_actions:
+                set_accessibility_quantity(driver, "shop_quantity", 3)
+                wait_for_ui_state(driver, "settlement_shop", args.timeout, expected_values={"selected_quantity": 3})
+                set_accessibility_quantity(driver, "shop_quantity", 2)
+                select_accessibility_option(driver, "shop_good", "medicine")
+            else:
+                select_game_option(driver, "shop_good", 3)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
@@ -632,7 +723,16 @@ def main() -> int:
                 expected_values={"selected_good_id": "medicine", "selected_destination_id": "reedwatch"},
             )
             # Brine Cross is two entries after the default Reedwatch choice.
-            select_game_option(driver, "destination", 2)
+            if use_accessibility_actions:
+                select_accessibility_option(driver, "cargo_good", "water")
+                wait_for_ui_state(driver, "departure_desk", args.timeout, expected_values={"selected_good_id": "water"})
+                select_accessibility_option(driver, "cargo_good", "medicine")
+                set_accessibility_quantity(driver, "cargo_quantity", 3)
+                wait_for_ui_state(driver, "departure_desk", args.timeout, expected_values={"selected_quantity": 3})
+                set_accessibility_quantity(driver, "cargo_quantity", 2)
+                select_accessibility_option(driver, "destination", "brine_cross")
+            else:
+                select_game_option(driver, "destination", 2)
             wait_for_ui_state(
                 driver,
                 "departure_desk",
@@ -692,11 +792,12 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 4,
+                    "manifest_version": 5,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
-                    "assistive_action_bridge": "focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
+                    "assistive_action_bridge": "actions focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
+                    "assistive_planning_controls": "Shop and Departure native HTML fields exercised at 960x540",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },

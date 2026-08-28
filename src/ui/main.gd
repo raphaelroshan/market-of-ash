@@ -128,6 +128,7 @@ var first_trade_elapsed_msec := -1
 var last_input_device := "unknown"
 var map_panel
 var web_accessibility_callback: Variant
+var web_accessibility_control_callback: Variant
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -766,6 +767,7 @@ func _build_shop() -> void:
 	market.add_child(ledger_label)
 	shop_good_option = OptionButton.new()
 	shop_good_option.custom_minimum_size = Vector2(0, 44)
+	shop_good_option.tooltip_text = "Choose which cargo to price, buy, or sell at this settlement."
 	for good_id in MarketContent.good_ids():
 		shop_good_option.add_item(good_id.capitalize())
 		shop_good_option.set_item_metadata(shop_good_option.item_count - 1, good_id)
@@ -774,6 +776,7 @@ func _build_shop() -> void:
 	shop_quantity.custom_minimum_size = Vector2(0, 44)
 	shop_quantity.min_value = 1
 	shop_quantity.max_value = 12
+	shop_quantity.step = 1
 	shop_quantity.value = PLAYTEST_QUANTITY
 	shop_quantity.tooltip_text = "Controller: Left/Right changes quantity."
 	market.add_child(_labeled_control("Quantity", shop_quantity))
@@ -1018,16 +1021,19 @@ func _build_ui() -> void:
 
 	destination_option = OptionButton.new()
 	destination_option.custom_minimum_size = Vector2(0, 44)
+	destination_option.tooltip_text = "Choose a connected settlement for the next journey."
 	_populate_destination_options()
 	controls.add_child(_labeled_control("Destination", destination_option))
 
 	route_option = OptionButton.new()
 	route_option.custom_minimum_size = Vector2(0, 44)
+	route_option.tooltip_text = "Choose one legal route to the selected destination."
 	_populate_route_options()
 	controls.add_child(_labeled_control("Route", route_option))
 
 	cargo_good_option = OptionButton.new()
 	cargo_good_option.custom_minimum_size = Vector2(0, 44)
+	cargo_good_option.tooltip_text = "Choose the cargo used by the route forecast."
 	for good in MarketContent.good_ids():
 		cargo_good_option.add_item(good.capitalize())
 		cargo_good_option.set_item_metadata(cargo_good_option.item_count - 1, good)
@@ -1037,6 +1043,7 @@ func _build_ui() -> void:
 	cargo_quantity.custom_minimum_size = Vector2(0, 44)
 	cargo_quantity.min_value = 1
 	cargo_quantity.max_value = 12
+	cargo_quantity.step = 1
 	cargo_quantity.value = PLAYTEST_QUANTITY
 	cargo_quantity.tooltip_text = "Controller: Left/Right changes forecast quantity."
 	controls.add_child(_labeled_control("Forecast quantity", cargo_quantity))
@@ -1533,16 +1540,146 @@ func _publish_web_ui_state() -> void:
 		return
 	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
 	var state_json := JSON.stringify(_web_ui_state())
-	var script := "(function(state){window.marketOfAshUiState=state;var hidden='position:absolute;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;';var region=document.getElementById('market-of-ash-status');if(!region){region=document.createElement('div');region.id='market-of-ash-status';region.setAttribute('role','status');region.setAttribute('aria-live','polite');region.setAttribute('aria-atomic','true');region.style.cssText=hidden;document.body.appendChild(region);}if(region.textContent!==state.announcement){region.textContent=state.announcement;}var actions=document.getElementById('market-of-ash-actions');if(!actions){actions=document.createElement('section');actions.id='market-of-ash-actions';actions.setAttribute('role','region');actions.setAttribute('aria-label','Available game actions');actions.style.cssText=hidden;actions.addEventListener('focusin',function(){actions.style.cssText='position:fixed;left:8px;top:8px;width:360px;max-height:calc(100vh - 16px);overflow:auto;padding:12px;background:#17130f;color:#f4d69a;border:2px solid #f4d69a;z-index:2147483647;';});actions.addEventListener('focusout',function(){setTimeout(function(){if(!actions.contains(document.activeElement)){actions.style.cssText=hidden;}},0);});document.body.appendChild(actions);}actions.dataset.screen=state.screen;actions.replaceChildren();var heading=document.createElement('h2');heading.id='market-of-ash-actions-heading';heading.textContent='Market of Ash — '+state.screen.replaceAll('_',' ');actions.appendChild(heading);var summary=document.createElement('p');summary.id='market-of-ash-actions-description';summary.textContent=state.announcement;actions.appendChild(summary);for(const action of state.accessibility_actions){var button=document.createElement('button');button.type='button';button.dataset.action=action.id;button.textContent=action.label;button.disabled=!action.enabled;button.setAttribute('aria-disabled',String(!action.enabled));actions.appendChild(button);if(action.description){var description=document.createElement('p');description.id='market-of-ash-action-description-'+action.id;description.textContent=action.description;description.hidden=true;button.setAttribute('aria-describedby',description.id);actions.appendChild(description);}button.addEventListener('click',function(){if(typeof window.marketOfAshAccessibilityActivate==='function'){window.marketOfAshAccessibilityActivate(action.id);}});}var canvas=document.getElementById('canvas');if(canvas){canvas.setAttribute('role','application');canvas.setAttribute('aria-label',state.announcement);canvas.setAttribute('aria-describedby','market-of-ash-status market-of-ash-actions-description');}})(%s);" % state_json
+	var script := """
+(function(state) {
+	window.marketOfAshUiState = state;
+	const hiddenStyle = 'position:absolute;left:-10000px;top:0;width:1px;height:1px;overflow:hidden;';
+	let region = document.getElementById('market-of-ash-status');
+	if (!region) {
+		region = document.createElement('div');
+		region.id = 'market-of-ash-status';
+		region.setAttribute('role', 'status');
+		region.setAttribute('aria-live', 'polite');
+		region.setAttribute('aria-atomic', 'true');
+		region.style.cssText = hiddenStyle;
+		document.body.appendChild(region);
+	}
+	if (region.textContent !== state.announcement) {
+		region.textContent = state.announcement;
+	}
+	let controlsRegion = document.getElementById('market-of-ash-actions');
+	if (!controlsRegion) {
+		controlsRegion = document.createElement('section');
+		controlsRegion.id = 'market-of-ash-actions';
+		controlsRegion.setAttribute('role', 'region');
+		controlsRegion.setAttribute('aria-label', 'Available game controls');
+		controlsRegion.style.cssText = hiddenStyle;
+		controlsRegion.addEventListener('focusin', function() {
+			controlsRegion.style.cssText = 'position:fixed;left:8px;top:8px;width:360px;max-height:calc(100vh - 16px);overflow:auto;padding:12px;background:#17130f;color:#f4d69a;border:2px solid #f4d69a;z-index:2147483647;';
+		});
+		controlsRegion.addEventListener('focusout', function() {
+			setTimeout(function() {
+				if (!controlsRegion.contains(document.activeElement)) {
+					controlsRegion.style.cssText = hiddenStyle;
+				}
+			}, 0);
+		});
+		document.body.appendChild(controlsRegion);
+	}
+	const focusedControlId = document.activeElement && document.activeElement.dataset
+		? document.activeElement.dataset.control || ''
+		: '';
+	controlsRegion.dataset.screen = state.screen;
+	controlsRegion.replaceChildren();
+	const heading = document.createElement('h2');
+	heading.id = 'market-of-ash-actions-heading';
+	heading.textContent = 'Market of Ash — ' + state.screen.replaceAll('_', ' ');
+	controlsRegion.appendChild(heading);
+	const summary = document.createElement('p');
+	summary.id = 'market-of-ash-actions-description';
+	summary.textContent = state.announcement;
+	controlsRegion.appendChild(summary);
+	for (const control of state.accessibility_controls) {
+		const fieldId = 'market-of-ash-control-' + control.id;
+		const label = document.createElement('label');
+		label.htmlFor = fieldId;
+		label.textContent = control.label;
+		controlsRegion.appendChild(label);
+		let field;
+		if (control.kind === 'select') {
+			field = document.createElement('select');
+			for (const item of control.options) {
+				const option = document.createElement('option');
+				option.value = item.value;
+				option.textContent = item.label;
+				field.appendChild(option);
+			}
+			field.value = control.value;
+		} else {
+			field = document.createElement('input');
+			field.type = 'number';
+			field.min = String(control.minimum);
+			field.max = String(control.maximum);
+			field.step = String(control.step);
+			field.value = String(control.value);
+		}
+		field.id = fieldId;
+		field.dataset.control = control.id;
+		field.disabled = !control.enabled;
+		field.setAttribute('aria-disabled', String(!control.enabled));
+		controlsRegion.appendChild(field);
+		if (control.description) {
+			const description = document.createElement('p');
+			description.id = 'market-of-ash-control-description-' + control.id;
+			description.textContent = control.description;
+			description.hidden = true;
+			field.setAttribute('aria-describedby', description.id);
+			controlsRegion.appendChild(description);
+		}
+		field.addEventListener('change', function() {
+			if (typeof window.marketOfAshAccessibilityChange === 'function') {
+				window.marketOfAshAccessibilityChange(control.id, field.value);
+			}
+		});
+	}
+	for (const action of state.accessibility_actions) {
+		const button = document.createElement('button');
+		button.type = 'button';
+		button.dataset.action = action.id;
+		button.textContent = action.label;
+		button.disabled = !action.enabled;
+		button.setAttribute('aria-disabled', String(!action.enabled));
+		controlsRegion.appendChild(button);
+		if (action.description) {
+			const description = document.createElement('p');
+			description.id = 'market-of-ash-action-description-' + action.id;
+			description.textContent = action.description;
+			description.hidden = true;
+			button.setAttribute('aria-describedby', description.id);
+			controlsRegion.appendChild(description);
+		}
+		button.addEventListener('click', function() {
+			if (typeof window.marketOfAshAccessibilityActivate === 'function') {
+				window.marketOfAshAccessibilityActivate(action.id);
+			}
+		});
+	}
+	if (focusedControlId) {
+		const replacement = Array.from(controlsRegion.querySelectorAll('[data-control]'))
+			.find(candidate => candidate.dataset.control === focusedControlId && !candidate.disabled);
+		if (replacement) {
+			replacement.focus();
+		}
+	}
+	const canvas = document.getElementById('canvas');
+	if (canvas) {
+		canvas.setAttribute('role', 'application');
+		canvas.setAttribute('aria-label', state.announcement);
+		canvas.setAttribute('aria-describedby', 'market-of-ash-status market-of-ash-actions-description');
+	}
+})(%s);
+""" % state_json
 	bridge.call("eval", script)
 
 func _setup_web_accessibility_bridge() -> void:
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
 		return
 	web_accessibility_callback = JavaScriptBridge.create_callback(_on_web_accessibility_action)
+	web_accessibility_control_callback = JavaScriptBridge.create_callback(_on_web_accessibility_control_change)
 	var browser_window: JavaScriptObject = JavaScriptBridge.get_interface("window")
 	if browser_window != null:
 		browser_window.marketOfAshAccessibilityActivate = web_accessibility_callback
+		browser_window.marketOfAshAccessibilityChange = web_accessibility_control_callback
 
 func _on_web_accessibility_action(arguments: Array) -> void:
 	if arguments.is_empty():
@@ -1555,6 +1692,46 @@ func _activate_web_accessibility_action(action_id: String) -> void:
 		_publish_web_ui_state()
 		return
 	control.emit_signal("pressed")
+
+func _on_web_accessibility_control_change(arguments: Array) -> void:
+	if arguments.size() < 2:
+		return
+	call_deferred("_change_web_accessibility_control", String(arguments[0]), String(arguments[1]))
+
+func _change_web_accessibility_control(control_id: String, value: String) -> void:
+	match control_id:
+		"shop_good":
+			_select_web_accessibility_option(shop_good_option, value)
+		"shop_quantity":
+			_set_web_accessibility_quantity(shop_quantity, value)
+		"destination":
+			_select_web_accessibility_option(destination_option, value)
+		"route":
+			_select_web_accessibility_option(route_option, value)
+		"cargo_good":
+			_select_web_accessibility_option(cargo_good_option, value)
+		"cargo_quantity":
+			_set_web_accessibility_quantity(cargo_quantity, value)
+		_:
+			_publish_web_ui_state()
+
+func _select_web_accessibility_option(control: OptionButton, target_id: String) -> void:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or control.disabled:
+		_publish_web_ui_state()
+		return
+	for index in range(control.item_count):
+		if String(control.get_item_metadata(index)) != target_id:
+			continue
+		control.select(index)
+		control.item_selected.emit(index)
+		return
+	_publish_web_ui_state()
+
+func _set_web_accessibility_quantity(control: SpinBox, requested_value: String) -> void:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree() or not control.editable or not requested_value.is_valid_int():
+		_publish_web_ui_state()
+		return
+	control.value = clampi(int(requested_value), int(control.min_value), int(control.max_value))
 
 func _web_accessibility_action_control(action_id: String) -> Variant:
 	match action_id:
@@ -1590,6 +1767,53 @@ func _append_web_accessibility_action(actions: Array, action_id: String, control
 		"enabled": not control.disabled,
 		"description": String(control.tooltip_text),
 	})
+
+func _web_accessibility_option_control(control_id: String, label: String, control: OptionButton) -> Dictionary:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree():
+		return {}
+	var options: Array = []
+	for index in range(control.item_count):
+		options.append({
+			"value": String(control.get_item_metadata(index)),
+			"label": control.get_item_text(index),
+		})
+	return {
+		"id": control_id,
+		"label": label,
+		"kind": "select",
+		"value": _selected_id(control),
+		"enabled": not control.disabled,
+		"description": control.tooltip_text,
+		"options": options,
+	}
+
+func _web_accessibility_quantity_control(control_id: String, label: String, control: SpinBox) -> Dictionary:
+	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree():
+		return {}
+	return {
+		"id": control_id,
+		"label": label,
+		"kind": "number",
+		"value": int(control.value),
+		"minimum": int(control.min_value),
+		"maximum": int(control.max_value),
+		"step": int(control.step),
+		"enabled": control.editable,
+		"description": control.tooltip_text,
+	}
+
+func _web_accessibility_controls() -> Array:
+	var controls: Array = []
+	match _current_ui_state_id():
+		"settlement_shop":
+			controls.append(_web_accessibility_option_control("shop_good", "Cargo", shop_good_option))
+			controls.append(_web_accessibility_quantity_control("shop_quantity", "Quantity", shop_quantity))
+		"departure_desk":
+			controls.append(_web_accessibility_option_control("destination", "Destination", destination_option))
+			controls.append(_web_accessibility_option_control("route", "Route", route_option))
+			controls.append(_web_accessibility_option_control("cargo_good", "Forecast cargo", cargo_good_option))
+			controls.append(_web_accessibility_quantity_control("cargo_quantity", "Forecast quantity", cargo_quantity))
+	return controls
 
 func _web_accessibility_actions() -> Array:
 	var actions: Array = []
@@ -1657,6 +1881,7 @@ func _web_ui_state() -> Dictionary:
 		"screen": _current_ui_state_id(),
 		"announcement": _web_accessibility_announcement(),
 		"accessibility_actions": _web_accessibility_actions(),
+		"accessibility_controls": _web_accessibility_controls(),
 		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
 		"targets": {
 			"start_game": _web_control_rect(start_game_button),
