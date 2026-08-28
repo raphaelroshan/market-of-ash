@@ -410,7 +410,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel.GRID_SIZE == Vector2i(17, 11), "map grid size is not the stable 17x11 contract")
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		_expect(ui.map_panel._map_heading().contains("ORDINARY PRESSURE") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "map text should identify the crisis stage and current location without relying on color")
-		_expect(ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0, "map settlement markers should retain a comfortable pointer target after minimum-window scaling")
+		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size == Vector2(108, 40) and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0, "map settlement markers should enlarge their pointer target without changing visible geometry")
 		var map_before: String = JSON.stringify(ui.world.serialize())
 		var map_click := InputEventMouseButton.new()
 		map_click.button_index = MOUSE_BUTTON_LEFT
