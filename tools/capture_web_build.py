@@ -229,7 +229,7 @@ def main() -> int:
             # to the pinned Plan action, so this both opens the next screen and
             # exercises packaged keyboard focus continuity without browser Tab.
             send_game_key(driver, Keys.ARROW_UP)
-            driver.find_element(By.ID, "canvas").click()
+            send_game_key(driver, Keys.ENTER)
             departure_state = wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
@@ -438,7 +438,7 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            send_game_key(driver, Keys.ENTER)
+            driver.find_element(By.ID, "canvas").click()
             wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
