@@ -223,6 +223,9 @@ func _build_main_menu() -> void:
 	content.add_child(binding_row)
 	for action_name in REMAPPABLE_ACTIONS:
 		var binding_button := Button.new()
+		binding_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		binding_button.custom_minimum_size = Vector2(0, 72)
+		binding_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		binding_button.pressed.connect(_on_rebind_pressed.bind(action_name))
 		binding_row.add_child(binding_button)
 		binding_buttons[action_name] = binding_button

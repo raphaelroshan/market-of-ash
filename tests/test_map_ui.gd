@@ -746,6 +746,8 @@ func _initialize() -> void:
 	ui._show_main_menu()
 	await process_frame
 	_expect(ui.start_game_button.get_global_rect().end.y <= ui.menu_layer.get_global_rect().end.y, "large text should keep Start new game visible before optional settings")
+	for binding_button in ui.binding_buttons.values():
+		_expect(binding_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and binding_button.custom_minimum_size.y >= 72.0, "large text should wrap combined keyboard/controller binding labels")
 	ui._show_shop()
 	ui.reduce_motion_checkbox.button_pressed = true
 	ui.interface_sounds_checkbox.button_pressed = false
@@ -768,6 +770,8 @@ func _initialize() -> void:
 	await process_frame
 	var pause_card: PanelContainer = ui.find_child("PauseCard", true, false)
 	_expect(pause_card != null and pause_card.get_global_rect().position.y >= ui.pause_layer.get_global_rect().position.y and pause_card.get_global_rect().end.y <= ui.pause_layer.get_global_rect().end.y, "large text should keep the complete Pause card inside the game layout")
+	for pause_action in [ui.pause_resume_button, ui.pause_save_button, ui.pause_load_button, ui.pause_report_button, ui.pause_main_menu_button]:
+		_expect(pause_card.get_global_rect().encloses(pause_action.get_global_rect()), "large text should keep Pause action %s inside the modal card" % pause_action.text)
 	ui._close_pause()
 	ui._on_reset_pressed()
 	await process_frame
