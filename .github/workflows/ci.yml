@@ -70,10 +70,12 @@ jobs:
         run: bash scripts/verify.sh
 
   native-render-windows:
-    name: Windows native render matrix
+    name: Windows minimum native render
     runs-on: windows-latest
     needs: [policy, tests]
     if: needs.policy.result == 'success' && needs.tests.result == 'success'
+    env:
+      MARKET_CAPTURE_GEOMETRIES: 960x540
     defaults:
       run:
         shell: bash

@@ -3,13 +3,16 @@
 
 from __future__ import annotations
 
+import argparse
 import struct
 import sys
 import tempfile
 import zlib
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPOSITORY_ROOT))
+sys.path.insert(0, str(REPOSITORY_ROOT / "tools"))
 
 from tools.capture_validation import (
     REQUIRED_CAPTURE_SCREENS,
@@ -22,6 +25,7 @@ from tools.capture_validation import (
     validate_capture_matrix,
     write_rgb_png,
 )
+from tools.validate_native_captures import parse_viewport
 
 
 def png_chunk(chunk_type: bytes, payload: bytes) -> bytes:
@@ -52,6 +56,14 @@ def write_rgba_png(path: Path, width: int, height: int, color: tuple[int, int, i
 
 
 def main() -> int:
+    assert parse_viewport("960x540") == (960, 540)
+    for invalid_viewport in ("960", "0x540", "widextall"):
+        try:
+            parse_viewport(invalid_viewport)
+        except argparse.ArgumentTypeError:
+            pass
+        else:
+            raise AssertionError(f"invalid viewport should be rejected: {invalid_viewport}")
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
         dark = root / "dark.png"

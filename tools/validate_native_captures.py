@@ -35,6 +35,17 @@ EXPECTED_UI_STATE = {
 }
 
 
+def parse_viewport(value: str) -> tuple[int, int]:
+    try:
+        width_text, height_text = value.lower().split("x", 1)
+        width, height = int(width_text), int(height_text)
+    except (ValueError, TypeError) as error:
+        raise argparse.ArgumentTypeError(f"invalid viewport {value!r}; expected WIDTHxHEIGHT") from error
+    if width <= 0 or height <= 0:
+        raise argparse.ArgumentTypeError(f"invalid viewport {value!r}; dimensions must be positive")
+    return width, height
+
+
 def rect_encloses(outer: dict[str, object], inner: dict[str, object]) -> bool:
     outer_left = float(outer.get("x", 0.0))
     outer_top = float(outer.get("y", 0.0))
@@ -51,9 +62,11 @@ def rect_encloses(outer: dict[str, object], inner: dict[str, object]) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--viewport", action="append", type=parse_viewport, default=[])
     args = parser.parse_args()
+    viewports = tuple(args.viewport) if args.viewport else NATIVE_VIEWPORTS
     captures: list[dict[str, object]] = []
-    for width, height in NATIVE_VIEWPORTS:
+    for width, height in viewports:
         manifest_path = args.output_dir / f"native-capture-{width}x{height}.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         if manifest.get("manifest_version") != 1:
@@ -70,7 +83,7 @@ def main() -> int:
     validate_capture_matrix(
         captures,
         required_screens=REQUIRED_NATIVE_SCREENS,
-        viewports=NATIVE_VIEWPORTS,
+        viewports=viewports,
     )
     by_viewport: dict[tuple[int, int], dict[str, Path]] = {}
     output_root = args.output_dir.resolve()

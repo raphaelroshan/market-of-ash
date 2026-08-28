@@ -54,11 +54,6 @@ func _run() -> void:
 	ui._on_large_text_toggled(false)
 	ui._refresh_continue_availability()
 	ui._show_main_menu()
-	if OS.get_name() == "Windows":
-		var viewport_ready: bool = await _fit_requested_viewport()
-		if not viewport_ready:
-			quit(1)
-			return
 	await _capture(ui, "main_menu", "main-menu")
 
 	ui._on_start_game_requested()
@@ -153,28 +148,6 @@ func _run() -> void:
 	ui.queue_free()
 	await process_frame
 	quit(0)
-
-func _fit_requested_viewport() -> bool:
-	for settle_frame in range(3):
-		await process_frame
-	for attempt in range(8):
-		await process_frame
-		var current_size := Vector2i(root.get_texture().get_size())
-		if current_size == requested_size:
-			return true
-		if current_size.x <= 0 or current_size.y <= 0:
-			continue
-		var window_size := DisplayServer.window_get_size()
-		var next_size := Vector2i(
-			maxi(1, roundi(float(window_size.x) * float(requested_size.x) / float(current_size.x))),
-			maxi(1, roundi(float(window_size.y) * float(requested_size.y) / float(current_size.y)))
-		)
-		if next_size == window_size:
-			next_size += requested_size - current_size
-		DisplayServer.window_set_size(next_size)
-	var final_size := Vector2i(root.get_texture().get_size())
-	push_error("Could not fit native viewport to %s; rendered %s from window %s at display scale %.3f." % [requested_size, final_size, DisplayServer.window_get_size(), DisplayServer.screen_get_scale(DisplayServer.window_get_current_screen())])
-	return false
 
 func _parse_arguments() -> bool:
 	var arguments := OS.get_cmdline_user_args()
