@@ -814,6 +814,7 @@ func _build_shop() -> void:
 	guided_test_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guided_test_button.custom_minimum_size = Vector2(0, 48)
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
+	guided_test_button.set_meta("web_accessibility_id", "guided_trade")
 	guided_test_button.pressed.connect(_on_guided_test_action)
 	market_shell.add_child(guided_test_button)
 	shop_good_option.item_selected.connect(_on_shop_plan_changed)
@@ -884,12 +885,14 @@ func _build_shop() -> void:
 	shop_save_button = Button.new()
 	shop_save_button.text = "Save prototype state"
 	shop_save_button.custom_minimum_size = Vector2(0, 44)
+	shop_save_button.set_meta("web_accessibility_id", "shop_save")
 	shop_save_button.pressed.connect(_on_save_pressed)
 	actions.add_child(shop_save_button)
 	shop_load_button = Button.new()
 	shop_load_button.text = "Load saved state"
 	shop_load_button.custom_minimum_size = Vector2(0, 44)
 	shop_load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
+	shop_load_button.set_meta("web_accessibility_id", "shop_load")
 	shop_load_button.pressed.connect(_on_load_pressed)
 	actions.add_child(shop_load_button)
 	save_status_label = Label.new()
@@ -900,12 +903,14 @@ func _build_shop() -> void:
 	shop_reset_button = Button.new()
 	shop_reset_button.text = "Reset run"
 	shop_reset_button.custom_minimum_size = Vector2(0, 44)
+	shop_reset_button.set_meta("web_accessibility_id", "shop_reset")
 	shop_reset_button.pressed.connect(_on_reset_pressed)
 	actions.add_child(shop_reset_button)
 	shop_report_button = Button.new()
 	shop_report_button.text = "Export playtest report"
 	shop_report_button.custom_minimum_size = Vector2(0, 44)
 	shop_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
+	shop_report_button.set_meta("web_accessibility_id", "shop_report")
 	shop_report_button.pressed.connect(_on_export_report_pressed)
 	actions.add_child(shop_report_button)
 	diagnostics_label = Label.new()
@@ -1579,7 +1584,11 @@ func _publish_web_ui_state() -> void:
 	const focusedControlId = document.activeElement && document.activeElement.dataset
 		? document.activeElement.dataset.control || ''
 		: '';
+	const focusedActionId = document.activeElement && document.activeElement.dataset
+		? document.activeElement.dataset.action || ''
+		: '';
 	controlsRegion.dataset.screen = state.screen;
+	controlsRegion.dataset.renderSequence = String(Number(controlsRegion.dataset.renderSequence || '0') + 1);
 	controlsRegion.replaceChildren();
 	const heading = document.createElement('h2');
 	heading.id = 'market-of-ash-actions-heading';
@@ -1594,6 +1603,7 @@ func _publish_web_ui_state() -> void:
 		const label = document.createElement('label');
 		label.htmlFor = fieldId;
 		label.textContent = control.label;
+		label.style.cssText = 'display:block;margin-top:8px;font-weight:600;';
 		controlsRegion.appendChild(label);
 		let field;
 		if (control.kind === 'select') {
@@ -1617,6 +1627,7 @@ func _publish_web_ui_state() -> void:
 		field.dataset.control = control.id;
 		field.disabled = !control.enabled;
 		field.setAttribute('aria-disabled', String(!control.enabled));
+		field.style.cssText = 'display:block;width:100%;min-height:44px;margin:4px 0 8px;box-sizing:border-box;font:inherit;';
 		controlsRegion.appendChild(field);
 		if (control.description) {
 			const description = document.createElement('p');
@@ -1639,6 +1650,7 @@ func _publish_web_ui_state() -> void:
 		button.textContent = action.label;
 		button.disabled = !action.enabled;
 		button.setAttribute('aria-disabled', String(!action.enabled));
+		button.style.cssText = 'display:block;width:100%;min-height:44px;margin-top:8px;box-sizing:border-box;font:inherit;';
 		controlsRegion.appendChild(button);
 		if (action.description) {
 			const description = document.createElement('p');
@@ -1659,6 +1671,13 @@ func _publish_web_ui_state() -> void:
 			.find(candidate => candidate.dataset.control === focusedControlId && !candidate.disabled);
 		if (replacement) {
 			replacement.focus();
+		}
+	} else if (focusedActionId) {
+		const matchingAction = Array.from(controlsRegion.querySelectorAll('[data-action]'))
+			.find(candidate => candidate.dataset.action === focusedActionId && !candidate.disabled);
+		const nextControl = controlsRegion.querySelector('[data-control]:not(:disabled),[data-action]:not(:disabled)');
+		if (matchingAction || nextControl) {
+			(matchingAction || nextControl).focus();
 		}
 	}
 	const canvas = document.getElementById('canvas');
@@ -1756,6 +1775,13 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 		var choice_index := int(action_id.trim_prefix("event_choice_"))
 		if choice_index >= 0 and choice_index < event_choice_buttons.size():
 			return event_choice_buttons[choice_index]
+	for control in [guided_test_button, shop_save_button, shop_load_button, shop_reset_button, shop_report_button]:
+		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
+			return control
+	for controls in [contract_buttons, opportunity_buttons, crew_buttons]:
+		for control in controls:
+			if is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
+				return control
 	return null
 
 func _append_web_accessibility_action(actions: Array, action_id: String, control: Variant) -> void:
@@ -1767,6 +1793,10 @@ func _append_web_accessibility_action(actions: Array, action_id: String, control
 		"enabled": not control.disabled,
 		"description": String(control.tooltip_text),
 	})
+
+func _append_tagged_web_accessibility_actions(actions: Array, controls: Array) -> void:
+	for control in controls:
+		_append_web_accessibility_action(actions, String(control.get_meta("web_accessibility_id", "")), control)
 
 func _web_accessibility_option_control(control_id: String, label: String, control: OptionButton) -> Dictionary:
 	if control == null or not is_instance_valid(control) or not control.is_visible_in_tree():
@@ -1824,6 +1854,14 @@ func _web_accessibility_actions() -> Array:
 		"settlement_shop":
 			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
 			_append_web_accessibility_action(actions, "shop_sell", shop_sell_button)
+			_append_web_accessibility_action(actions, "guided_trade", guided_test_button)
+			_append_tagged_web_accessibility_actions(actions, contract_buttons)
+			_append_tagged_web_accessibility_actions(actions, opportunity_buttons)
+			_append_tagged_web_accessibility_actions(actions, crew_buttons)
+			_append_web_accessibility_action(actions, "shop_save", shop_save_button)
+			_append_web_accessibility_action(actions, "shop_load", shop_load_button)
+			_append_web_accessibility_action(actions, "shop_reset", shop_reset_button)
+			_append_web_accessibility_action(actions, "shop_report", shop_report_button)
 			_append_web_accessibility_action(actions, "plan_departure", plan_departure_button)
 		"departure_desk":
 			_append_web_accessibility_action(actions, "return_to_shop", return_to_shop_button)
@@ -2519,6 +2557,7 @@ func _refresh_opportunities() -> void:
 				contract_button.disabled = true
 				contract_reason = "Needs %d free cargo space; only %d is available." % [required_weight, free_capacity]
 		contract_button.tooltip_text = contract_reason if contract_button.disabled else String(contract_record.get("tradeoff", ""))
+		contract_button.set_meta("web_accessibility_id", "accept_contract_%s" % contract_id)
 		contract_button.pressed.connect(_on_accept_contract_pressed.bind(contract_id))
 		opportunity_list.add_child(contract_button)
 		contract_buttons.append(contract_button)
@@ -2543,6 +2582,7 @@ func _refresh_opportunities() -> void:
 			resolve_button.tooltip_text = "Acquire %d more %s by Day %d." % [remaining, String(active.get("good_id", "")), int(active.get("deadline_day", 0))]
 		else:
 			resolve_button.tooltip_text = "Resolve the contract using the currently carried cargo and deadline."
+		resolve_button.set_meta("web_accessibility_id", "resolve_contract_%s" % active_id)
 		resolve_button.pressed.connect(_on_resolve_contract_pressed.bind(active_id))
 		opportunity_list.add_child(resolve_button)
 		contract_buttons.append(resolve_button)
@@ -2593,6 +2633,7 @@ func _refresh_opportunities() -> void:
 			action_button.disabled = true
 			unavailable_reason = "Arms escalation is already zero; no audit is needed."
 		action_button.tooltip_text = unavailable_reason if action_button.disabled else "%s %s" % [String(action.get("description", "")), String(action.get("tradeoff", ""))]
+		action_button.set_meta("web_accessibility_id", "settlement_action_%s" % String(action.get("id", "")))
 		action_button.pressed.connect(_on_settlement_action_pressed.bind(String(action.get("id", ""))))
 		opportunity_list.add_child(action_button)
 		opportunity_buttons.append(action_button)
@@ -2631,6 +2672,7 @@ func _append_crew_opportunity() -> void:
 				reason = "No visit slots remain."
 			button.pressed.connect(_on_assign_crew_pressed.bind(crew_id))
 		button.tooltip_text = reason if button.disabled else String(crew.get("hook", ""))
+		button.set_meta("web_accessibility_id", "%s_crew_%s" % ["assign" if recruited else "recruit", crew_id])
 		opportunity_list.add_child(button)
 		crew_buttons.append(button)
 		var details := Label.new()

@@ -152,7 +152,15 @@ func _initialize() -> void:
 	var shop_targets: Dictionary = initial_web_state.get("targets", {})
 	_expect(not Dictionary(shop_targets.get("shop_good", {})).is_empty() and not Dictionary(shop_targets.get("shop_buy", {})).is_empty() and not Dictionary(shop_targets.get("plan_departure", {})).is_empty(), "Web diagnostics should publish visible Shop target geometry for packaged pointer checks")
 	var shop_accessibility_actions: Array = initial_web_state.get("accessibility_actions", [])
-	_expect(shop_accessibility_actions.size() == 3 and shop_accessibility_actions[0].get("id") == "shop_buy" and shop_accessibility_actions[1].get("id") == "shop_sell" and shop_accessibility_actions[2].get("id") == "plan_departure", "Web accessibility actions should mirror the Shop's primary trade and planning controls")
+	var shop_accessibility_action_ids: Array[String] = []
+	for action in shop_accessibility_actions:
+		shop_accessibility_action_ids.append(String(action.get("id", "")))
+	_expect(shop_accessibility_action_ids.size() >= 3 and shop_accessibility_action_ids[0] == "shop_buy" and shop_accessibility_action_ids[1] == "shop_sell" and shop_accessibility_action_ids[2] == "guided_trade", "Web accessibility actions should begin with the Shop's visible trade controls")
+	_expect("shop_save" in shop_accessibility_action_ids and "shop_load" in shop_accessibility_action_ids and "shop_reset" in shop_accessibility_action_ids and "shop_report" in shop_accessibility_action_ids and "plan_departure" in shop_accessibility_action_ids, "Web accessibility actions should include Shop utility and planning controls")
+	for dynamic_controls in [ui.contract_buttons, ui.opportunity_buttons, ui.crew_buttons]:
+		for dynamic_control in dynamic_controls:
+			var dynamic_action_id := String(dynamic_control.get_meta("web_accessibility_id", ""))
+			_expect(not dynamic_action_id.is_empty() and dynamic_action_id in shop_accessibility_action_ids and ui._web_accessibility_action_control(dynamic_action_id) == dynamic_control, "Every dynamic Shop action should publish a stable semantic ID that resolves to its existing Godot button")
 	var shop_accessibility_controls: Array = initial_web_state.get("accessibility_controls", [])
 	_expect(shop_accessibility_controls.size() == 2 and shop_accessibility_controls[0].get("id") == "shop_good" and shop_accessibility_controls[0].get("kind") == "select" and shop_accessibility_controls[0].get("value") == "water" and Array(shop_accessibility_controls[0].get("options", [])).size() == ui.shop_good_option.item_count, "Web accessibility controls should expose the complete Shop cargo selector")
 	_expect(shop_accessibility_controls[1].get("id") == "shop_quantity" and shop_accessibility_controls[1].get("kind") == "number" and shop_accessibility_controls[1].get("value") == 2 and shop_accessibility_controls[1].get("minimum") == 1 and shop_accessibility_controls[1].get("maximum") == 12 and shop_accessibility_controls[1].get("step") == 1, "Web accessibility controls should expose the Shop quantity bounds, integer step, and value")

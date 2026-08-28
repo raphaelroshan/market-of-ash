@@ -102,9 +102,28 @@ def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: 
             if not ready:
                 time.sleep(0.1)
                 continue
+            render_sequence = int(
+                driver.execute_script(
+                    "return Number(document.getElementById('market-of-ash-actions').dataset.renderSequence || '0')"
+                )
+            )
             button.send_keys(Keys.ENTER)
-            time.sleep(INPUT_SETTLE_SECONDS)
-            return
+            focus_deadline = time.monotonic() + timeout_seconds
+            while time.monotonic() < focus_deadline:
+                focus_state = driver.execute_script(
+                    """
+                    const region = document.getElementById('market-of-ash-actions');
+                    return {
+                      preserved: Boolean(region && region.contains(document.activeElement)),
+                      renderSequence: region ? Number(region.dataset.renderSequence || '0') : 0,
+                    };
+                    """,
+                )
+                if focus_state["preserved"] and focus_state["renderSequence"] > render_sequence:
+                    time.sleep(INPUT_SETTLE_SECONDS)
+                    return
+                time.sleep(0.1)
+            raise TimeoutError(f"Web accessibility action {action_id!r} did not preserve semantic focus")
         time.sleep(0.1)
     raise TimeoutError(f"Web accessibility action {action_id!r} was not available")
 
@@ -153,6 +172,27 @@ def set_accessibility_quantity(driver: Any, control_id: str, value: int) -> None
     control.send_keys(str(value))
     control.send_keys(Keys.TAB)
     time.sleep(INPUT_SETTLE_SECONDS)
+
+
+def wait_for_accessibility_action_state(
+    driver: Any, action_id: str, enabled: bool, timeout_seconds: float = 5.0
+) -> None:
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(state, dict):
+            action = next(
+                (
+                    candidate
+                    for candidate in state.get("accessibility_actions", [])
+                    if candidate.get("id") == action_id
+                ),
+                None,
+            )
+            if isinstance(action, dict) and bool(action.get("enabled")) is enabled:
+                return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility action {action_id!r} did not become enabled={enabled}")
 
 
 def activate_game_action(driver: Any, action_id: str, through_accessibility: bool) -> None:
@@ -468,6 +508,10 @@ def main() -> int:
                     "ui_state": shop_state,
                 }
             )
+            if use_accessibility_actions:
+                contract_action_id = "accept_contract_reedwatch_water_relief_01"
+                activate_accessibility_action(driver, contract_action_id)
+                wait_for_accessibility_action_state(driver, contract_action_id, False)
             send_game_key(driver, "p")
             pause_state = wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="ashgate")
             pause_output = args.output_dir / f"pause-{width}x{height}.png"
@@ -798,6 +842,7 @@ def main() -> int:
                     "loading_overlay_cleared": True,
                     "assistive_action_bridge": "actions focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
                     "assistive_planning_controls": "Shop and Departure native HTML fields exercised at 960x540",
+                    "assistive_dynamic_actions": "Reedwatch Water Relief accepted through its generated semantic button at 960x540",
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
                     "captures": captures,
                 },
