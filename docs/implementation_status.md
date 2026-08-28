@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards, including keyboard-operated semantic Web actions, generated Shop actions, planning fields, and presentation settings, are configured; the remaining gates require input-remapping semantics, physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
+**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards, including keyboard-operated semantic Web actions, generated Shop actions, planning fields, presentation settings, and keyboard remapping, are configured; the remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
 
 ## Implemented player-facing spine
 
@@ -143,7 +143,7 @@ godot --headless --path . --export-release Web build/web/index.html
 
 `scripts/verify.sh` runs repository policy, every content validator, validator fixtures, and all deterministic Godot suites. The separate editor import remains useful for import/cache validation.
 
-CI run 225 on PR head `9de5d5b` passed repository policy, Ubuntu and Windows Godot tests, deterministic review, Windows/Web packaging and smoke checks, packaged Windows GUI/resource validation, and 84 packaged-browser captures across Chrome, Firefox, and Edge. Local results must still be recorded for every subsequent slice.
+CI run 227 on PR head `c323604` passed repository policy, Ubuntu and Windows Godot tests, deterministic review, Windows/Web packaging and smoke checks, packaged Windows GUI/resource validation, and 84 packaged-browser captures across Chrome, Firefox, and Edge. Local results must still be recorded for every subsequent slice.
 
 ## Baseline verification result
 
@@ -317,8 +317,9 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - CI run 220 (`33152425997`) passed all nine jobs at `f6ddf4a`. Its Chrome, Firefox, and Edge manifests are version 5, each contains 28 captures, 38 minimum-viewport semantic-action instances, and 16 published Shop/Departure form snapshots. The browser flow changes cargo, destination, and integer quantities through native HTML fields, verifies exact labels/options/values/bounds/descriptions after each update, and still routes all actions through the Godot callback. Downloaded constrained Shop evidence shows the semantic overlay hides before capture and leaves the game canvas unobscured.
 - CI run 224 (`33154435995`) passed all nine jobs at `4b4ee4d`. Each browser artifact contains 28 captures, 159 total action snapshots, and 32 planning-control snapshots across both viewports. The minimum-viewport flow accepts Reedwatch Water Relief through its generated semantic button, requires the same action to become disabled, and preserves semantic focus through the resulting Shop rebuild. Stable IDs also cover generated contract resolution, settlement opportunities, crew recruitment/assignment, the guided trade, and Shop save/load/reset/report controls. Downloaded Chrome and Edge frames confirm the focus-only overlay is absent from captures and the canvas remains unobscured.
 - CI run 225 (`33155440504`) passed all nine jobs at `9de5d5b`. Its manifest-v6 Chrome, Firefox, and Edge artifacts each contain 28 captures, 159 action snapshots, and 44 semantic-control snapshots across both viewports. At 960×540 the harness toggles Reduce travel motion, Large text, and Interface sounds off and on with Space through native HTML checkboxes, requires the published Godot values to match, preserves focus through each DOM rebuild, and checks that Start/Continue precede the optional settings in semantic order. The 1280×720 path remains independently canvas-driven.
+- CI run 227 (`33156731432`) passed all nine jobs at `c323604`. Its manifest-v7 browser artifacts each contain 28 captures, 175 action snapshots, and 44 control snapshots. At 960×540 the harness enters Pause remapping through the semantic button, sends `R` through the browser key bridge, verifies Godot preserves the Menu/Start controller binding while publishing Pause as `R`, keeps focus on the same semantic action across the DOM rebuild, then activates Restore default inputs and requires Pause to return to `P`. The mixed action/control order exactly matches the Main Menu's visual sequence in Chrome, Firefox, and Edge.
 - `docs/ux/alpha_accessibility_input_audit.md` separates automated minimum-window evidence from the physical-controller, high-DPI, rendered large-text, color-simulation, and deeper browser checks still requiring human execution. `docs/playtest_feedback_form.md` captures comprehension and causal run stories without personal data.
 
 ## Next permitted task
 
-Complete semantic input-remapping coverage, then run the portable candidate on physical Windows hardware through the documented 125%/150%/200% scaling, controller, browser-shortcut, assistive-technology, antivirus/reputation, and installer/storefront matrix. Keep any resulting fixes narrow; do not broaden into beta content or storefront integration until those observations are recorded.
+Run the portable candidate on physical Windows hardware through the documented 125%/150%/200% scaling, controller, browser-shortcut, assistive-technology, antivirus/reputation, and installer/storefront matrix. Keep any resulting fixes narrow; do not broaden into beta content or storefront integration until those observations are recorded.
