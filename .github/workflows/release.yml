@@ -50,6 +50,8 @@ jobs:
           test -s build/web/index.html
           test -s build/web/index.pck
           test -s build/web/index.wasm
+          generated_import=$(find build -type f -name '*.import' -print -quit)
+          test -z "$generated_import"
           "./build/${slug}.exe" --headless --quit-after 2
       - name: Create release manifest
         run: |
