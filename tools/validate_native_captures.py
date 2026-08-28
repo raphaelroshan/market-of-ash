@@ -23,6 +23,7 @@ REQUIRED_NATIVE_SCREENS = {
     "route_event",
     "route_event_large_text",
     "route_event_result",
+    "route_event_loss_result",
     "destination_shop",
     "new_game_confirmation",
 }
@@ -32,6 +33,7 @@ EXPECTED_UI_STATE = {
     "destination_shop": "settlement_shop",
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
+    "route_event_loss_result": "arrival_handoff",
 }
 
 
@@ -117,6 +119,7 @@ def main() -> int:
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
         require_distinct_screen(screens["departure_desk"], screens["route_event"], f"{viewport} Route event")
         require_distinct_screen(screens["route_event"], screens["route_event_result"], f"{viewport} Resolve event")
+        require_distinct_screen(screens["route_event_result"], screens["route_event_loss_result"], f"{viewport} Realized loss recovery")
         require_distinct_screen(screens["route_event_result"], screens["destination_shop"], f"{viewport} Enter settlement")
         require_distinct_screen(screens["main_menu"], screens["new_game_confirmation"], f"{viewport} New game confirmation", minimum_ratio=0.01)
         for screen in ("main_menu", "settlement_shop", "pause", "departure_desk"):

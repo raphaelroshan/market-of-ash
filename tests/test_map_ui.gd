@@ -688,6 +688,7 @@ func _initialize() -> void:
 	_expect(ui.world.pending_event.is_empty() and ui.world.current_settlement == "brine_cross", "paying the event toll did not complete arrival")
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
 	_expect(ui.conflict_outcome_panel.visible and ui.conflict_outcome_label.text.contains("PLAN VS ACTUAL") and ui.conflict_outcome_label.text.contains("TACTIC — PAY / CERTAIN") and ui.conflict_outcome_label.text.contains("PLAN — -6 ashmarks") and ui.conflict_outcome_label.text.contains("ACTUAL — -6 ashmarks") and ui.conflict_outcome_label.text.contains("Matched the disclosed plan"), "resolved Gatekeeper choice should compare its disclosed plan with the authoritative actual outcome")
+	_expect(not ui.conflict_outcome_label.text.contains("RECOVERY —"), "a conflict result without realized cargo loss should not manufacture recovery advice")
 	_expect(ui._web_accessibility_announcement().contains("PLAN VS ACTUAL") and ui._web_accessibility_announcement().contains("PLAN — -6 ashmarks") and ui._web_accessibility_announcement().contains("ACTUAL — -6 ashmarks"), "arrival announcement should expose the full conflict comparison to Web assistive users")
 	_expect(ui.event_label.text.contains("NEXT — Review the result") and ui.event_label.text.contains("Enter Brine Cross"), "a resolved journey should state the named destination action needed to continue")
 	_expect(ui.destination_option.disabled and ui.route_option.disabled, "an arrival report should keep planning controls locked until the player enters the settlement")
@@ -783,6 +784,24 @@ func _initialize() -> void:
 	ui._on_event_choice_pressed("three_riders_no_banner", "cross_without_escort")
 	_expect(ui.world.current_settlement == "reedwatch" and int(ui.world.cargo.get("medicine", 0)) == 1, "risk-comparison fixture should realize the deterministic exposed-unit loss")
 	_expect(ui.conflict_outcome_label.text.contains("TACTIC — MANEUVER / 45% RISK") and ui.conflict_outcome_label.text.contains("Medicine -1") and ui.conflict_outcome_label.text.contains("Risk realized: the 24% roll was below 45%"), "risky confrontation comparison should explain the disclosed threshold, actual roll, and realized cargo loss")
+	_expect(ui.conflict_outcome_label.text.contains("RECOVERY — Medicine x1 remains and would sell here for 52 ashmarks") and ui.conflict_outcome_label.text.contains("lowest-risk affordable onward route") and ui.conflict_outcome_label.text.contains("No restart is required"), "a realized cargo loss should name a concrete surviving sale and affordable onward route")
+	_expect(ui._web_accessibility_announcement().contains("RECOVERY — Medicine x1 remains") and ui._web_accessibility_announcement().contains("No restart is required"), "arrival accessibility announcement should include the concrete recovery path")
+	var recovery_sale: Dictionary = ui._best_recovery_sale()
+	_expect(recovery_sale.get("good_id", "") == "medicine" and int(recovery_sale.get("quantity", 0)) == 1 and int(recovery_sale.get("total", 0)) == 52, "recovery guidance should select the highest-value surviving local sale")
+	var recovery_route: Dictionary = ui._safest_affordable_recovery_route(ui.world.money + int(recovery_sale.get("total", 0)))
+	_expect(not recovery_route.is_empty() and int(recovery_route.get("money_cost", 999)) <= ui.world.money + int(recovery_sale.get("total", 0)) and int(recovery_route.get("provision_cost", 999)) <= ui.world.provisions, "recovery guidance should only name an actually affordable onward route")
+	var risk_recovery_cargo: Dictionary = ui.world.cargo.duplicate(true)
+	ui.world.cargo["medicine"] = 0
+	ui.world.cargo["grain"] = 1
+	ui.world.cargo["weight"] = 1
+	var alternative_recovery_sale: Dictionary = ui._best_recovery_sale()
+	_expect(alternative_recovery_sale.get("good_id", "") == "grain" and int(alternative_recovery_sale.get("quantity", 0)) == 1, "recovery guidance should fall back to another held good when the exposed cargo is gone")
+	ui.world.cargo = risk_recovery_cargo
+	ui._on_enter_settlement_pressed()
+	ui._on_save_pressed()
+	ui._on_start_game_pressed()
+	ui._on_load_pressed()
+	_expect(ui.recent_conflict_label.text.contains("RECOVERY — Medicine x1 remains and would sell here for 52 ashmarks"), "save/load should reconstruct the concrete recovery path from archived event history and restored world state")
 
 	ui._on_start_game_pressed()
 	ui._on_recruit_crew_pressed("nara_vey")
