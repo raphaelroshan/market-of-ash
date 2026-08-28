@@ -18,6 +18,21 @@ from selenium.webdriver.common.keys import Keys
 
 
 VIEWPORTS = ((960, 540), (1280, 720))
+REQUIRED_CAPTURE_SCREENS = {
+    "main_menu",
+    "settlement_shop",
+    "pause",
+    "departure_desk",
+    "returned_shop",
+    "arrival_handoff",
+    "destination_shop",
+    "main_menu_large_text",
+    "settlement_shop_large_text",
+    "pause_large_text",
+    "departure_desk_large_text",
+    "route_event",
+    "route_event_result",
+}
 
 
 def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
@@ -149,6 +164,18 @@ def require_distinct_screen(before: Path, after: Path, transition: str, minimum_
             "this may be only a focus highlight rather than the requested screen"
         )
     return ratio
+
+
+def validate_capture_matrix(captures: list[dict[str, object]]) -> None:
+    for width, height in VIEWPORTS:
+        captured_screens = {
+            str(capture.get("screen", ""))
+            for capture in captures
+            if capture.get("requested_window") == {"width": width, "height": height}
+        }
+        missing = sorted(REQUIRED_CAPTURE_SCREENS - captured_screens)
+        if missing:
+            raise AssertionError(f"{width}x{height}: missing required captures: {', '.join(missing)}")
 
 
 def set_viewport_size(driver: webdriver.Chrome, width: int, height: int) -> None:
@@ -544,9 +571,19 @@ def main() -> int:
                     "ui_state": event_arrival_state,
                 }
             )
+        validate_capture_matrix(captures)
         (args.output_dir / "dom.html").write_text(driver.page_source, encoding="utf-8")
         (args.output_dir / "capture_manifest.json").write_text(
-            json.dumps({"url": args.url, "loading_overlay_cleared": True, "captures": captures}, indent=2),
+            json.dumps(
+                {
+                    "manifest_version": 2,
+                    "url": args.url,
+                    "loading_overlay_cleared": True,
+                    "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
+                    "captures": captures,
+                },
+                indent=2,
+            ),
             encoding="utf-8",
         )
     except Exception as error:
