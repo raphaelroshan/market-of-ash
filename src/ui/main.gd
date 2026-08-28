@@ -1539,11 +1539,10 @@ func _publish_web_ui_state() -> void:
 func _setup_web_accessibility_bridge() -> void:
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
 		return
-	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
-	web_accessibility_callback = bridge.call("create_callback", Callable(self, "_on_web_accessibility_action"))
-	var browser_window: Variant = bridge.call("get_interface", "window")
+	web_accessibility_callback = JavaScriptBridge.create_callback(_on_web_accessibility_action)
+	var browser_window: JavaScriptObject = JavaScriptBridge.get_interface("window")
 	if browser_window != null:
-		browser_window.set("marketOfAshAccessibilityActivate", web_accessibility_callback)
+		browser_window.marketOfAshAccessibilityActivate = web_accessibility_callback
 
 func _on_web_accessibility_action(arguments: Array) -> void:
 	if arguments.is_empty():
