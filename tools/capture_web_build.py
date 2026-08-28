@@ -37,7 +37,7 @@ def send_game_key(driver: Any, key: str) -> None:
 
 
 def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.0) -> None:
-    """Reveal and click a Godot control described by the Web test state."""
+    """Click the center of a Godot control described by the Web test state."""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         state = driver.execute_script("return window.marketOfAshUiState || null")
@@ -53,15 +53,10 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
             ):
                 logical_x = target["x"] + target["width"] / 2
                 logical_y = target["y"] + target["height"] / 2
-                canvas = driver.find_element(By.ID, "canvas")
-                if not 0 <= logical_x < viewport["width"]:
+                if not (0 <= logical_x < viewport["width"] and 0 <= logical_y < viewport["height"]):
                     time.sleep(0.1)
                     continue
-                if not 0 <= logical_y < viewport["height"]:
-                    scroll_y = 300 if logical_y >= viewport["height"] else -300
-                    ActionChains(driver).move_to_element(canvas).scroll_by_amount(0, scroll_y).perform()
-                    time.sleep(INPUT_SETTLE_SECONDS)
-                    continue
+                canvas = driver.find_element(By.ID, "canvas")
                 canvas_rect = driver.execute_script(
                     "const r=arguments[0].getBoundingClientRect();"
                     "return {width:r.width,height:r.height};",
@@ -76,6 +71,29 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
                 return
         time.sleep(0.1)
     raise TimeoutError(f"Web UI target {target_name!r} was not available")
+
+
+def reveal_game_target_with_focus(
+    driver: Any, target_name: str, navigation_key: str, maximum_steps: int = 12
+) -> None:
+    """Use Godot focus navigation so its ScrollContainer reveals a canvas target."""
+    for _ in range(maximum_steps + 1):
+        state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(state, dict):
+            target = state.get("targets", {}).get(target_name, {})
+            viewport = state.get("logical_viewport", {})
+            if isinstance(target, dict) and isinstance(viewport, dict):
+                logical_x = target.get("x", 0) + target.get("width", 0) / 2
+                logical_y = target.get("y", 0) + target.get("height", 0) / 2
+                if (
+                    target.get("width", 0) > 0
+                    and target.get("height", 0) > 0
+                    and 0 <= logical_x < viewport.get("width", 0)
+                    and 0 <= logical_y < viewport.get("height", 0)
+                ):
+                    return
+        send_game_key(driver, navigation_key)
+    raise TimeoutError(f"Web UI target {target_name!r} was not revealed by focus navigation")
 
 
 def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: float = 5.0) -> None:
@@ -843,6 +861,7 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
+            reveal_game_target_with_focus(driver, "large_text", Keys.ARROW_DOWN)
             click_game_target(driver, "large_text")
             large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
@@ -858,7 +877,7 @@ def main() -> int:
                     "file": large_menu_output.name,
                     "bytes": large_menu_bytes,
                     "changed_pixel_ratio": round(large_menu_changed_ratio, 4),
-                    "navigation": "Pointer activation of the published Large text target",
+                    "navigation": "Keyboard reveal, then pointer activation of the published Large text target",
                     "ui_state": large_menu_state,
                 }
             )
