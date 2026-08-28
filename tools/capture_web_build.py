@@ -37,7 +37,7 @@ def send_game_key(driver: Any, key: str) -> None:
 
 
 def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.0) -> None:
-    """Click the center of a Godot control described by the Web test state."""
+    """Reveal and click a Godot control described by the Web test state."""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         state = driver.execute_script("return window.marketOfAshUiState || null")
@@ -53,10 +53,15 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
             ):
                 logical_x = target["x"] + target["width"] / 2
                 logical_y = target["y"] + target["height"] / 2
-                if not (0 <= logical_x < viewport["width"] and 0 <= logical_y < viewport["height"]):
+                canvas = driver.find_element(By.ID, "canvas")
+                if not 0 <= logical_x < viewport["width"]:
                     time.sleep(0.1)
                     continue
-                canvas = driver.find_element(By.ID, "canvas")
+                if not 0 <= logical_y < viewport["height"]:
+                    scroll_y = 300 if logical_y >= viewport["height"] else -300
+                    ActionChains(driver).move_to_element(canvas).scroll_by_amount(0, scroll_y).perform()
+                    time.sleep(INPUT_SETTLE_SECONDS)
+                    continue
                 canvas_rect = driver.execute_script(
                     "const r=arguments[0].getBoundingClientRect();"
                     "return {width:r.width,height:r.height};",
