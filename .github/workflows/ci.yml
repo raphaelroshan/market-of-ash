@@ -221,6 +221,7 @@ jobs:
         run: |
           if [ "${{ matrix.browser }}" = "firefox" ]; then
             firefox --version
+            command -v xvfb-run
           else
             google-chrome --version
           fi
@@ -237,10 +238,17 @@ jobs:
             sleep 1
           done
           curl --fail --silent http://127.0.0.1:8765/index.html >/dev/null
-          python tools/capture_web_build.py \
-            --browser "${{ matrix.browser }}" \
-            --url http://127.0.0.1:8765/index.html \
+          capture_args=(
+            --browser "${{ matrix.browser }}"
+            --url http://127.0.0.1:8765/index.html
             --output-dir "artifacts/web-render-${{ matrix.browser }}"
+          )
+          if [ "${{ matrix.browser }}" = "firefox" ]; then
+            MOZ_WEBRENDER=1 LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a \
+              python tools/capture_web_build.py "${capture_args[@]}"
+          else
+            python tools/capture_web_build.py "${capture_args[@]}"
+          fi
       - name: Upload rendered browser evidence
         if: always()
         uses: actions/upload-artifact@v7

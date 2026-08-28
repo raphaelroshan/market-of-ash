@@ -188,9 +188,13 @@ def create_driver(browser: str) -> Any:
         return webdriver.Chrome(options=options)
     if browser == "firefox":
         options = webdriver.FirefoxOptions()
-        options.add_argument("-headless")
         options.set_preference("browser.startup.page", 0)
         options.set_preference("media.autoplay.default", 0)
+        options.set_preference("webgl.disabled", False)
+        options.set_preference("webgl.force-enabled", True)
+        options.set_preference("webgl.enable-webgl2", True)
+        options.set_preference("gfx.webrender.all", True)
+        options.set_preference("layers.acceleration.force-enabled", True)
         return webdriver.Firefox(options=options)
     raise ValueError(f"unsupported browser {browser!r}")
 
