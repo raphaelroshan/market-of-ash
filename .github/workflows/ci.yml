@@ -171,6 +171,21 @@ jobs:
           version: 4.4.1
           use-dotnet: false
           include-templates: true
+      - name: Setup Windows resource editor
+        shell: pwsh
+        run: |
+          $toolDirectory = Join-Path $env:RUNNER_TEMP "rcedit-v2.0.0"
+          $toolPath = Join-Path $toolDirectory "rcedit.exe"
+          $expectedHash = "3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+          New-Item -ItemType Directory -Path $toolDirectory -Force | Out-Null
+          Invoke-WebRequest `
+            -Uri "https://github.com/electron/rcedit/releases/download/v2.0.0/rcedit-x64.exe" `
+            -OutFile $toolPath
+          $actualHash = (Get-FileHash -Path $toolPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -ne $expectedHash) {
+            throw "rcedit checksum mismatch: expected $expectedHash, got $actualHash"
+          }
+          $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Stamp build provenance
         run: |
           python -c "import os; from pathlib import Path; p=Path('project.godot'); s=p.read_text(encoding='utf-8'); assert 'build_commit=\"development\"' in s and 'build_run=\"local\"' in s; s=s.replace('build_commit=\"development\"', 'build_commit=\"'+os.environ['GITHUB_SHA']+'\"').replace('build_run=\"local\"', 'build_run=\"'+os.environ['GITHUB_RUN_ID']+'\"'); p.write_text(s, encoding='utf-8')"
