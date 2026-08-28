@@ -329,6 +329,7 @@ func _show_main_menu() -> void:
 	menu_layer.visible = true
 	if start_game_button:
 		start_game_button.grab_focus()
+	_publish_web_ui_state()
 
 func _refresh_continue_availability() -> void:
 	if continue_game_button == null:
@@ -414,6 +415,7 @@ func _on_large_text_toggled(enabled: bool) -> void:
 		map_panel.text_scale = 1.25 if enabled else 1.0
 		map_panel.queue_redraw()
 	_save_presentation_settings()
+	_publish_web_ui_state()
 	if not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 		get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
 
@@ -1283,6 +1285,7 @@ func _open_pause() -> void:
 	pause_layer.visible = true
 	get_tree().paused = true
 	pause_resume_button.grab_focus()
+	_publish_web_ui_state()
 
 func _refresh_pause_summary(feedback_text: String = "") -> void:
 	if pause_summary_label == null:
@@ -1293,6 +1296,7 @@ func _refresh_pause_summary(feedback_text: String = "") -> void:
 func _close_pause() -> void:
 	get_tree().paused = false
 	pause_layer.visible = false
+	_publish_web_ui_state()
 	if _grab_focus_if_available(focus_before_pause):
 		return
 	if shop_layer.visible:
@@ -1308,6 +1312,7 @@ func _on_pause_load_pressed() -> void:
 		return
 	get_tree().paused = false
 	pause_layer.visible = false
+	_publish_web_ui_state()
 	if not world.pending_event.is_empty():
 		_grab_first_enabled(event_choice_buttons)
 	else:
@@ -1394,6 +1399,33 @@ func _download_web_report(report_json: String) -> bool:
 		return false
 	bridge.call("download_buffer", report_json.to_utf8_buffer(), WEB_REPORT_FILENAME, "application/json")
 	return true
+
+func _current_ui_state_id() -> String:
+	if pause_layer != null and pause_layer.visible:
+		return "pause"
+	if menu_layer != null and menu_layer.visible:
+		return "main_menu"
+	if shop_layer != null and shop_layer.visible:
+		return "settlement_shop"
+	if game_layer != null and game_layer.visible:
+		if not world.pending_event.is_empty():
+			return "route_event"
+		if arrival_pending:
+			return "arrival_handoff"
+		return "departure_desk"
+	return "unknown"
+
+func _publish_web_ui_state() -> void:
+	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
+		return
+	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
+	var state := {
+		"screen": _current_ui_state_id(),
+		"large_text": large_text_enabled,
+		"settlement_id": world.current_settlement if world != null else "",
+		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
+	}
+	bridge.call("eval", "window.marketOfAshUiState = %s;" % JSON.stringify(state))
 
 func _report_viewport_size() -> Vector2i:
 	if OS.has_feature("web") and Engine.has_singleton("JavaScriptBridge"):
@@ -2310,6 +2342,7 @@ func _refresh_ui() -> void:
 		map_panel.queue_redraw()
 	if large_text_checkbox and large_text_checkbox.button_pressed:
 		_apply_text_scale(self, 1.25)
+	_publish_web_ui_state()
 
 class MapPanel extends Control:
 	signal settlement_selected(settlement_id: String)

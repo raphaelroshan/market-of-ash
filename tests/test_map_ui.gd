@@ -34,6 +34,7 @@ func _initialize() -> void:
 	ui._refresh_continue_availability()
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
+	_expect(ui._current_ui_state_id() == "main_menu", "Web diagnostics should identify the Main Menu state")
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")
@@ -115,11 +116,14 @@ func _initialize() -> void:
 	ui._on_start_game_requested()
 	await process_frame
 	_expect(not ui.menu_layer.visible and ui.shop_layer.visible and not ui.game_layer.visible, "Start Game should open the central shop rather than the departure map")
+	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should identify the Settlement Shop state")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
 	ui._open_pause()
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "pausing from the shop should stop the tree and focus Resume")
+	_expect(ui._current_ui_state_id() == "pause", "Web diagnostics should identify the modal Pause state")
 	ui._close_pause()
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "resuming should restore the previous gameplay focus")
+	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should restore the underlying Shop state after Resume")
 	var valid_test_save_path: String = ui.save_path
 	ui.save_path = "user://market_of_ash_missing_parent_test/campaign.save"
 	ui.autosave_enabled = true
@@ -401,6 +405,7 @@ func _initialize() -> void:
 	ui._on_plan_departure_pressed()
 	await process_frame
 	_expect(not ui.shop_layer.visible and ui.game_layer.visible, "Plan departure should open the dedicated departure map")
+	_expect(ui._current_ui_state_id() == "departure_desk", "Web diagnostics should identify uncommitted departure planning")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "opening departure planning should focus the destination control")
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("FORECAST SCENARIO") and ui.departure_load_label.text.contains("Water x2") and ui.departure_load_label.text.contains("actually held 2"), "departure desk did not distinguish its forecast scenario from actual cargo")
@@ -466,6 +471,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel._caravan_motion_label() == "MOVING", "active travel should expose a concise motion label")
 		_expect(ui.map_panel.travel_points.size() == 3, "travel traversal did not create origin, waypoint, destination")
 		_expect(ui.enter_settlement_button.visible and ui.enter_settlement_button.text == "Enter Reedwatch" and ui.commit_departure_button.disabled and not ui.departure_travel_actions.visible, "arrival state should replace the planning actions with a destination-specific settlement-entry action")
+		_expect(ui._current_ui_state_id() == "arrival_handoff", "Web diagnostics should identify the arrival handoff")
 		_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "an uninterrupted arrival should focus the settlement-entry action")
 		_expect(ui.playtest_status_label.text.contains("STEP 3 OF 3"), "arrival with water did not advance the playtest objective")
 		_expect(not ui.guided_test_button.visible, "the first-move purchase helper should not follow the caravan to later settlements")
@@ -475,6 +481,7 @@ func _initialize() -> void:
 	ui._on_enter_settlement_pressed()
 	_expect(not ui.destination_option.disabled and not ui.route_option.disabled and not ui.cargo_good_option.disabled and ui.cargo_quantity.editable, "entering the settlement should unlock planning controls for the next journey")
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Enter settlement should return the player to the central shop")
+	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should identify the destination Shop after entry")
 	_expect(ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "arrival did not refresh the destination visit budget")
 	_expect(ui.opportunity_buttons.size() == 1 and ui.opportunity_buttons[0].disabled, "Reedwatch should show its unavailable opportunity with a disabled control")
 	_expect(ui.opportunity_buttons[0].tooltip_text.contains("completed Reedwatch Water Relief"), "disabled Reedwatch opportunity did not explain its contract and crisis dependency")
@@ -508,6 +515,7 @@ func _initialize() -> void:
 	ui._on_destination_changed(ui.destination_option.selected)
 	ui._on_depart_pressed()
 	_expect(not ui.world.pending_event.is_empty() and ui.world.pending_event.id == "gatekeepers_chalk", "eligible Toll Road trip did not present Gatekeeper's Chalk")
+	_expect(ui._current_ui_state_id() == "route_event", "Web diagnostics should identify a pending route event")
 	_expect(ui.event_card.visible and not ui.enter_settlement_button.visible and not ui.departure_travel_actions.visible, "pending route event should replace planning actions with the event card")
 	_expect(ui.event_label.text.contains("NEXT — Choose one available route response"), "a pending route event should state the next required action")
 	_expect(ui.destination_option.disabled and ui.route_option.disabled and ui.cargo_good_option.disabled and not ui.cargo_quantity.editable, "a committed route event should lock planning controls until it resolves")

@@ -29,6 +29,35 @@ def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
     raise TimeoutError("Godot loading overlay did not clear before the capture timeout")
 
 
+def wait_for_ui_state(
+    driver: webdriver.Chrome,
+    expected_screen: str,
+    timeout_seconds: float,
+    *,
+    large_text: bool | None = None,
+    settlement_id: str | None = None,
+    pending_event_id: str | None = None,
+) -> dict[str, object]:
+    deadline = time.monotonic() + timeout_seconds
+    last_state: object = None
+    while time.monotonic() < deadline:
+        last_state = driver.execute_script("return window.marketOfAshUiState || null")
+        if isinstance(last_state, dict) and last_state.get("screen") == expected_screen:
+            if large_text is not None and last_state.get("large_text") is not large_text:
+                time.sleep(0.1)
+                continue
+            if settlement_id is not None and last_state.get("settlement_id") != settlement_id:
+                time.sleep(0.1)
+                continue
+            if pending_event_id is not None and last_state.get("pending_event_id") != pending_event_id:
+                time.sleep(0.1)
+                continue
+            time.sleep(0.2)
+            return last_state
+        time.sleep(0.1)
+    raise TimeoutError(f"expected Web UI state {expected_screen!r}; last state was {last_state!r}")
+
+
 def png_dimensions(path: Path) -> tuple[int, int]:
     data = path.read_bytes()
     if data[:8] != b"\x89PNG\r\n\x1a\n" or len(data) < 24:
@@ -186,6 +215,7 @@ def main() -> int:
             set_viewport_size(driver, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
             actual_width = int(driver.execute_script("return window.innerWidth"))
             actual_height = int(driver.execute_script("return window.innerHeight"))
             output = args.output_dir / f"main-menu-{width}x{height}.png"
@@ -201,7 +231,7 @@ def main() -> int:
             )
             canvas = driver.find_element(By.ID, "canvas")
             canvas.click()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
             if shop_output.read_bytes() == output.read_bytes():
@@ -223,7 +253,7 @@ def main() -> int:
             # intentionally wired to the pinned Plan action, so this both opens
             # the next screen and exercises packaged keyboard focus continuity.
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             departure_output = args.output_dir / f"departure-desk-{width}x{height}.png"
             departure_bytes = capture_frame(driver, departure_output, (actual_width, actual_height))
             departure_changed_ratio = require_distinct_screen(shop_output, departure_output, "Plan departure")
@@ -242,7 +272,8 @@ def main() -> int:
             for _ in range(4):
                 commit_actions.send_keys(Keys.TAB)
             commit_actions.send_keys(Keys.ENTER).perform()
-            time.sleep(2.0)
+            wait_for_ui_state(driver, "arrival_handoff", args.timeout, large_text=False, settlement_id="reedwatch")
+            time.sleep(1.8)
             arrival_output = args.output_dir / f"arrival-handoff-{width}x{height}.png"
             arrival_bytes = capture_frame(driver, arrival_output, (actual_width, actual_height))
             arrival_changed_ratio = require_distinct_screen(departure_output, arrival_output, "Commit departure")
@@ -258,7 +289,7 @@ def main() -> int:
                 }
             )
             ActionChains(driver).send_keys(Keys.ENTER).perform()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
             destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
             destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
             destination_changed_ratio = require_distinct_screen(arrival_output, destination_output, "Enter settlement")
@@ -278,10 +309,11 @@ def main() -> int:
             set_viewport_size(driver, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
             canvas = driver.find_element(By.ID, "canvas")
             driver.execute_script("arguments[0].focus()", canvas)
             ActionChains(driver).send_keys(Keys.TAB, Keys.TAB, Keys.SPACE).perform()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
             large_menu_bytes = capture_frame(driver, large_menu_output, (actual_width, actual_height))
             large_menu_changed_ratio = require_distinct_screen(
@@ -299,7 +331,7 @@ def main() -> int:
                 }
             )
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB, Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
             large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
             large_shop_changed_ratio = require_distinct_screen(
@@ -317,7 +349,7 @@ def main() -> int:
                 }
             )
             ActionChains(driver).key_down(Keys.SHIFT).send_keys(Keys.TAB).key_up(Keys.SHIFT).send_keys(Keys.ENTER).perform()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=True, settlement_id="ashgate")
             large_departure_output = args.output_dir / f"departure-desk-large-text-{width}x{height}.png"
             large_departure_bytes = capture_frame(driver, large_departure_output, (actual_width, actual_height))
             large_departure_changed_ratio = require_distinct_screen(
@@ -339,8 +371,9 @@ def main() -> int:
             set_viewport_size(driver, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
             driver.find_element(By.ID, "canvas").click()
-            time.sleep(1.0)
+            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Select Medicine (two entries after Water), buy the default two
             # units, and use the success focus handoff to open Departure.
             ActionChains(driver).send_keys(
@@ -352,9 +385,9 @@ def main() -> int:
                 Keys.TAB,
                 Keys.ENTER,
             ).perform()
-            time.sleep(0.5)
+            time.sleep(0.2)
             ActionChains(driver).send_keys(Keys.ENTER).perform()
-            time.sleep(0.5)
+            wait_for_ui_state(driver, "departure_desk", args.timeout, large_text=False, settlement_id="ashgate")
             # Brine Cross is two entries after the default Reedwatch choice.
             ActionChains(driver).send_keys(
                 Keys.SPACE,
@@ -362,12 +395,19 @@ def main() -> int:
                 Keys.ARROW_DOWN,
                 Keys.ENTER,
             ).perform()
-            time.sleep(0.5)
+            time.sleep(0.2)
             event_commit_actions = ActionChains(driver)
             for _ in range(4):
                 event_commit_actions.send_keys(Keys.TAB)
             event_commit_actions.send_keys(Keys.ENTER).perform()
-            time.sleep(1.0)
+            wait_for_ui_state(
+                driver,
+                "route_event",
+                args.timeout,
+                large_text=False,
+                settlement_id="ashgate",
+                pending_event_id="gatekeepers_chalk",
+            )
             event_output = args.output_dir / f"route-event-{width}x{height}.png"
             event_bytes = capture_frame(driver, event_output, (actual_width, actual_height))
             event_changed_ratio = require_distinct_screen(departure_output, event_output, "Open route event")
