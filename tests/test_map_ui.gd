@@ -112,6 +112,7 @@ func _initialize() -> void:
 	ui.autosave_enabled = true
 	ui._show_command_result({"ok": true, "message": "Test command succeeded."}, "Test")
 	_expect(ui.event_label.text.contains("Test command succeeded") and ui.event_label.text.contains("SAVE WARNING") and ui.event_label.text.contains("temporary save file"), "a successful command with a failed autosave should surface both outcomes in the primary result")
+	_expect(ui.audio_player.stream == ui.audio_cues["blocked"], "a failed autosave should replace the success cue with the warning cue")
 	ui.save_path = valid_test_save_path
 	ui.autosave_enabled = false
 	_expect(ui.world.current_settlement == "ashgate" and ui.world.day == 1, "Start Game did not load the authored Ashgate day-one preset")
