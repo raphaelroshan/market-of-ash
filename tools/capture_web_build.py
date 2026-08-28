@@ -460,7 +460,7 @@ def main() -> int:
             click_game_target(driver, "shop_good")
             for key in [Keys.ARROW_DOWN, Keys.ARROW_DOWN, Keys.ENTER]:
                 send_game_key(driver, key)
-            event_state = wait_for_ui_state(
+            wait_for_ui_state(
                 driver,
                 "settlement_shop",
                 args.timeout,
@@ -493,7 +493,7 @@ def main() -> int:
                 expected_values={"selected_destination_id": "brine_cross"},
             )
             click_game_target(driver, "commit_departure")
-            wait_for_ui_state(
+            event_state = wait_for_ui_state(
                 driver,
                 "route_event",
                 args.timeout,
@@ -512,7 +512,7 @@ def main() -> int:
                     "file": event_output.name,
                     "bytes": event_bytes,
                     "changed_pixel_ratio": round(event_changed_ratio, 4),
-                    "navigation": "Buy Medicine, plan Brine Cross, and commit through keyboard focus",
+                    "navigation": "Buy Medicine, plan Brine Cross, and commit through published pointer targets",
                     "ui_state": event_state,
                 }
             )
@@ -536,7 +536,7 @@ def main() -> int:
                     "file": event_arrival_output.name,
                     "bytes": event_arrival_bytes,
                     "changed_pixel_ratio": round(event_arrival_changed_ratio, 4),
-                    "navigation": "Enter on the focused first available route-event response",
+                    "navigation": "Pointer activation of the first available route-event response",
                     "ui_state": event_arrival_state,
                 }
             )
