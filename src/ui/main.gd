@@ -1868,6 +1868,7 @@ func _write_save(status_prefix: String) -> bool:
 	if start_game_button:
 		start_game_button.text = "Start new game"
 		start_game_button.tooltip_text = "Requires confirmation because a validated saved campaign is available."
+	_link_main_menu_focus_cycle()
 	return true
 
 func _on_load_pressed() -> bool:

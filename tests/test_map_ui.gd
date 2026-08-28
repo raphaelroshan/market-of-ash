@@ -210,6 +210,7 @@ func _initialize() -> void:
 	_expect(FileAccess.file_exists(test_save_path) and ui.save_status_label.text.contains("SAVED — Day 1 · Ashgate · 120 ashmarks · hold 0/12"), "manual save should write a versioned campaign and expose a readable resource summary")
 	_expect(ui.audio_player.stream == ui.audio_cues["success"], "a successful manual save should use the confirmation cue")
 	_expect(not ui.continue_game_button.disabled, "a successful save should enable the main-menu continue action")
+	_expect(ui.start_game_button.find_next_valid_focus() == ui.continue_game_button and ui.continue_game_button.find_next_valid_focus() == ui.reduce_motion_checkbox, "enabling Continue after a save should rebuild the Main Menu focus cycle")
 	_expect(ui.start_game_button.text == "Start new game" and ui.start_game_button.tooltip_text.contains("confirmation"), "a validated save should make the destructive fresh-start distinction visible before selection")
 	var state_before_new_game_prompt := JSON.stringify(ui.world.serialize())
 	ui._show_main_menu()
