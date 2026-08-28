@@ -231,6 +231,7 @@ func _build_main_menu() -> void:
 		binding_buttons[action_name] = binding_button
 	restore_bindings_button = Button.new()
 	restore_bindings_button.text = "Restore default inputs"
+	restore_bindings_button.custom_minimum_size = Vector2(0, 44)
 	restore_bindings_button.pressed.connect(_on_restore_default_bindings)
 	content.add_child(restore_bindings_button)
 	binding_status_label = Label.new()
@@ -260,6 +261,7 @@ func _build_main_menu() -> void:
 	content.add_child(menu_save_status_label)
 	quit_button = Button.new()
 	quit_button.text = "Quit"
+	quit_button.custom_minimum_size = Vector2(0, 44)
 	quit_button.tooltip_text = "Close the desktop build. Browser builds use the browser tab instead."
 	quit_button.visible = not OS.has_feature("web")
 	quit_button.pressed.connect(_on_quit_pressed)
@@ -311,19 +313,23 @@ func _build_pause_menu() -> void:
 	content.add_child(pause_resume_button)
 	pause_save_button = Button.new()
 	pause_save_button.text = "Save campaign"
+	pause_save_button.custom_minimum_size = Vector2(0, 44)
 	pause_save_button.pressed.connect(_on_save_pressed)
 	content.add_child(pause_save_button)
 	pause_load_button = Button.new()
 	pause_load_button.text = "Load saved campaign"
+	pause_load_button.custom_minimum_size = Vector2(0, 44)
 	pause_load_button.pressed.connect(_on_pause_load_pressed)
 	content.add_child(pause_load_button)
 	pause_report_button = Button.new()
 	pause_report_button.text = "Export playtest report"
+	pause_report_button.custom_minimum_size = Vector2(0, 44)
 	pause_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
 	pause_report_button.pressed.connect(_on_export_report_pressed)
 	content.add_child(pause_report_button)
 	pause_main_menu_button = Button.new()
 	pause_main_menu_button.text = "Return to main menu"
+	pause_main_menu_button.custom_minimum_size = Vector2(0, 44)
 	pause_main_menu_button.pressed.connect(_on_pause_main_menu_pressed)
 	content.add_child(pause_main_menu_button)
 	_link_focus_cycle([pause_resume_button, pause_save_button, pause_load_button, pause_report_button, pause_main_menu_button])
@@ -734,11 +740,13 @@ func _build_shop() -> void:
 	ledger_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	market.add_child(ledger_label)
 	shop_good_option = OptionButton.new()
+	shop_good_option.custom_minimum_size = Vector2(0, 44)
 	for good_id in MarketContent.good_ids():
 		shop_good_option.add_item(good_id.capitalize())
 		shop_good_option.set_item_metadata(shop_good_option.item_count - 1, good_id)
 	market.add_child(_labeled_control("Cargo", shop_good_option))
 	shop_quantity = SpinBox.new()
+	shop_quantity.custom_minimum_size = Vector2(0, 44)
 	shop_quantity.min_value = 1
 	shop_quantity.max_value = 12
 	shop_quantity.value = PLAYTEST_QUANTITY
@@ -846,10 +854,12 @@ func _build_shop() -> void:
 	action_shell.add_child(plan_departure_button)
 	shop_save_button = Button.new()
 	shop_save_button.text = "Save prototype state"
+	shop_save_button.custom_minimum_size = Vector2(0, 44)
 	shop_save_button.pressed.connect(_on_save_pressed)
 	actions.add_child(shop_save_button)
 	shop_load_button = Button.new()
 	shop_load_button.text = "Load saved state"
+	shop_load_button.custom_minimum_size = Vector2(0, 44)
 	shop_load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
 	shop_load_button.pressed.connect(_on_load_pressed)
 	actions.add_child(shop_load_button)
@@ -860,10 +870,12 @@ func _build_shop() -> void:
 	actions.add_child(save_status_label)
 	shop_reset_button = Button.new()
 	shop_reset_button.text = "Reset run"
+	shop_reset_button.custom_minimum_size = Vector2(0, 44)
 	shop_reset_button.pressed.connect(_on_reset_pressed)
 	actions.add_child(shop_reset_button)
 	shop_report_button = Button.new()
 	shop_report_button.text = "Export playtest report"
+	shop_report_button.custom_minimum_size = Vector2(0, 44)
 	shop_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
 	shop_report_button.pressed.connect(_on_export_report_pressed)
 	actions.add_child(shop_report_button)
@@ -972,20 +984,24 @@ func _build_ui() -> void:
 	controls.add_child(control_title)
 
 	destination_option = OptionButton.new()
+	destination_option.custom_minimum_size = Vector2(0, 44)
 	_populate_destination_options()
 	controls.add_child(_labeled_control("Destination", destination_option))
 
 	route_option = OptionButton.new()
+	route_option.custom_minimum_size = Vector2(0, 44)
 	_populate_route_options()
 	controls.add_child(_labeled_control("Route", route_option))
 
 	cargo_good_option = OptionButton.new()
+	cargo_good_option.custom_minimum_size = Vector2(0, 44)
 	for good in MarketContent.good_ids():
 		cargo_good_option.add_item(good.capitalize())
 		cargo_good_option.set_item_metadata(cargo_good_option.item_count - 1, good)
 	controls.add_child(_labeled_control("Forecast cargo", cargo_good_option))
 
 	cargo_quantity = SpinBox.new()
+	cargo_quantity.custom_minimum_size = Vector2(0, 44)
 	cargo_quantity.min_value = 1
 	cargo_quantity.max_value = 12
 	cargo_quantity.value = PLAYTEST_QUANTITY
@@ -1069,10 +1085,12 @@ func _build_ui() -> void:
 
 	var save_button := Button.new()
 	save_button.text = "Save prototype state"
+	save_button.custom_minimum_size = Vector2(0, 44)
 	save_button.pressed.connect(_on_save_pressed)
 	controls.add_child(save_button)
 	var load_button := Button.new()
 	load_button.text = "Load saved state"
+	load_button.custom_minimum_size = Vector2(0, 44)
 	load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
 	load_button.pressed.connect(_on_load_pressed)
 	controls.add_child(load_button)

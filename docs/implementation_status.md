@@ -288,6 +288,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Shop, Departure Desk, route decision, and arrival transitions now place focus on a predictable enabled control and retain ordinary focus traversal.
 - Rebuilding contract, local-opportunity, or crew controls after a result restores focus to the first remaining enabled Shop action, falling back to Plan departure when none remain.
 - Main Menu, Shop, Departure, Pause, and route-event choices use explicit cyclic focus order. Dynamic Shop and event cycles skip disabled actions while leaving their reasons visible.
+- Selectors and utility actions maintain a 44-logical-pixel minimum target; primary trade, journey, binding, and event actions remain larger where labels need wrapping.
 - Web builds mirror the active screen and its primary next action into a polite ARIA live region and descriptive canvas label; the diagnostic payload contains only non-personal state used by browser verification.
 - Enter/Space and controller A activate focused controls; Escape and controller B share the safe departure-back action. The Main Menu explains both schemes.
 - The Main Menu can independently remap keyboard keys and controller buttons for Accept, Back, and Pause, rejects modifier/reserved/conflicting inputs, reserves D-pad directions for focus navigation, persists mappings outside campaign saves, and restores both input families in one action.

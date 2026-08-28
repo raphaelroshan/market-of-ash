@@ -59,6 +59,7 @@ func _initialize() -> void:
 	_expect(_action_has_joypad_button("ui_cancel", 1), "ui_cancel should retain the secondary controller button")
 	_expect(_action_has_joypad_button("ui_pause", 6), "ui_pause should expose the controller menu button")
 	_expect(ui.binding_buttons.size() == 3 and ui.controls_hint_label.text.contains("Enter / Space") and ui.controls_hint_label.text.contains("A / Cross") and ui.controls_hint_label.text.contains("B / Circle"), "main menu should expose the current keyboard and controller bindings")
+	_expect(ui.restore_bindings_button.custom_minimum_size.y >= 44.0 and ui.quit_button.custom_minimum_size.y >= 44.0, "Main Menu utility buttons should expose comfortable pointer targets")
 	ui._on_rebind_pressed("ui_pause")
 	var rebind_pause := InputEventKey.new()
 	rebind_pause.physical_keycode = KEY_R
@@ -127,11 +128,15 @@ func _initialize() -> void:
 	var initial_web_state: Dictionary = ui._web_ui_state()
 	_expect(initial_web_state.get("settlement_id") == "ashgate" and initial_web_state.get("day") == 1 and initial_web_state.get("money") == 120 and initial_web_state.get("provisions") == 12 and initial_web_state.get("cargo_weight") == 0 and initial_web_state.get("selected_good_id") == "water" and initial_web_state.get("selected_destination_id") == "reedwatch" and initial_web_state.get("selected_quantity") == 2 and initial_web_state.get("held_selected_quantity") == 0, "Web diagnostics should expose the deterministic visible planning state without personal data")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
+	for shop_control in [ui.shop_good_option, ui.shop_quantity, ui.shop_save_button, ui.shop_load_button, ui.shop_reset_button, ui.shop_report_button]:
+		_expect(shop_control.custom_minimum_size.y >= 44.0, "Shop control %s should expose a comfortable pointer target" % shop_control.get_class())
 	ui._open_pause()
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "pausing from the shop should stop the tree and focus Resume")
 	_expect(ui._current_ui_state_id() == "pause", "Web diagnostics should identify the modal Pause state")
 	_expect(ui._web_accessibility_announcement().contains("Resume is focused"), "Web accessibility fallback should announce Pause and its primary action")
 	_expect(ui.pause_resume_button.find_next_valid_focus() == ui.pause_save_button and ui.pause_main_menu_button.find_next_valid_focus() == ui.pause_resume_button, "Pause focus should cycle through every modal action and wrap to Resume")
+	for pause_action in [ui.pause_resume_button, ui.pause_save_button, ui.pause_load_button, ui.pause_report_button, ui.pause_main_menu_button]:
+		_expect(pause_action.custom_minimum_size.y >= 44.0, "Pause action %s should expose a comfortable pointer target" % pause_action.text)
 	ui._close_pause()
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "resuming should restore the previous gameplay focus")
 	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should restore the underlying Shop state after Resume")
@@ -423,6 +428,8 @@ func _initialize() -> void:
 	await process_frame
 	_expect(not ui.shop_layer.visible and ui.game_layer.visible, "Plan departure should open the dedicated departure map")
 	_expect(ui._current_ui_state_id() == "departure_desk", "Web diagnostics should identify uncommitted departure planning")
+	for departure_control in [ui.destination_option, ui.route_option, ui.cargo_good_option, ui.cargo_quantity, ui.return_to_shop_button, ui.commit_departure_button]:
+		_expect(departure_control.custom_minimum_size.y >= 44.0, "Departure control %s should expose a comfortable pointer target" % departure_control.get_class())
 	_expect(ui._web_accessibility_announcement().contains("Return to shop spends nothing"), "Web accessibility fallback should announce the reversible Departure choice")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "opening departure planning should focus the destination control")
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
