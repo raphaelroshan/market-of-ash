@@ -8,6 +8,7 @@ import json
 import time
 import traceback
 from pathlib import Path
+from typing import Any
 
 from capture_validation import (
     REQUIRED_CAPTURE_SCREENS,
@@ -25,7 +26,7 @@ INPUT_SETTLE_SECONDS = 0.2
 OPTION_ROW_HEIGHT = 28.0
 
 
-def send_game_key(driver: webdriver.Chrome, key: str) -> None:
+def send_game_key(driver: Any, key: str) -> None:
     """Send one key to the canvas, then allow Godot to process a frame."""
     canvas = driver.find_element(By.ID, "canvas")
     driver.execute_script("arguments[0].focus()", canvas)
@@ -33,7 +34,7 @@ def send_game_key(driver: webdriver.Chrome, key: str) -> None:
     time.sleep(INPUT_SETTLE_SECONDS)
 
 
-def click_game_target(driver: webdriver.Chrome, target_name: str, timeout_seconds: float = 5.0) -> None:
+def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.0) -> None:
     """Click the center of a Godot control described by the Web test state."""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
@@ -70,7 +71,7 @@ def click_game_target(driver: webdriver.Chrome, target_name: str, timeout_second
     raise TimeoutError(f"Web UI target {target_name!r} was not available")
 
 
-def click_game_position(driver: webdriver.Chrome, logical_x: float, logical_y: float) -> None:
+def click_game_position(driver: Any, logical_x: float, logical_y: float) -> None:
     """Click a logical Godot canvas position with a trusted pointer action."""
     state = driver.execute_script("return window.marketOfAshUiState || null")
     if not isinstance(state, dict):
@@ -89,7 +90,7 @@ def click_game_position(driver: webdriver.Chrome, logical_x: float, logical_y: f
     time.sleep(INPUT_SETTLE_SECONDS)
 
 
-def select_game_option(driver: webdriver.Chrome, target_name: str, item_index: int) -> None:
+def select_game_option(driver: Any, target_name: str, item_index: int) -> None:
     """Open a Godot OptionButton and click a known authored item row."""
     state = driver.execute_script("return window.marketOfAshUiState || null")
     target = state.get("targets", {}).get(target_name, {}) if isinstance(state, dict) else {}
@@ -103,7 +104,7 @@ def select_game_option(driver: webdriver.Chrome, target_name: str, item_index: i
     )
 
 
-def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
+def wait_for_game(driver: Any, timeout_seconds: float) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         if not driver.find_elements(By.ID, "status"):
@@ -113,7 +114,7 @@ def wait_for_game(driver: webdriver.Chrome, timeout_seconds: float) -> None:
 
 
 def wait_for_ui_state(
-    driver: webdriver.Chrome,
+    driver: Any,
     expected_screen: str,
     timeout_seconds: float,
     *,
@@ -171,19 +172,47 @@ def wait_for_ui_state(
     raise TimeoutError(f"expected Web UI state {expected_screen!r}; last state was {last_state!r}")
 
 
-def set_viewport_size(driver: webdriver.Chrome, width: int, height: int) -> None:
-    # Headless Chrome can transiently ignore WebDriver window-resize calls while
-    # its first renderer is starting. CDP's device metrics apply to the page
-    # viewport directly, avoiding dependence on runner window-manager chrome.
-    driver.execute_cdp_cmd(
-        "Emulation.setDeviceMetricsOverride",
-        {
-            "width": width,
-            "height": height,
-            "deviceScaleFactor": 1,
-            "mobile": False,
-        },
-    )
+def create_driver(browser: str) -> Any:
+    if browser == "chrome":
+        options = webdriver.ChromeOptions()
+        for option in [
+            "--headless=new",
+            "--no-sandbox",
+            "--no-first-run",
+            "--disable-background-networking",
+            "--disable-dev-shm-usage",
+            "--use-angle=swiftshader",
+            "--enable-unsafe-swiftshader",
+        ]:
+            options.add_argument(option)
+        return webdriver.Chrome(options=options)
+    if browser == "firefox":
+        options = webdriver.FirefoxOptions()
+        options.add_argument("-headless")
+        options.set_preference("browser.startup.page", 0)
+        options.set_preference("media.autoplay.default", 0)
+        return webdriver.Firefox(options=options)
+    raise ValueError(f"unsupported browser {browser!r}")
+
+
+def set_viewport_size(driver: Any, browser: str, width: int, height: int) -> None:
+    if browser == "chrome":
+        # Headless Chrome can transiently ignore WebDriver window-resize calls
+        # while its first renderer is starting. CDP applies page viewport
+        # metrics directly, avoiding runner window-manager chrome.
+        driver.execute_cdp_cmd(
+            "Emulation.setDeviceMetricsOverride",
+            {
+                "width": width,
+                "height": height,
+                "deviceScaleFactor": 1,
+                "mobile": False,
+            },
+        )
+    else:
+        # Firefox exposes only the W3C window rectangle. Compensate for its
+        # headless window frame until the content viewport is exact.
+        driver.set_window_rect(width=width, height=height)
     deadline = time.monotonic() + 5.0
     actual = (0, 0)
     while time.monotonic() < deadline:
@@ -193,13 +222,19 @@ def set_viewport_size(driver: webdriver.Chrome, width: int, height: int) -> None
         )
         if actual == (width, height):
             return
+        if browser == "firefox":
+            window = driver.get_window_rect()
+            driver.set_window_rect(
+                width=max(1, int(window["width"]) + width - actual[0]),
+                height=max(1, int(window["height"]) + height - actual[1]),
+            )
         time.sleep(0.1)
     raise AssertionError(f"could not establish requested viewport {(width, height)}; got {actual}")
 
 
-def capture_frame(driver: webdriver.Chrome, output: Path, expected_size: tuple[int, int]) -> int:
+def capture_frame(driver: Any, output: Path, expected_size: tuple[int, int]) -> int:
     if not driver.save_screenshot(str(output)):
-        raise RuntimeError(f"Chrome did not save {output}")
+        raise RuntimeError(f"Browser did not save {output}")
     image_size = png_dimensions(output)
     if image_size != expected_size:
         raise AssertionError(f"{output.name}: PNG is {image_size}, expected {expected_size}")
@@ -214,29 +249,18 @@ def main() -> int:
     parser.add_argument("--url", required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--timeout", type=float, default=90.0)
+    parser.add_argument("--browser", choices=("chrome", "firefox"), default="chrome")
     args = parser.parse_args()
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
-    options = webdriver.ChromeOptions()
-    for option in [
-        "--headless=new",
-        "--no-sandbox",
-        "--no-first-run",
-        "--disable-background-networking",
-        "--disable-dev-shm-usage",
-        "--use-angle=swiftshader",
-        "--enable-unsafe-swiftshader",
-    ]:
-        options.add_argument(option)
-
     captures: list[dict[str, object]] = []
-    driver: webdriver.Chrome | None = None
+    driver: Any | None = None
     try:
         for width, height in VIEWPORTS:
             if driver is not None:
                 driver.quit()
-            driver = webdriver.Chrome(options=options)
-            set_viewport_size(driver, width, height)
+            driver = create_driver(args.browser)
+            set_viewport_size(driver, args.browser, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             main_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
@@ -402,8 +426,8 @@ def main() -> int:
                 }
             )
             driver.quit()
-            driver = webdriver.Chrome(options=options)
-            set_viewport_size(driver, width, height)
+            driver = create_driver(args.browser)
+            set_viewport_size(driver, args.browser, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
@@ -486,8 +510,8 @@ def main() -> int:
                 }
             )
             driver.quit()
-            driver = webdriver.Chrome(options=options)
-            set_viewport_size(driver, width, height)
+            driver = create_driver(args.browser)
+            set_viewport_size(driver, args.browser, width, height)
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
@@ -580,6 +604,7 @@ def main() -> int:
             json.dumps(
                 {
                     "manifest_version": 2,
+                    "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
                     "required_screens": sorted(REQUIRED_CAPTURE_SCREENS),
@@ -613,7 +638,7 @@ def main() -> int:
     finally:
         if driver is not None:
             driver.quit()
-    print("Web render captures: PASS")
+    print(f"Web render captures ({args.browser}): PASS")
     return 0
 
 
