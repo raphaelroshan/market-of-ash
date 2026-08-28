@@ -6,7 +6,7 @@ Market of Ash is an agent-first Godot 4.x prototype for a premium Windows game t
 
 The repository contains a complete, replayable alpha vertical slice. Players can inspect explained prices, trade, accept a relief contract, recruit and assign crew, plan through a clickable regional map, resolve state-sensitive route events, influence factions and settlement resilience, steer a three-stage water crisis toward four distinct endings, and continue trading afterward. Versioned autosaves, backup recovery, Pause, accessibility preferences, deterministic diagnostics, and privacy-safe playtest reports support external testing.
 
-The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, launch-smoke the Windows executable, and upload a provenance manifest plus source snapshot.
+The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, create and validate a single-file portable Windows ZIP, clean-extract and launch-smoke that executable, and upload GUI evidence, checksums, provenance, and a source snapshot.
 
 ## Run the prototype
 
@@ -60,7 +60,7 @@ The preferred unit of work is one vertical slice. For example: “Add the toll d
 
 ## Implemented roadmap sequence
 
-The implementation has completed roadmap slices A0–A1 and B0–B10’s automated scope. Packaged browser evidence covers 14 normal/Large text/event/result states at 960×540 and 1280×720 in Chrome, Firefox, and Edge; packaged Windows evidence now also verifies a clean visible Main Menu and embedded product/version resources. Optional interface cues, keyboard/controller remapping, and Web screen-change announcements are implemented. The remaining alpha gates are physical-controller coverage, Windows high-DPI and clean-install review, hands-on browser/assistive-technology checks, moderated player comprehension, and eventual storefront integration. See `docs/implementation_status.md` for exact evidence and current limitations.
+The implementation has completed roadmap slices A0–A1 and B0–B10’s automated scope. Packaged browser evidence covers 14 normal/Large text/event/result states at 960×540 and 1280×720 in Chrome, Firefox, and Edge; packaged Windows evidence verifies a clean visible Main Menu, embedded product/version resources, portable-archive contents, and launch from a clean extraction directory. Optional interface cues, keyboard/controller remapping, and Web screen-change announcements are implemented. The remaining alpha gates are physical-controller coverage, Windows high-DPI and antivirus/reputation review, hands-on browser/assistive-technology checks, moderated player comprehension, and eventual installer/storefront integration. See `docs/implementation_status.md` for exact evidence and current limitations.
 
 ## Definition of done for an agent task
 
