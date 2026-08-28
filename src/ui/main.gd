@@ -1260,8 +1260,8 @@ func _on_start_game_requested() -> void:
 	new_game_confirmation_dialog.popup_centered(Vector2i(560, 190))
 	_configure_confirmation_targets(new_game_confirmation_dialog)
 	call_deferred("_configure_confirmation_targets", new_game_confirmation_dialog)
-	call_deferred("_publish_web_ui_state")
 	new_game_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
+	call_deferred("_publish_web_ui_state")
 
 func _configure_confirmation_targets(dialog: ConfirmationDialog) -> void:
 	if dialog == null or not is_instance_valid(dialog):
@@ -1432,7 +1432,7 @@ func _on_export_report_pressed() -> void:
 	var report_json := JSON.stringify(report, "\t")
 	if _download_web_report(report_json):
 		_play_ui_cue("success")
-		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
+		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
 		var file := FileAccess.open(report_path, FileAccess.WRITE)
 		if file == null:
@@ -1449,7 +1449,7 @@ func _on_export_report_pressed() -> void:
 			_set_event("Report export failed. The campaign remains unchanged.")
 		else:
 			_play_ui_cue("success")
-			_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
+			_set_event("REPORT EXPORTED — %s\nBuild, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
@@ -1985,8 +1985,8 @@ func _on_reset_pressed() -> void:
 	reset_confirmation_dialog.popup_centered(Vector2i(520, 180))
 	_configure_confirmation_targets(reset_confirmation_dialog)
 	call_deferred("_configure_confirmation_targets", reset_confirmation_dialog)
-	call_deferred("_publish_web_ui_state")
 	reset_confirmation_dialog.get_cancel_button().call_deferred("grab_focus")
+	call_deferred("_publish_web_ui_state")
 
 func _confirm_reset() -> void:
 	if reset_confirmation_dialog:

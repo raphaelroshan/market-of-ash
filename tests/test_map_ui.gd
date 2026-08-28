@@ -67,6 +67,7 @@ func _initialize() -> void:
 	rebind_pause.pressed = true
 	ui._unhandled_input(rebind_pause)
 	_expect(_action_has_key("ui_pause", KEY_R) and _action_has_joypad_button("ui_pause", 6), "rebinding Pause should replace its keyboard key without removing controller Menu")
+	_expect(ui.controls_hint_label.text.contains("Pause: R") and ui.controls_hint_label.text.contains("Menu / Start"), "keyboard remapping should refresh the visible combined control scheme")
 	var rebound_settings := ConfigFile.new()
 	_expect(rebound_settings.load(test_settings_path) == OK and rebound_settings.get_value("input", "ui_pause", []).has(KEY_R), "keyboard remapping should persist outside the campaign save")
 	ui._replace_keyboard_bindings("ui_pause", [KEY_P])
@@ -78,6 +79,7 @@ func _initialize() -> void:
 	rebind_pause_button.pressed = true
 	ui._unhandled_input(rebind_pause_button)
 	_expect(_action_has_joypad_button("ui_pause", JOY_BUTTON_X) and not _action_has_joypad_button("ui_pause", JOY_BUTTON_START) and _action_has_key("ui_pause", KEY_R), "controller remapping should replace only the selected action's controller button")
+	_expect(ui.controls_hint_label.text.contains("Pause: R / X / Square"), "controller remapping should refresh the visible combined control scheme")
 	var controller_settings := ConfigFile.new()
 	_expect(controller_settings.load(test_settings_path) == OK and controller_settings.get_value("input", "ui_pause_joypad", []).has(JOY_BUTTON_X), "controller remapping should persist outside the campaign save")
 	ui._on_rebind_pressed("ui_cancel")
