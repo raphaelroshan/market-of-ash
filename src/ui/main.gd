@@ -614,6 +614,8 @@ func _refresh_binding_labels() -> void:
 			button.text = "Press a key or controller button…" if remapping_action == action_name else "%s: %s · Pad %s" % [String(ACTION_LABELS.get(action_name, action_name)), _keyboard_binding_text(action_name), _controller_binding_text(action_name)]
 	if controls_hint_label:
 		controls_hint_label.text = "Controls: arrows/Tab or controller D-pad/stick move focus. Accept: %s / %s. Back: %s / %s. Pause: %s / %s." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept"), _keyboard_binding_text("ui_cancel"), _controller_binding_text("ui_cancel"), _keyboard_binding_text("ui_pause"), _controller_binding_text("ui_pause")]
+	if menu_layer != null:
+		_publish_web_ui_state()
 
 func _load_presentation_settings() -> void:
 	var config := ConfigFile.new()
@@ -1492,7 +1494,7 @@ func _web_accessibility_announcement() -> String:
 	var screen_id := _current_ui_state_id()
 	match screen_id:
 		"main_menu":
-			return "Market of Ash main menu. Start Game is focused. Accessibility and input settings follow the launch actions."
+			return "Market of Ash main menu. Start Game is focused. Accept uses %s or controller %s. Accessibility and input settings follow the launch actions." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
 		"settlement_shop":
 			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure." % String(world.settlement(world.current_settlement).get("name", world.current_settlement))
 		"departure_desk":

@@ -35,7 +35,7 @@ func _initialize() -> void:
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
 	_expect(ui._current_ui_state_id() == "main_menu", "Web diagnostics should identify the Main Menu state")
-	_expect(ui._web_accessibility_announcement().contains("Start Game is focused"), "Web accessibility fallback should announce the Main Menu's primary action")
+	_expect(ui._web_accessibility_announcement().contains("Start Game is focused") and ui._web_accessibility_announcement().contains("Enter / Space") and ui._web_accessibility_announcement().contains("A / Cross"), "Web accessibility fallback should announce the Main Menu's primary action and active accept bindings")
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "Start Game", "main menu should expose a Start Game button")
