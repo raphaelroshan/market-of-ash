@@ -796,6 +796,12 @@ func _initialize() -> void:
 	ui.world.cargo["weight"] = 1
 	var alternative_recovery_sale: Dictionary = ui._best_recovery_sale()
 	_expect(alternative_recovery_sale.get("good_id", "") == "grain" and int(alternative_recovery_sale.get("quantity", 0)) == 1, "recovery guidance should fall back to another held good when the exposed cargo is gone")
+	ui.world.cargo["medicine"] = 1
+	ui.world.cargo["weight"] = 2
+	ui.world.active_contracts["protected_recovery_test"] = {"good_id": "medicine", "quantity": 1}
+	var contract_safe_recovery_sale: Dictionary = ui._best_recovery_sale()
+	_expect(contract_safe_recovery_sale.get("good_id", "") == "grain", "recovery guidance should not recommend selling cargo reserved for an active contract")
+	ui.world.active_contracts.erase("protected_recovery_test")
 	ui.world.cargo = risk_recovery_cargo
 	ui._on_enter_settlement_pressed()
 	ui._on_save_pressed()

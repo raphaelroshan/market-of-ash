@@ -3200,7 +3200,7 @@ func _conflict_recovery_text(event_record: Dictionary, outcome: Dictionary) -> S
 		var funding_basis := "With current funds"
 		if not sale.is_empty():
 			funding_basis = "After that sale"
-		recovery_steps.append("%s, %s to %s is the lowest-risk affordable onward route at %d ashmarks, %d provision%s, and %d%% cargo risk" % [funding_basis, String(route_option.get("route_name", "Route")), String(route_option.get("destination_name", "destination")), int(route_option.get("money_cost", 0)), int(route_option.get("provision_cost", 0)), "" if int(route_option.get("provision_cost", 0)) == 1 else "s", int(route_option.get("risk_percent", 0))])
+		recovery_steps.append("%s, %s to %s is the lowest-risk affordable onward route at %d ashmarks, %d provision%s, and %d%% route risk" % [funding_basis, String(route_option.get("route_name", "Route")), String(route_option.get("destination_name", "destination")), int(route_option.get("money_cost", 0)), int(route_option.get("provision_cost", 0)), "" if int(route_option.get("provision_cost", 0)) == 1 else "s", int(route_option.get("risk_percent", 0))])
 	if recovery_steps.is_empty():
 		var loss_basis: Dictionary = event_record.get("loss_basis", {})
 		var loss_good_id := String(loss_basis.get("loss_good_id", "cargo"))
@@ -3212,7 +3212,7 @@ func _best_recovery_sale() -> Dictionary:
 	var context := world.pricing_context()
 	var best: Dictionary = {}
 	for good_id in MarketContent.good_ids():
-		var quantity := int(world.cargo.get(good_id, 0))
+		var quantity := _uncommitted_cargo_quantity(good_id)
 		if quantity <= 0:
 			continue
 		var unit_price := MarketEconomy.price_for(good_id, settlement, context)
@@ -3226,6 +3226,14 @@ func _best_recovery_sale() -> Dictionary:
 				"total": total,
 			}
 	return best
+
+func _uncommitted_cargo_quantity(good_id: String) -> int:
+	var reserved_quantity := 0
+	for contract_id in world.active_contracts.keys():
+		var contract := world.active_contract(String(contract_id))
+		if String(contract.get("good_id", "")) == good_id:
+			reserved_quantity += int(contract.get("quantity", 0))
+	return maxi(0, int(world.cargo.get(good_id, 0)) - reserved_quantity)
 
 func _safest_affordable_recovery_route(available_money: int) -> Dictionary:
 	var best: Dictionary = {}
