@@ -123,6 +123,7 @@ func _initialize() -> void:
 	ui._open_pause()
 	_expect(ui.pause_layer.visible and ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "pausing from the shop should stop the tree and focus Resume")
 	_expect(ui._current_ui_state_id() == "pause", "Web diagnostics should identify the modal Pause state")
+	_expect(ui.pause_resume_button.find_next_valid_focus() == ui.pause_save_button and ui.pause_main_menu_button.find_next_valid_focus() == ui.pause_resume_button, "Pause focus should cycle through every modal action and wrap to Resume")
 	ui._close_pause()
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "resuming should restore the previous gameplay focus")
 	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should restore the underlying Shop state after Resume")

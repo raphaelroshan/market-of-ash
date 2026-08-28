@@ -253,6 +253,24 @@ def main() -> int:
                     "changed_pixel_ratio": round(shop_changed_ratio, 4),
                 }
             )
+            ActionChains(driver).send_keys("p").perform()
+            wait_for_ui_state(driver, "pause", args.timeout, large_text=False, settlement_id="ashgate")
+            pause_output = args.output_dir / f"pause-{width}x{height}.png"
+            pause_bytes = capture_frame(driver, pause_output, (actual_width, actual_height))
+            pause_changed_ratio = require_distinct_screen(shop_output, pause_output, "Pause")
+            captures.append(
+                {
+                    "screen": "pause",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": pause_output.name,
+                    "bytes": pause_bytes,
+                    "changed_pixel_ratio": round(pause_changed_ratio, 4),
+                    "navigation": "P from the focused Shop cargo selector",
+                }
+            )
+            ActionChains(driver).send_keys(Keys.ESCAPE).perform()
+            wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             # Start focuses the Shop cargo selector. Reverse focus traversal is
             # intentionally wired to the pinned Plan action, so this both opens
             # the next screen and exercises packaged keyboard focus continuity.

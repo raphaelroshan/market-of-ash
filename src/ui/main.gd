@@ -38,6 +38,10 @@ var shop_layer: Control
 var menu_layer: Control
 var pause_layer: Control
 var pause_resume_button: Button
+var pause_save_button: Button
+var pause_load_button: Button
+var pause_report_button: Button
+var pause_main_menu_button: Button
 var pause_summary_label: Label
 var focus_before_pause: Control
 var start_game_button: Button
@@ -302,23 +306,24 @@ func _build_pause_menu() -> void:
 	pause_resume_button.custom_minimum_size = Vector2(0, 46)
 	pause_resume_button.pressed.connect(_close_pause)
 	content.add_child(pause_resume_button)
-	var save_button := Button.new()
-	save_button.text = "Save campaign"
-	save_button.pressed.connect(_on_save_pressed)
-	content.add_child(save_button)
-	var load_button := Button.new()
-	load_button.text = "Load saved campaign"
-	load_button.pressed.connect(_on_pause_load_pressed)
-	content.add_child(load_button)
-	var report_button := Button.new()
-	report_button.text = "Export playtest report"
-	report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
-	report_button.pressed.connect(_on_export_report_pressed)
-	content.add_child(report_button)
-	var menu_button := Button.new()
-	menu_button.text = "Return to main menu"
-	menu_button.pressed.connect(_on_pause_main_menu_pressed)
-	content.add_child(menu_button)
+	pause_save_button = Button.new()
+	pause_save_button.text = "Save campaign"
+	pause_save_button.pressed.connect(_on_save_pressed)
+	content.add_child(pause_save_button)
+	pause_load_button = Button.new()
+	pause_load_button.text = "Load saved campaign"
+	pause_load_button.pressed.connect(_on_pause_load_pressed)
+	content.add_child(pause_load_button)
+	pause_report_button = Button.new()
+	pause_report_button.text = "Export playtest report"
+	pause_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
+	pause_report_button.pressed.connect(_on_export_report_pressed)
+	content.add_child(pause_report_button)
+	pause_main_menu_button = Button.new()
+	pause_main_menu_button.text = "Return to main menu"
+	pause_main_menu_button.pressed.connect(_on_pause_main_menu_pressed)
+	content.add_child(pause_main_menu_button)
+	_link_focus_cycle([pause_resume_button, pause_save_button, pause_load_button, pause_report_button, pause_main_menu_button])
 
 func _show_main_menu() -> void:
 	get_tree().paused = false
