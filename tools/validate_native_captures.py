@@ -117,6 +117,10 @@ def main() -> int:
             or ui_state.get("road_waypoint") != "ROAD STOP — THE NEXT INSPECTION POST"
         ):
             raise AssertionError(f"{file_name}: Toll Road capture is missing its corridor identity")
+        if screen == "settlement_shop" and ui_state.get("bazaar_scene_id") != "warden_gate_market":
+            raise AssertionError(f"{file_name}: Ashgate capture is missing its gate-market identity")
+        if screen == "destination_shop" and ui_state.get("bazaar_scene_id") != "brine_pan_exchange":
+            raise AssertionError(f"{file_name}: destination capture is missing Brine Cross's salt-market identity")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
         by_viewport.setdefault(viewport, {})[screen] = file_path
