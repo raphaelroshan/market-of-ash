@@ -387,6 +387,23 @@ def select_game_option(driver: Any, target_name: str, item_index: int) -> None:
     )
 
 
+def select_game_option_value(driver: Any, target_name: str, control_id: str, value: str) -> None:
+    """Select an authored Godot option by stable value through the canvas."""
+    state = driver.execute_script("return window.marketOfAshUiState || null")
+    controls = state.get("accessibility_controls", []) if isinstance(state, dict) else []
+    control = next((candidate for candidate in controls if candidate.get("id") == control_id), None)
+    if not isinstance(control, dict):
+        raise RuntimeError(f"Web UI control {control_id!r} is unavailable for canvas selection")
+    options = control.get("options", [])
+    item_index = next(
+        (index for index, option in enumerate(options) if option.get("value") == value),
+        None,
+    )
+    if item_index is None:
+        raise RuntimeError(f"Web UI control {control_id!r} has no option {value!r}")
+    select_game_option(driver, target_name, item_index)
+
+
 def wait_for_game(driver: Any, timeout_seconds: float) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
@@ -1043,8 +1060,11 @@ def main() -> int:
                     "selected_route_id": "old_road",
                 },
             )
-            select_accessibility_option(driver, "shop_good", "medicine")
-            set_accessibility_quantity(driver, "shop_quantity", 2)
+            if use_accessibility_actions:
+                select_accessibility_option(driver, "shop_good", "medicine")
+                set_accessibility_quantity(driver, "shop_quantity", 2)
+            else:
+                select_game_option_value(driver, "shop_good", "shop_good", "medicine")
             activate_game_action(driver, "shop_buy", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
@@ -1064,7 +1084,10 @@ def main() -> int:
                     "selected_good_id": "medicine",
                 },
             )
-            select_accessibility_option(driver, "destination", "brine_cross")
+            if use_accessibility_actions:
+                select_accessibility_option(driver, "destination", "brine_cross")
+            else:
+                select_game_option_value(driver, "destination", "destination", "brine_cross")
             wait_for_ui_state(
                 driver,
                 "departure_desk",
