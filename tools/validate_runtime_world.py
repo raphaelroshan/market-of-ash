@@ -182,8 +182,9 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
             fail(errors, f"unavailable settlement action {action_id} must declare unavailable_reason")
 
 
-def validate_contracts(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
+def validate_contracts(value: Any, factions_value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
     rules = as_object(value, "contracts", errors)
+    factions = as_object(factions_value, "factions", errors)
     history_limit = rules.get("max_history")
     if not isinstance(history_limit, int) or not 1 <= history_limit <= 100:
         fail(errors, "contracts.max_history must be an integer from 1 through 100")
@@ -201,7 +202,7 @@ def validate_contracts(value: Any, visit_slot_limit: Any, errors: list[str]) -> 
         elif contract_id in seen_ids:
             fail(errors, f"duplicate contract id: {contract_id}")
         seen_ids.add(contract_id)
-        for field in ("name", "sponsor", "description", "tradeoff", "failure_recovery"):
+        for field in ("name", "sponsor", "description", "tradeoff", "decision_summary", "recovery_summary", "failure_recovery"):
             if not isinstance(contract.get(field), str) or not contract[field]:
                 fail(errors, f"contract {contract_id} must declare {field}")
         for field in ("origin_id", "destination_id"):
@@ -222,6 +223,26 @@ def validate_contracts(value: Any, visit_slot_limit: Any, errors: list[str]) -> 
             fail(errors, f"contract {contract_id}.service_slots must not exceed the visit limit")
         if not isinstance(contract.get("failure_penalty"), int) or contract["failure_penalty"] < 0:
             fail(errors, f"contract {contract_id}.failure_penalty must be a non-negative integer")
+        for field in ("success_reputation", "failure_reputation"):
+            effects = contract.get(field)
+            if not isinstance(effects, dict):
+                fail(errors, f"contract {contract_id}.{field} must be an object")
+                continue
+            for faction_id, delta in effects.items():
+                if faction_id not in factions:
+                    fail(errors, f"contract {contract_id}.{field} references unknown faction {faction_id}")
+                if not isinstance(delta, int):
+                    fail(errors, f"contract {contract_id}.{field}.{faction_id} must be an integer")
+        minimum_reputation = contract.get("minimum_reputation", {})
+        if not isinstance(minimum_reputation, dict):
+            fail(errors, f"contract {contract_id}.minimum_reputation must be an object")
+        else:
+            for faction_id, minimum in minimum_reputation.items():
+                faction = factions.get(faction_id)
+                if not isinstance(faction, dict):
+                    fail(errors, f"contract {contract_id}.minimum_reputation references unknown faction {faction_id}")
+                elif not isinstance(minimum, int) or minimum < faction.get("minimum", -10) or minimum > faction.get("maximum", 10):
+                    fail(errors, f"contract {contract_id}.minimum_reputation.{faction_id} must fit the authored faction bounds")
 
 
 def validate_events(value: Any, errors: list[str]) -> None:
@@ -511,7 +532,7 @@ def validate(data: Any) -> list[str]:
     validate_settlement_actions(root.get("settlement_actions"), errors)
     settlement_action_rules = root.get("settlement_actions")
     visit_slot_limit = settlement_action_rules.get("visit_slots_per_arrival") if isinstance(settlement_action_rules, dict) else None
-    validate_contracts(root.get("contracts"), visit_slot_limit, errors)
+    validate_contracts(root.get("contracts"), root.get("factions"), visit_slot_limit, errors)
     validate_crew(root.get("crew"), visit_slot_limit, errors)
     validate_factions(root.get("factions"), errors)
     validate_arms_trade(root.get("arms_trade"), errors)

@@ -119,6 +119,7 @@ def main() -> int:
     rows = pd.DataFrame(data["rows"])
     multi_trip_rows = pd.DataFrame(data.get("multi_trip_rows", []))
     memory_probe = data.get("market_memory_probe", {})
+    quality_metrics = data.get("quality_metrics", {})
     output = args.output_dir
     output.mkdir(parents=True, exist_ok=True)
 
@@ -254,6 +255,54 @@ def main() -> int:
     )
     calibration.to_csv(output / "forecast_calibration.csv", index=False)
 
+    safe_opening = quality_metrics.get("safe_opening", {})
+    opening_variety = quality_metrics.get("opening_variety", {})
+    world_state_variety = quality_metrics.get("world_state_variety", {})
+    cargo_loss_recovery = quality_metrics.get("cargo_loss_recovery", {})
+    preparation_overhead = quality_metrics.get("preparation_overhead", {})
+    quality_gates = pd.DataFrame(
+        [
+            {
+                "gate": "Safe first expedition",
+                "passed": safe_opening.get("completion_rate", 0) == 1.0
+                and safe_opening.get("minimum_money", 0) >= 60
+                and safe_opening.get("minimum_provisions", 0) >= 9,
+                "evidence": f"{safe_opening.get('completed', 0)}/{safe_opening.get('runs', 0)} complete; floor {safe_opening.get('minimum_money', 0)} ashmarks and {safe_opening.get('minimum_provisions', 0)} provisions",
+            },
+            {
+                "gate": "Multiple viable openings",
+                "passed": opening_variety.get("positive_strategy_count", 0) >= 3
+                and opening_variety.get("good_count", 0) >= 3
+                and opening_variety.get("route_count", 0) >= 2,
+                "evidence": f"{opening_variety.get('positive_strategy_count', 0)} positive choices across {opening_variety.get('good_count', 0)} goods and {opening_variety.get('route_count', 0)} routes",
+            },
+            {
+                "gate": "No permanent route winner",
+                "passed": world_state_variety.get("choice_count", 0) >= 3
+                and world_state_variety.get("route_count", 0) >= 2,
+                "evidence": f"{world_state_variety.get('choice_count', 0)} best choices across {world_state_variety.get('route_count', 0)} routes in {world_state_variety.get('scenario_count', 0)} world states",
+            },
+            {
+                "gate": "Cargo-loss recovery",
+                "passed": cargo_loss_recovery.get("cargo_loss_observed", False)
+                and cargo_loss_recovery.get("recovered", False)
+                and cargo_loss_recovery.get("recovery_trips", 99) <= 3
+                and cargo_loss_recovery.get("minimum_money", 0) > 0,
+                "evidence": f"seed {cargo_loss_recovery.get('seed', 'none')}; recovered to {cargo_loss_recovery.get('ending_money', 0)} ashmarks in {cargo_loss_recovery.get('recovery_trips', 0)} outbound trade(s)",
+            },
+            {
+                "gate": "Short preparation",
+                "passed": preparation_overhead.get("tutorial_setup_ok", False)
+                and preparation_overhead.get("commands_through_first_trade", 99) <= 2,
+                "evidence": f"first cargo purchase is command {preparation_overhead.get('commands_through_first_trade', 0)}",
+            },
+        ]
+    )
+    quality_gates.to_csv(output / "quality_gate_summary.csv", index=False)
+    quality_display = quality_gates.copy()
+    quality_display["passed"] = quality_display["passed"].map(lambda value: "PASS" if value else "FAIL")
+    quality_display.columns = ["Quality gate", "Status", "Evidence"]
+
     write_chart(summary, output / "policy_outcomes.png")
     write_choice_chart(choice_mix, output / "choice_concentration.png")
 
@@ -328,6 +377,12 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 ## Results
 
 {markdown_table(presentation)}
+
+## Automated Quality Gates
+
+{markdown_table(quality_display)}
+
+These gates make the audit's minimum playability promises executable: the taught opening preserves a recovery floor across every deterministic seed, several positive opening plans exist, changing market/access state changes the best plan, a real cargo-loss run can recover, and the tutorial reaches its first trade without excessive preparation.
 
 Under legal paths, the **forecast maximizer** selects **{forecast_choice['choice']}** in every seed and averages **{signed(float(forecast_policy['mean_realized_economic_profit']))}** realized economic profit. The **gross-margin chaser** selects **{gross_choice['choice']}** and averages **{signed(float(gross_policy['mean_realized_economic_profit']))}**. The **Toll-road-only** policy selects **{toll_choice['choice']}** and averages **{signed(float(toll_policy['mean_realized_economic_profit']))}**. The guided Water delivery remains a smaller, understandable positive-margin teaching run at **{signed(float(guided_policy['mean_realized_economic_profit']))}**.
 
@@ -412,6 +467,8 @@ The attached raw results were generated by `tools/simulate_trade_policies.gd` an
         "market_memory_probe": memory_probe,
         "event_summary": event_summary.to_dict(orient="records"),
         "arms_policy_summary": arms_summary.to_dict(orient="records"),
+        "quality_metrics": quality_metrics,
+        "quality_gates": quality_gates.to_dict(orient="records"),
     }
     (output / "analysis_summary.json").write_text(json.dumps(artifact, indent=2), encoding="utf-8")
     print(f"Wrote analysis to {output}")

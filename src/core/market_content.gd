@@ -343,7 +343,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 
 	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
-	_validate_contracts(data.get("contracts", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
+	_validate_contracts(data.get("contracts", {}), data.get("factions", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_factions(data.get("factions", {}), errors)
 	_validate_arms_trade(data.get("arms_trade", {}), errors)
@@ -536,7 +536,7 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 		if not bool(action.get("available", false)) and String(action.get("unavailable_reason", "")).is_empty():
 			errors.append("unavailable settlement action %s must declare unavailable_reason" % action_id)
 
-static func _validate_contracts(value: Variant, visit_slot_limit: int, errors: Array[String]) -> void:
+static func _validate_contracts(value: Variant, factions_value: Variant, visit_slot_limit: int, errors: Array[String]) -> void:
 	if typeof(value) != TYPE_DICTIONARY:
 		errors.append("contracts must be an object")
 		return
@@ -549,6 +549,7 @@ static func _validate_contracts(value: Variant, visit_slot_limit: int, errors: A
 		errors.append("contracts records must be an array")
 		return
 	var seen_ids: Dictionary = {}
+	var authored_factions: Dictionary = factions_value if typeof(factions_value) == TYPE_DICTIONARY else {}
 	for raw_contract in records_value:
 		if typeof(raw_contract) != TYPE_DICTIONARY:
 			errors.append("each contract must be an object")
@@ -561,7 +562,7 @@ static func _validate_contracts(value: Variant, visit_slot_limit: int, errors: A
 			errors.append("duplicate contract id: %s" % contract_id)
 		else:
 			seen_ids[contract_id] = true
-		for required_text in ["name", "sponsor", "description", "tradeoff", "failure_recovery"]:
+		for required_text in ["name", "sponsor", "description", "tradeoff", "decision_summary", "recovery_summary", "failure_recovery"]:
 			if String(contract_record.get(required_text, "")).is_empty():
 				errors.append("contract %s must declare %s" % [contract_id, required_text])
 		for settlement_field in ["origin_id", "destination_id"]:
@@ -578,6 +579,25 @@ static func _validate_contracts(value: Variant, visit_slot_limit: int, errors: A
 			errors.append("contract %s service_slots must not exceed the visit limit" % contract_id)
 		if int(contract_record.get("failure_penalty", -1)) < 0:
 			errors.append("contract %s failure_penalty must be non-negative" % contract_id)
+		for required_reputation_field in ["success_reputation", "failure_reputation"]:
+			if not contract_record.has(required_reputation_field):
+				errors.append("contract %s must declare %s" % [contract_id, required_reputation_field])
+		for reputation_field in ["minimum_reputation", "success_reputation", "failure_reputation"]:
+			var reputation_value: Variant = contract_record.get(reputation_field, {})
+			if typeof(reputation_value) != TYPE_DICTIONARY:
+				errors.append("contract %s %s must be an object" % [contract_id, reputation_field])
+				continue
+			var reputation_effects: Dictionary = reputation_value
+			for faction_id_value in reputation_effects.keys():
+				var faction_id := String(faction_id_value)
+				if not authored_factions.has(faction_id):
+					errors.append("contract %s %s references unknown faction %s" % [contract_id, reputation_field, faction_id])
+				elif typeof(reputation_effects.get(faction_id_value)) != TYPE_INT and typeof(reputation_effects.get(faction_id_value)) != TYPE_FLOAT:
+					errors.append("contract %s %s value for %s must be numeric" % [contract_id, reputation_field, faction_id])
+				elif reputation_field == "minimum_reputation" and int(reputation_effects.get(faction_id_value, -1)) < int(authored_factions.get(faction_id, {}).get("minimum", -10)):
+					errors.append("contract %s minimum reputation for %s is below the authored faction bound" % [contract_id, faction_id])
+				elif reputation_field == "minimum_reputation" and int(reputation_effects.get(faction_id_value, 0)) > int(authored_factions.get(faction_id, {}).get("maximum", 10)):
+					errors.append("contract %s minimum reputation for %s is above the authored faction bound" % [contract_id, faction_id])
 
 static func _validate_events(value: Variant, errors: Array[String]) -> void:
 	if typeof(value) != TYPE_DICTIONARY:

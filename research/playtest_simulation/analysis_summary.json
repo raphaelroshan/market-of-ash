@@ -241,5 +241,98 @@
       "mean_economic_profit": 53.0,
       "mean_escalation": 0.0
     }
+  ],
+  "quality_metrics": {
+    "cargo_loss_recovery": {
+      "cargo_loss_observed": true,
+      "ending_money": 306,
+      "ending_provisions": 9,
+      "minimum_money": 114,
+      "money_after_loss": 118,
+      "recovered": true,
+      "recovery_trips": 1,
+      "seed": 3
+    },
+    "opening_variety": {
+      "choices": [
+        "grain \u2192 cinderford / toll_road",
+        "grain \u2192 brine_cross / toll_road",
+        "water \u2192 reedwatch / old_road",
+        "water \u2192 cinderford / toll_road",
+        "scrap \u2192 reedwatch / old_road",
+        "medicine \u2192 reedwatch / old_road",
+        "medicine \u2192 brine_cross / toll_road"
+      ],
+      "good_count": 4,
+      "positive_strategy_count": 7,
+      "route_count": 2
+    },
+    "preparation_overhead": {
+      "commands_through_first_trade": 2,
+      "non_trade_commands_before_first_trade": 1,
+      "tutorial_setup_ok": true
+    },
+    "safe_opening": {
+      "cargo_loss_runs": 35,
+      "completed": 100,
+      "completion_rate": 1.0,
+      "minimum_money": 118,
+      "minimum_provisions": 11,
+      "runs": 100
+    },
+    "world_state_variety": {
+      "choice_count": 3,
+      "results": [
+        {
+          "choice": "water \u2192 reedwatch / old_road",
+          "expected_net_profit": 99,
+          "scenario": "ordinary_opening"
+        },
+        {
+          "choice": "medicine \u2192 reedwatch / old_road",
+          "expected_net_profit": 27,
+          "scenario": "reedwatch_water_supplied"
+        },
+        {
+          "choice": "water \u2192 reedwatch / old_road",
+          "expected_net_profit": 26,
+          "scenario": "reedwatch_broad_supply"
+        },
+        {
+          "choice": "grain \u2192 cinderford / toll_road",
+          "expected_net_profit": 30,
+          "scenario": "recognized_warden_corridor"
+        }
+      ],
+      "route_count": 2,
+      "scenario_count": 4
+    }
+  },
+  "quality_gates": [
+    {
+      "gate": "Safe first expedition",
+      "passed": true,
+      "evidence": "100/100 complete; floor 118 ashmarks and 11 provisions"
+    },
+    {
+      "gate": "Multiple viable openings",
+      "passed": true,
+      "evidence": "7 positive choices across 4 goods and 2 routes"
+    },
+    {
+      "gate": "No permanent route winner",
+      "passed": true,
+      "evidence": "3 best choices across 2 routes in 4 world states"
+    },
+    {
+      "gate": "Cargo-loss recovery",
+      "passed": true,
+      "evidence": "seed 3; recovered to 306 ashmarks in 1 outbound trade(s)"
+    },
+    {
+      "gate": "Short preparation",
+      "passed": true,
+      "evidence": "first cargo purchase is command 2"
+    }
   ]
 }

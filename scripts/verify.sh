@@ -24,6 +24,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --path . --script res://tests/test_tutorial_flow.gd
   godot --headless --path . --script res://tests/test_controller_flow.gd
   godot --headless --path . --script res://tests/test_campaign.gd
+  godot --headless --path . --script res://tests/test_game_quality.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --path . --script res://tests/test_economy.gd
   godot4 --headless --path . --script res://tests/test_map_ui.gd
@@ -37,5 +38,6 @@ else
   echo "Then run: godot --headless --path . --script res://tests/test_tutorial_flow.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_controller_flow.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_campaign.gd"
+  echo "Then run: godot --headless --path . --script res://tests/test_game_quality.gd"
   exit 2
 fi

@@ -19,6 +19,7 @@ func _init() -> void:
 	_test_market_memory()
 	_test_settlement_actions()
 	_test_reedwatch_relief_contract()
+	_test_brine_cross_medicine_escort_contract()
 	_test_gatekeepers_chalk_event()
 	_test_span_at_cinderford_event()
 	_test_last_clean_barrel_event()
@@ -51,7 +52,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.15.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.16.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
@@ -60,6 +61,7 @@ func _test_runtime_content() -> void:
 	_expect(int(MarketContent.settlement_action("brine_cross_cistern_queue").get("minimum_crisis_stage", 0)) == 1, "runtime content should expose the shortage-gated Brine Cross action")
 	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 1, "runtime content should expose a Reedwatch opportunity state")
 	_expect(MarketContent.contract("reedwatch_water_relief_01").get("destination_id", "") == "reedwatch", "runtime content should expose the first relief contract")
+	_expect(MarketContent.contract("brine_cross_medicine_escort_01").get("destination_id", "") == "brine_cross", "runtime content should expose the regulated escort contract")
 	_expect(MarketContent.event("gatekeepers_chalk").get("route_ids", []).has("toll_road"), "runtime content should expose the first Toll Road event")
 	_expect(MarketContent.event("span_at_cinderford").get("route_ids", []).has("old_road"), "runtime content should expose the Cinderford span event")
 	_expect(MarketContent.event("last_clean_barrel").get("destination_ids", []).has("reedwatch"), "runtime content should expose the shortage settlement event")
@@ -470,6 +472,7 @@ func _test_reedwatch_relief_contract() -> void:
 	_expect(world.command_history[-2].id == MarketCommandProcessor.RESOLVE_CONTRACT, "automatic arrival completion should be logged through the contract command boundary")
 	_expect(int(world.cargo.get("water", 0)) == 0 and world.money == 206, "contract completion should consume four water and pay the frozen reward")
 	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.16), "contract delivery should update local market memory")
+	_expect(int(world.reputation.get("caravans", 0)) == 1, "relief completion should apply its visible Free Caravan relationship effect")
 	var duplicate_completion := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.RESOLVE_CONTRACT,
 		"inputs": {"contract_id": "reedwatch_water_relief_01"},
@@ -530,6 +533,47 @@ func _test_reedwatch_relief_contract() -> void:
 	var restored := AshWorldState.new(0)
 	var restore_result := restored.load_serialized(saved_world.serialize())
 	_expect(restore_result.ok and restored.active_contract("reedwatch_water_relief_01") == saved_world.active_contract("reedwatch_water_relief_01"), "save/load should preserve frozen active-contract terms")
+
+func _test_brine_cross_medicine_escort_contract() -> void:
+	var blocked_world := AshWorldState.new(1)
+	var blocked := MarketCommandProcessor.execute(blocked_world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "brine_cross_medicine_escort_01"},
+	})
+	_expect(not blocked.ok and blocked.reason.contains("requires 1 Ash Wardens standing"), "regulated escort should explain its Warden prerequisite")
+	_expect(blocked_world.visit_slots_remaining == 2, "blocked faction prerequisite should preserve visit slots")
+
+	var world := AshWorldState.new(1)
+	world.adjust_reputation("wardens", 1)
+	var accept := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
+		"inputs": {"contract_id": "brine_cross_medicine_escort_01"},
+	})
+	_expect(accept.ok, "recognized caravan should accept the Brine Cross medicine escort")
+	var snapshot := world.active_contract("brine_cross_medicine_escort_01")
+	_expect(int(snapshot.deadline_day) == 3 and int(snapshot.get("success_reputation", {}).get("wardens", 0)) == 1, "regulated escort should freeze its deadline and relationship terms")
+	_expect(MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "medicine", "quantity": 2}}).ok, "regulated escort cargo should use normal spot purchase")
+	var depart := MarketCommandProcessor.execute(world, {
+		"id": MarketCommandProcessor.DEPART_ROUTE,
+		"inputs": {"route_id": "toll_road", "destination_id": "brine_cross"},
+	})
+	if not world.pending_event.is_empty():
+		depart = MarketCommandProcessor.execute(world, {
+			"id": MarketCommandProcessor.RESOLVE_EVENT,
+			"inputs": {"event_id": String(world.pending_event.get("id", "")), "choice_id": "pay_posted_toll"},
+		})
+	_expect(depart.ok and world.active_contract("brine_cross_medicine_escort_01").is_empty(), "on-time medicine escort should resolve through arrival")
+	_expect(world.contract_history.back().status == "completed" and int(world.reputation.get("wardens", 0)) >= 2, "escort completion should archive once and cross the recognized-carrier threshold")
+	_expect(int(world.cargo.get("medicine", 0)) == 0 and world.money >= 142, "escort completion should consume only committed medicine and leave a positive guaranteed margin")
+
+	var late_world := AshWorldState.new(1)
+	late_world.adjust_reputation("wardens", 1)
+	MarketCommandProcessor.execute(late_world, {"id": MarketCommandProcessor.ACCEPT_CONTRACT, "inputs": {"contract_id": "brine_cross_medicine_escort_01"}})
+	late_world.cargo = {"medicine": 2, "weight": 2}
+	late_world.advance_day(3)
+	var late := MarketCommandProcessor.execute(late_world, {"id": MarketCommandProcessor.RESOLVE_CONTRACT, "inputs": {"contract_id": "brine_cross_medicine_escort_01"}})
+	_expect(late.ok and late.state_delta.status == "failed", "late regulated escort should resolve as a deterministic failure")
+	_expect(int(late_world.reputation.get("wardens", 0)) == 0 and int(late_world.cargo.get("medicine", 0)) == 2, "escort failure should withdraw standing while preserving recovery cargo")
 
 func _test_gatekeepers_chalk_event() -> void:
 	var trigger_world := AshWorldState.new(1)
@@ -1362,7 +1406,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.15.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.16.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})

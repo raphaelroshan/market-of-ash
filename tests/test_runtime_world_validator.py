@@ -85,6 +85,9 @@ def main() -> int:
         "good_id must reference a known good",
         "quantity must be a positive integer",
         "failure_penalty must be a non-negative integer",
+        "success_reputation must be an object",
+        "failure_reputation must be an object",
+        "minimum_reputation references unknown faction",
     )
     missing_contracts = [
         fragment

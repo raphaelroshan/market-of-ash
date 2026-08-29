@@ -12,9 +12,13 @@
       "deadline_days": 0,
       "reward": 0,
       "failure_penalty": -1,
+      "minimum_reputation": {"missing_faction": 999},
+      "success_reputation": "invalid",
       "service_slots": 0,
       "description": "",
       "tradeoff": "",
+      "decision_summary": "",
+      "recovery_summary": "",
       "failure_recovery": ""
     }
   ]
