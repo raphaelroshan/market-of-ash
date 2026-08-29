@@ -19,6 +19,7 @@ static func evaluate() -> Dictionary:
 		"opening_variety": _opening_variety_probe(),
 		"trade_pattern_families": _trade_pattern_families_probe(),
 		"contract_parity": _contract_parity_probe(),
+		"path_reward_balance": _path_reward_balance_probe(),
 		"adaptive_failure_recovery": _adaptive_failure_recovery_probe(),
 		"replacement_faction_agency": _replacement_faction_agency_probe(),
 		"world_state_variety": _world_state_variety_probe(),
@@ -102,9 +103,8 @@ static func _contract_parity_probe() -> Dictionary:
 	var best_ordinary := _best_candidate(world)
 	var ordinary_net := int(best_ordinary.get("preview", {}).get("expected_net_profit", 0))
 	var contract := MarketContent.contract("reedwatch_water_relief_01")
-	var contract_candidate := _candidate_for(world, String(contract.get("good_id", "")), int(contract.get("quantity", 0)), String(contract.get("destination_id", "")), "old_road")
-	var contract_preview: Dictionary = contract_candidate.get("preview", {})
-	var contract_expected_net := int(contract.get("reward", 0)) - int(contract_preview.get("purchase_total", 0)) - int(contract_preview.get("route_cost", 0)) - int(contract_preview.get("provision_cost", 0)) - int(contract_preview.get("expected_loss", 0)) - int(contract_preview.get("time_cost", 0))
+	var contract_preview := MarketEconomy.contract_reward_preview(contract, world.settlement("ashgate"), world.settlement("reedwatch"), world.route("old_road", "ashgate", "reedwatch"), world.pricing_context())
+	var contract_expected_net := int(contract_preview.get("expected_net_profit", 0))
 	var parity_ratio := float(ordinary_net) / float(contract_expected_net) if contract_expected_net > 0 else 0.0
 	return {
 		"ordinary_choice": "%s → %s / %s" % [String(best_ordinary.get("good_id", "")), String(best_ordinary.get("destination_id", "")), String(best_ordinary.get("route_id", ""))],
@@ -114,6 +114,65 @@ static func _contract_parity_probe() -> Dictionary:
 		"ordinary_to_contract_ratio": parity_ratio,
 		"minimum_ratio": 0.70,
 		"passed": ordinary_net > 0 and parity_ratio >= 0.70,
+	}
+
+static func _path_reward_balance_probe() -> Dictionary:
+	var assumptions := MarketContent.planning_assumptions()
+	var world := AshWorldState.new(1107)
+	var ordinary := _best_candidate(world)
+	var ordinary_preview: Dictionary = ordinary.get("preview", {})
+	var ordinary_vector := MarketEconomy.reward_vector_from_trade_preview(ordinary_preview)
+	var contract := MarketContent.contract("reedwatch_water_relief_01")
+	var contract_preview := MarketEconomy.contract_reward_preview(contract, world.settlement("ashgate"), world.settlement("reedwatch"), world.route("old_road", "ashgate", "reedwatch"), world.pricing_context())
+	var contract_vector: Dictionary = contract_preview.get("reward_vector", {})
+	var civic_vector := _action_reward_vector(MarketContent.settlement_action("reedwatch_supply_shelter"))
+	var faction_vector := _action_reward_vector(MarketContent.settlement_action("reedwatch_commons_boiler_fuel"))
+	var ordinary_net := int(ordinary_vector.get("expected_net_profit", 0))
+	var contract_net := int(contract_vector.get("expected_net_profit", 0))
+	var contract_ratio := float(contract_net) / float(ordinary_net) if ordinary_net > 0 else 0.0
+	var minimum_ratio := float(assumptions.get("contract_expected_net_min_ratio", 1.0))
+	var maximum_ratio := float(assumptions.get("contract_expected_net_max_ratio", 1.2))
+	var required_dimensions := ["ashmarks_after_direct_costs", "expected_net_profit", "provisions_used", "capacity_committed", "standing", "time_days", "visit_slots"]
+	var all_dimensions_tracked := true
+	for vector in [ordinary_vector, contract_vector, civic_vector, faction_vector]:
+		for dimension in required_dimensions:
+			if not vector.has(dimension):
+				all_dimensions_tracked = false
+	var paths := {
+		"ordinary": ordinary_vector,
+		"contract": contract_vector,
+		"civic": civic_vector,
+		"faction": faction_vector,
+	}
+	return {
+		"fixture_minutes": int(assumptions.get("reward_fixture_minutes", 0)),
+		"ordinary_choice": "%s → %s / %s" % [String(ordinary.get("good_id", "")), String(ordinary.get("destination_id", "")), String(ordinary.get("route_id", ""))],
+		"contract_id": String(contract.get("id", "")),
+		"contract_to_ordinary_expected_net_ratio": contract_ratio,
+		"minimum_contract_ratio": minimum_ratio,
+		"maximum_contract_ratio": maximum_ratio,
+		"all_dimensions_tracked": all_dimensions_tracked,
+		"non_cash_paths_are_explicit": int(civic_vector.get("resilience", 0)) > 0 and int(faction_vector.get("support", 0)) > 0,
+		"passed": int(assumptions.get("reward_fixture_minutes", 0)) == 10 and all_dimensions_tracked and ordinary_net > 0 and contract_ratio >= minimum_ratio and contract_ratio <= maximum_ratio,
+		"paths": paths,
+	}
+
+static func _action_reward_vector(action: Dictionary) -> Dictionary:
+	var effects: Dictionary = action.get("effects", {})
+	var cargo_cost: Dictionary = effects.get("cargo_cost", {})
+	var capacity_committed := int(cargo_cost.get("quantity", 0)) * int(MarketContent.good(String(cargo_cost.get("good_id", ""))).get("weight", 0))
+	var resilience: Dictionary = effects.get("settlement_resilience", {})
+	var support: Dictionary = effects.get("emergent_faction_support", {})
+	return {
+		"ashmarks_after_direct_costs": -int(action.get("cost", 0)),
+		"expected_net_profit": -int(action.get("cost", 0)),
+		"provisions_used": 0,
+		"capacity_committed": capacity_committed,
+		"standing": effects.get("reputation", {}).duplicate(true),
+		"time_days": int(action.get("time_cost", 0)),
+		"visit_slots": int(action.get("service_slots", 0)),
+		"resilience": int(resilience.get("delta", 0)),
+		"support": int(support.get("delta", 0)),
 	}
 
 static func _adaptive_failure_recovery_probe() -> Dictionary:

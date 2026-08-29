@@ -259,6 +259,7 @@ def main() -> int:
     opening_variety = quality_metrics.get("opening_variety", {})
     trade_pattern_families = quality_metrics.get("trade_pattern_families", {})
     contract_parity = quality_metrics.get("contract_parity", {})
+    path_reward_balance = quality_metrics.get("path_reward_balance", {})
     adaptive_failure_recovery = quality_metrics.get("adaptive_failure_recovery", {})
     replacement_faction_agency = quality_metrics.get("replacement_faction_agency", {})
     world_state_variety = quality_metrics.get("world_state_variety", {})
@@ -290,6 +291,13 @@ def main() -> int:
                 "gate": "Ordinary trade / contract parity",
                 "passed": contract_parity.get("passed", False),
                 "evidence": f"ordinary {contract_parity.get('ordinary_expected_net_profit', 0)} vs contract {contract_parity.get('contract_expected_net_profit', 0)} expected net ({contract_parity.get('ordinary_to_contract_ratio', 0):.0%})",
+            },
+            {
+                "gate": "Cross-path reward balance",
+                "passed": path_reward_balance.get("passed", False)
+                and path_reward_balance.get("all_dimensions_tracked", False)
+                and path_reward_balance.get("non_cash_paths_are_explicit", False),
+                "evidence": f"{path_reward_balance.get('fixture_minutes', 0)}-minute fixture; contract/ordinary expected net {path_reward_balance.get('contract_to_ordinary_expected_net_ratio', 0):.0%}; cash, provisions, hold, standing, time, and slots tracked separately",
             },
             {
                 "gate": "Adaptive failure creates trade",

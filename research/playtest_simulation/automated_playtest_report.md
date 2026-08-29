@@ -32,17 +32,18 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 
 ## Automated Quality Gates
 
-| Quality gate                     | Status   | Evidence                                                                             |
-|:---------------------------------|:---------|:-------------------------------------------------------------------------------------|
-| Safe first expedition            | PASS     | 100/100 complete; floor 118 ashmarks and 11 provisions                               |
-| Multiple viable openings         | PASS     | 7 positive choices across 4 goods and 2 routes                                       |
-| Ordinary trade families          | PASS     | 4/4 staple, repair, medicine, and industrial fixtures are positive without contracts |
-| Ordinary trade / contract parity | PASS     | ordinary 99 vs contract 70 expected net (141%)                                       |
-| Adaptive failure creates trade   | PASS     | charcoal expected net -10 → 7; Reedwatch resilience 1                                |
-| Replacement faction agency       | PASS     | 2 cooperation paths; support -1 → 0 after opposition/reconciliation                  |
-| No permanent route winner        | PASS     | 3 best choices across 2 routes in 4 world states                                     |
-| Cargo-loss recovery              | PASS     | seed 3; recovered to 278 ashmarks in 1 outbound trade(s)                             |
-| Short preparation                | PASS     | first cargo purchase is command 2                                                    |
+| Quality gate                     | Status   | Evidence                                                                                                                     |
+|:---------------------------------|:---------|:-----------------------------------------------------------------------------------------------------------------------------|
+| Safe first expedition            | PASS     | 100/100 complete; floor 118 ashmarks and 11 provisions                                                                       |
+| Multiple viable openings         | PASS     | 7 positive choices across 4 goods and 2 routes                                                                               |
+| Ordinary trade families          | PASS     | 4/4 staple, repair, medicine, and industrial fixtures are positive without contracts                                         |
+| Ordinary trade / contract parity | PASS     | ordinary 99 vs contract 100 expected net (99%)                                                                               |
+| Cross-path reward balance        | PASS     | 10-minute fixture; contract/ordinary expected net 101%; cash, provisions, hold, standing, time, and slots tracked separately |
+| Adaptive failure creates trade   | PASS     | charcoal expected net -10 → 7; Reedwatch resilience 1                                                                        |
+| Replacement faction agency       | PASS     | 2 cooperation paths; support -1 → 0 after opposition/reconciliation                                                          |
+| No permanent route winner        | PASS     | 3 best choices across 2 routes in 4 world states                                                                             |
+| Cargo-loss recovery              | PASS     | seed 3; recovered to 278 ashmarks in 1 outbound trade(s)                                                                     |
+| Short preparation                | PASS     | first cargo purchase is command 2                                                                                            |
 
 These gates make the audit's minimum playability promises executable: the taught opening preserves a recovery floor across every deterministic seed, several positive opening plans exist, changing market/access state changes the best plan, a real cargo-loss run can recover, and the tutorial reaches its first trade without excessive preparation.
 
@@ -93,7 +94,7 @@ Gatekeeper's Chalk replaces the generic Toll Road cargo incident when it trigger
 | Policy           | Runs   | Completed   | Median economic   | Mean economic   | Mean escalation   |
 |:-----------------|:-------|:------------|:------------------|:----------------|:------------------|
 | arms_broker_sale | 100    | 100.0%      | 37.0              | 37.0            | 2.0               |
-| non_arms_relief  | 100    | 85.0%       | 71.0              | 53.0            | 0.0               |
+| non_arms_relief  | 100    | 85.0%       | 101.0             | 78.5            | 0.0               |
 
 The arms path is a same-settlement cash opportunity. The non-arms path accepts and attempts the authored Reedwatch relief contract through normal travel and event resolution. This is a synthetic viability check, not final balance approval.
 

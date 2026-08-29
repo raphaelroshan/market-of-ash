@@ -457,3 +457,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A replacement faction should be a relationship the player can use, resist, and reconsider—not a second mandatory quest chain. Reusing settlement actions and ordinary cargo keeps the interaction inside the established Bazaar loop.
 
 **Trade-off:** Support currently changes one local market response and is summarized as a signed value rather than a dedicated faction screen. Feed D should compare its total economic value against contracts and ordinary trade before more rewards are authored.
+
+## ADR-058: Cross-path rewards remain a visible vector
+
+**Decision:** Evaluate ordinary trade, contracts, civic work, and replacement-faction work in a deterministic ten-minute fixture that reports ashmarks, provisions, hold commitment, standing, time, and visit slots separately. Tune Reedwatch Water Relief to 180 ashmarks, placing its expected net at 100 against the best ordinary opening's 99, with an authored acceptable band of 100–120%. Present the contract vector on the Job Board and preserve civic resilience and Commons support as named non-cash outcomes rather than converting them into a synthetic currency.
+
+**Reason:** A contract should compensate the player for reduced flexibility and a visit-slot commitment, but a dominant cash premium would quietly turn the open economy back into a quest ladder. Separate dimensions make the real tradeoff legible and executable.
+
+**Trade-off:** The fixture compares representative paths rather than claiming that one standing point or resilience point has a universal ashmark value. Feed E can now compose these durable non-cash outcomes into alternate endings without changing the currency model.

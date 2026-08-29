@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.19.0",
+  "content_version": "1.20.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -12,7 +12,10 @@
   ],
   "planning_assumptions": {
     "provision_value": 3,
-    "time_opportunity_cost_per_day": 2
+    "time_opportunity_cost_per_day": 2,
+    "reward_fixture_minutes": 10,
+    "contract_expected_net_min_ratio": 1.0,
+    "contract_expected_net_max_ratio": 1.2
   },
   "market_memory": {
     "pressure_min": 0.0,
@@ -207,7 +210,7 @@
         "good_id": "water",
         "quantity": 4,
         "deadline_days": 2,
-        "reward": 150,
+        "reward": 180,
         "failure_penalty": 8,
         "success_reputation": {"caravans": 1},
         "failure_reputation": {},

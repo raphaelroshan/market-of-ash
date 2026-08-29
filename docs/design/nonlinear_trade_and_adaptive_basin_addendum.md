@@ -323,6 +323,8 @@ Give the emergent faction at least two cooperation paths and one bypass or oppos
 
 Compare ordinary trade, contract, civic, and faction income per ten-minute fixture. Adjust rewards so contracts are attractive but not mandatory. Track ashmarks, provisions, capacity, standing, and time separately; do not introduce a new currency to compensate for a broken baseline.
 
+**Implemented foundation:** Runtime content `1.20.0` defines a ten-minute comparison fixture and an explicit 100–120% contract-to-ordinary expected-net band. Reedwatch Water Relief now pays 180 ashmarks, producing 100 expected net against the best ordinary opening's 99 while also requiring one visit slot, four hold spaces, one provision, and one travel day. The Job Board exposes those dimensions separately. Civic shelter work and Commons boiler support remain intentionally non-cash paths whose resilience, standing, support, capacity, time, and visit-slot effects are recorded beside the two income paths. See `docs/economy/path_reward_balance.md`.
+
 ### Feed E — Compose endings
 
 Connect the replacement faction and ordinary trade outcomes to existing ending dimensions. Add one alternate ending fixture reachable through scenario failure followed by ordinary trading.
