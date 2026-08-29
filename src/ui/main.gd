@@ -2974,7 +2974,18 @@ func _refresh_forecasts() -> void:
 	forecast_cargo[good_id] = maxi(int(forecast_cargo.get(good_id, 0)), quantity)
 	world_context["cargo"] = forecast_cargo
 	world_context["route_intelligence"] = world.route_intelligence(route_id)
-	var market_text := _market_preview_text(good_id, quantity, origin, world_context)
+	var selected_route: Dictionary = {}
+	if MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+		selected_route = world.route(route_id, world.current_settlement, destination_id)
+		selected_route["provisions"] = world.route_provision_cost(route_id, destination_id)
+	if shop_status_label and not selected_route.is_empty():
+		var trade_story := MarketEconomy.ordinary_trade_story(good_id, quantity, origin, destination, selected_route, world_context)
+		if bool(trade_story.get("ok", false)):
+			var status_lines := shop_status_label.text.split("\n")
+			if status_lines.size() >= 2:
+				status_lines[1] = "TODAY'S TRADE — %s: %d here → %d at %s · %+d expected · NO CONTRACT" % [good_id.capitalize(), int(trade_story.origin_price), int(trade_story.destination_price), String(trade_story.destination_name), int(trade_story.expected_net_profit)]
+				shop_status_label.text = "\n".join(status_lines)
+	var market_text := _market_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
@@ -3010,15 +3021,13 @@ func _refresh_forecasts() -> void:
 		if commit_departure_button:
 			commit_departure_button.text = "Commit departure"
 		return
-	var selected_route := world.route(route_id, world.current_settlement, destination_id)
-	selected_route["provisions"] = world.route_provision_cost(route_id, destination_id)
 	if commit_departure_button:
 		var provision_count := int(selected_route.get("provisions", 0))
 		var provision_label := "provision" if provision_count == 1 else "provisions"
 		commit_departure_button.text = "Confirm and set out — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
 	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 
-func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:
+func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
 	var details := MarketEconomy.price_details(good_id, settlement, world_context)
 	if not details.ok:
 		return "MARKET\nNo valid good selected."
@@ -3027,7 +3036,7 @@ func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary
 	var memory_text := ""
 	if float(details.market_pressure) > 0.0:
 		var delivery := world.latest_market_delivery(String(settlement.get("id", "")), good_id)
-		var decay_percent := int(round(float(MarketContent.market_memory_rules().get("daily_decay_per_day", 0.0)) * 100.0))
+		var decay_percent := int(round(MarketEconomy.market_pressure_decay_rate(settlement, good_id) * 100.0))
 		if delivery.is_empty():
 			memory_text = "\nMarket memory: recent deliveries softened this price by %d%%; the effect recovers by %d%% per day." % [int(round(float(details.market_pressure) * 100.0)), decay_percent]
 		else:
@@ -3038,7 +3047,16 @@ func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary
 		if candidate == settlement:
 			continue
 		comparison.append("%s %d" % [String(candidate.get("name", settlement_id)), MarketEconomy.price_for(good_id, candidate, world_context)])
-	return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s%s\nOther markets: %s\nBase %d × local %.2f × demand %.2f × crisis %.2f × faction %.2f × memory %.2f" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, memory_text, "; ".join(comparison), int(details.base_price), float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.market_memory_modifier)]
+	if route.is_empty() or destination.is_empty():
+		return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s%s\nOther markets: %s" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, memory_text, "; ".join(comparison)]
+	var story := MarketEconomy.ordinary_trade_story(good_id, quantity, settlement, destination, route, world_context)
+	if not story.ok:
+		return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s%s\nOther markets: %s" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, memory_text, "; ".join(comparison)]
+	var spread_text := "%+d" % int(story.unit_spread)
+	var gross_text := "%+d" % int(story.gross_margin)
+	var net_text := "%+d" % int(story.expected_net_profit)
+	var provision_word := "provision" if int(story.provisions) == 1 else "provisions"
+	return "ORDINARY TRADE — NO CONTRACT REQUIRED\n%s x%d · %s → %s via %s\nSOURCE — %s\nNEED — %s\nSPREAD — buy %d · sell %d · %s each · load total %s\nROAD — %d ashmarks · %d %s · %d%% exposed-unit risk\nEXPECTED NET %s ashmarks after travel, time, and expected loss\nWhy this price: %s%s\nMarket factors: local %.2f · demand %.2f · crisis %.2f · faction %.2f · memory %.2f\nOther markets: %s" % [good_id.capitalize(), quantity, story.origin_name, story.destination_name, story.route_name, story.source_reason, story.need_reason, int(story.origin_price), int(story.destination_price), spread_text, gross_text, int(story.route_cost), int(story.provisions), provision_word, int(round(float(story.risk) * 100.0)), net_text, reason_text, memory_text, float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.market_memory_modifier), "; ".join(comparison)]
 
 func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
 	var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, world_context)

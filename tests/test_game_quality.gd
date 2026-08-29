@@ -14,6 +14,14 @@ func _init() -> void:
 	_expect(int(opening.positive_strategy_count) >= 3 and int(opening.good_count) >= 3, "the opening must expose at least three positive cargo strategies")
 	_expect(int(opening.route_count) >= 2, "the opening must include viable choices on both regulated and exposed roads")
 
+	var patterns: Dictionary = metrics.trade_pattern_families
+	_expect(int(patterns.fixture_count) >= 3 and bool(patterns.all_viable), "staple, repair, medicine, and industrial trade patterns must remain viable without contracts")
+	for result in patterns.results:
+		_expect(not bool(result.requires_contract) and int(result.expected_net_profit) > 0, "ordinary trade fixture %s must stay independent and profitable" % String(result.family))
+
+	var parity: Dictionary = metrics.contract_parity
+	_expect(bool(parity.passed), "the best ordinary opening must retain at least 70% of the accessible relief contract's expected value")
+
 	var world_states: Dictionary = metrics.world_state_variety
 	_expect(int(world_states.choice_count) >= 3, "changing market and access state must rotate the best visible trade across at least three choices")
 	_expect(int(world_states.route_count) >= 2, "no one route may dominate every tested world state")

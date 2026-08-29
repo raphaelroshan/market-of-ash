@@ -257,6 +257,8 @@ def main() -> int:
 
     safe_opening = quality_metrics.get("safe_opening", {})
     opening_variety = quality_metrics.get("opening_variety", {})
+    trade_pattern_families = quality_metrics.get("trade_pattern_families", {})
+    contract_parity = quality_metrics.get("contract_parity", {})
     world_state_variety = quality_metrics.get("world_state_variety", {})
     cargo_loss_recovery = quality_metrics.get("cargo_loss_recovery", {})
     preparation_overhead = quality_metrics.get("preparation_overhead", {})
@@ -275,6 +277,17 @@ def main() -> int:
                 and opening_variety.get("good_count", 0) >= 3
                 and opening_variety.get("route_count", 0) >= 2,
                 "evidence": f"{opening_variety.get('positive_strategy_count', 0)} positive choices across {opening_variety.get('good_count', 0)} goods and {opening_variety.get('route_count', 0)} routes",
+            },
+            {
+                "gate": "Ordinary trade families",
+                "passed": trade_pattern_families.get("fixture_count", 0) >= 3
+                and trade_pattern_families.get("all_viable", False),
+                "evidence": f"{trade_pattern_families.get('viable_count', 0)}/{trade_pattern_families.get('fixture_count', 0)} staple, repair, medicine, and industrial fixtures are positive without contracts",
+            },
+            {
+                "gate": "Ordinary trade / contract parity",
+                "passed": contract_parity.get("passed", False),
+                "evidence": f"ordinary {contract_parity.get('ordinary_expected_net_profit', 0)} vs contract {contract_parity.get('contract_expected_net_profit', 0)} expected net ({contract_parity.get('ordinary_to_contract_ratio', 0):.0%})",
             },
             {
                 "gate": "No permanent route winner",

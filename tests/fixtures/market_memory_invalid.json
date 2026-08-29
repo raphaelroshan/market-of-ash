@@ -3,6 +3,9 @@
   "pressure_max": 0.2,
   "sale_impact_per_unit": 0.0,
   "daily_decay_per_day": -0.01,
+  "producer_decay_multiplier": 0.0,
+  "consumer_decay_multiplier": 2.5,
+  "neutral_decay_multiplier": -1.0,
   "crisis_effectiveness": {
     "0": 1.2,
     "2": 0.0

@@ -325,6 +325,8 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 		errors.append("settlements must be an object keyed by stable id")
 	else:
 		var settlements_dictionary: Dictionary = settlements_data
+		var source_coverage: Dictionary = {}
+		var consumer_coverage: Dictionary = {}
 		for settlement_id in REQUIRED_SETTLEMENT_IDS:
 			if not settlements_dictionary.has(settlement_id):
 				errors.append("missing required settlement: %s" % settlement_id)
@@ -336,10 +338,16 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			var settlement: Dictionary = settlement_value
 			if String(settlement.get("name", "")).is_empty():
 				errors.append("settlement %s must have a name" % settlement_id)
+			_validate_trade_profile(settlement_id, settlement.get("trade_profile", {}), seen_goods, source_coverage, consumer_coverage, errors)
 			_validate_modifier_table("settlement %s price_modifiers" % settlement_id, settlement.get("price_modifiers", {}), seen_goods, errors)
 			_validate_modifier_table("settlement %s demand" % settlement_id, settlement.get("demand", {}), seen_goods, errors)
 			if float(settlement.get("faction_price_modifier", 0.0)) <= 0.0:
 				errors.append("settlement %s must have a positive faction_price_modifier" % settlement_id)
+		for good_id in REQUIRED_GOOD_IDS:
+			if not source_coverage.has(good_id):
+				errors.append("trade profiles must declare at least one producer for %s" % good_id)
+			if not consumer_coverage.has(good_id):
+				errors.append("trade profiles must declare at least one consumer for %s" % good_id)
 
 	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
@@ -427,6 +435,10 @@ static func _validate_market_memory(value: Variant, errors: Array[String]) -> vo
 	var daily_decay := float(rules.get("daily_decay_per_day", 0.0))
 	if daily_decay <= 0.0 or daily_decay > pressure_max:
 		errors.append("market_memory daily_decay_per_day must be greater than 0 and no greater than pressure_max")
+	for multiplier_id in ["producer_decay_multiplier", "consumer_decay_multiplier", "neutral_decay_multiplier"]:
+		var multiplier := float(rules.get(multiplier_id, 0.0))
+		if multiplier <= 0.0 or multiplier > 2.0:
+			errors.append("market_memory %s must be greater than 0 and no greater than 2" % multiplier_id)
 	var effectiveness_value: Variant = rules.get("crisis_effectiveness", {})
 	if typeof(effectiveness_value) != TYPE_DICTIONARY:
 		errors.append("market_memory crisis_effectiveness must be an object")
@@ -443,6 +455,36 @@ static func _validate_market_memory(value: Variant, errors: Array[String]) -> vo
 	var history_limit := int(rules.get("max_delivery_history", 0))
 	if history_limit < 1 or history_limit > 100:
 		errors.append("market_memory max_delivery_history must be an integer from 1 through 100")
+
+static func _validate_trade_profile(settlement_id: String, value: Variant, known_goods: Dictionary, source_coverage: Dictionary, consumer_coverage: Dictionary, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("settlement %s trade_profile must be an object" % settlement_id)
+		return
+	var profile: Dictionary = value
+	if String(profile.get("ordinary_trade_note", "")).is_empty():
+		errors.append("settlement %s trade_profile must declare ordinary_trade_note" % settlement_id)
+	var produced_goods := _validate_trade_profile_side(settlement_id, "produces", profile.get("produces", {}), known_goods, source_coverage, errors)
+	var consumed_goods := _validate_trade_profile_side(settlement_id, "consumes", profile.get("consumes", {}), known_goods, consumer_coverage, errors)
+	for good_id in produced_goods.keys():
+		if consumed_goods.has(good_id):
+			errors.append("settlement %s trade_profile cannot both produce and consume %s" % [settlement_id, good_id])
+
+static func _validate_trade_profile_side(settlement_id: String, side: String, value: Variant, known_goods: Dictionary, coverage: Dictionary, errors: Array[String]) -> Dictionary:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("settlement %s trade_profile.%s must be an object" % [settlement_id, side])
+		return {}
+	var goods: Dictionary = value
+	if goods.is_empty():
+		errors.append("settlement %s trade_profile.%s must name at least one good" % [settlement_id, side])
+	for good_id_value in goods.keys():
+		var good_id := String(good_id_value)
+		if not known_goods.has(good_id):
+			errors.append("settlement %s trade_profile.%s references unknown good %s" % [settlement_id, side, good_id])
+		elif String(goods.get(good_id_value, "")).is_empty():
+			errors.append("settlement %s trade_profile.%s.%s must explain the market role" % [settlement_id, side, good_id])
+		else:
+			coverage[good_id] = true
+	return goods
 
 static func _validate_settlement_actions(value: Variant, errors: Array[String]) -> void:
 	if typeof(value) != TYPE_DICTIONARY:

@@ -183,7 +183,7 @@
     "baseline_price": 32,
     "initial_pressure": 0.16,
     "post_delivery_price": 27,
-    "recovery_days": 6,
+    "recovery_days": 4,
     "sale_ok": true,
     "saturated_pressure": 0.35
   },
@@ -253,6 +253,15 @@
       "recovery_trips": 1,
       "seed": 3
     },
+    "contract_parity": {
+      "contract_expected_net_profit": 70,
+      "contract_id": "reedwatch_water_relief_01",
+      "minimum_ratio": 0.7,
+      "ordinary_choice": "water \u2192 reedwatch / old_road",
+      "ordinary_expected_net_profit": 99,
+      "ordinary_to_contract_ratio": 1.41428571428571,
+      "passed": true
+    },
     "opening_variety": {
       "choices": [
         "grain \u2192 cinderford / toll_road",
@@ -279,6 +288,53 @@
       "minimum_money": 118,
       "minimum_provisions": 11,
       "runs": 100
+    },
+    "trade_pattern_families": {
+      "all_viable": true,
+      "fixture_count": 4,
+      "results": [
+        {
+          "destination_id": "reedwatch",
+          "expected_net_profit": 14,
+          "family": "staple",
+          "good_id": "water",
+          "origin_id": "ashgate",
+          "requires_contract": false,
+          "route_id": "old_road",
+          "viable": true
+        },
+        {
+          "destination_id": "ashgate",
+          "expected_net_profit": 4,
+          "family": "repair",
+          "good_id": "scrap",
+          "origin_id": "cinderford",
+          "requires_contract": false,
+          "route_id": "toll_road",
+          "viable": true
+        },
+        {
+          "destination_id": "reedwatch",
+          "expected_net_profit": 13,
+          "family": "medicine",
+          "good_id": "medicine",
+          "origin_id": "hollow_market",
+          "requires_contract": false,
+          "route_id": "dry_cut",
+          "viable": true
+        },
+        {
+          "destination_id": "brine_cross",
+          "expected_net_profit": 16,
+          "family": "industrial",
+          "good_id": "charcoal",
+          "origin_id": "cinderford",
+          "requires_contract": false,
+          "route_id": "toll_road",
+          "viable": true
+        }
+      ],
+      "viable_count": 4
     },
     "world_state_variety": {
       "choice_count": 3,
@@ -318,6 +374,16 @@
       "gate": "Multiple viable openings",
       "passed": true,
       "evidence": "7 positive choices across 4 goods and 2 routes"
+    },
+    {
+      "gate": "Ordinary trade families",
+      "passed": true,
+      "evidence": "4/4 staple, repair, medicine, and industrial fixtures are positive without contracts"
+    },
+    {
+      "gate": "Ordinary trade / contract parity",
+      "passed": true,
+      "evidence": "ordinary 99 vs contract 70 expected net (141%)"
     },
     {
       "gate": "No permanent route winner",

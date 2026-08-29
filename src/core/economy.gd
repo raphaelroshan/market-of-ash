@@ -33,12 +33,19 @@ static func price_details(good: String, settlement: Dictionary, world: Dictionar
 		float(memory_rules.get("pressure_max", 0.0)),
 	)
 	var market_memory_modifier := 1.0 - market_pressure
+	var trade_profile: Dictionary = settlement.get("trade_profile", {})
+	var produced_goods: Dictionary = trade_profile.get("produces", {})
+	var consumed_goods: Dictionary = trade_profile.get("consumes", {})
 	var reasons: Array[String] = []
-	if settlement_modifier >= 1.15:
+	if produced_goods.has(good):
+		reasons.append(String(produced_goods.get(good, "Local production keeps this good available.")))
+	elif settlement_modifier >= 1.15:
 		reasons.append("local production is limited")
 	elif settlement_modifier <= 0.85:
 		reasons.append("local production is abundant")
-	if demand_modifier > 1.15:
+	if consumed_goods.has(good):
+		reasons.append(String(consumed_goods.get(good, "Local demand absorbs this good.")))
+	elif demand_modifier > 1.15:
 		reasons.append("local demand is high")
 	elif demand_modifier < 0.85:
 		reasons.append("local supply is comfortable")
@@ -65,6 +72,58 @@ static func price_details(good: String, settlement: Dictionary, world: Dictionar
 		"market_pressure": market_pressure,
 		"market_memory_modifier": market_memory_modifier,
 		"reasons": reasons,
+	}
+
+static func market_role(settlement: Dictionary, good: String) -> Dictionary:
+	var profile: Dictionary = settlement.get("trade_profile", {})
+	var produced_goods: Dictionary = profile.get("produces", {})
+	var consumed_goods: Dictionary = profile.get("consumes", {})
+	return {
+		"is_source": produced_goods.has(good),
+		"is_consumer": consumed_goods.has(good),
+		"source_reason": String(produced_goods.get(good, "This is not one of the settlement's named exports.")),
+		"need_reason": String(consumed_goods.get(good, "Demand follows ordinary local conditions.")),
+		"settlement_note": String(profile.get("ordinary_trade_note", "Local production and demand set the ordinary market.")),
+	}
+
+static func market_pressure_decay_rate(settlement: Dictionary, good: String) -> float:
+	var rules := MarketContent.market_memory_rules()
+	var base_decay := float(rules.get("daily_decay_per_day", 0.0))
+	var role := market_role(settlement, good)
+	var multiplier := float(rules.get("neutral_decay_multiplier", 1.0))
+	if bool(role.get("is_consumer", false)):
+		multiplier = float(rules.get("consumer_decay_multiplier", 1.0))
+	elif bool(role.get("is_source", false)):
+		multiplier = float(rules.get("producer_decay_multiplier", 1.0))
+	return base_decay * multiplier
+
+static func ordinary_trade_story(good: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world: Dictionary) -> Dictionary:
+	var preview := route_profit_preview(good, quantity, origin, destination, route, world)
+	if not preview.ok:
+		return preview
+	var origin_role := market_role(origin, good)
+	var destination_role := market_role(destination, good)
+	return {
+		"ok": true,
+		"good_id": good,
+		"quantity": quantity,
+		"origin_name": String(origin.get("name", "Origin")),
+		"destination_name": String(destination.get("name", "Destination")),
+		"route_name": String(route.get("name", "Route")),
+		"origin_price": int(preview.origin_price),
+		"destination_price": int(preview.destination_price),
+		"unit_spread": int(preview.destination_price) - int(preview.origin_price),
+		"gross_margin": int(preview.gross_trade_margin),
+		"expected_net_profit": int(preview.expected_net_profit),
+		"route_cost": int(preview.route_cost),
+		"provisions": int(preview.provisions),
+		"risk": float(preview.risk),
+		"loss_good_id": String(preview.loss_good_id),
+		"source_reason": String(origin_role.source_reason),
+		"need_reason": String(destination_role.need_reason),
+		"origin_is_source": bool(origin_role.is_source),
+		"destination_is_consumer": bool(destination_role.is_consumer),
+		"no_contract_required": true,
 	}
 
 static func projected_profit(good: String, quantity: int, origin: Dictionary, destination: Dictionary, world: Dictionary) -> int:

@@ -70,6 +70,15 @@ def validate_market_memory(value: Any, errors: list[str]) -> None:
     ):
         fail(errors, "market_memory.daily_decay_per_day must be greater than 0 and no greater than pressure_max")
 
+    for multiplier_id in (
+        "producer_decay_multiplier",
+        "consumer_decay_multiplier",
+        "neutral_decay_multiplier",
+    ):
+        multiplier = rules.get(multiplier_id)
+        if not isinstance(multiplier, (int, float)) or not 0 < multiplier <= 2:
+            fail(errors, f"market_memory.{multiplier_id} must be greater than 0 and no greater than 2")
+
     effectiveness = as_object(
         rules.get("crisis_effectiveness"),
         "market_memory.crisis_effectiveness",
@@ -84,6 +93,39 @@ def validate_market_memory(value: Any, errors: list[str]) -> None:
     history_limit = rules.get("max_delivery_history")
     if not isinstance(history_limit, int) or not 1 <= history_limit <= 100:
         fail(errors, "market_memory.max_delivery_history must be an integer from 1 through 100")
+
+
+def validate_trade_profile(
+    settlement_id: str,
+    value: Any,
+    good_ids: set[str],
+    source_coverage: set[str],
+    consumer_coverage: set[str],
+    errors: list[str],
+) -> None:
+    profile = as_object(value, f"settlement {settlement_id}.trade_profile", errors)
+    note = profile.get("ordinary_trade_note")
+    if not isinstance(note, str) or not note:
+        fail(errors, f"settlement {settlement_id}.trade_profile must declare ordinary_trade_note")
+    sides: dict[str, tuple[set[str], dict[str, Any]]] = {}
+    for side, coverage in (("produces", source_coverage), ("consumes", consumer_coverage)):
+        goods = as_object(
+            profile.get(side),
+            f"settlement {settlement_id}.trade_profile.{side}",
+            errors,
+        )
+        sides[side] = (coverage, goods)
+        if not goods:
+            fail(errors, f"settlement {settlement_id}.trade_profile.{side} must name at least one good")
+        for good_id, explanation in goods.items():
+            if good_id not in good_ids:
+                fail(errors, f"settlement {settlement_id}.trade_profile.{side} references unknown good {good_id}")
+            elif not isinstance(explanation, str) or not explanation:
+                fail(errors, f"settlement {settlement_id}.trade_profile.{side}.{good_id} must explain the market role")
+            else:
+                coverage.add(good_id)
+    for good_id in set(sides["produces"][1]) & set(sides["consumes"][1]):
+        fail(errors, f"settlement {settlement_id}.trade_profile cannot both produce and consume {good_id}")
 
 
 def validate_settlement_actions(value: Any, errors: list[str]) -> None:
@@ -564,12 +606,22 @@ def validate(data: Any) -> list[str]:
             fail(errors, f"missing required good: {good_id}")
 
     settlements = as_object(root.get("settlements"), "settlements", errors)
+    source_coverage: set[str] = set()
+    consumer_coverage: set[str] = set()
     for settlement_id in REQUIRED_SETTLEMENTS:
         settlement = as_object(settlements.get(settlement_id), f"settlement {settlement_id}", errors)
         if not isinstance(settlement.get("name"), str) or not settlement["name"]:
             fail(errors, f"settlement {settlement_id} must have a non-empty name")
         if not isinstance(settlement.get("role"), str) or not settlement["role"]:
             fail(errors, f"settlement {settlement_id} must have a non-empty role")
+        validate_trade_profile(
+            settlement_id,
+            settlement.get("trade_profile"),
+            good_ids,
+            source_coverage,
+            consumer_coverage,
+            errors,
+        )
         validate_modifier_table(
             settlement.get("price_modifiers"),
             f"settlement {settlement_id}.price_modifiers",
@@ -585,6 +637,11 @@ def validate(data: Any) -> list[str]:
         modifier = settlement.get("faction_price_modifier")
         if not isinstance(modifier, (int, float)) or modifier <= 0:
             fail(errors, f"settlement {settlement_id}.faction_price_modifier must be positive")
+    for good_id in REQUIRED_GOODS:
+        if good_id not in source_coverage:
+            fail(errors, f"trade profiles must declare at least one producer for {good_id}")
+        if good_id not in consumer_coverage:
+            fail(errors, f"trade profiles must declare at least one consumer for {good_id}")
 
     routes = as_object(root.get("routes"), "routes", errors)
     for route_id in REQUIRED_ROUTES:

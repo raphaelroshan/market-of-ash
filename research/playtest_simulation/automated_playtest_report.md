@@ -32,13 +32,15 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 
 ## Automated Quality Gates
 
-| Quality gate              | Status   | Evidence                                                 |
-|:--------------------------|:---------|:---------------------------------------------------------|
-| Safe first expedition     | PASS     | 100/100 complete; floor 118 ashmarks and 11 provisions   |
-| Multiple viable openings  | PASS     | 7 positive choices across 4 goods and 2 routes           |
-| No permanent route winner | PASS     | 3 best choices across 2 routes in 4 world states         |
-| Cargo-loss recovery       | PASS     | seed 3; recovered to 306 ashmarks in 1 outbound trade(s) |
-| Short preparation         | PASS     | first cargo purchase is command 2                        |
+| Quality gate                     | Status   | Evidence                                                                             |
+|:---------------------------------|:---------|:-------------------------------------------------------------------------------------|
+| Safe first expedition            | PASS     | 100/100 complete; floor 118 ashmarks and 11 provisions                               |
+| Multiple viable openings         | PASS     | 7 positive choices across 4 goods and 2 routes                                       |
+| Ordinary trade families          | PASS     | 4/4 staple, repair, medicine, and industrial fixtures are positive without contracts |
+| Ordinary trade / contract parity | PASS     | ordinary 99 vs contract 70 expected net (141%)                                       |
+| No permanent route winner        | PASS     | 3 best choices across 2 routes in 4 world states                                     |
+| Cargo-loss recovery              | PASS     | seed 3; recovered to 306 ashmarks in 1 outbound trade(s)                             |
+| Short preparation                | PASS     | first cargo purchase is command 2                                                    |
 
 These gates make the audit's minimum playability promises executable: the taught opening preserves a recovery floor across every deterministic seed, several positive opening plans exist, changing market/access state changes the best plan, a real cargo-loss run can recover, and the tutorial reaches its first trade without excessive preparation.
 
@@ -70,7 +72,7 @@ Every deterministic policy still concentrates on one legal initial trade in this
 
 The adaptive policy re-evaluates the best legal forecast before each of three outbound deliveries, returning to Ashgate between trips. This is a mechanical concentration probe, not a human strategy model. It shows whether bounded local supply pressure is strong enough to make the visible best opening trade rotate under the current route graph and crisis timing.
 
-The fixed Reedwatch water probe starts at **32** ashmarks per unit. A four-unit delivery creates **16%** pressure and changes the immediate price to **27**. Pressure returns to zero after **6** elapsed days and repeated deliveries clamp at **35%**.
+The fixed Reedwatch water probe starts at **32** ashmarks per unit. A four-unit delivery creates **16%** pressure and changes the immediate price to **27**. Pressure returns to zero after **4** elapsed days and repeated deliveries clamp at **35%**.
 
 ## Travel Event Probe
 

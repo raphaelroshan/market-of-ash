@@ -33,6 +33,9 @@ def main() -> int:
         "pressure_max must be greater than pressure_min and less than 1",
         "sale_impact_per_unit must be greater than 0",
         "daily_decay_per_day must be greater than 0",
+        "producer_decay_multiplier must be greater than 0 and no greater than 2",
+        "consumer_decay_multiplier must be greater than 0 and no greater than 2",
+        "neutral_decay_multiplier must be greater than 0 and no greater than 2",
         "crisis_effectiveness must contain stages 0, 1, 2, and 3",
         "crisis_effectiveness.0 must be greater than 0 and no greater than 1",
         "max_delivery_history must be an integer from 1 through 100",
@@ -41,6 +44,30 @@ def main() -> int:
     if missing:
         print("FAIL: invalid market-memory fixture did not produce expected errors")
         for fragment in missing:
+            print(f"- missing: {fragment}")
+        return 1
+
+    invalid_trade_profiles = copy.deepcopy(runtime)
+    invalid_trade_profiles["settlements"]["ashgate"]["trade_profile"] = {
+        "produces": {"missing_good": "Not a real cargo."},
+        "consumes": {"water": ""},
+        "ordinary_trade_note": "",
+    }
+    trade_profile_errors = validate(invalid_trade_profiles)
+    expected_trade_profile_fragments = (
+        "trade_profile must declare ordinary_trade_note",
+        "trade_profile.produces references unknown good missing_good",
+        "trade_profile.consumes.water must explain the market role",
+        "trade profiles must declare at least one producer for sealed_arms_crate",
+    )
+    missing_trade_profile_errors = [
+        fragment
+        for fragment in expected_trade_profile_fragments
+        if not any(fragment in error for error in trade_profile_errors)
+    ]
+    if missing_trade_profile_errors:
+        print("FAIL: invalid trade-profile fixture did not produce expected errors")
+        for fragment in missing_trade_profile_errors:
             print(f"- missing: {fragment}")
         return 1
 
