@@ -4075,13 +4075,14 @@ func _refresh_ui() -> void:
 		cargo_quantity.editable = not journey_locked
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
+		
 		var crisis := MarketContent.crisis_stage(world.crisis_stage)
 		if shop_title_label:
 			shop_title_label.text = "%s BAZAAR" % String(settlement.get("name", "Settlement")).to_upper()
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
 		var leads_text := " · Leads %d" % world.known_information.size() if not world.known_information.is_empty() else ""
-		shop_status_label.text = "%s · Day %d · Crisis %d: %s\nTODAY'S NEED — %s\nResilience %d/10 · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), world.resilience_for(world.current_settlement), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
+		shop_status_label.text = "%s · Day %d · Crisis %d: %s\nTODAY'S NEED / TRADE THESIS — %s\nResilience %d/10 · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), world.resilience_for(world.current_settlement), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if ending_panel and ending_label:
