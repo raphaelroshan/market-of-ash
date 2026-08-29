@@ -11,6 +11,8 @@
 
 This document is an implementation contract for GPT coding agents, visual agents, audio agents, test agents, and the product lead. It is intentionally narrower than the full Market of Ash design. The goal is not to implement every faction, good, settlement, or event. The goal is to make the **existing first basin journey feel like a game**.
 
+**Binding addendum:** [Open Trade, Adaptive Basin, and Non-Railroaded Progression](design/nonlinear_trade_and_adaptive_basin_addendum.md) clarifies that ordinary buying and selling must remain a complete play style, and that ignored or failed scenarios must create causal replacement opportunities rather than a prescribed quest path.
+
 ---
 
 ## 1. Product decision
