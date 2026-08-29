@@ -47,6 +47,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/game_quality_vertical_slice_roadmap.md` | Complete game-quality vertical-slice plan for the basin journey, economy UX, route/map, settlements, events, factions, visual identity, audio, testing, playtesting, and alpha gates. |
 | `docs/design/nonlinear_trade_and_adaptive_basin_addendum.md` | Binding design addendum ensuring ordinary trade remains valuable, scenarios remain optional, and missed opportunities create causal replacement factions and alternate endings. |
 | `docs/implementation_status.md` | Current implementation, verification evidence, and remaining manual gates. |
+| `docs/visual_evidence_gallery.md` | Versioned internal screenshots from the `v0.12.0-alpha-quality` visual audit with Kickstarter archive guidance. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
 | `src/ui/main.gd` | Prototype UI and actionable procedural route map. Keep presentation logic here, not in the simulation. |
