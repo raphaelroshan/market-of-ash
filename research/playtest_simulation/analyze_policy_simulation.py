@@ -260,6 +260,7 @@ def main() -> int:
     trade_pattern_families = quality_metrics.get("trade_pattern_families", {})
     contract_parity = quality_metrics.get("contract_parity", {})
     adaptive_failure_recovery = quality_metrics.get("adaptive_failure_recovery", {})
+    replacement_faction_agency = quality_metrics.get("replacement_faction_agency", {})
     world_state_variety = quality_metrics.get("world_state_variety", {})
     cargo_loss_recovery = quality_metrics.get("cargo_loss_recovery", {})
     preparation_overhead = quality_metrics.get("preparation_overhead", {})
@@ -297,6 +298,14 @@ def main() -> int:
                 and adaptive_failure_recovery.get("new_trade_viable", False)
                 and adaptive_failure_recovery.get("offer_closed", False),
                 "evidence": f"charcoal expected net {adaptive_failure_recovery.get('baseline_charcoal_net', 0)} → {adaptive_failure_recovery.get('replacement_charcoal_net', 0)}; Reedwatch resilience {adaptive_failure_recovery.get('reedwatch_resilience', 0)}",
+            },
+            {
+                "gate": "Replacement faction agency",
+                "passed": replacement_faction_agency.get("cooperation_paths_completed", 0) >= 2
+                and replacement_faction_agency.get("opposition_path_completed", False)
+                and replacement_faction_agency.get("reconciliation_completed", False)
+                and replacement_faction_agency.get("ordinary_trade_open", False),
+                "evidence": f"{replacement_faction_agency.get('cooperation_paths_completed', 0)} cooperation paths; support {replacement_faction_agency.get('opposed_support', 0)} → {replacement_faction_agency.get('reconciled_support', 0)} after opposition/reconciliation",
             },
             {
                 "gate": "No permanent route winner",

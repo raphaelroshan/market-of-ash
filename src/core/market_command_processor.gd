@@ -702,17 +702,23 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	var required_contract_id := String(action.get("requires_completed_contract_id", ""))
 	if not required_contract_id.is_empty() and not _has_completed_contract(world, required_contract_id):
 		return _failure(String(action.get("unavailable_reason", "complete the required contract first")))
+	var required_emergent_faction_id := String(action.get("requires_emergent_faction_id", ""))
+	if not required_emergent_faction_id.is_empty() and world.emergent_faction(required_emergent_faction_id).is_empty():
+		return _failure(String(action.get("unavailable_reason", "the required local faction is not active")))
 	var slots_required := int(action.get("service_slots", 0))
 	if world.visit_slots_remaining < slots_required:
 		return _failure("no visit slots remain; depart and arrive at a settlement to refresh them")
 	var cost := int(action.get("cost", 0))
 	if world.money < cost:
 		return _failure("you need %d ashmarks for %s, but have %d" % [cost, String(action.get("name", action_id)), world.money])
+	var cargo_cost: Dictionary = action.get("effects", {}).get("cargo_cost", {})
+	if not cargo_cost.is_empty() and int(world.cargo.get(String(cargo_cost.get("good_id", "")), 0)) < int(cargo_cost.get("quantity", 0)):
+		return _failure("you need %d %s for %s" % [int(cargo_cost.get("quantity", 0)), String(cargo_cost.get("good_id", "")), String(action.get("name", action_id))])
 
 	match action_id:
 		"ashgate_provision_bundle":
 			return _apply_provision_bundle(world, action)
-		"brine_cross_cistern_queue", "cinderford_repair_bench", "hollow_market_route_rumor", "reedwatch_supply_shelter":
+		"brine_cross_cistern_queue", "cinderford_repair_bench", "hollow_market_route_rumor", "reedwatch_supply_shelter", "reedwatch_commons_boiler_fuel", "reedwatch_commons_open_ledger", "reedwatch_warden_cistern_bypass":
 			return _apply_civic_action(world, action)
 		"ashgate_cinder_rider_arms_sale":
 			return _apply_arms_sale(world, action)
@@ -726,6 +732,15 @@ static func _apply_civic_action(world: AshWorldState, action: Dictionary) -> Dic
 	var slots := int(action.get("service_slots", 1))
 	var days := int(action.get("time_cost", 0))
 	var effects: Dictionary = action.get("effects", {})
+	var cargo_delta: Dictionary = {}
+	var cargo_cost: Dictionary = effects.get("cargo_cost", {})
+	if not cargo_cost.is_empty():
+		var good_id := String(cargo_cost.get("good_id", ""))
+		var quantity := int(cargo_cost.get("quantity", 0))
+		var removed_weight := quantity * int(MarketContent.good(good_id).get("weight", 0))
+		world.cargo[good_id] = int(world.cargo.get(good_id, 0)) - quantity
+		world.cargo["weight"] = maxi(0, int(world.cargo.get("weight", 0)) - removed_weight)
+		cargo_delta = {good_id: -quantity, "weight": -removed_weight}
 	world.money -= cost
 	var information_id := String(effects.get("information_id", ""))
 	var information_added := world.record_information(information_id)
@@ -745,6 +760,10 @@ static func _apply_civic_action(world: AshWorldState, action: Dictionary) -> Dic
 	for faction_id_value in reputation_delta.keys():
 		var faction_id := String(faction_id_value)
 		reputation_results[faction_id] = world.adjust_reputation(faction_id, int(reputation_delta.get(faction_id_value, 0)))
+	var emergent_support_result: Dictionary = {}
+	var emergent_support: Dictionary = effects.get("emergent_faction_support", {})
+	if not emergent_support.is_empty():
+		emergent_support_result = world.adjust_emergent_faction_support(String(emergent_support.get("faction_id", "")), int(emergent_support.get("delta", 0)), String(action.get("id", "")))
 	world.visit_slots_remaining -= slots
 	if days > 0:
 		world.advance_day(days, false)
@@ -760,6 +779,8 @@ static func _apply_civic_action(world: AshWorldState, action: Dictionary) -> Dic
 		"information_id": information_id if information_added else "",
 		"route_condition": route_result.get("condition", {}),
 		"reputation": reputation_results,
+		"cargo": cargo_delta,
+		"emergent_faction_support": emergent_support_result,
 	})
 
 static func _has_completed_contract(world: AshWorldState, contract_id: String) -> bool:

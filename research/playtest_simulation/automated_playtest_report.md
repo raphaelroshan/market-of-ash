@@ -39,6 +39,7 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 | Ordinary trade families          | PASS     | 4/4 staple, repair, medicine, and industrial fixtures are positive without contracts |
 | Ordinary trade / contract parity | PASS     | ordinary 99 vs contract 70 expected net (141%)                                       |
 | Adaptive failure creates trade   | PASS     | charcoal expected net -10 → 7; Reedwatch resilience 1                                |
+| Replacement faction agency       | PASS     | 2 cooperation paths; support -1 → 0 after opposition/reconciliation                  |
 | No permanent route winner        | PASS     | 3 best choices across 2 routes in 4 world states                                     |
 | Cargo-loss recovery              | PASS     | seed 3; recovered to 278 ashmarks in 1 outbound trade(s)                             |
 | Short preparation                | PASS     | first cargo purchase is command 2                                                    |

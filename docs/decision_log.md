@@ -449,3 +449,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Expiry should be a world transition rather than a failed player test. The same unmet water need gives local organizers material legitimacy and creates new trade geometry, making the player's omission visible and playable without blocking the Bazaar, roads, or other systems.
 
 **Trade-off:** Feed B exposes the Commons as a replacement actor and market condition but does not yet add relationship scores or direct faction actions. Feed C must add at least two cooperation paths and one bypass or opposition path while keeping ordinary trade open.
+
+## ADR-057: Commons support modifies a market but never gates it
+
+**Decision:** Represent interaction with the emergent Well Commons as bounded support stored on its existing response record. Two cooperation actions exchange cargo or resources for resilience, route information, and support; a Warden permit provides a negative-support bypass. Support scales the already-authored water and charcoal response but never disables spot buying, selling, or travel. Distinct one-time interaction IDs prevent farming, and later cooperation can reverse opposition.
+
+**Reason:** A replacement faction should be a relationship the player can use, resist, and reconsider—not a second mandatory quest chain. Reusing settlement actions and ordinary cargo keeps the interaction inside the established Bazaar loop.
+
+**Trade-off:** Support currently changes one local market response and is summarized as a signed value rather than a dedicated faction screen. Feed D should compare its total economic value against contracts and ordinary trade before more rewards are authored.

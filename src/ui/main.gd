@@ -1681,11 +1681,20 @@ func _on_bazaar_navigation_pressed(section_id: String) -> void:
 		"trade":
 			target = shop_good_option
 		"assignments":
-			target = contract_buttons[0] if not contract_buttons.is_empty() else null
+			for button in contract_buttons:
+				if not button.disabled:
+					target = button
+					break
 		"information":
-			target = opportunity_buttons[0] if not opportunity_buttons.is_empty() else null
+			for button in opportunity_buttons:
+				if not button.disabled:
+					target = button
+					break
 		"crew":
-			target = crew_buttons[0] if not crew_buttons.is_empty() else null
+			for button in crew_buttons:
+				if not button.disabled:
+					target = button
+					break
 		"outlook":
 			shop_transaction_status_label.text = "BAZAAR — Regional outlook opened."
 			_publish_web_ui_state()
@@ -3536,6 +3545,9 @@ func _refresh_opportunities() -> void:
 		contract_buttons.append(resolve_button)
 	var actions := MarketContent.settlement_actions_for(world.current_settlement)
 	for action in actions:
+		var required_emergent_faction_id := String(action.get("requires_emergent_faction_id", ""))
+		if not required_emergent_faction_id.is_empty() and world.emergent_faction(required_emergent_faction_id).is_empty():
+			continue
 		var action_button := _wrapped_action_button()
 		var cost := int(action.get("cost", 0))
 		var slots := int(action.get("service_slots", 1))
@@ -3553,6 +3565,9 @@ func _refresh_opportunities() -> void:
 		elif effects.has("route_condition"):
 			var route_effect: Dictionary = effects.get("route_condition", {})
 			effect_summary = "%+d%% %s risk, information" % [int(round(float(route_effect.get("risk_delta", 0.0)) * 100.0)), String(route_effect.get("route_id", "route")).replace("_", " ").capitalize()]
+		if effects.has("emergent_faction_support"):
+			var support_effect: Dictionary = effects.get("emergent_faction_support", {})
+			effect_summary += ", Commons support %+d" % int(support_effect.get("delta", 0))
 		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
@@ -3572,6 +3587,11 @@ func _refresh_opportunities() -> void:
 		elif world.money < cost:
 			action_button.disabled = true
 			unavailable_reason = "You need %d ashmarks, but have %d." % [cost, world.money]
+		elif effects.has("cargo_cost"):
+			var cargo_requirement: Dictionary = effects.get("cargo_cost", {})
+			if int(world.cargo.get(String(cargo_requirement.get("good_id", "")), 0)) < int(cargo_requirement.get("quantity", 0)):
+				action_button.disabled = true
+				unavailable_reason = "Needs %d %s; acquire it through ordinary trade first." % [int(cargo_requirement.get("quantity", 0)), String(cargo_requirement.get("good_id", "")).capitalize()]
 		elif effects.has("arms_sale"):
 			var arms_requirement: Dictionary = effects.get("arms_sale", {})
 			if int(world.cargo.get(String(arms_requirement.get("good_id", "")), 0)) < int(arms_requirement.get("quantity", 0)):

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.18.0",
+  "content_version": "1.19.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -138,6 +138,60 @@
         "tradeoff": "Spend one day to add one local resilience and one Free Caravan standing after completing water relief.",
         "result": "The relief stores open as a protected public shelter. Reedwatch resilience and Free Caravan standing each rise by one.",
         "unavailable_reason": "Requires completed Reedwatch Water Relief during crisis stage 1 or later."
+      },
+      {
+        "id": "reedwatch_commons_boiler_fuel",
+        "settlement_id": "reedwatch",
+        "name": "Fuel the Commons boilers",
+        "category": "relief",
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "well_commons",
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "commons_boilers_fueled", "cargo_cost": {"good_id": "charcoal", "quantity": 2}, "settlement_resilience": {"settlement_id": "reedwatch", "delta": 1}, "reputation": {"caravans": 1}, "emergent_faction_support": {"faction_id": "well_commons", "delta": 1}},
+        "description": "Commit two charcoal to the public boiling fires and pump crews.",
+        "tradeoff": "Give up an immediate charcoal sale to strengthen the Commons, Reedwatch, and Free Caravan standing.",
+        "result": "Two charcoal fuel the public boilers. Reedwatch resilience, Free Caravan standing, and Commons support each rise by one.",
+        "unavailable_reason": "Available after the Well Commons organizes in Reedwatch."
+      },
+      {
+        "id": "reedwatch_commons_open_ledger",
+        "settlement_id": "reedwatch",
+        "name": "Publish the Commons ledger",
+        "category": "information",
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "well_commons",
+        "cost": 8,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"information_id": "commons_ledger_published", "route_condition": {"route_id": "dry_cut", "id": "commons_water_stations", "label": "Commons water stations", "risk_delta": -0.03, "cost_delta": 0, "description": "Published ration stops make the Dry Cut easier to cross."}, "reputation": {"caravans": 1}, "emergent_faction_support": {"faction_id": "well_commons", "delta": 1}},
+        "description": "Fund a public ration ledger and mark Commons water stations on the Dry Cut.",
+        "tradeoff": "Spend eight ashmarks, one day, and one visit slot for public route knowledge and stronger Commons influence.",
+        "result": "The ration ledger is public. Dry Cut exposure falls by three points; Free Caravan standing and Commons support each rise by one.",
+        "unavailable_reason": "Available after the Well Commons organizes in Reedwatch."
+      },
+      {
+        "id": "reedwatch_warden_cistern_bypass",
+        "settlement_id": "reedwatch",
+        "name": "Buy a Warden cistern permit",
+        "category": "information",
+        "available": true,
+        "minimum_crisis_stage": 1,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "well_commons",
+        "cost": 10,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "warden_cistern_bypass", "reputation": {"wardens": 1}, "emergent_faction_support": {"faction_id": "well_commons", "delta": -1}},
+        "description": "Use a Warden permit to buy around the Commons ration queue.",
+        "tradeoff": "Gain official access and Warden standing, but reduce Commons support; ordinary market trade remains available.",
+        "result": "The permit bypasses the ration queue. Warden standing rises by one and Commons support falls by one without closing the market.",
+        "unavailable_reason": "Available after the Well Commons organizes in Reedwatch."
       }
     ]
   },
@@ -209,6 +263,10 @@
           "market_modifiers": {
             "water": 0.9,
             "charcoal": 1.3
+          },
+          "support_market_steps": {
+            "water": -0.03,
+            "charcoal": 0.05
           },
           "opportunity": {
             "title": "Commons Charcoal Exchange",

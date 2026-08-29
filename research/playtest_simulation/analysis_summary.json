@@ -290,6 +290,15 @@
       "non_trade_commands_before_first_trade": 1,
       "tutorial_setup_ok": true
     },
+    "replacement_faction_agency": {
+      "cooperation_paths_completed": 2,
+      "cooperative_support": 2,
+      "opposed_support": -1,
+      "opposition_path_completed": true,
+      "ordinary_trade_open": true,
+      "reconciled_support": 0,
+      "reconciliation_completed": true
+    },
     "safe_opening": {
       "cargo_loss_runs": 35,
       "completed": 100,
@@ -398,6 +407,11 @@
       "gate": "Adaptive failure creates trade",
       "passed": true,
       "evidence": "charcoal expected net -10 \u2192 7; Reedwatch resilience 1"
+    },
+    {
+      "gate": "Replacement faction agency",
+      "passed": true,
+      "evidence": "2 cooperation paths; support -1 \u2192 0 after opposition/reconciliation"
     },
     {
       "gate": "No permanent route winner",

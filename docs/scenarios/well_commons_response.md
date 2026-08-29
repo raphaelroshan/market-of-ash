@@ -28,6 +28,14 @@ Activation is idempotent and does four durable things:
 
 The stale relief offer becomes disabled with a causal explanation. The regional map hover names the active exchange, Town Outlook marks the Commons response, and Web diagnostics expose the scenario state, actor, and trade summary.
 
+## Interaction paths
+
+- `Fuel the Commons boilers`: spend two charcoal for one Reedwatch resilience, one Free Caravan standing, and one Commons support.
+- `Publish the Commons ledger`: spend eight ashmarks, one day, and one visit slot for one Commons support, one Free Caravan standing, and three points less Dry Cut risk.
+- `Buy a Warden cistern permit`: spend ten ashmarks for one Warden standing and minus one Commons support; the ordinary market remains available.
+
+Commons support is bounded from -3 to +3. Positive support strengthens the charcoal premium and further stabilizes water; opposition weakens those effects without deleting them. A later cooperation action can reverse a prior bypass.
+
 ## New play
 
 A four-charcoal Ashgate-to-Reedwatch Old Road fixture changes from `-10` expected net before the response to `+7` afterward. This is ordinary spot trade: no contract or faction action is required.

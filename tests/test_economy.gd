@@ -19,6 +19,7 @@ func _init() -> void:
 	_test_command_buy_and_sell()
 	_test_market_memory()
 	_test_adaptive_relief_response()
+	_test_well_commons_interactions()
 	_test_settlement_actions()
 	_test_reedwatch_relief_contract()
 	_test_brine_cross_medicine_escort_contract()
@@ -54,7 +55,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.18.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.19.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
@@ -64,7 +65,7 @@ func _test_runtime_content() -> void:
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
 	_expect(MarketContent.settlement_action("ashgate_provision_bundle").get("settlement_id", "") == "ashgate", "runtime content should expose the live Ashgate provision action")
 	_expect(int(MarketContent.settlement_action("brine_cross_cistern_queue").get("minimum_crisis_stage", 0)) == 1, "runtime content should expose the shortage-gated Brine Cross action")
-	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 1, "runtime content should expose a Reedwatch opportunity state")
+	_expect(MarketContent.settlement_actions_for("reedwatch").size() == 4, "runtime content should expose the relief shelter and three Well Commons interaction paths")
 	_expect(MarketContent.contract("reedwatch_water_relief_01").get("destination_id", "") == "reedwatch", "runtime content should expose the first relief contract")
 	_expect(MarketContent.contract("brine_cross_medicine_escort_01").get("destination_id", "") == "brine_cross", "runtime content should expose the regulated escort contract")
 	_expect(MarketContent.adaptive_scenario("reedwatch_water_relief").get("contract_id", "") == "reedwatch_water_relief_01", "runtime content should expose the adaptive relief scenario")
@@ -368,6 +369,31 @@ func _test_adaptive_relief_response() -> void:
 	_expect(String(failed.scenario_state("reedwatch_water_relief").get("state", "")) == "delayed" and not failed.emergent_faction("well_commons").is_empty(), "overdue accepted relief should trigger the local response before formal resolution")
 	MarketCommandProcessor.execute(failed, {"id": MarketCommandProcessor.RESOLVE_CONTRACT, "inputs": {"contract_id": "reedwatch_water_relief_01"}})
 	_expect(String(failed.scenario_state("reedwatch_water_relief").get("state", "")) == "failed", "formal late resolution should preserve a distinct failed scenario state")
+
+func _test_well_commons_interactions() -> void:
+	var cooperative := AshWorldState.new(1107)
+	cooperative.advance_day(3)
+	cooperative.current_settlement = "reedwatch"
+	var missing_fuel := MarketCommandProcessor.execute(cooperative, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	_expect(not missing_fuel.ok and missing_fuel.reason.contains("need 2 charcoal"), "Commons boiler support should require its disclosed ordinary-trade cargo")
+	cooperative.cargo = {"charcoal": 2, "weight": 2}
+	var fuel := MarketCommandProcessor.execute(cooperative, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	_expect(fuel.ok and int(cooperative.cargo.get("charcoal", 0)) == 0 and cooperative.resilience_for("reedwatch") == 2, "fueling Commons boilers should consume cargo and strengthen Reedwatch")
+	_expect(int(cooperative.reputation.get("caravans", 0)) == 1 and int(cooperative.emergent_faction("well_commons").get("support", 0)) == 1, "boiler support should strengthen Free Caravan and Commons relationships")
+	var ledger := MarketCommandProcessor.execute(cooperative, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_open_ledger"}})
+	_expect(ledger.ok and cooperative.money == 112 and cooperative.day == 5 and is_equal_approx(float(cooperative.route("dry_cut").risk), 0.52), "publishing the Commons ledger should spend its disclosed resources and reveal safer Dry Cut stations")
+	_expect(int(cooperative.emergent_faction("well_commons").get("support", 0)) == 2 and cooperative.known_information.has("commons_ledger_published"), "two cooperation paths should accumulate visible Commons support and information")
+
+	var bypass := AshWorldState.new(1107)
+	bypass.advance_day(3)
+	bypass.current_settlement = "reedwatch"
+	var permit := MarketCommandProcessor.execute(bypass, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_warden_cistern_bypass"}})
+	_expect(permit.ok and bypass.money == 110 and int(bypass.reputation.get("wardens", 0)) == 1 and int(bypass.emergent_faction("well_commons").get("support", 0)) == -1, "the Warden permit should provide a disclosed opposition path without closing trade")
+	bypass.reset_visit_slots()
+	bypass.cargo = {"charcoal": 2, "weight": 2}
+	var reconcile := MarketCommandProcessor.execute(bypass, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	_expect(reconcile.ok and int(bypass.emergent_faction("well_commons").get("support", 0)) == 0, "a later cooperation action should reverse prior Commons opposition")
+	_expect(MarketEconomy.price_for("charcoal", bypass.settlement("reedwatch"), bypass.pricing_context()) > MarketEconomy.price_for("charcoal", bypass.settlement("ashgate"), bypass.pricing_context()), "the bypass path must preserve a viable ordinary charcoal market")
 
 func _test_settlement_actions() -> void:
 	var world := AshWorldState.new(1107)
@@ -1474,7 +1500,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.18.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.19.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})
@@ -1544,6 +1570,16 @@ func _test_disk_save_sanitization() -> void:
 	inconsistent_emergent_faction["emergent_factions"] = {"well_commons": {"id": "well_commons", "scenario_id": "reedwatch_water_relief", "activated_day": 1}}
 	var rejected_inconsistent_faction := AshWorldState.new(0).load_serialized(inconsistent_emergent_faction)
 	_expect(not rejected_inconsistent_faction.ok and rejected_inconsistent_faction.reason.contains("does not match its adaptive scenario state"), "load should reject an emergent faction attached to an untriggered scenario")
+	var invalid_support_world := AshWorldState.new(1107)
+	invalid_support_world.advance_day(3)
+	var invalid_support_save: Dictionary = invalid_support_world.serialize()
+	invalid_support_save["emergent_factions"]["well_commons"]["support"] = 99
+	var rejected_support := AshWorldState.new(0).load_serialized(invalid_support_save)
+	_expect(not rejected_support.ok and rejected_support.reason.contains("invalid support state"), "load should reject out-of-bounds emergent-faction support")
+	var invalid_interaction_save: Dictionary = invalid_support_world.serialize()
+	invalid_interaction_save["emergent_factions"]["well_commons"]["interaction_ids"] = ["invented_interaction"]
+	var rejected_interaction := AshWorldState.new(0).load_serialized(invalid_interaction_save)
+	_expect(not rejected_interaction.ok and rejected_interaction.reason.contains("invalid interaction"), "load should reject unknown emergent-faction interaction history")
 	var invalid_pending: Dictionary = source.serialize()
 	invalid_pending["pending_event"] = {"id": "invented_event", "choices": []}
 	invalid_pending["journey_context"] = {"origin_id": "ashgate", "destination_id": "reedwatch", "route_id": "old_road"}

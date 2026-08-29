@@ -20,6 +20,7 @@ static func evaluate() -> Dictionary:
 		"trade_pattern_families": _trade_pattern_families_probe(),
 		"contract_parity": _contract_parity_probe(),
 		"adaptive_failure_recovery": _adaptive_failure_recovery_probe(),
+		"replacement_faction_agency": _replacement_faction_agency_probe(),
 		"world_state_variety": _world_state_variety_probe(),
 		"cargo_loss_recovery": _cargo_loss_recovery_probe(),
 		"preparation_overhead": _preparation_overhead_probe(),
@@ -130,6 +131,34 @@ static func _adaptive_failure_recovery_probe() -> Dictionary:
 		"replacement_charcoal_net": replacement_net,
 		"new_trade_viable": baseline_net <= 0 and replacement_net > 0,
 		"offer_closed": not world.contract_offer_closed_reason("reedwatch_water_relief_01").is_empty(),
+	}
+
+static func _replacement_faction_agency_probe() -> Dictionary:
+	var cooperative := AshWorldState.new(1107)
+	cooperative.advance_day(3)
+	cooperative.current_settlement = "reedwatch"
+	cooperative.cargo = {"charcoal": 2, "weight": 2}
+	var fuel := MarketCommandProcessor.execute(cooperative, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	var ledger := MarketCommandProcessor.execute(cooperative, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_open_ledger"}})
+	var cooperative_support := int(cooperative.emergent_faction("well_commons").get("support", 0))
+
+	var bypass := AshWorldState.new(1107)
+	bypass.advance_day(3)
+	bypass.current_settlement = "reedwatch"
+	var permit := MarketCommandProcessor.execute(bypass, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_warden_cistern_bypass"}})
+	var opposed_support := int(bypass.emergent_faction("well_commons").get("support", 0))
+	bypass.reset_visit_slots()
+	bypass.cargo = {"charcoal": 2, "weight": 2}
+	var reconcile := MarketCommandProcessor.execute(bypass, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	var reconciled_support := int(bypass.emergent_faction("well_commons").get("support", 0))
+	return {
+		"cooperation_paths_completed": int(bool(fuel.ok)) + int(bool(ledger.ok)),
+		"cooperative_support": cooperative_support,
+		"opposition_path_completed": bool(permit.ok),
+		"opposed_support": opposed_support,
+		"reconciliation_completed": bool(reconcile.ok),
+		"reconciled_support": reconciled_support,
+		"ordinary_trade_open": MarketEconomy.price_for("charcoal", bypass.settlement("reedwatch"), bypass.pricing_context()) > MarketEconomy.price_for("charcoal", bypass.settlement("ashgate"), bypass.pricing_context()),
 	}
 
 static func _world_state_variety_probe() -> Dictionary:
