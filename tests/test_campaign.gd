@@ -105,7 +105,7 @@ func _init() -> void:
 	_expect(merchant_world.pending_event.get("id", "") == "last_clean_barrel", "the merchant water run should reach The Last Clean Barrel")
 	_expect_ok(_command(merchant_world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "last_clean_barrel", "choice_id": "sell_barrels_at_peak"}), "take the emergency water premium")
 	_expect_ok(_command(merchant_world, MarketCommandProcessor.SELL_GOODS, {"good_id": "water", "quantity": 1}), "sell the remaining water through the ordinary market")
-	_expect(merchant_world.money >= 220 and merchant_world.resilience_for("reedwatch") == 0, "the profit-first strategy should establish its distinct ending state")
+	_expect(merchant_world.money >= 220 and merchant_world.resilience_for("reedwatch") == 1 and not merchant_world.emergent_faction("well_commons").is_empty(), "the profit-first strategy should establish its distinct ending state after leaving relief to the Well Commons")
 	var merchant_targets := ["ashgate", "brine_cross", "ashgate", "reedwatch"]
 	var merchant_routes := ["old_road", "toll_road", "toll_road", "old_road"]
 	for index in range(merchant_targets.size()):

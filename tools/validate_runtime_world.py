@@ -287,6 +287,69 @@ def validate_contracts(value: Any, factions_value: Any, visit_slot_limit: Any, e
                     fail(errors, f"contract {contract_id}.minimum_reputation.{faction_id} must fit the authored faction bounds")
 
 
+def validate_adaptive_scenarios(
+    value: Any, known_contract_ids: set[str], errors: list[str]
+) -> None:
+    rules = as_object(value, "adaptive_scenarios", errors)
+    records = rules.get("records")
+    if not isinstance(records, list) or not records:
+        fail(errors, "adaptive_scenarios.records must be a non-empty list")
+        return
+    seen_ids: set[str] = set()
+    for index, raw_scenario in enumerate(records):
+        scenario = as_object(raw_scenario, f"adaptive_scenarios.records[{index}]", errors)
+        scenario_id = scenario.get("id")
+        if not isinstance(scenario_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", scenario_id):
+            fail(errors, f"adaptive scenario at index {index} must use a lower_snake_case id")
+            scenario_id = f"index_{index}"
+        elif scenario_id in seen_ids:
+            fail(errors, f"duplicate adaptive scenario id: {scenario_id}")
+        seen_ids.add(scenario_id)
+        if scenario.get("contract_id") not in known_contract_ids:
+            fail(errors, f"adaptive scenario {scenario_id} must reference a known contract")
+        if scenario.get("initial_state") != "offered":
+            fail(errors, f"adaptive scenario {scenario_id}.initial_state must equal offered")
+        if not isinstance(scenario.get("response_day"), int) or scenario["response_day"] < 2:
+            fail(errors, f"adaptive scenario {scenario_id}.response_day must be an integer of at least 2")
+        for field in ("offered_summary", "expired_summary"):
+            if not isinstance(scenario.get(field), str) or not scenario[field]:
+                fail(errors, f"adaptive scenario {scenario_id} must declare {field}")
+        response = as_object(
+            scenario.get("failure_response"),
+            f"adaptive scenario {scenario_id}.failure_response",
+            errors,
+        )
+        if response.get("type") != "emergent_faction":
+            fail(errors, f"adaptive scenario {scenario_id}.failure_response.type must equal emergent_faction")
+        for field in ("faction_id", "name", "material_basis", "legitimacy_claim", "trade_footprint", "information_id"):
+            if not isinstance(response.get(field), str) or not response[field]:
+                fail(errors, f"adaptive scenario {scenario_id}.failure_response must declare {field}")
+        if response.get("settlement_id") not in REQUIRED_SETTLEMENTS:
+            fail(errors, f"adaptive scenario {scenario_id}.failure_response must reference a known settlement")
+        if not isinstance(response.get("resilience_delta"), int) or not 1 <= response["resilience_delta"] <= 10:
+            fail(errors, f"adaptive scenario {scenario_id}.resilience_delta must be an integer from 1 through 10")
+        modifiers = as_object(
+            response.get("market_modifiers"),
+            f"adaptive scenario {scenario_id}.market_modifiers",
+            errors,
+        )
+        if not modifiers:
+            fail(errors, f"adaptive scenario {scenario_id}.market_modifiers must not be empty")
+        for good_id, modifier in modifiers.items():
+            if good_id not in REQUIRED_GOODS or not isinstance(modifier, (int, float)) or not 0.5 <= modifier <= 2:
+                fail(errors, f"adaptive scenario {scenario_id}.market modifier {good_id} must reference a known good and stay between 0.5 and 2")
+        opportunity = as_object(
+            response.get("opportunity"),
+            f"adaptive scenario {scenario_id}.opportunity",
+            errors,
+        )
+        if opportunity.get("good_id") not in REQUIRED_GOODS or opportunity.get("good_id") not in modifiers:
+            fail(errors, f"adaptive scenario {scenario_id}.opportunity must reference a modified known good")
+        for field in ("title", "summary"):
+            if not isinstance(opportunity.get(field), str) or not opportunity[field]:
+                fail(errors, f"adaptive scenario {scenario_id}.opportunity must declare {field}")
+
+
 def validate_events(value: Any, errors: list[str]) -> None:
     rules = as_object(value, "events", errors)
     history_limit = rules.get("max_history")
@@ -574,7 +637,16 @@ def validate(data: Any) -> list[str]:
     validate_settlement_actions(root.get("settlement_actions"), errors)
     settlement_action_rules = root.get("settlement_actions")
     visit_slot_limit = settlement_action_rules.get("visit_slots_per_arrival") if isinstance(settlement_action_rules, dict) else None
-    validate_contracts(root.get("contracts"), root.get("factions"), visit_slot_limit, errors)
+    contract_rules = root.get("contracts")
+    validate_contracts(contract_rules, root.get("factions"), visit_slot_limit, errors)
+    contract_records = contract_rules.get("records", []) if isinstance(contract_rules, dict) else []
+    known_contract_ids = {
+        contract.get("id")
+        for contract in contract_records
+        if isinstance(contract, dict)
+        and isinstance(contract.get("id"), str)
+    }
+    validate_adaptive_scenarios(root.get("adaptive_scenarios"), known_contract_ids, errors)
     validate_crew(root.get("crew"), visit_slot_limit, errors)
     validate_factions(root.get("factions"), errors)
     validate_arms_trade(root.get("arms_trade"), errors)

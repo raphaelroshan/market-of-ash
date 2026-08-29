@@ -20,6 +20,8 @@ REQUIRED_NATIVE_SCREENS = {
     "pause",
     "departure_desk",
     "returned_shop",
+    "well_commons_jobs",
+    "well_commons_market",
     "main_menu_large_text",
     "settlement_shop_large_text",
     "pause_large_text",
@@ -39,6 +41,8 @@ EXPECTED_UI_STATE = {
     "introduction_road": "introduction",
     "bazaar_jobs": "settlement_shop",
     "returned_shop": "settlement_shop",
+    "well_commons_jobs": "settlement_shop",
+    "well_commons_market": "settlement_shop",
     "destination_shop": "settlement_shop",
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
@@ -127,6 +131,12 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Ashgate capture is missing its gate-market identity")
         if screen == "destination_shop" and ui_state.get("bazaar_scene_id") != "brine_pan_exchange":
             raise AssertionError(f"{file_name}: destination capture is missing Brine Cross's salt-market identity")
+        if screen in {"well_commons_jobs", "well_commons_market"} and (
+            ui_state.get("adaptive_scenario_state") != "expired"
+            or "well_commons" not in ui_state.get("emergent_factions", [])
+            or "ordinary charcoal deliveries" not in ui_state.get("adaptive_response", "")
+        ):
+            raise AssertionError(f"{file_name}: adaptive response capture is missing the Well Commons state")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
         by_viewport.setdefault(viewport, {})[screen] = file_path
@@ -138,6 +148,8 @@ def main() -> int:
         require_distinct_screen(screens["introduction_road"], screens["settlement_shop"], f"{viewport} Begin guided campaign")
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
+        require_distinct_screen(screens["bazaar_jobs"], screens["well_commons_jobs"], f"{viewport} Expire relief offer")
+        require_distinct_screen(screens["well_commons_jobs"], screens["well_commons_market"], f"{viewport} Open Commons market")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
         require_distinct_screen(screens["departure_desk"], screens["route_travel"], f"{viewport} Begin road travel")

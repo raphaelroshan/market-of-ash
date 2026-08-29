@@ -57,4 +57,4 @@ All must remain positive and contract-free. The strongest ordinary opening must 
 
 ## Failure and save behavior
 
-Invalid profiles fail content loading before a campaign starts. Existing saves need no migration because trade profiles and replenishment rates are runtime rules; persisted market pressure continues to load under save version 11 and follows the current validated content rules when time advances.
+Invalid profiles fail content loading before a campaign starts. The Feed A fields themselves require no migration because trade profiles and replenishment rates are runtime rules; persisted market pressure continues to follow the current validated content rules when time advances. The repository's current save version is 12 after Feed B added adaptive scenario state.

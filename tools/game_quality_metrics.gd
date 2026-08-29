@@ -19,6 +19,7 @@ static func evaluate() -> Dictionary:
 		"opening_variety": _opening_variety_probe(),
 		"trade_pattern_families": _trade_pattern_families_probe(),
 		"contract_parity": _contract_parity_probe(),
+		"adaptive_failure_recovery": _adaptive_failure_recovery_probe(),
 		"world_state_variety": _world_state_variety_probe(),
 		"cargo_loss_recovery": _cargo_loss_recovery_probe(),
 		"preparation_overhead": _preparation_overhead_probe(),
@@ -112,6 +113,23 @@ static func _contract_parity_probe() -> Dictionary:
 		"ordinary_to_contract_ratio": parity_ratio,
 		"minimum_ratio": 0.70,
 		"passed": ordinary_net > 0 and parity_ratio >= 0.70,
+	}
+
+static func _adaptive_failure_recovery_probe() -> Dictionary:
+	var world := AshWorldState.new(1107)
+	var baseline := _candidate_for(world, "charcoal", 4, "reedwatch", "old_road")
+	var baseline_net := int(baseline.get("preview", {}).get("expected_net_profit", 0))
+	world.advance_day(3)
+	var replacement := _candidate_for(world, "charcoal", 4, "reedwatch", "old_road")
+	var replacement_net := int(replacement.get("preview", {}).get("expected_net_profit", 0))
+	return {
+		"scenario_state": String(world.scenario_state("reedwatch_water_relief").get("state", "")),
+		"faction_active": not world.emergent_faction("well_commons").is_empty(),
+		"reedwatch_resilience": world.resilience_for("reedwatch"),
+		"baseline_charcoal_net": baseline_net,
+		"replacement_charcoal_net": replacement_net,
+		"new_trade_viable": baseline_net <= 0 and replacement_net > 0,
+		"offer_closed": not world.contract_offer_closed_reason("reedwatch_water_relief_01").is_empty(),
 	}
 
 static func _world_state_variety_probe() -> Dictionary:

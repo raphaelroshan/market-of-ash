@@ -311,6 +311,8 @@ First, add or validate settlement production/consumption profiles, recurring rep
 
 Implement one complete scenario state machine with a visible failure response. The recommended first chain is water relief: if the player ignores or fails the relief offer, the Well Commons appears, Reedwatch’s market and resilience change, and a new commons-mediated trade opportunity opens.
 
+**Implemented foundation:** Runtime content `1.18.0` owns the Reedwatch relief state machine. The offer remains open through Day 3; an ignored offer expires on Day 4, while an accepted overdue offer becomes delayed and later records formal failure. Either unmet path activates the Well Commons once, adds one Reedwatch resilience, lowers the water multiplier, raises the charcoal multiplier, closes the stale job with a causal explanation, and exposes the replacement market on the map, Job Board, Town Outlook, Web state, saves, tests, and simulation evidence. Successful relief resolves without spawning the response. See `docs/scenarios/well_commons_response.md`.
+
 ### Feed C — Add replacement faction interaction
 
 Give the emergent faction at least two cooperation paths and one bypass or opposition path. Ensure its presence changes the map and outlook rather than adding another isolated dialogue screen.

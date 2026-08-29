@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.17.0",
+  "content_version": "1.18.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -184,6 +184,38 @@
         "decision_summary": "Guaranteed margin and Warden access; accepts a named manifest and official scrutiny.",
         "recovery_summary": "Late medicine remains sellable; money and standing losses are bounded.",
         "failure_recovery": "Late medicine remains yours to sell; the office charges at most six ashmarks and withdraws one Warden standing."
+      }
+    ]
+  },
+  "adaptive_scenarios": {
+    "records": [
+      {
+        "id": "reedwatch_water_relief",
+        "contract_id": "reedwatch_water_relief_01",
+        "initial_state": "offered",
+        "response_day": 4,
+        "offered_summary": "Reedwatch's wellkeepers are asking Ashgate caravans for a fast water delivery.",
+        "expired_summary": "The public relief window closed before the caravan committed. Reedwatch's households organized their own exchange.",
+        "failure_response": {
+          "type": "emergent_faction",
+          "faction_id": "well_commons",
+          "name": "The Well Commons",
+          "settlement_id": "reedwatch",
+          "material_basis": "Shared cistern labor, household ration tallies, and public boiling fires.",
+          "legitimacy_claim": "Reedwatch residents kept water moving when official relief did not arrive.",
+          "trade_footprint": "The Commons stabilizes water prices and buys charcoal for boiling and pump work.",
+          "resilience_delta": 1,
+          "information_id": "well_commons_exchange_open",
+          "market_modifiers": {
+            "water": 0.9,
+            "charcoal": 1.3
+          },
+          "opportunity": {
+            "title": "Commons Charcoal Exchange",
+            "good_id": "charcoal",
+            "summary": "Reedwatch's public boiling fires now pay a durable premium for ordinary charcoal deliveries. No contract is required."
+          }
+        }
       }
     ]
   },

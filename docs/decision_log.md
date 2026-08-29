@@ -441,3 +441,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Contracts and authored scenarios should change the caravan's commitments and consequences, not rescue an otherwise insolvent economy. A stable renewable baseline gives players a reason to read places and revisit markets while leaving crisis, faction, event, and market-memory state free to create volatile opportunities.
 
 **Trade-off:** The five-node slice still uses fixed authored profiles rather than capacity-limited production inventories or a continuous population model. Replenishment changes only recent-delivery pressure, so later adaptive-basin work must introduce replacement actors and changed access through explicit world state rather than hiding them inside price formulas.
+
+## ADR-056: Missed relief creates the Well Commons instead of resetting the offer
+
+**Decision:** Model Reedwatch relief as a serialized scenario state machine. The offer remains optional through Day 3. On Day 4, an ignored offer expires; an accepted but overdue offer becomes delayed and later records formal failure. Either unmet path activates the Well Commons exactly once, adds one Reedwatch resilience, closes the stale contract offer, lowers the local water multiplier, and raises the local charcoal multiplier enough to create a new contract-free trade. Completed relief resolves the scenario without activating the response.
+
+**Reason:** Expiry should be a world transition rather than a failed player test. The same unmet water need gives local organizers material legitimacy and creates new trade geometry, making the player's omission visible and playable without blocking the Bazaar, roads, or other systems.
+
+**Trade-off:** Feed B exposes the Commons as a replacement actor and market condition but does not yet add relationship scores or direct faction actions. Feed C must add at least two cooperation paths and one bypass or opposition path while keeping ordinary trade open.

@@ -544,6 +544,7 @@ static func _accept_contract(world: AshWorldState, inputs: Dictionary) -> Dictio
 	snapshot["status"] = "active"
 	world.active_contracts[contract_id] = snapshot
 	world.visit_slots_remaining -= slots_required
+	world._evaluate_adaptive_scenarios()
 	var message := "Accepted %s. Deliver %d %s to %s by Day %d for %d ashmarks. %d visit slot remains." % [String(snapshot.name), quantity, good_id, String(world.settlement(String(snapshot.destination_id)).name), int(snapshot.deadline_day), int(snapshot.reward), world.visit_slots_remaining]
 	world.add_log(message)
 	return _success(message, {
@@ -557,6 +558,9 @@ static func _accept_contract(world: AshWorldState, inputs: Dictionary) -> Dictio
 
 static func contract_acceptance_reason(world: AshWorldState, contract_record: Dictionary) -> String:
 	var contract_id := String(contract_record.get("id", ""))
+	var closed_reason := world.contract_offer_closed_reason(contract_id)
+	if not closed_reason.is_empty():
+		return closed_reason
 	if not world.active_contract(contract_id).is_empty():
 		return "contract is already active"
 	if world.has_contract_outcome(contract_id):
