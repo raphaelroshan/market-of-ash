@@ -465,3 +465,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A contract should compensate the player for reduced flexibility and a visit-slot commitment, but a dominant cash premium would quietly turn the open economy back into a quest ladder. Separate dimensions make the real tradeoff legible and executable.
 
 **Trade-off:** The fixture compares representative paths rather than claiming that one standing point or resilience point has a universal ashmark value. Feed E can now compose these durable non-cash outcomes into alternate endings without changing the currency model.
+
+## ADR-059: Post-failure ordinary trade can define the regional ending
+
+**Decision:** Add `The Wells Belong to Those Who Carry` ahead of the broad faction endings. Eligibility requires Reedwatch relief to expire or fail, the Well Commons to be active with positive support, Reedwatch resilience of at least two, contained arms escalation, and at least four charcoal sold into Reedwatch after Commons activation. Qualifying spot deliveries accumulate in the serialized Commons record; contract and event transfers do not count, and the bounded market-history log is not authoritative for ending eligibility.
+
+**Reason:** The adaptive-basin promise is incomplete if the replacement actor changes prices but disappears from the final verdict. Requiring a real post-activation market delivery and direct support makes the ending emerge from the same Bazaar → road → arrival loop as the rest of the game.
+
+**Trade-off:** This adds a fifth ending and gives it priority over the generic Free Caravan outcome when both qualify. The delivery threshold is deliberately narrow and should be revisited only with playtest evidence, not converted into a hidden score.

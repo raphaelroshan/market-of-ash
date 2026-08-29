@@ -343,13 +343,15 @@ func archive_pending_event(choice_id: String, outcome: Dictionary) -> Dictionary
 	journey_context.clear()
 	return record.duplicate(true)
 
-func record_market_delivery(settlement_id: String, good_id: String, quantity: int) -> Dictionary:
+func record_market_delivery(settlement_id: String, good_id: String, quantity: int, delivery_mode: String = "ordinary_trade") -> Dictionary:
 	if not has_settlement(settlement_id):
 		return {"ok": false, "reason": "unknown settlement"}
 	if MarketContent.good(good_id).is_empty():
 		return {"ok": false, "reason": "unknown good"}
 	if quantity <= 0:
 		return {"ok": false, "reason": "quantity must be positive"}
+	if not ["ordinary_trade", "contract", "event_trade"].has(delivery_mode):
+		return {"ok": false, "reason": "unknown delivery mode"}
 	var rules := MarketContent.market_memory_rules()
 	var pressure_min := float(rules.get("pressure_min", 0.0))
 	var pressure_max := float(rules.get("pressure_max", 0.0))
@@ -371,12 +373,26 @@ func record_market_delivery(settlement_id: String, good_id: String, quantity: in
 		"effective_impact": _rounded_pressure(after - before),
 		"crisis_stage": crisis_stage,
 		"crisis_effectiveness": crisis_factor,
+		"delivery_mode": delivery_mode,
 	}
 	market_delivery_history.append(record)
+	if delivery_mode == "ordinary_trade":
+		_record_emergent_faction_delivery(settlement_id, good_id, quantity)
 	var history_limit := int(rules.get("max_delivery_history", 1))
 	while market_delivery_history.size() > history_limit:
 		market_delivery_history.pop_front()
 	return {"ok": true, "record": record.duplicate(true)}
+
+func _record_emergent_faction_delivery(settlement_id: String, good_id: String, quantity: int) -> void:
+	for faction_id_value in emergent_factions.keys():
+		var faction_id := String(faction_id_value)
+		var faction: Dictionary = emergent_factions.get(faction_id_value, {}).duplicate(true)
+		if String(faction.get("settlement_id", "")) != settlement_id:
+			continue
+		var deliveries: Dictionary = faction.get("ordinary_deliveries", {}).duplicate(true)
+		deliveries[good_id] = mini(1000000, int(deliveries.get(good_id, 0)) + quantity)
+		faction["ordinary_deliveries"] = deliveries
+		emergent_factions[faction_id] = faction
 
 func _update_crisis_modifiers() -> void:
 	crisis_modifiers = {"grain": 1.0, "water": 1.0, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0}
@@ -428,6 +444,16 @@ func _ending_is_eligible(ending: Dictionary) -> bool:
 				if String(contract.get("id", "")) == required_contract_id and String(contract.get("status", "")) == "completed":
 					return resilience_for("reedwatch") >= int(ending.get("minimum_reedwatch_resilience", 0))
 			return false
+		"ending_commons_exchange":
+			var scenario := scenario_state(String(ending.get("required_scenario_id", "")))
+			if not ending.get("required_scenario_states", []).has(String(scenario.get("state", ""))):
+				return false
+			var faction := emergent_faction(String(ending.get("required_faction_id", "")))
+			if faction.is_empty() or int(faction.get("support", 0)) < int(ending.get("minimum_faction_support", 0)):
+				return false
+			if resilience_for("reedwatch") < int(ending.get("minimum_reedwatch_resilience", 0)):
+				return false
+			return _ordinary_delivery_requirement_met(ending.get("required_ordinary_delivery", {}), faction.get("ordinary_deliveries", {}))
 		"ending_warden_reserve":
 			return int(reputation.get("wardens", 0)) >= int(ending.get("minimum_warden_reputation", 0)) and int(reputation.get("caravans", 0)) <= int(ending.get("maximum_caravan_reputation", 10))
 		"ending_free_caravan_routes":
@@ -435,6 +461,10 @@ func _ending_is_eligible(ending: Dictionary) -> bool:
 		"ending_ash_merchant":
 			return money >= int(ending.get("minimum_money", 0)) and resilience_for("reedwatch") <= int(ending.get("maximum_reedwatch_resilience", 10))
 	return false
+
+func _ordinary_delivery_requirement_met(requirement: Dictionary, delivery_value: Variant) -> bool:
+	var deliveries: Dictionary = delivery_value if typeof(delivery_value) == TYPE_DICTIONARY else {}
+	return int(deliveries.get(String(requirement.get("good_id", "")), 0)) >= int(requirement.get("minimum_quantity", 0))
 
 func _decay_market_pressure(days: int) -> void:
 	if days <= 0 or market_pressure.is_empty():
@@ -725,6 +755,12 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 			return {"ok": false, "reason": "save emergent faction does not match its adaptive scenario state"}
 		if int(record.get("support", 0)) < -3 or int(record.get("support", 0)) > 3 or typeof(record.get("interaction_ids", [])) != TYPE_ARRAY:
 			return {"ok": false, "reason": "save emergent faction has invalid support state"}
+		var ordinary_deliveries_value: Variant = record.get("ordinary_deliveries", {})
+		if typeof(ordinary_deliveries_value) != TYPE_DICTIONARY:
+			return {"ok": false, "reason": "save emergent faction has invalid ordinary deliveries"}
+		for good_id_value in ordinary_deliveries_value.keys():
+			if MarketContent.good(String(good_id_value)).is_empty() or int(ordinary_deliveries_value.get(good_id_value, -1)) < 0 or int(ordinary_deliveries_value.get(good_id_value, 0)) > 1000000:
+				return {"ok": false, "reason": "save emergent faction has invalid ordinary deliveries"}
 		for interaction_id_value in record.get("interaction_ids", []):
 			var interaction := MarketContent.settlement_action(String(interaction_id_value))
 			if interaction.is_empty() or String(interaction.get("requires_emergent_faction_id", "")) != faction_id:
@@ -874,6 +910,7 @@ func _activate_adaptive_response(scenario: Dictionary) -> void:
 		"information_id": String(response.get("information_id", "")),
 		"support": 0,
 		"interaction_ids": [],
+		"ordinary_deliveries": {},
 	}
 	var resilience_settlement := String(response.get("settlement_id", ""))
 	if not resilience_settlement.is_empty():
@@ -911,7 +948,14 @@ func _sanitize_emergent_factions(value: Variant) -> Dictionary:
 			var interaction_id := String(interaction_id_value)
 			if not interaction_id.is_empty() and not interactions.has(interaction_id):
 				interactions.append(interaction_id)
-		sanitized[faction_id] = {"id": faction_id, "scenario_id": String(scenario.get("id", "")), "activated_day": clampi(int(record.get("activated_day", 1)), 1, day), "settlement_id": String(response.get("settlement_id", "")), "information_id": String(response.get("information_id", "")), "support": clampi(int(record.get("support", 0)), -3, 3), "interaction_ids": interactions}
+		var ordinary_deliveries: Dictionary = {}
+		var delivery_value: Variant = record.get("ordinary_deliveries", {})
+		if typeof(delivery_value) == TYPE_DICTIONARY:
+			for good_id_value in delivery_value.keys():
+				var good_id := String(good_id_value)
+				if not MarketContent.good(good_id).is_empty():
+					ordinary_deliveries[good_id] = clampi(int(delivery_value.get(good_id_value, 0)), 0, 1000000)
+		sanitized[faction_id] = {"id": faction_id, "scenario_id": String(scenario.get("id", "")), "activated_day": clampi(int(record.get("activated_day", 1)), 1, day), "settlement_id": String(response.get("settlement_id", "")), "information_id": String(response.get("information_id", "")), "support": clampi(int(record.get("support", 0)), -3, 3), "interaction_ids": interactions, "ordinary_deliveries": ordinary_deliveries}
 	return sanitized
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:

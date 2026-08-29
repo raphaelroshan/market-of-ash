@@ -41,6 +41,7 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 | Cross-path reward balance        | PASS     | 10-minute fixture; contract/ordinary expected net 101%; cash, provisions, hold, standing, time, and slots tracked separately |
 | Adaptive failure creates trade   | PASS     | charcoal expected net -10 → 7; Reedwatch resilience 1                                                                        |
 | Replacement faction agency       | PASS     | 2 cooperation paths; support -1 → 0 after opposition/reconciliation                                                          |
+| Adaptive ordinary-trade ending   | PASS     | expired relief; 4 charcoal delivered Day 5 after Commons Day 4; support 1                                                    |
 | No permanent route winner        | PASS     | 3 best choices across 2 routes in 4 world states                                                                             |
 | Cargo-loss recovery              | PASS     | seed 3; recovered to 278 ashmarks in 1 outbound trade(s)                                                                     |
 | Short preparation                | PASS     | first cargo purchase is command 2                                                                                            |

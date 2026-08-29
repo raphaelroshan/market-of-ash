@@ -37,6 +37,11 @@ func _init() -> void:
 	_expect(bool(faction_agency.opposition_path_completed) and int(faction_agency.opposed_support) == -1, "the Well Commons must expose a disclosed Warden bypass or opposition path")
 	_expect(bool(faction_agency.reconciliation_completed) and int(faction_agency.reconciled_support) == 0 and bool(faction_agency.ordinary_trade_open), "Commons pressure must be reversible without closing ordinary trade")
 
+	var adaptive_ending: Dictionary = metrics.adaptive_ending
+	_expect(bool(adaptive_ending.commands_completed), "the alternate ending fixture must use the ordinary buy, travel, sell, and settlement-action command path")
+	_expect(bool(adaptive_ending.passed) and adaptive_ending.scenario_state in ["expired", "failed"], "scenario failure followed by ordinary Commons trade must reach its authored alternate ending")
+	_expect(int(adaptive_ending.delivery_quantity) >= 4 and int(adaptive_ending.delivery_day) >= int(adaptive_ending.activation_day), "the Commons ending must require a post-activation ordinary charcoal delivery")
+
 	var world_states: Dictionary = metrics.world_state_variety
 	_expect(int(world_states.choice_count) >= 3, "changing market and access state must rotate the best visible trade across at least three choices")
 	_expect(int(world_states.route_count) >= 2, "no one route may dominate every tested world state")

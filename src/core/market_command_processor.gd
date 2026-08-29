@@ -353,7 +353,7 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 	if trade_quantity > 0:
 		var removed_trade := _remove_event_materials(world, trade_basis, trade_quantity)
 		trade_delta = removed_trade.delta
-		var delivery_result := world.record_market_delivery(destination_id, String(trade_basis.get("good_id", "")), trade_quantity)
+		var delivery_result := world.record_market_delivery(destination_id, String(trade_basis.get("good_id", "")), trade_quantity, "event_trade")
 		if delivery_result.ok:
 			market_memory = delivery_result.record
 	var specific_cargo_delta: Dictionary = {}
@@ -635,7 +635,7 @@ static func _resolve_contract(world: AshWorldState, inputs: Dictionary) -> Dicti
 	var held_quantity := int(world.cargo.get(good_id, 0))
 	if held_quantity < quantity:
 		return _failure("contract needs %d more %s by Day %d" % [quantity - held_quantity, good_id, int(snapshot.deadline_day)])
-	var memory_result := world.record_market_delivery(world.current_settlement, good_id, quantity)
+	var memory_result := world.record_market_delivery(world.current_settlement, good_id, quantity, "contract")
 	if not memory_result.ok:
 		return _failure(String(memory_result.reason))
 	var removed_weight := int(MarketContent.good(good_id).get("weight", 0)) * quantity

@@ -1,6 +1,7 @@
 extends SceneTree
 
 const AshWorldState = preload("res://src/core/world_state.gd")
+const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
 var failures: Array[String] = []
 
@@ -300,7 +301,7 @@ func _initialize() -> void:
 	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.20.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.21.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -962,6 +963,16 @@ func _initialize() -> void:
 	ui._refresh_ui()
 	_expect(ui.world.ending_id == "open_routes_relief" and ui.shop_status_label.text.contains("ENDING — Open Routes, Shared Wells"), "qualified crisis state did not expose the deterministic ending summary")
 	_expect(ui.ending_panel.visible and ui.ending_label.text.contains("CAMPAIGN CONCLUSION") and ui.ending_label.text.contains("Open Routes, Shared Wells"), "completed relief should receive a dedicated campaign-conclusion card")
+	ui._on_start_game_pressed()
+	ui.world.advance_day(3)
+	ui.world.current_settlement = "reedwatch"
+	ui.world.record_market_delivery("reedwatch", "charcoal", 4)
+	ui.world.cargo = {"charcoal": 2, "weight": 2}
+	MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	ui.world.advance_day(10 - ui.world.day)
+	ui._refresh_ui()
+	_expect(ui.world.ending_id == "ending_commons_exchange" and ui.ending_label.text.contains("The Wells Belong to Those Who Carry"), "post-failure ordinary trade should expose the Commons campaign conclusion")
+	_expect(ui._web_accessibility_announcement().contains("Campaign conclusion") and ui._web_ui_state().get("ending_id", "") == "ending_commons_exchange", "Web state should announce and identify the Commons ending")
 	ui._on_start_game_pressed()
 	ui.world.adjust_reputation("wardens", 3)
 	ui.world.advance_day(9)

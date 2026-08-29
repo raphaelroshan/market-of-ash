@@ -1047,6 +1047,15 @@ static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
 			"open_routes_relief":
 				if String(ending.get("required_contract_id", "")).is_empty() or int(ending.get("minimum_reedwatch_resilience", -1)) < 0:
 					errors.append("open_routes_relief must declare its contract and resilience bounds")
+			"ending_commons_exchange":
+				var required_delivery_value: Variant = ending.get("required_ordinary_delivery", {})
+				var required_delivery: Dictionary = required_delivery_value if typeof(required_delivery_value) == TYPE_DICTIONARY else {}
+				if String(ending.get("required_scenario_id", "")).is_empty() or String(ending.get("required_faction_id", "")).is_empty() or ending.get("required_scenario_states", []).is_empty():
+					errors.append("ending_commons_exchange must declare its scenario and faction requirements")
+				if int(ending.get("minimum_faction_support", -1)) < 1 or int(ending.get("minimum_reedwatch_resilience", -1)) < 1:
+					errors.append("ending_commons_exchange must declare positive support and resilience bounds")
+				if String(required_delivery.get("settlement_id", "")).is_empty() or String(required_delivery.get("good_id", "")).is_empty() or int(required_delivery.get("minimum_quantity", 0)) <= 0 or not bool(required_delivery.get("after_faction_activation", false)):
+					errors.append("ending_commons_exchange must require a positive post-activation ordinary delivery")
 			"ending_warden_reserve":
 				if int(ending.get("minimum_warden_reputation", -1)) < 0 or int(ending.get("maximum_caravan_reputation", -1)) < 0:
 					errors.append("ending_warden_reserve must declare faction bounds")

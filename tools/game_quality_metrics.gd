@@ -22,6 +22,7 @@ static func evaluate() -> Dictionary:
 		"path_reward_balance": _path_reward_balance_probe(),
 		"adaptive_failure_recovery": _adaptive_failure_recovery_probe(),
 		"replacement_faction_agency": _replacement_faction_agency_probe(),
+		"adaptive_ending": _adaptive_ending_probe(),
 		"world_state_variety": _world_state_variety_probe(),
 		"cargo_loss_recovery": _cargo_loss_recovery_probe(),
 		"preparation_overhead": _preparation_overhead_probe(),
@@ -218,6 +219,30 @@ static func _replacement_faction_agency_probe() -> Dictionary:
 		"reconciliation_completed": bool(reconcile.ok),
 		"reconciled_support": reconciled_support,
 		"ordinary_trade_open": MarketEconomy.price_for("charcoal", bypass.settlement("reedwatch"), bypass.pricing_context()) > MarketEconomy.price_for("charcoal", bypass.settlement("ashgate"), bypass.pricing_context()),
+	}
+
+static func _adaptive_ending_probe() -> Dictionary:
+	var world := AshWorldState.new(1107)
+	world.advance_day(3)
+	world.resolved_event_ids = ["span_at_cinderford", "three_riders_no_banner"]
+	var bought := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "charcoal", "quantity": 6}})
+	var departed := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "old_road", "destination_id": "reedwatch"}}) if bought.ok else {"ok": false}
+	var sold := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.SELL_GOODS, "inputs": {"good_id": "charcoal", "quantity": 4}}) if departed.ok and world.pending_event.is_empty() else {"ok": false}
+	var supported := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}}) if sold.ok else {"ok": false}
+	if supported.ok:
+		world.advance_day(maxi(0, 10 - world.day))
+	var delivery := world.latest_market_delivery("reedwatch", "charcoal")
+	var faction := world.emergent_faction("well_commons")
+	return {
+		"commands_completed": bool(bought.ok) and bool(departed.ok) and bool(sold.ok) and bool(supported.ok),
+		"scenario_state": String(world.scenario_state("reedwatch_water_relief").get("state", "")),
+		"delivery_quantity": int(faction.get("ordinary_deliveries", {}).get("charcoal", 0)),
+		"delivery_day": int(delivery.get("day", 0)),
+		"activation_day": int(faction.get("activated_day", 0)),
+		"support": int(faction.get("support", 0)),
+		"reedwatch_resilience": world.resilience_for("reedwatch"),
+		"ending_id": world.ending_id,
+		"passed": world.ending_id == "ending_commons_exchange",
 	}
 
 static func _world_state_variety_probe() -> Dictionary:

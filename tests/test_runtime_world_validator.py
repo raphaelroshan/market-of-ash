@@ -318,6 +318,26 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_commons_ending = copy.deepcopy(runtime)
+    commons_ending = next(ending for ending in invalid_commons_ending["crisis"]["endings"] if ending["id"] == "ending_commons_exchange")
+    commons_ending["required_scenario_states"] = ["resolved"]
+    commons_ending["minimum_faction_support"] = 0
+    commons_ending["required_ordinary_delivery"]["minimum_quantity"] = 0
+    commons_ending_errors = validate(invalid_commons_ending)
+    expected_commons_ending_fragments = (
+        "must require expired or failed scenario states",
+        "must require positive faction support",
+        "must require a positive ordinary delivery quantity",
+    )
+    missing_commons_ending = [
+        fragment for fragment in expected_commons_ending_fragments if not any(fragment in error for error in commons_ending_errors)
+    ]
+    if missing_commons_ending:
+        print("FAIL: invalid Commons ending did not produce expected errors")
+        for fragment in missing_commons_ending:
+            print(f"- missing: {fragment}")
+        return 1
+
     # Route-stop validation keeps intermediate settlements reachable without accepting malformed segments.
     invalid_routes = copy.deepcopy(runtime)
     invalid_routes["routes"]["toll_road"]["segments"][0]["endpoints"] = ["ashgate", "missing_town"]

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.20.0",
+  "content_version": "1.21.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -795,6 +795,18 @@
         "minimum_reedwatch_resilience": 2,
         "maximum_arms_escalation": 1,
         "summary": "Reedwatch's public reserve holds, relief caravans retain access, and the basin enters the next season without armed traffic controlling the roads. The caravan chose accountable supply over a single controlling buyer."
+      },
+      {
+        "id": "ending_commons_exchange",
+        "title": "The Wells Belong to Those Who Carry",
+        "required_scenario_id": "reedwatch_water_relief",
+        "required_scenario_states": ["expired", "failed"],
+        "required_faction_id": "well_commons",
+        "minimum_faction_support": 1,
+        "minimum_reedwatch_resilience": 2,
+        "required_ordinary_delivery": {"settlement_id": "reedwatch", "good_id": "charcoal", "minimum_quantity": 4, "after_faction_activation": true},
+        "maximum_arms_escalation": 1,
+        "summary": "Official relief never arrived, but ordinary charcoal runs kept Reedwatch's boilers lit and turned the Well Commons into a durable public exchange. The caravan helped a replacement institution earn legitimacy through repeated material support rather than a restored contract."
       },
       {
         "id": "ending_warden_reserve",

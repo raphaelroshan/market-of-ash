@@ -652,6 +652,25 @@ def validate_crisis(value: Any, errors: list[str]) -> None:
                 fail(errors, "open_routes_relief must declare required_contract_id")
             if not isinstance(ending.get("minimum_reedwatch_resilience"), int) or ending["minimum_reedwatch_resilience"] < 0:
                 fail(errors, "open_routes_relief must declare a non-negative resilience bound")
+        elif ending_id == "ending_commons_exchange":
+            if ending.get("required_scenario_id") != "reedwatch_water_relief":
+                fail(errors, "ending_commons_exchange must require the Reedwatch relief scenario")
+            scenario_states = ending.get("required_scenario_states")
+            if not isinstance(scenario_states, list) or not scenario_states or any(state not in {"expired", "failed"} for state in scenario_states):
+                fail(errors, "ending_commons_exchange must require expired or failed scenario states")
+            if ending.get("required_faction_id") != "well_commons":
+                fail(errors, "ending_commons_exchange must require the Well Commons")
+            if not isinstance(ending.get("minimum_faction_support"), int) or ending["minimum_faction_support"] < 1:
+                fail(errors, "ending_commons_exchange must require positive faction support")
+            if not isinstance(ending.get("minimum_reedwatch_resilience"), int) or ending["minimum_reedwatch_resilience"] < 1:
+                fail(errors, "ending_commons_exchange must require positive Reedwatch resilience")
+            delivery = as_object(ending.get("required_ordinary_delivery"), "ending_commons_exchange.required_ordinary_delivery", errors)
+            if delivery.get("settlement_id") != "reedwatch" or delivery.get("good_id") != "charcoal":
+                fail(errors, "ending_commons_exchange must require ordinary charcoal delivery to Reedwatch")
+            if not isinstance(delivery.get("minimum_quantity"), int) or delivery["minimum_quantity"] <= 0:
+                fail(errors, "ending_commons_exchange must require a positive ordinary delivery quantity")
+            if delivery.get("after_faction_activation") is not True:
+                fail(errors, "ending_commons_exchange delivery must follow faction activation")
         elif ending_id == "ending_warden_reserve":
             for field in ("minimum_warden_reputation", "maximum_caravan_reputation"):
                 if not isinstance(ending.get(field), int) or ending[field] < 0:

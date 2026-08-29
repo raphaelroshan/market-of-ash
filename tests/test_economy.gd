@@ -55,10 +55,10 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.20.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.21.0", "runtime content should expose content version")
 	var planning := MarketContent.planning_assumptions()
 	_expect(int(planning.get("reward_fixture_minutes", 0)) == 10 and float(planning.get("contract_expected_net_min_ratio", 0.0)) == 1.0, "runtime content should expose the ten-minute cross-path reward benchmark")
-	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
+	_expect(MarketContent.ending_records().size() == 5 and MarketContent.ending("ending_commons_exchange").get("title", "") == "The Wells Belong to Those Who Carry" and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
 	_expect(float(memory_rules.get("producer_decay_multiplier", 0.0)) == 0.75 and float(memory_rules.get("consumer_decay_multiplier", 0.0)) == 1.5, "runtime content should expose differentiated replenishment rules")
@@ -304,6 +304,7 @@ func _test_market_memory() -> void:
 	_expect(failed_world.market_pressure.is_empty() and failed_world.market_delivery_history.is_empty(), "failed sale should not write market memory")
 	_expect(not failed_world.record_market_delivery("missing", "water", 1).ok, "unknown settlements should not receive market pressure")
 	_expect(not failed_world.record_market_delivery("reedwatch", "missing", 1).ok, "unknown goods should not receive market pressure")
+	_expect(not failed_world.record_market_delivery("reedwatch", "water", 1, "invented_mode").ok, "market deliveries should reject unknown source modes")
 
 	var saturated_world := AshWorldState.new(1107)
 	saturated_world.current_settlement = "reedwatch"
@@ -1396,6 +1397,36 @@ func _test_crisis_progression_and_ending() -> void:
 	ending_world.advance_day(9)
 	_expect(ending_world.crisis_stage == 3 and ending_world.ending_id == "open_routes_relief", "qualified day-ten state should reach the deterministic relief ending")
 	_expect(ending_world.ending_summary.contains("public reserve holds"), "ending should preserve its authored regional summary")
+	var commons_world := AshWorldState.new(1107)
+	commons_world.advance_day(3)
+	commons_world.resolved_event_ids = ["span_at_cinderford", "three_riders_no_banner"]
+	_expect(MarketCommandProcessor.execute(commons_world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "charcoal", "quantity": 6}}).ok, "Commons ending fixture should buy ordinary charcoal after the failed offer")
+	_expect(MarketCommandProcessor.execute(commons_world, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "old_road", "destination_id": "reedwatch"}}).ok and commons_world.pending_event.is_empty(), "Commons ending fixture should reach Reedwatch through normal travel")
+	_expect(MarketCommandProcessor.execute(commons_world, {"id": MarketCommandProcessor.SELL_GOODS, "inputs": {"good_id": "charcoal", "quantity": 4}}).ok, "Commons ending fixture should record a normal market delivery")
+	_expect(MarketCommandProcessor.execute(commons_world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}}).ok, "Commons ending fixture should turn the remaining cargo into local support")
+	for index in range(12):
+		commons_world.record_market_delivery("ashgate", "grain", 1)
+	_expect(commons_world.latest_market_delivery("reedwatch", "charcoal").is_empty() and int(commons_world.emergent_faction("well_commons").get("ordinary_deliveries", {}).get("charcoal", 0)) == 4, "Commons delivery credit should survive eviction from the bounded market log")
+	var restored_commons := AshWorldState.new(0)
+	_expect(restored_commons.load_serialized(commons_world.serialize()).ok and int(restored_commons.emergent_faction("well_commons").get("ordinary_deliveries", {}).get("charcoal", 0)) == 4, "save/load should preserve durable Commons ordinary-delivery credit")
+	restored_commons.advance_day(10 - restored_commons.day)
+	_expect(restored_commons.ending_id == "ending_commons_exchange" and restored_commons.ending_summary.contains("ordinary charcoal runs"), "failed relief followed by ordinary trade and Commons support should reach the replacement ending")
+	var premature_commons := AshWorldState.new(1107)
+	premature_commons.record_market_delivery("reedwatch", "charcoal", 4)
+	premature_commons.advance_day(3)
+	premature_commons.current_settlement = "reedwatch"
+	premature_commons.cargo = {"charcoal": 2, "weight": 2}
+	MarketCommandProcessor.execute(premature_commons, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	premature_commons.advance_day(10 - premature_commons.day)
+	_expect(premature_commons.ending_id != "ending_commons_exchange", "charcoal delivered before Commons activation must not satisfy the alternate ending")
+	var contract_transfer_commons := AshWorldState.new(1107)
+	contract_transfer_commons.advance_day(3)
+	contract_transfer_commons.record_market_delivery("reedwatch", "charcoal", 4, "contract")
+	contract_transfer_commons.current_settlement = "reedwatch"
+	contract_transfer_commons.cargo = {"charcoal": 2, "weight": 2}
+	MarketCommandProcessor.execute(contract_transfer_commons, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}})
+	contract_transfer_commons.advance_day(10 - contract_transfer_commons.day)
+	_expect(contract_transfer_commons.ending_id != "ending_commons_exchange", "contract or event transfers must not count as ordinary trade for the Commons ending")
 	var warden_world := AshWorldState.new(1)
 	warden_world.adjust_reputation("wardens", 3)
 	warden_world.advance_day(9)
@@ -1506,7 +1537,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.20.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.21.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})
@@ -1582,6 +1613,14 @@ func _test_disk_save_sanitization() -> void:
 	invalid_support_save["emergent_factions"]["well_commons"]["support"] = 99
 	var rejected_support := AshWorldState.new(0).load_serialized(invalid_support_save)
 	_expect(not rejected_support.ok and rejected_support.reason.contains("invalid support state"), "load should reject out-of-bounds emergent-faction support")
+	var invalid_deliveries_save: Dictionary = invalid_support_world.serialize()
+	invalid_deliveries_save["emergent_factions"]["well_commons"]["ordinary_deliveries"] = {"missing_good": 4}
+	var rejected_deliveries := AshWorldState.new(0).load_serialized(invalid_deliveries_save)
+	_expect(not rejected_deliveries.ok and rejected_deliveries.reason.contains("invalid ordinary deliveries"), "load should reject unknown durable Commons delivery goods")
+	var oversized_deliveries_save: Dictionary = invalid_support_world.serialize()
+	oversized_deliveries_save["emergent_factions"]["well_commons"]["ordinary_deliveries"] = {"charcoal": 1000001}
+	var rejected_oversized_deliveries := AshWorldState.new(0).load_serialized(oversized_deliveries_save)
+	_expect(not rejected_oversized_deliveries.ok and rejected_oversized_deliveries.reason.contains("invalid ordinary deliveries"), "load should reject unbounded durable Commons delivery totals")
 	var invalid_interaction_save: Dictionary = invalid_support_world.serialize()
 	invalid_interaction_save["emergent_factions"]["well_commons"]["interaction_ids"] = ["invented_interaction"]
 	var rejected_interaction := AshWorldState.new(0).load_serialized(invalid_interaction_save)
