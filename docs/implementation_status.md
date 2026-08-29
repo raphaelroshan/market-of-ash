@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. The quality-plan enforcement slice adds the missing regulated escort contract and executable safety, variety, recovery, and preparation gates. Remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
+**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The updated vertical-slice roadmap's open-trade Feed A is also implemented: authored production/consumption roles, differentiated replenishment, ordinary-trade-first Bazaar language, four non-contract trade fixtures, and contract-parity enforcement. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. Remaining hardware and comprehension gates require Windows display scaling, hands-on assistive technology, or moderated players; Feed B's adaptive Well Commons failure chain remains next.
 
 ## Implemented player-facing spine
 
@@ -20,7 +20,9 @@
 - Desktop builds expose a conventional Main Menu Quit action; Web builds omit it and leave tab lifecycle to the browser.
 - The Main Menu also exposes a persisted Interface Sounds switch. Short generated cues distinguish successful commands, blocked actions, and committed travel without carrying essential information or adding external audio assets.
 - Runtime goods, settlements, route endpoints, and planning assumptions load from validated `content/runtime_world.json`.
+- Every settlement declares authoritative exports, recurring consumption, and a concise ordinary-market thesis. Validation requires every good to have at least one producer and one consumer across the basin.
 - Prices and route forecasts are deterministic and explain their current inputs.
+- The Trade stall frames the selected load as `ORDINARY TRADE — NO CONTRACT REQUIRED`, connecting its authored source and destination need to unit spread, load margin, route burden, exposed-unit risk, and expected net value.
 - The optional first-run Water delivery has a positive risk-adjusted forecast, and pre-purchase route forecasts include the proposed load in the same one-exposed-unit risk model used after purchase.
 - Forecasts label selected quantities as trade scenarios, show the matching quantity actually held, and warn that departure carries only the real hold when a proposed load has not been purchased.
 - First-run objective progress is reconstructed from saved command evidence, so loading after the guided purchase or completed sale cannot reset the prompt or repeat its one-use action; missing cargo produces a specific recovery prompt instead of silently returning to step one.
@@ -29,10 +31,10 @@
 - Buy, sell, and departure mutations pass through a serializable command/result boundary; runtime and loaded histories both retain only the newest 100 command records.
 - The human-readable campaign log retains the newest 200 entries both during play and after load, preventing long sessions or imported saves from inflating saves and diagnostic reports without bound.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.
-- Saves declare save version 11 and runtime content version `1.16.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.
+- Saves declare save version 11 and runtime content version `1.17.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.
 - A deterministic 100-seed policy simulation records opening-route incentives, forecast error, safe-opening resource floors, viable strategy breadth, best-choice rotation across changed world states, real cargo-loss recovery, and tutorial preparation overhead.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
-- Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
+- Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it. Consumer markets replenish at 150% of baseline decay, neutral markets at 100%, and producer markets at 75%, keeping recurring needs useful without erasing recent deliveries.
 - Settlement visits expose a two-slot auxiliary-action budget. Ashgate's provisions and escalation recovery, Brine Cross's cistern queue, Cinderford's repair bench, Hollow Market's route rumor, and Reedwatch's supply shelter create local tradeoffs with visible dependency reasons.
 - Ashgate offers a fixed-term Reedwatch water-relief contract and a Warden-gated Brine Cross medicine escort. Accepted terms, prerequisites, and relationship effects are visible, frozen, pinned during departure, and resolved deterministically on arrival.
 - Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
@@ -209,6 +211,8 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 - The guided first expedition completes in 100/100 deterministic seeds and never falls below 118 ashmarks or 11 provisions.
 - The opening contains seven positive strategies across four goods and both the exposed and regulated road types.
+- Four named ordinary-trade fixtures cover staple, repair, medicine, and industrial cargo; all remain profitable without accepting a contract.
+- The best opening ordinary trade must retain at least 70% of the accessible relief contract's expected net value; the current deterministic result is 99 versus 70 ashmarks.
 - Four representative market/access states rotate the best forecast across three choices and two routes, preventing a permanent route winner in the measured slice.
 - A real command-path cargo-loss run recovers starting cash in one outbound trade while retaining positive money and provisions.
 - The guided contract flow reaches its first cargo purchase in two authoritative commands, with one non-trade action before meaningful trade.

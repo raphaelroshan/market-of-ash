@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.16.0",
+  "content_version": "1.17.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -19,6 +19,9 @@
     "pressure_max": 0.35,
     "sale_impact_per_unit": 0.04,
     "daily_decay_per_day": 0.03,
+    "producer_decay_multiplier": 0.75,
+    "consumer_decay_multiplier": 1.5,
+    "neutral_decay_multiplier": 1.0,
     "crisis_effectiveness": {"0": 1.0, "1": 0.85, "2": 0.7, "3": 0.55},
     "max_delivery_history": 12
   },
@@ -578,6 +581,19 @@
     "ashgate": {
       "name": "Ashgate",
       "role": "regulated hub",
+      "trade_profile": {
+        "produces": {
+          "grain": "Reserve granaries keep ordinary grain available.",
+          "water": "Licensed cistern releases keep water below frontier prices.",
+          "charcoal": "Regulated fuel stores maintain a steady charcoal supply.",
+          "sealed_arms_crate": "Licensed depots hold sealed equipment under named manifests."
+        },
+        "consumes": {
+          "scrap": "Gate repairs and wagon yards keep local scrap demand active.",
+          "cloth": "Officials and passing caravans pay for durable dyed cloth."
+        },
+        "ordinary_trade_note": "A stable departure market: modest sources, regulated access, and clear outward spreads."
+      },
       "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
       "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.0
@@ -585,6 +601,17 @@
     "brine_cross": {
       "name": "Brine Cross",
       "role": "water market",
+      "trade_profile": {
+        "produces": {
+          "water": "Working brine wells keep ordinary water plentiful before the crisis deepens."
+        },
+        "consumes": {
+          "grain": "Well crews consume imported grain through every season.",
+          "scrap": "Cistern pumps absorb repair scrap as fast as it arrives.",
+          "medicine": "Salt sores and failing pumps keep medicine demand high."
+        },
+        "ordinary_trade_note": "Water leaves cheaply; food, repair stock, and medicine return at a premium."
+      },
       "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
       "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.0
@@ -592,6 +619,19 @@
     "cinderford": {
       "name": "Cinderford",
       "role": "foundry town",
+      "trade_profile": {
+        "produces": {
+          "scrap": "Salvage yards sort usable scrap beside the furnaces.",
+          "charcoal": "Local kilns make charcoal the town's dependable export."
+        },
+        "consumes": {
+          "grain": "Foundry shifts keep staple demand high.",
+          "water": "Furnaces and workers consume more water than the town can draw.",
+          "cloth": "Heat, sparks, and hard labor create steady demand for replacement cloth.",
+          "sealed_arms_crate": "Competing foundry patrons seek controlled equipment and weapon stock."
+        },
+        "ordinary_trade_note": "Heavy industry turns cheap material exports into recurring demand for food, water, and cloth."
+      },
       "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15, "sealed_arms_crate": 1.0},
       "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.0
@@ -599,6 +639,19 @@
     "hollow_market": {
       "name": "Hollow Market",
       "role": "free-trade bazaar",
+      "trade_profile": {
+        "produces": {
+          "grain": "Independent growers sell small grain lots without Warden tariffs.",
+          "medicine": "Private apothecaries keep compact medicine bundles moving.",
+          "cloth": "Reed weavers and dyers make cloth the bazaar's signature export."
+        },
+        "consumes": {
+          "water": "Crowded stalls and uncertain wells keep water demand volatile.",
+          "charcoal": "Cooking fires and dye works consume imported charcoal.",
+          "sealed_arms_crate": "Unlicensed brokers pay for restricted crates despite the political exposure."
+        },
+        "ordinary_trade_note": "Low formal costs reward information, timing, and tolerance for volatile buyers."
+      },
       "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75, "sealed_arms_crate": 1.0},
       "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 0.95
@@ -606,6 +659,18 @@
     "reedwatch": {
       "name": "Reedwatch",
       "role": "frontier settlement",
+      "trade_profile": {
+        "produces": {
+          "grain": "Reed plots and dry fields make grain the settlement's reliable outbound cargo.",
+          "cloth": "Reed fiber and household looms keep simple cloth available."
+        },
+        "consumes": {
+          "water": "Frontier wells run low, so local demand is high for every sealed water load.",
+          "scrap": "Wells, roofs, and road barriers create recurring repair demand.",
+          "medicine": "Distance from clinics keeps medicine scarce and valuable."
+        },
+        "ordinary_trade_note": "Frontier shortages pay well, while local grain and cloth make the return journey viable."
+      },
       "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9, "sealed_arms_crate": 1.0},
       "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0},
       "faction_price_modifier": 1.05

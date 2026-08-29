@@ -14,6 +14,7 @@ func _init() -> void:
 	_test_crisis_changes_water_price()
 	_test_capacity_validation()
 	_test_explainable_route_preview()
+	_test_ordinary_trade_story()
 	_test_incident_loss_model()
 	_test_command_buy_and_sell()
 	_test_market_memory()
@@ -52,10 +53,13 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.16.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.17.0", "runtime content should expose content version")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
+	_expect(float(memory_rules.get("producer_decay_multiplier", 0.0)) == 0.75 and float(memory_rules.get("consumer_decay_multiplier", 0.0)) == 1.5, "runtime content should expose differentiated replenishment rules")
+	var ashgate_profile: Dictionary = MarketContent.settlements().get("ashgate", {}).get("trade_profile", {})
+	_expect(ashgate_profile.get("produces", {}).has("water") and ashgate_profile.get("consumes", {}).has("scrap"), "runtime content should expose authored production and consumption roles")
 	_expect(int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 0)) == 2, "runtime content should expose the two-slot visit budget")
 	_expect(MarketContent.settlement_action("ashgate_provision_bundle").get("settlement_id", "") == "ashgate", "runtime content should expose the live Ashgate provision action")
 	_expect(int(MarketContent.settlement_action("brine_cross_cistern_queue").get("minimum_crisis_stage", 0)) == 1, "runtime content should expose the shortage-gated Brine Cross action")
@@ -120,7 +124,7 @@ func _test_explainable_route_preview() -> void:
 	var details := MarketEconomy.price_details("water", destination, {"crisis_modifiers": world.crisis_modifiers})
 	_expect(details.ok, "price details should be available for a valid good and settlement")
 	_expect(details.reasons.has("local production is limited"), "price details should expose local production pressure")
-	_expect(details.reasons.has("local demand is high"), "price details should expose high local demand")
+	_expect(details.reasons.has("Frontier wells run low, so local demand is high for every sealed water load."), "price details should expose authored consumption pressure")
 	world.crisis_stage = 2
 	world._update_crisis_modifiers()
 	var crisis_details := MarketEconomy.price_details("water", destination, {"crisis_modifiers": world.crisis_modifiers})
@@ -143,6 +147,21 @@ func _test_explainable_route_preview() -> void:
 	_expect(int(preview.expected_net_profit) == int(preview.gross_trade_margin) - int(preview.route_cost) - int(preview.provision_cost) - int(preview.expected_loss) - int(preview.time_cost), "preview net profit should equal the displayed cost breakdown")
 	var invalid := MarketEconomy.route_profit_preview("missing", 2, origin, destination, route, {"crisis_modifiers": world.crisis_modifiers})
 	_expect(not invalid.ok, "route preview should reject an unknown good")
+
+func _test_ordinary_trade_story() -> void:
+	var world := AshWorldState.new(1107)
+	var route := world.route("old_road", "ashgate", "reedwatch")
+	route["provisions"] = world.route_provision_cost("old_road", "reedwatch")
+	var context := world.pricing_context()
+	context["cargo"] = {"water": 2, "weight": 2}
+	var story := MarketEconomy.ordinary_trade_story("water", 2, world.settlement("ashgate"), world.settlement("reedwatch"), route, context)
+	_expect(story.ok and bool(story.no_contract_required), "ordinary trade story should explicitly remain independent of contracts")
+	_expect(bool(story.origin_is_source) and bool(story.destination_is_consumer), "ordinary trade story should connect an authored source to an authored recurring need")
+	_expect(int(story.origin_price) == 15 and int(story.destination_price) == 32 and int(story.unit_spread) == 17, "ordinary trade story should expose the authoritative unit spread")
+	_expect(int(story.gross_margin) == 34 and int(story.expected_net_profit) == 14, "ordinary trade story should expose the authoritative load margin and expected net")
+	_expect(String(story.source_reason).contains("cistern releases") and String(story.need_reason).contains("Frontier wells"), "ordinary trade story should carry authored source and need explanations")
+	var invalid := MarketEconomy.ordinary_trade_story("missing", 2, world.settlement("ashgate"), world.settlement("reedwatch"), route, context)
+	_expect(not invalid.ok, "ordinary trade story should reject an unknown good")
 
 func _test_incident_loss_model() -> void:
 	var world := AshWorldState.new(3)
@@ -257,9 +276,14 @@ func _test_market_memory() -> void:
 	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), pressure_before_buy), "buying must not change local supply pressure")
 
 	world.advance_day(1)
-	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.13), "one elapsed day should decay pressure by the authored amount")
+	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.115), "consumer demand should replenish delivered water faster than a neutral market")
 	world.advance_day(20)
 	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.0), "market pressure should decay to but never below zero")
+
+	var producer_world := AshWorldState.new(1107)
+	producer_world.record_market_delivery("brine_cross", "water", 4)
+	producer_world.advance_day(1)
+	_expect(is_equal_approx(producer_world.market_pressure_for("brine_cross", "water"), 0.1375), "producer supply should absorb repeat deliveries more slowly than consumer demand")
 
 	var failed_world := AshWorldState.new(1107)
 	failed_world.current_settlement = "reedwatch"
@@ -1406,7 +1430,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.16.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.17.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})

@@ -433,3 +433,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A strong vertical slice must teach the caravan, trade, contracts, roads, recovery, crew, and regional consequences as one coherent campaign. Visible test scenarios make the opening read like a harness and divide learning into artificial starts, while a state-derived guide can survive saves and reasonable mistakes without bypassing simulation rules.
 
 **Trade-off:** The introduction and environments currently use deliberate code-drawn illustration with stable scene identities rather than final raster art. Tutorial completion is per campaign save rather than a profile-wide preference, and skipping guidance is explicit but does not suppress future authored onboarding across all saves.
+
+## ADR-055: Ordinary trade is authored as a renewable source-to-need loop
+
+**Decision:** Give every runtime settlement explicit produced goods, consumed goods, and an ordinary-market thesis. Recent-delivery pressure decays at a role-specific rate: consumer needs replenish faster, neutral markets use baseline recovery, and producer markets retain added supply longer. The Bazaar presents source, need, spread, route burden, risk, and expected net before detailed price factors, and labels the path as requiring no contract. Deterministic gates keep staple, repair, medicine, and industrial fixtures profitable and require the best ordinary opening to retain at least 70% of the opening relief contract's expected net value.
+
+**Reason:** Contracts and authored scenarios should change the caravan's commitments and consequences, not rescue an otherwise insolvent economy. A stable renewable baseline gives players a reason to read places and revisit markets while leaving crisis, faction, event, and market-memory state free to create volatile opportunities.
+
+**Trade-off:** The five-node slice still uses fixed authored profiles rather than capacity-limited production inventories or a continuous population model. Replenishment changes only recent-delivery pressure, so later adaptive-basin work must introduce replacement actors and changed access through explicit world state rather than hiding them inside price formulas.

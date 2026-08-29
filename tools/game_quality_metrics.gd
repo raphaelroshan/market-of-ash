@@ -17,6 +17,8 @@ static func evaluate() -> Dictionary:
 	return {
 		"safe_opening": _safe_opening_probe(),
 		"opening_variety": _opening_variety_probe(),
+		"trade_pattern_families": _trade_pattern_families_probe(),
+		"contract_parity": _contract_parity_probe(),
 		"world_state_variety": _world_state_variety_probe(),
 		"cargo_loss_recovery": _cargo_loss_recovery_probe(),
 		"preparation_overhead": _preparation_overhead_probe(),
@@ -62,6 +64,54 @@ static func _opening_variety_probe() -> Dictionary:
 		"good_count": goods.size(),
 		"route_count": routes.size(),
 		"choices": choices,
+	}
+
+static func _trade_pattern_families_probe() -> Dictionary:
+	var fixtures := [
+		{"family": "staple", "origin_id": "ashgate", "good_id": "water", "quantity": 2, "destination_id": "reedwatch", "route_id": "old_road"},
+		{"family": "repair", "origin_id": "cinderford", "good_id": "scrap", "quantity": 4, "destination_id": "ashgate", "route_id": "toll_road"},
+		{"family": "medicine", "origin_id": "hollow_market", "good_id": "medicine", "quantity": 2, "destination_id": "reedwatch", "route_id": "dry_cut"},
+		{"family": "industrial", "origin_id": "cinderford", "good_id": "charcoal", "quantity": 4, "destination_id": "brine_cross", "route_id": "toll_road"},
+	]
+	var results: Array[Dictionary] = []
+	var viable_count := 0
+	for fixture in fixtures:
+		var world := AshWorldState.new(1107)
+		world.current_settlement = String(fixture.origin_id)
+		var candidate := _candidate_for(world, String(fixture.good_id), int(fixture.quantity), String(fixture.destination_id), String(fixture.route_id))
+		var expected_net := int(candidate.get("preview", {}).get("expected_net_profit", 0))
+		var viable := not candidate.is_empty() and expected_net > 0
+		if viable:
+			viable_count += 1
+		results.append({
+			"family": String(fixture.family),
+			"origin_id": String(fixture.origin_id),
+			"destination_id": String(fixture.destination_id),
+			"good_id": String(fixture.good_id),
+			"route_id": String(fixture.route_id),
+			"expected_net_profit": expected_net,
+			"viable": viable,
+			"requires_contract": false,
+		})
+	return {"fixture_count": fixtures.size(), "viable_count": viable_count, "all_viable": viable_count == fixtures.size(), "results": results}
+
+static func _contract_parity_probe() -> Dictionary:
+	var world := AshWorldState.new(1107)
+	var best_ordinary := _best_candidate(world)
+	var ordinary_net := int(best_ordinary.get("preview", {}).get("expected_net_profit", 0))
+	var contract := MarketContent.contract("reedwatch_water_relief_01")
+	var contract_candidate := _candidate_for(world, String(contract.get("good_id", "")), int(contract.get("quantity", 0)), String(contract.get("destination_id", "")), "old_road")
+	var contract_preview: Dictionary = contract_candidate.get("preview", {})
+	var contract_expected_net := int(contract.get("reward", 0)) - int(contract_preview.get("purchase_total", 0)) - int(contract_preview.get("route_cost", 0)) - int(contract_preview.get("provision_cost", 0)) - int(contract_preview.get("expected_loss", 0)) - int(contract_preview.get("time_cost", 0))
+	var parity_ratio := float(ordinary_net) / float(contract_expected_net) if contract_expected_net > 0 else 0.0
+	return {
+		"ordinary_choice": "%s → %s / %s" % [String(best_ordinary.get("good_id", "")), String(best_ordinary.get("destination_id", "")), String(best_ordinary.get("route_id", ""))],
+		"ordinary_expected_net_profit": ordinary_net,
+		"contract_id": String(contract.get("id", "")),
+		"contract_expected_net_profit": contract_expected_net,
+		"ordinary_to_contract_ratio": parity_ratio,
+		"minimum_ratio": 0.70,
+		"passed": ordinary_net > 0 and parity_ratio >= 0.70,
 	}
 
 static func _world_state_variety_probe() -> Dictionary:

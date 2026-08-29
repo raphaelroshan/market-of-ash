@@ -5,6 +5,7 @@ extends RefCounted
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
+const MarketEconomy = preload("res://src/core/economy.gd")
 const SAVE_VERSION := 11
 const MAX_COMMAND_HISTORY := 100
 const MAX_LOG_ENTRIES := 200
@@ -373,10 +374,10 @@ func _decay_market_pressure(days: int) -> void:
 		return
 	var rules := MarketContent.market_memory_rules()
 	var pressure_min := float(rules.get("pressure_min", 0.0))
-	var decay := float(days) * float(rules.get("daily_decay_per_day", 0.0))
 	for settlement_id in market_pressure.keys():
 		var settlement_pressure: Dictionary = market_pressure.get(settlement_id, {}).duplicate(true)
 		for good_id in settlement_pressure.keys():
+			var decay := float(days) * MarketEconomy.market_pressure_decay_rate(settlement(String(settlement_id)), String(good_id))
 			var after := _rounded_pressure(maxf(pressure_min, float(settlement_pressure.get(good_id, pressure_min)) - decay))
 			if is_equal_approx(after, pressure_min):
 				settlement_pressure.erase(good_id)

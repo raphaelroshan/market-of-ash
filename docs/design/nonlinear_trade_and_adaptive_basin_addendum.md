@@ -305,6 +305,8 @@ Add deterministic fixtures for:
 
 First, add or validate settlement production/consumption profiles, recurring replenishment, and the UI language that presents ordinary trade as the main Bazaar verb. Tune the first five-node slice until three non-contract trade patterns are viable.
 
+**Implemented foundation:** Runtime content `1.17.0` gives every settlement explicit production, consumption, and ordinary-market context. Producer, consumer, and neutral markets now replenish recent-delivery pressure at different authored rates. The Bazaar leads with a source-to-need ordinary-trade story and states that no contract is required. Four deterministic non-contract fixtures—staple, repair, medicine, and industrial—must remain profitable, while an executable parity gate protects ordinary trade from being eclipsed by the opening relief contract. See `docs/economy/open_trade_foundation.md`.
+
 ### Feed B — Add one adaptive failure chain
 
 Implement one complete scenario state machine with a visible failure response. The recommended first chain is water relief: if the player ignores or fails the relief offer, the Well Commons appears, Reedwatch’s market and resilience change, and a new commons-mediated trade opportunity opens.
