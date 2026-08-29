@@ -455,6 +455,8 @@ func _on_settings_pressed() -> void:
 	_link_main_menu_focus_cycle()
 	if settings_panel.visible:
 		_grab_focus_if_available(reduce_motion_checkbox)
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _on_credits_pressed() -> void:
 	credits_panel.visible = not credits_panel.visible
@@ -462,6 +464,8 @@ func _on_credits_pressed() -> void:
 	developer_panel.visible = false
 	_link_main_menu_focus_cycle()
 	_grab_focus_if_available(credits_button)
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _on_developer_scenario_requested(path_id: String) -> void:
 	pending_tutorial_enabled = false
@@ -1974,6 +1978,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_link_main_menu_focus_cycle()
 		if developer_panel.visible:
 			_grab_focus_if_available(start_conflict_button)
+		_publish_web_ui_state()
+		_queue_web_ui_state_after_layout()
 		get_viewport().set_input_as_handled()
 		return
 	if not remapping_action.is_empty():
@@ -1993,6 +1999,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		developer_panel.visible = false
 		_link_main_menu_focus_cycle()
 		_grab_focus_if_available(settings_button)
+		_publish_web_ui_state()
+		_queue_web_ui_state_after_layout()
 		get_viewport().set_input_as_handled()
 	elif pause_layer != null and pause_layer.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_pause")):
 		_close_pause()
