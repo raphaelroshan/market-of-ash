@@ -825,7 +825,14 @@ def main() -> int:
                 }
             )
             activate_game_action(driver, "enter_settlement", use_accessibility_actions)
-            destination_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="reedwatch")
+            destination_state = wait_for_ui_state(
+                driver,
+                "settlement_shop",
+                args.timeout,
+                large_text=False,
+                settlement_id="reedwatch",
+                expected_values={"bazaar_scene_id": "reedwatch_water_market"},
+            )
             destination_output = args.output_dir / f"destination-shop-{width}x{height}.png"
             destination_bytes = capture_frame(driver, destination_output, (actual_width, actual_height))
             destination_changed_ratio = require_distinct_screen(arrival_output, destination_output, "Enter settlement")

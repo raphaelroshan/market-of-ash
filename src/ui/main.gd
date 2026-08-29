@@ -1448,9 +1448,9 @@ func _apply_bazaar_section() -> void:
 	if guided_test_button:
 		guided_test_button.visible = guided_test_button.visible and trade_active
 	if bazaar_scene:
-		bazaar_scene.visible = not trade_active
-		bazaar_scene.custom_minimum_size.y = 236.0
-		bazaar_scene.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		bazaar_scene.visible = true
+		bazaar_scene.custom_minimum_size.y = 72.0 if trade_active else 236.0
+		bazaar_scene.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if trade_active else Control.SIZE_EXPAND_FILL
 		var settlement := world.settlement(world.current_settlement)
 		bazaar_scene.set_context(
 			world.current_settlement,
@@ -2469,6 +2469,7 @@ func _web_ui_state() -> Dictionary:
 		"road_scene_id": String(map_panel._road_profile(map_panel.travel_route_id).get("scene_id", "")) if map_panel != null and map_panel._is_road_view() else "",
 		"road_waypoint": map_panel._road_waypoint_label() if map_panel != null and map_panel._is_road_view() else "",
 		"bazaar_section": active_bazaar_section,
+		"bazaar_scene_id": bazaar_scene.scene_id() if bazaar_scene != null and world != null else "",
 		"selected_good_id": selected_good_id,
 		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
 		"selected_route_id": _selected_id(route_option) if route_option != null else "",
@@ -3846,6 +3847,7 @@ class BazaarScene extends Control:
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
+		clip_contents = true
 
 	func set_context(next_id: String, next_name: String, next_role: String, next_section: String) -> void:
 		settlement_id = next_id
@@ -3870,6 +3872,58 @@ class BazaarScene extends Control:
 			"reedwatch": Color("#71835c"),
 		}
 		return tints.get(settlement_id, Color("#80634d"))
+
+	func _settlement_profile() -> Dictionary:
+		var profiles := {
+			"ashgate": {"scene_id": "warden_gate_market", "caption": "THE GATE BELLS MARK EVERY LOAD", "landmark": "gate", "sky": Color("#39251f"), "ground": Color("#4a3024")},
+			"brine_cross": {"scene_id": "brine_pan_exchange", "caption": "SALT PANS AND CISTERN QUEUES", "landmark": "brine", "sky": Color("#1f3435"), "ground": Color("#344a45")},
+			"cinderford": {"scene_id": "cinder_span_yard", "caption": "FORGES WORK BESIDE THE SPAN", "landmark": "forge", "sky": Color("#382b24"), "ground": Color("#4d3828")},
+			"hollow_market": {"scene_id": "hollow_lantern_market", "caption": "LANTERNS TRADE RUMOUR FOR COIN", "landmark": "lanterns", "sky": Color("#2d2735"), "ground": Color("#403447")},
+			"reedwatch": {"scene_id": "reedwatch_water_market", "caption": "EVERY BARREL HAS A WITNESS", "landmark": "reeds", "sky": Color("#293328"), "ground": Color("#3d4933")},
+		}
+		return profiles.get(settlement_id, {"scene_id": "roadside_bazaar", "caption": "A LIVING MARKET BETWEEN ROADS", "landmark": "gate", "sky": Color("#30251f"), "ground": Color("#443327")})
+
+	func scene_id() -> String:
+		return String(_settlement_profile().get("scene_id", "roadside_bazaar"))
+
+	func _draw_settlement_landmark(profile: Dictionary, area: Rect2, tint: Color) -> void:
+		var horizon_y := area.position.y + area.size.y * 0.58
+		draw_rect(area, Color(profile.get("sky", Color("#30251f"))), true)
+		draw_rect(Rect2(area.position.x, horizon_y, area.size.x, area.end.y - horizon_y), Color(profile.get("ground", Color("#443327"))), true)
+		var ink := tint.lightened(0.12)
+		match String(profile.get("landmark", "gate")):
+			"brine":
+				for pan_index in range(5):
+					var pan_x := area.position.x + 30.0 + pan_index * area.size.x / 5.0
+					draw_arc(Vector2(pan_x, horizon_y + 12), 22, 0, PI, 16, ink, 2.0)
+				draw_line(Vector2(area.position.x + area.size.x * 0.72, horizon_y - 34), Vector2(area.position.x + area.size.x * 0.72, horizon_y + 18), ink, 5.0)
+				draw_line(Vector2(area.position.x + area.size.x * 0.68, horizon_y - 20), Vector2(area.position.x + area.size.x * 0.79, horizon_y - 20), ink, 3.0)
+			"forge":
+				for stack_index in range(3):
+					var stack_x := area.position.x + area.size.x * (0.62 + stack_index * 0.08)
+					draw_rect(Rect2(stack_x, horizon_y - 38 - stack_index * 6, 10, 48 + stack_index * 6), ink.darkened(0.18), true)
+					draw_circle(Vector2(stack_x + 5, horizon_y - 46 - stack_index * 8), 8 + stack_index * 2, Color(ink, 0.32))
+				draw_line(Vector2(area.position.x + 20, horizon_y + 4), Vector2(area.end.x - 22, horizon_y - 12), ink, 4.0)
+			"lanterns":
+				draw_line(Vector2(area.position.x + 12, horizon_y - 28), Vector2(area.end.x - 12, horizon_y - 18), ink.darkened(0.12), 2.0)
+				for lantern_index in range(7):
+					var lantern_x := area.position.x + 35.0 + lantern_index * (area.size.x - 70.0) / 6.0
+					var lantern_y := horizon_y - 26.0 + lantern_index * 1.6
+					draw_line(Vector2(lantern_x, lantern_y), Vector2(lantern_x, lantern_y + 9), ink, 1.5)
+					draw_circle(Vector2(lantern_x, lantern_y + 12), 4.0, Color("#e1a75b"))
+			"reeds":
+				draw_rect(Rect2(area.position.x, horizon_y + 11, area.size.x, 5), Color("#52706a"), true)
+				for reed_index in range(18):
+					var reed_x := area.position.x + 12.0 + reed_index * (area.size.x - 24.0) / 17.0
+					var reed_height := 13.0 + float((reed_index * 7) % 15)
+					draw_line(Vector2(reed_x, horizon_y + 14), Vector2(reed_x + 3, horizon_y + 14 - reed_height), ink, 1.5)
+				draw_rect(Rect2(area.position.x + area.size.x * 0.72, horizon_y - 36, 28, 38), ink.darkened(0.12), false, 3.0)
+			_:
+				var gate_center := Vector2(area.position.x + area.size.x * 0.72, horizon_y)
+				draw_rect(Rect2(gate_center.x - 42, gate_center.y - 34, 84, 40), ink.darkened(0.18), true)
+				draw_arc(Vector2(gate_center.x, gate_center.y + 5), 22, PI, TAU, 18, Color("#19140f"), 16.0)
+				draw_rect(Rect2(gate_center.x - 55, gate_center.y - 48, 18, 54), ink, true)
+				draw_rect(Rect2(gate_center.x + 37, gate_center.y - 48, 18, 54), ink, true)
 
 	func _draw_person(center: Vector2, coat: Color, scale: float = 1.0) -> void:
 		draw_circle(center + Vector2(0, -14) * scale, 6.5 * scale, Color("#d6ad7b"))
@@ -3907,17 +3961,19 @@ class BazaarScene extends Control:
 	func _draw() -> void:
 		var bounds := Rect2(Vector2.ZERO, size)
 		var tint := _settlement_tint()
+		var profile := _settlement_profile()
 		draw_rect(bounds, Color("#19140f"), true)
 		draw_rect(Rect2(1, 1, size.x - 2, size.y - 2), tint.darkened(0.52), false, 2.0)
 		draw_rect(Rect2(2, 2, size.x - 4, 36), tint.darkened(0.62), true)
 		draw_string(ThemeDB.fallback_font, Vector2(16, 25), "%s — %s" % [settlement_name.to_upper(), settlement_role.to_upper()], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(14), Color("#e6c58d"))
-		draw_string(ThemeDB.fallback_font, Vector2(size.x - 195, 25), "A LIVING MARKET BETWEEN ROADS", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#b5a18b"))
+		draw_string(ThemeDB.fallback_font, Vector2(size.x - 250, 25), String(profile.get("caption", "A LIVING MARKET BETWEEN ROADS")), HORIZONTAL_ALIGNMENT_LEFT, 235, _font_size(11), Color("#b5a18b"))
+		_draw_settlement_landmark(profile, Rect2(3, 38, size.x - 6, maxf(40.0, size.y - 41.0)), tint)
 
 		var gap := 8.0
 		var left_margin := 10.0
 		var stall_width := (size.x - left_margin * 2.0 - gap * 4.0) / 5.0
 		var stall_top := 49.0
-		var stall_height := maxf(150.0, size.y - stall_top - 12.0)
+		var stall_height := maxf(54.0, size.y - stall_top - 12.0)
 		var active_index := SECTION_IDS.find(active_section)
 		for index in range(5):
 			var accent := Color(SECTION_ACCENTS[index])
@@ -3925,16 +3981,18 @@ class BazaarScene extends Control:
 			var selected := index == active_index
 			draw_rect(stall_rect, accent.darkened(0.68 if selected else 0.78), true)
 			draw_rect(stall_rect, Color("#f1d39d") if selected else accent.darkened(0.25), false, 3.0 if selected else 1.5)
-			var canopy := Rect2(stall_rect.position, Vector2(stall_width, 30))
+			var canopy_height := minf(30.0, stall_height * 0.35)
+			var canopy := Rect2(stall_rect.position, Vector2(stall_width, canopy_height))
 			draw_rect(canopy, accent.darkened(0.22), true)
 			var stripe_width := stall_width / 6.0
 			for stripe in range(6):
 				if stripe % 2 == 0:
 					draw_rect(Rect2(canopy.position.x + stripe * stripe_width, canopy.position.y, stripe_width, canopy.size.y), accent.lightened(0.13), true)
-			draw_rect(Rect2(stall_rect.position + Vector2(7, stall_height - 42), Vector2(stall_width - 14, 24)), Color("#3b2a1f"), true)
+			draw_rect(Rect2(stall_rect.position + Vector2(7, maxf(canopy_height + 8.0, stall_height - 42)), Vector2(stall_width - 14, minf(24.0, stall_height * 0.22))), Color("#3b2a1f"), true)
 			var figure_color := accent.lightened(0.08) if selected else accent.darkened(0.05)
-			_draw_person(Vector2(stall_rect.get_center().x - 18, stall_rect.position.y + stall_height - 70), figure_color, 0.9)
-			_draw_stall_icon(index, Vector2(stall_rect.get_center().x + 23, stall_rect.position.y + 73), Color("#e7d3aa") if selected else Color("#a9987c"))
+			if stall_height >= 120.0:
+				_draw_person(Vector2(stall_rect.get_center().x - 18, stall_rect.position.y + stall_height - 70), figure_color, 0.9)
+				_draw_stall_icon(index, Vector2(stall_rect.get_center().x + 23, stall_rect.position.y + 73), Color("#e7d3aa") if selected else Color("#a9987c"))
 			draw_string(ThemeDB.fallback_font, Vector2(stall_rect.position.x, stall_rect.position.y + 24), SECTION_LABELS[index], HORIZONTAL_ALIGNMENT_CENTER, stall_width, _font_size(12), Color("#fff0bd") if selected else Color("#d3c0a0"))
 			if selected:
 				draw_circle(Vector2(stall_rect.get_center().x, stall_rect.end.y - 8), 3.5, Color("#fff0bd"))

@@ -417,3 +417,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A mandatory road stop is only meaningful if the player can recognize which road they chose and connect its atmosphere to the disclosed tradeoff. Frontier's useful lesson is the repeated sense of leaving one place, occupying transit, and approaching another—not a generic loading screen.
 
 **Trade-off:** Route scenes remain lightweight code-drawn presentations and share one caravan camera. They add no new random rolls, intermediate map nodes, travel commands, or simulation state; authored roadside locations should only become gameplay nodes when they support a real trade, information, or event decision.
+
+## ADR-053: Every settlement has a stable Bazaar identity
+
+**Decision:** Keep the same five-stall Bazaar directory in every settlement, but render a stable location-specific backdrop and caption from the settlement ID. Ashgate uses its Warden gate, Brine Cross its salt pans and cistern frame, Cinderford its forge stacks and span, Hollow Market its rumour lanterns, and Reedwatch its reeds and watched water store. The scene remains visible as a compact identity strip during Trade and expands when another stall is opened.
+
+**Reason:** The repeatable Frontier-inspired loop needs both familiarity and a sense of arrival. Keeping navigation fixed lets players build muscle memory, while a distinct place silhouette makes travel feel like movement between actual markets rather than a text swap on one universal screen.
+
+**Trade-off:** These are restrained code-drawn landmarks rather than final environment art. They add no settlement state or gameplay rules; future authored art should preserve the stable scene IDs, captions, action order, and compact-versus-expanded layout contract.
