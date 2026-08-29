@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. Remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
+**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. The quality-plan enforcement slice adds the missing regulated escort contract and executable safety, variety, recovery, and preparation gates. Remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
 
 ## Implemented player-facing spine
 
@@ -29,12 +29,12 @@
 - Buy, sell, and departure mutations pass through a serializable command/result boundary; runtime and loaded histories both retain only the newest 100 command records.
 - The human-readable campaign log retains the newest 200 entries both during play and after load, preventing long sessions or imported saves from inflating saves and diagnostic reports without bound.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.
-- Saves declare save version 11 and runtime content version `1.15.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.
-- A deterministic 100-seed policy simulation records opening-route incentives and forecast error.
+- Saves declare save version 11 and runtime content version `1.16.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.
+- A deterministic 100-seed policy simulation records opening-route incentives, forecast error, safe-opening resource floors, viable strategy breadth, best-choice rotation across changed world states, real cargo-loss recovery, and tutorial preparation overhead.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it.
 - Settlement visits expose a two-slot auxiliary-action budget. Ashgate's provisions and escalation recovery, Brine Cross's cistern queue, Cinderford's repair bench, Hollow Market's route rumor, and Reedwatch's supply shelter create local tradeoffs with visible dependency reasons.
-- Ashgate offers one fixed-term Reedwatch water-relief contract; accepted terms are pinned during departure and resolve deterministically on arrival.
+- Ashgate offers a fixed-term Reedwatch water-relief contract and a Warden-gated Brine Cross medicine escort. Accepted terms, prerequisites, and relationship effects are visible, frozen, pinned during departure, and resolved deterministically on arrival.
 - Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
@@ -193,13 +193,26 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Cinderford is a real Toll Road stop rather than a decorative waypoint: Ashgate and Brine Cross each connect to it through a six-ashmark segment, while the direct through passage remains available.
 - A third auxiliary action is blocked without changing resources, and save version 3 preserves remaining slots.
 
-## B3 first-contract result
+## B3 contract result
 
 - The Reedwatch Wellkeepers offer a four-water delivery due two days after acceptance for 150 ashmarks.
+- Completing Reedwatch relief grants one Free Caravan standing, making its public relationship consequence part of the frozen contract terms.
+- The Ash Warden Cistern Office offers a two-medicine Brine Cross escort due within two days for 108 ashmarks. It requires one Warden standing, grants one on success, and withdraws one on failure.
 - Acceptance consumes one visit slot, freezes terms, and reserves no cargo; spot buying and selling remain available.
-- The Departure Desk pins destination, deadline, reward, held quantity, and free hold space.
+- The Job Board persistently explains unmet faction standing, updates immediately when standing changes, and lists sponsor visibility plus success/failure relationship effects before acceptance.
+- The Departure Desk pins every active contract's destination, deadline, reward, held quantity, and free hold space.
 - Route incidents resolve before delivery. A complete load auto-delivers; a partial load remains active with the exact shortfall; late failure costs at most eight ashmarks and leaves cargo sellable.
-- Save version 4 preserves active and resolved contract state.
+- Regulated escort failure costs at most six ashmarks, preserves medicine for spot-sale recovery, and applies its disclosed standing loss.
+- Save version 4 and later preserve active and resolved contract state; current-content saves reject forged prerequisite or relationship terms.
+
+## Executable game-quality gates
+
+- The guided first expedition completes in 100/100 deterministic seeds and never falls below 118 ashmarks or 11 provisions.
+- The opening contains seven positive strategies across four goods and both the exposed and regulated road types.
+- Four representative market/access states rotate the best forecast across three choices and two routes, preventing a permanent route winner in the measured slice.
+- A real command-path cargo-loss run recovers starting cash in one outbound trade while retaining positive money and provisions.
+- The guided contract flow reaches its first cargo purchase in two authoritative commands, with one non-trade action before meaningful trade.
+- `tests/test_game_quality.gd` blocks regressions in these thresholds, while `research/playtest_simulation/quality_gate_summary.csv` records the current evidence.
 
 ## B4 first-event result
 
@@ -324,7 +337,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - A local real-renderer Godot matrix now captures Main Menu, Trade, the illustrated Job Board Bazaar, Pause, Departure, non-mutating return, the dedicated road view, Gatekeeper event/result, a deterministic realized-loss recovery result, destination Shop, and new-game confirmation, including Large text coverage, at 960×540, 1280×720, 1600×900, and 1920×1080; the current macOS/OpenGL run covers all 68 frames. The validator accepts both Chrome RGB and Godot RGBA screenshots, checks exact dimensions/state/distinct transitions, and verifies that the Departure map remains between its instructions and result text. These source-run images complement but do not replace packaged Windows/Web evidence.
 - The CI native renderer executes the same real-renderer journey on Windows through ANGLE at the exact minimum 960×540 viewport, validates all 15 states, and uploads the screenshots and manifest. Larger Windows windows remain a physical-machine gate because the hosted runner's virtual desktop constrains them below their requested dimensions.
 - A dependency-free color-vision evidence tool produces grayscale, protanopia, and deuteranopia approximations for six constrained 960×540 states. The current 18-frame review keeps route identities, current-location/resilience text, focus borders, disabled reasons, and primary actions legible without relying on hue; these approximations remain a supplement to human accessibility testing.
-- The current head cross-exports locally as a 64-bit Windows PE with a structurally verified embedded PCK after installing the matching Godot 4.4.1 x86-64 templates. Windows file/product versions use the numeric `0.11.0.0` required by PE resources while the player-facing project version is `0.11.0-alpha-tutorial`.
+- The current head cross-exports locally as a 64-bit Windows PE with a structurally verified embedded PCK after installing the matching Godot 4.4.1 x86-64 templates. Windows file/product versions use the numeric `0.12.0.0` required by PE resources while the player-facing project version is `0.12.0-alpha-quality`.
 - CI run 210 installs checksum-pinned `rcedit` before export, launches the packaged executable as a visible Windows GUI, captures only its exact 960×540 client area, and rejects missing/wrong product name, file version, product version, title, bounds, dimensions, or low-detail pixels. The downloaded frame was visually inspected after two iterations fixed off-screen desktop leakage and a stray hover tooltip; it is a clean neutral Main Menu. The 97,848,976-byte x86-64 executable contains a 328,836-byte embedded PCK and all recorded release checksums revalidate.
 - CI run 212 packages that executable as a 34,567,550-byte `market-of-ash-windows.zip` containing exactly `Market of Ash/market-of-ash.exe`, rejects unexpected or unsafe archive members, clean-extracts it outside the checkout, and uses the extracted copy for both launch smoke tests and the inspected GUI capture. The separately dispatched release workflow run `33149086304` passed the same resource stamping, portable-package, clean-extraction, GUI, provenance, and checksum path from branch head `8922a9e`.
 - CI run 220 (`33152425997`) passed all nine jobs at `f6ddf4a`. Its Chrome, Firefox, and Edge manifests are version 5, each contains 28 captures, 38 minimum-viewport semantic-action instances, and 16 published Shop/Departure form snapshots. The browser flow changes cargo, destination, and integer quantities through native HTML fields, verifies exact labels/options/values/bounds/descriptions after each update, and still routes all actions through the Godot callback. Downloaded constrained Shop evidence shows the semantic overlay hides before capture and leaves the game canvas unobscured.

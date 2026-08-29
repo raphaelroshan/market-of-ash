@@ -1,0 +1,6 @@
+gate,passed,evidence
+Safe first expedition,True,100/100 complete; floor 118 ashmarks and 11 provisions
+Multiple viable openings,True,7 positive choices across 4 goods and 2 routes
+No permanent route winner,True,3 best choices across 2 routes in 4 world states
+Cargo-loss recovery,True,seed 3; recovered to 306 ashmarks in 1 outbound trade(s)
+Short preparation,True,first cargo purchase is command 2

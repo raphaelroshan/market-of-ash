@@ -262,7 +262,13 @@ func _initialize() -> void:
 	_expect(ui.campaign_outlook_label.text.contains("Open Routes") and ui.campaign_outlook_label.text.contains("Wardens 0/3") and ui.campaign_outlook_label.text.contains("120/220 ashmarks"), "shop should expose exact progress toward each campaign conclusion")
 	_expect(ui.opportunity_buttons.size() == 3 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[2].disabled, "Ashgate should expose provisions, cargo-gated arms, and condition-gated recovery")
 	_expect(ui.opportunity_buttons[0].focus_mode != Control.FOCUS_NONE, "the local opportunity should remain keyboard/controller focusable")
-	_expect(ui.contract_buttons.size() == 1 and not ui.contract_buttons[0].disabled, "Ashgate should expose the Reedwatch relief contract")
+	_expect(ui.contract_buttons.size() == 2 and not ui.contract_buttons[0].disabled and ui.contract_buttons[1].disabled, "Ashgate should expose relief plus the standing-gated regulated escort")
+	_expect(ui.contract_buttons[1].tooltip_text.contains("requires 1 Ash Wardens standing"), "regulated escort should persistently explain its faction prerequisite")
+	ui.world.adjust_reputation("wardens", 1)
+	ui._refresh_opportunities()
+	_expect(ui.contract_buttons.size() == 2 and not ui.contract_buttons[1].disabled, "earning the disclosed Warden standing should immediately unlock the regulated escort")
+	ui.world.adjust_reputation("wardens", -1)
+	ui._refresh_opportunities()
 	_expect(ui.crew_buttons.size() == 3 and ui.crew_buttons[0].text.contains("Recruit Nara Vey") and ui.crew_buttons[1].text.contains("Recruit Jorun Pale") and ui.crew_buttons[2].text.contains("Recruit Tess Oryn"), "Ashgate should expose all authored crew recruit actions")
 	_expect(ui.map_panel._assignment_state("reedwatch") == "available", "an unaccepted local assignment should appear as a potential destination on the map")
 	_expect(ui.bazaar_navigation_buttons.size() == 5 and ui.bazaar_navigation_buttons[0].text == "Market Stall" and ui.bazaar_navigation_buttons[1].text == "Job Board" and ui.bazaar_navigation_buttons[2].text.contains("Intel") and ui.bazaar_navigation_buttons[0].custom_minimum_size.y >= 58.0, "the bazaar should expose a prominent stable directory for its major action groups")
@@ -289,7 +295,7 @@ func _initialize() -> void:
 	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.15.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.16.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -503,7 +509,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.11.0-alpha-tutorial" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.12.0-alpha-quality" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")

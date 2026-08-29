@@ -30,6 +30,18 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 | Toll-road-only        | 100    | 100.0%      | 3.0%            | +17.0          | +20.6               | +19.0             | 0.0%        | +3.6             | 9.0          |
 | No trade baseline     | 100    | 0.0%        | 0.0%            | +0.0           | +0.0                | +0.0              | 0.0%        | +0.0             | 0.0          |
 
+## Automated Quality Gates
+
+| Quality gate              | Status   | Evidence                                                 |
+|:--------------------------|:---------|:---------------------------------------------------------|
+| Safe first expedition     | PASS     | 100/100 complete; floor 118 ashmarks and 11 provisions   |
+| Multiple viable openings  | PASS     | 7 positive choices across 4 goods and 2 routes           |
+| No permanent route winner | PASS     | 3 best choices across 2 routes in 4 world states         |
+| Cargo-loss recovery       | PASS     | seed 3; recovered to 306 ashmarks in 1 outbound trade(s) |
+| Short preparation         | PASS     | first cargo purchase is command 2                        |
+
+These gates make the audit's minimum playability promises executable: the taught opening preserves a recovery floor across every deterministic seed, several positive opening plans exist, changing market/access state changes the best plan, a real cargo-loss run can recover, and the tutorial reaches its first trade without excessive preparation.
+
 Under legal paths, the **forecast maximizer** selects **water → reedwatch / old_road** in every seed and averages **+99.7** realized economic profit. The **gross-margin chaser** selects **water → reedwatch / old_road** and averages **+99.7**. The **Toll-road-only** policy selects **grain → cinderford / toll_road** and averages **+20.6**. The guided Water delivery remains a smaller, understandable positive-margin teaching run at **+13.8**.
 
 ![Policy outcome chart](policy_outcomes.png)

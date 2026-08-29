@@ -7,6 +7,7 @@ const MarketContent = preload("res://src/core/market_content.gd")
 const MarketEconomy = preload("res://src/core/economy.gd")
 const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
+const GameQualityMetrics = preload("res://tools/game_quality_metrics.gd")
 
 const STARTING_MONEY := 120
 const STARTING_PROVISIONS := 12
@@ -36,6 +37,7 @@ func _init() -> void:
 		"event_probe_rows": event_probe_rows,
 		"arms_policy_rows": arms_policy_rows,
 		"market_memory_probe": _market_memory_probe(),
+		"quality_metrics": GameQualityMetrics.evaluate(),
 	}
 	var output_path := _output_path()
 	if not output_path.is_empty():

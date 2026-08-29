@@ -1,6 +1,6 @@
 # Alpha Accessibility and Input Audit
 
-**Build:** `0.11.0-alpha-tutorial`
+**Build:** `0.12.0-alpha-quality`
 **Scope:** Main Menu → Settlement Shop → Departure Desk → Route Event/Arrival → Settlement Shop  
 **Status:** Automated checks pass; the hardware/rendered checks below remain release-candidate gates.
 

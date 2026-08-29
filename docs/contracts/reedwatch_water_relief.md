@@ -15,6 +15,7 @@ At Ashgate, the player may spend one visit slot to accept a fixed commitment fro
 | Cargo | 4 water |
 | Deadline | Acceptance day + 2 |
 | Reward | 150 ashmarks |
+| Completion relationship | Free Caravan standing +1 |
 | Late penalty | Up to 8 currently held ashmarks |
 | Visit cost | 1 slot |
 
@@ -24,7 +25,7 @@ The complete record is copied into `active_contracts` at acceptance. Later conte
 
 | State | Result |
 | --- | --- |
-| At Reedwatch on/before deadline with at least 4 water | Remove 4 water, pay 150 ashmarks, apply a four-unit market-memory delivery, archive `completed`. |
+| At Reedwatch on/before deadline with at least 4 water | Remove 4 water, pay 150 ashmarks, grant one Free Caravan standing, apply a four-unit market-memory delivery, archive `completed`. |
 | At Reedwatch on/before deadline with fewer than 4 water | Keep the contract active, keep cargo, and state the exact missing quantity. The player may buy the remainder locally and resolve explicitly. |
 | Anywhere after deadline | Charge at most 8 ashmarks, preserve all cargo for spot sale, and archive `failed`. |
 | Resolve after completion/failure | Reject without authoritative mutation. |

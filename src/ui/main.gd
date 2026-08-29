@@ -3471,16 +3471,10 @@ func _refresh_opportunities() -> void:
 			contract_button.disabled = true
 			contract_button.text = "%s — resolved" % String(contract_record.get("name", "Contract"))
 			contract_reason = "This one-time alpha contract has already been resolved."
-		elif world.visit_slots_remaining < int(contract_record.get("service_slots", 1)):
-			contract_button.disabled = true
-			contract_reason = "No visit slots remain. Depart and arrive at a settlement to refresh them."
 		else:
-			var good := MarketContent.good(String(contract_record.get("good_id", "")))
-			var required_weight := int(good.get("weight", 0)) * int(contract_record.get("quantity", 0))
-			var free_capacity := world.cargo_capacity - int(world.cargo.get("weight", 0))
-			if free_capacity < required_weight:
+			contract_reason = MarketCommandProcessor.contract_acceptance_reason(world, contract_record)
+			if not contract_reason.is_empty():
 				contract_button.disabled = true
-				contract_reason = "Needs %d free cargo space; only %d is available." % [required_weight, free_capacity]
 		contract_button.tooltip_text = contract_reason if contract_button.disabled else String(contract_record.get("tradeoff", ""))
 		contract_button.set_meta("web_accessibility_id", "accept_contract_%s" % contract_id)
 		contract_button.set_meta("bazaar_section", "assignments")
@@ -3491,7 +3485,9 @@ func _refresh_opportunities() -> void:
 		contract_details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		contract_details.add_theme_font_size_override("font_size", 12)
 		contract_details.add_theme_color_override("font_color", Color("#aa9a87"))
-		contract_details.text = contract_reason if contract_button.disabled else "%s Sponsor: %s. Deliver %d %s to %s within %d days for %d ashmarks. Failure: %d ashmarks. %s" % [String(contract_record.get("description", "")), String(contract_record.get("sponsor", "")), int(contract_record.get("quantity", 0)), String(contract_record.get("good_id", "")), String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination")), int(contract_record.get("deadline_days", 0)), int(contract_record.get("reward", 0)), int(contract_record.get("failure_penalty", 0)), String(contract_record.get("failure_recovery", ""))]
+		var relationship_terms := _contract_relationship_terms(contract_record)
+		var compact_terms := "SPONSOR — %s · LOAD — %d %s → %s · DUE — %d days\nREWARD — %d ashmarks · LATE COST — up to %d%s\nDECISION — %s RECOVERY — %s" % [String(contract_record.get("sponsor", "")), int(contract_record.get("quantity", 0)), String(contract_record.get("good_id", "")).capitalize(), String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination")), int(contract_record.get("deadline_days", 0)), int(contract_record.get("reward", 0)), int(contract_record.get("failure_penalty", 0)), relationship_terms, String(contract_record.get("decision_summary", "")), String(contract_record.get("recovery_summary", ""))]
+		contract_details.text = ("LOCKED — %s\n" % contract_reason if contract_button.disabled else "") + compact_terms
 		contract_details.set_meta("bazaar_section", "assignments")
 		opportunity_list.add_child(contract_details)
 	var active_ids: Array = world.active_contracts.keys()
@@ -3626,15 +3622,33 @@ func _refresh_contract_summary() -> void:
 		departure_contract_label.text = "ACTIVE CONTRACT — none."
 		return
 	active_contract_label.visible = true
-	var contract_record := world.active_contract(String(contract_ids[0]))
-	var good_id := String(contract_record.get("good_id", ""))
-	var quantity := int(contract_record.get("quantity", 0))
-	var held := int(world.cargo.get(good_id, 0))
-	var free_capacity := world.cargo_capacity - int(world.cargo.get("weight", 0))
-	var destination_name := String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination"))
-	var summary := "%s — %s wants %d %s at %s by Day %d for %d ashmarks. Held %d/%d; free hold %d." % [String(contract_record.get("name", "Contract")), String(contract_record.get("sponsor", "Sponsor")), quantity, good_id, destination_name, int(contract_record.get("deadline_day", 0)), int(contract_record.get("reward", 0)), held, quantity, free_capacity]
-	active_contract_label.text = "ACTIVE CONTRACT\n" + summary
-	departure_contract_label.text = "CONTRACT PIN\n" + summary
+	var summaries: Array[String] = []
+	for contract_id_value in contract_ids:
+		var contract_record := world.active_contract(String(contract_id_value))
+		var good_id := String(contract_record.get("good_id", ""))
+		var quantity := int(contract_record.get("quantity", 0))
+		var held := int(world.cargo.get(good_id, 0))
+		var free_capacity := world.cargo_capacity - int(world.cargo.get("weight", 0))
+		var destination_name := String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination"))
+		summaries.append("%s — %s wants %d %s at %s by Day %d for %d ashmarks. Held %d/%d; free hold %d." % [String(contract_record.get("name", "Contract")), String(contract_record.get("sponsor", "Sponsor")), quantity, good_id, destination_name, int(contract_record.get("deadline_day", 0)), int(contract_record.get("reward", 0)), held, quantity, free_capacity])
+	var summary := "\n".join(summaries)
+	active_contract_label.text = "ACTIVE CONTRACTS\n" + summary
+	departure_contract_label.text = "CONTRACT PINS\n" + summary
+
+func _contract_relationship_terms(contract_record: Dictionary) -> String:
+	var parts: Array[String] = []
+	var minimum_reputation: Dictionary = contract_record.get("minimum_reputation", {})
+	for faction_id_value in minimum_reputation.keys():
+		var faction_id := String(faction_id_value)
+		parts.append("requires %s %d" % [String(MarketContent.faction(faction_id).get("name", faction_id)), int(minimum_reputation.get(faction_id_value, 0))])
+	for field_and_label in [["success_reputation", "Success"], ["failure_reputation", "Failure"]]:
+		var effects: Dictionary = contract_record.get(String(field_and_label[0]), {})
+		for faction_id_value in effects.keys():
+			var delta := int(effects.get(faction_id_value, 0))
+			if delta != 0:
+				var faction_id := String(faction_id_value)
+				parts.append("%s %s %+d" % [String(field_and_label[1]).to_lower(), String(MarketContent.faction(faction_id).get("name", faction_id)), delta])
+	return " · " + " · ".join(parts) if not parts.is_empty() else ""
 
 func _refresh_event_card() -> void:
 	if event_card == null or event_choice_list == null:

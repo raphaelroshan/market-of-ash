@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.15.0",
+  "content_version": "1.16.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -152,10 +152,35 @@
         "deadline_days": 2,
         "reward": 150,
         "failure_penalty": 8,
+        "success_reputation": {"caravans": 1},
+        "failure_reputation": {},
         "service_slots": 1,
         "description": "Carry four sealed water units from Ashgate to Reedwatch before the public reserve is rationed.",
         "tradeoff": "A guaranteed premium and visible relief, but four hold spaces and a short deadline are committed.",
+        "decision_summary": "Guaranteed relief premium; commits four hold spaces and a short deadline.",
+        "recovery_summary": "Late cargo remains sellable; the cash penalty is capped.",
         "failure_recovery": "Late cargo remains yours to sell, and the penalty never takes more ashmarks than you hold."
+      },
+      {
+        "id": "brine_cross_medicine_escort_01",
+        "name": "Brine Cross Medicine Escort",
+        "sponsor": "Ash Warden Cistern Office",
+        "origin_id": "ashgate",
+        "destination_id": "brine_cross",
+        "good_id": "medicine",
+        "quantity": 2,
+        "deadline_days": 2,
+        "reward": 108,
+        "failure_penalty": 6,
+        "minimum_reputation": {"wardens": 1},
+        "success_reputation": {"wardens": 1},
+        "failure_reputation": {"wardens": -1},
+        "service_slots": 1,
+        "description": "Escort two registered medicine cases through the Toll Road inspection chain to Brine Cross.",
+        "tradeoff": "A modest guaranteed margin and Warden standing, but the named manifest exposes the caravan to official scrutiny and commits two hold spaces.",
+        "decision_summary": "Guaranteed margin and Warden access; accepts a named manifest and official scrutiny.",
+        "recovery_summary": "Late medicine remains sellable; money and standing losses are bounded.",
+        "failure_recovery": "Late medicine remains yours to sell; the office charges at most six ashmarks and withdraws one Warden standing."
       }
     ]
   },

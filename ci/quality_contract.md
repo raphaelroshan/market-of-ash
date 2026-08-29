@@ -12,6 +12,8 @@ The Frontier trade promise is a release-critical constraint. Review whether regi
 
 Keep economy logic presentation-independent, deterministic under a fixed seed, serializable, and covered by focused headless tests. Prefer explicit commands and result objects over hidden mutation. Add regression tests for price changes, fuel/bankruptcy boundaries, route risk, crisis effects, invalid actions, and save/load round trips whenever those systems change.
 
+The executable minimums live in `tests/test_game_quality.gd` and `tools/game_quality_metrics.gd`: the guided opening must complete across all 100 deterministic seeds with at least 60 ashmarks and 9 provisions remaining; at least three positive opening strategies across three goods and both road types must exist; changing market/access state must rotate the best plan across three choices and both road types; a command-path cargo loss must recover starting cash within three outbound trades without reaching zero money or provisions; and the tutorial must reach its first cargo purchase within two authoritative commands. Any intentional threshold change requires updated evidence in `research/playtest_simulation/`.
+
 ## Release-quality criteria
 
 Do not add storefront integrations, network requirements, or credentials to the simulation layer. Controller and keyboard/mouse paths should reach the same commands. A visual or UI change must not silently alter deterministic outcomes.
