@@ -22,6 +22,11 @@ static func price_details(good: String, settlement: Dictionary, world: Dictionar
 	var crisis_modifier: float = float(world.get("crisis_modifiers", {}).get(good, 1.0))
 	var faction_modifier: float = float(settlement.get("faction_price_modifier", 1.0))
 	var settlement_id := String(settlement.get("id", ""))
+	var adaptive_market_value: Variant = world.get("adaptive_market_modifiers", {})
+	var adaptive_markets: Dictionary = adaptive_market_value if typeof(adaptive_market_value) == TYPE_DICTIONARY else {}
+	var adaptive_settlement_value: Variant = adaptive_markets.get(settlement_id, {})
+	var adaptive_settlement: Dictionary = adaptive_settlement_value if typeof(adaptive_settlement_value) == TYPE_DICTIONARY else {}
+	var adaptive_modifier := float(adaptive_settlement.get(good, 1.0))
 	var market_pressure_value: Variant = world.get("market_pressure", {})
 	var market_pressure_table: Dictionary = market_pressure_value if typeof(market_pressure_value) == TYPE_DICTIONARY else {}
 	var settlement_pressure_value: Variant = market_pressure_table.get(settlement_id, {})
@@ -57,18 +62,23 @@ static func price_details(good: String, settlement: Dictionary, world: Dictionar
 		reasons.append("local faction terms raise market prices")
 	elif faction_modifier < 0.95:
 		reasons.append("local faction terms lower market prices")
+	if adaptive_modifier > 1.05:
+		reasons.append("a local replacement exchange is increasing demand")
+	elif adaptive_modifier < 0.95:
+		reasons.append("a local replacement exchange is stabilizing supply")
 	if market_pressure > 0.0:
 		reasons.append("your recent deliveries increased local supply")
 	if reasons.is_empty():
 		reasons.append("normal local conditions")
 	return {
 		"ok": true,
-		"unit_price": maxi(1, int(round(base * settlement_modifier * demand_modifier * crisis_modifier * faction_modifier * market_memory_modifier))),
+		"unit_price": maxi(1, int(round(base * settlement_modifier * demand_modifier * crisis_modifier * faction_modifier * adaptive_modifier * market_memory_modifier))),
 		"base_price": base,
 		"settlement_modifier": settlement_modifier,
 		"demand_modifier": demand_modifier,
 		"crisis_modifier": crisis_modifier,
 		"faction_modifier": faction_modifier,
+		"adaptive_modifier": adaptive_modifier,
 		"market_pressure": market_pressure,
 		"market_memory_modifier": market_memory_modifier,
 		"reasons": reasons,

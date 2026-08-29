@@ -259,6 +259,7 @@ def main() -> int:
     opening_variety = quality_metrics.get("opening_variety", {})
     trade_pattern_families = quality_metrics.get("trade_pattern_families", {})
     contract_parity = quality_metrics.get("contract_parity", {})
+    adaptive_failure_recovery = quality_metrics.get("adaptive_failure_recovery", {})
     world_state_variety = quality_metrics.get("world_state_variety", {})
     cargo_loss_recovery = quality_metrics.get("cargo_loss_recovery", {})
     preparation_overhead = quality_metrics.get("preparation_overhead", {})
@@ -288,6 +289,14 @@ def main() -> int:
                 "gate": "Ordinary trade / contract parity",
                 "passed": contract_parity.get("passed", False),
                 "evidence": f"ordinary {contract_parity.get('ordinary_expected_net_profit', 0)} vs contract {contract_parity.get('contract_expected_net_profit', 0)} expected net ({contract_parity.get('ordinary_to_contract_ratio', 0):.0%})",
+            },
+            {
+                "gate": "Adaptive failure creates trade",
+                "passed": adaptive_failure_recovery.get("scenario_state") == "expired"
+                and adaptive_failure_recovery.get("faction_active", False)
+                and adaptive_failure_recovery.get("new_trade_viable", False)
+                and adaptive_failure_recovery.get("offer_closed", False),
+                "evidence": f"charcoal expected net {adaptive_failure_recovery.get('baseline_charcoal_net', 0)} → {adaptive_failure_recovery.get('replacement_charcoal_net', 0)}; Reedwatch resilience {adaptive_failure_recovery.get('reedwatch_resilience', 0)}",
             },
             {
                 "gate": "No permanent route winner",

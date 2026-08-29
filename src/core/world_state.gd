@@ -6,7 +6,7 @@ extends RefCounted
 
 const MarketContent = preload("res://src/core/market_content.gd")
 const MarketEconomy = preload("res://src/core/economy.gd")
-const SAVE_VERSION := 11
+const SAVE_VERSION := 12
 const MAX_COMMAND_HISTORY := 100
 const MAX_LOG_ENTRIES := 200
 
@@ -37,6 +37,8 @@ var assigned_crew: String = ""
 var crew_reports: Dictionary = {}
 var arms_escalation: int = 0
 var arms_trade_history: Array[Dictionary] = []
+var scenario_states: Dictionary = {}
+var emergent_factions: Dictionary = {}
 var ending_id: String = ""
 var ending_summary: String = ""
 var log: Array[String] = []
@@ -53,6 +55,7 @@ func _init(world_seed: int = 1107) -> void:
 		return
 	settlements = content_result.data.settlements.duplicate(true)
 	routes = content_result.data.routes.duplicate(true)
+	_initialize_adaptive_scenarios()
 	reset_visit_slots()
 	_update_crisis_modifiers()
 
@@ -200,7 +203,52 @@ func pricing_context() -> Dictionary:
 	return {
 		"crisis_modifiers": crisis_modifiers.duplicate(true),
 		"market_pressure": market_pressure.duplicate(true),
+		"adaptive_market_modifiers": adaptive_market_modifiers(),
 	}
+
+func scenario_state(scenario_id: String) -> Dictionary:
+	var state_value: Variant = scenario_states.get(scenario_id, {})
+	return state_value.duplicate(true) if typeof(state_value) == TYPE_DICTIONARY else {}
+
+func emergent_faction(faction_id: String) -> Dictionary:
+	var faction_value: Variant = emergent_factions.get(faction_id, {})
+	return faction_value.duplicate(true) if typeof(faction_value) == TYPE_DICTIONARY else {}
+
+func adaptive_market_modifiers() -> Dictionary:
+	var modifiers: Dictionary = {}
+	for faction_id_value in emergent_factions.keys():
+		var faction: Dictionary = emergent_faction(String(faction_id_value))
+		var scenario := MarketContent.adaptive_scenario(String(faction.get("scenario_id", "")))
+		var response: Dictionary = scenario.get("failure_response", {})
+		var settlement_id := String(response.get("settlement_id", ""))
+		if settlement_id.is_empty():
+			continue
+		var settlement_modifiers: Dictionary = modifiers.get(settlement_id, {}).duplicate(true)
+		for good_id_value in response.get("market_modifiers", {}).keys():
+			var good_id := String(good_id_value)
+			settlement_modifiers[good_id] = float(settlement_modifiers.get(good_id, 1.0)) * float(response.get("market_modifiers", {}).get(good_id_value, 1.0))
+		modifiers[settlement_id] = settlement_modifiers
+	return modifiers
+
+func adaptive_response_summary() -> String:
+	var faction_ids: Array = emergent_factions.keys()
+	faction_ids.sort()
+	for faction_id_value in faction_ids:
+		var faction: Dictionary = emergent_faction(String(faction_id_value))
+		var scenario := MarketContent.adaptive_scenario(String(faction.get("scenario_id", "")))
+		var response: Dictionary = scenario.get("failure_response", {})
+		var opportunity: Dictionary = response.get("opportunity", {})
+		return "%s — %s\n%s" % [String(response.get("name", faction_id_value)), String(response.get("legitimacy_claim", "A local actor responded to an unmet need.")), String(opportunity.get("summary", response.get("trade_footprint", "A replacement market is now active.")))]
+	return ""
+
+func contract_offer_closed_reason(contract_id: String) -> String:
+	var scenario := MarketContent.adaptive_scenario_for_contract(contract_id)
+	if scenario.is_empty():
+		return ""
+	var state := scenario_state(String(scenario.get("id", "")))
+	if String(state.get("state", "offered")) == "expired":
+		return "offer closed on Day %d; %s now responds to the unmet need" % [int(scenario.get("response_day", 0)), String(scenario.get("failure_response", {}).get("name", "a local exchange"))]
+	return ""
 
 func market_pressure_for(settlement_id: String, good_id: String) -> float:
 	if not has_settlement(settlement_id) or MarketContent.good(good_id).is_empty():
@@ -250,6 +298,7 @@ func archive_contract(contract_id: String, status: String, extra: Dictionary = {
 	var history_limit := int(MarketContent.contract_rules().get("max_history", 1))
 	while contract_history.size() > history_limit:
 		contract_history.pop_front()
+	_evaluate_adaptive_scenarios()
 	return snapshot.duplicate(true)
 
 func has_resolved_event(event_id: String) -> bool:
@@ -336,6 +385,7 @@ func advance_day(days: int, evaluate_campaign: bool = true) -> void:
 		crisis_stage = next_stage
 		_update_crisis_modifiers()
 		add_log("Crisis stage %d: %s." % [crisis_stage, String(MarketContent.crisis_stage(crisis_stage).get("label", "Regional pressure"))])
+	_evaluate_adaptive_scenarios()
 	if evaluate_campaign:
 		evaluate_ending()
 
@@ -453,6 +503,8 @@ func serialize() -> Dictionary:
 		"crew_reports": crew_reports.duplicate(true),
 		"arms_escalation": arms_escalation,
 		"arms_trade_history": arms_trade_history.duplicate(true),
+		"scenario_states": scenario_states.duplicate(true),
+		"emergent_factions": emergent_factions.duplicate(true),
 		"ending_id": ending_id,
 		"ending_summary": ending_summary,
 		"log": log.duplicate(),
@@ -536,6 +588,8 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		for raw_arms_record in saved_arms_history:
 			if typeof(raw_arms_record) == TYPE_DICTIONARY:
 				arms_trade_history.append(raw_arms_record.duplicate(true))
+	scenario_states = _sanitize_scenario_states(restored.get("scenario_states", {}))
+	emergent_factions = _sanitize_emergent_factions(restored.get("emergent_factions", {}))
 	ending_id = String(restored.get("ending_id", ""))
 	ending_summary = String(restored.get("ending_summary", ""))
 	log.clear()
@@ -548,6 +602,7 @@ func load_serialized(data: Dictionary) -> Dictionary:
 		if typeof(raw_entry) == TYPE_DICTIONARY:
 			command_history.append(raw_entry.duplicate(true))
 	_update_crisis_modifiers()
+	_evaluate_adaptive_scenarios()
 	return {"ok": true, "data": serialize(), "migrated_from": int(migration.migrated_from)}
 
 func _validate_serialized_shape(data: Dictionary) -> Dictionary:
@@ -563,7 +618,7 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 		return {"ok": false, "reason": "save cargo capacity is outside supported bounds"}
 	if int(data.get("crisis_stage", 0)) < 0 or int(data.get("crisis_stage", 0)) > 3:
 		return {"ok": false, "reason": "save crisis stage is outside supported bounds"}
-	for field in ["cargo", "reputation", "market_pressure", "active_contracts", "journey_context", "pending_event", "route_conditions", "settlement_resilience", "crew_reports"]:
+	for field in ["cargo", "reputation", "market_pressure", "active_contracts", "journey_context", "pending_event", "route_conditions", "settlement_resilience", "crew_reports", "scenario_states", "emergent_factions"]:
 		if typeof(data.get(field, {})) != TYPE_DICTIONARY:
 			return {"ok": false, "reason": "save field %s must be an object" % field}
 	for field in ["market_delivery_history", "contract_history", "resolved_event_ids", "event_history", "known_information", "recruited_crew", "arms_trade_history", "log", "command_history"]:
@@ -628,6 +683,29 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 			var basis_validation := _validate_pending_event_bases(pending, authored_event)
 			if not basis_validation.ok:
 				return basis_validation
+	var saved_scenarios: Dictionary = data.get("scenario_states", {})
+	for scenario_id_value in saved_scenarios.keys():
+		var scenario_id := String(scenario_id_value)
+		var state_value: Variant = saved_scenarios.get(scenario_id_value, {})
+		if MarketContent.adaptive_scenario(scenario_id).is_empty() or typeof(state_value) != TYPE_DICTIONARY:
+			return {"ok": false, "reason": "save references an invalid adaptive scenario"}
+		var state: Dictionary = state_value
+		if not ["offered", "accepted", "delayed", "failed", "resolved", "expired"].has(String(state.get("state", ""))) or int(state.get("updated_day", 0)) < 1 or int(state.get("updated_day", 0)) > int(data.get("day", 1)):
+			return {"ok": false, "reason": "save adaptive scenario has invalid state"}
+	var saved_emergent_factions: Dictionary = data.get("emergent_factions", {})
+	for faction_id_value in saved_emergent_factions.keys():
+		var faction_id := String(faction_id_value)
+		var record_value: Variant = saved_emergent_factions.get(faction_id_value, {})
+		if typeof(record_value) != TYPE_DICTIONARY:
+			return {"ok": false, "reason": "save emergent faction must be an object"}
+		var record: Dictionary = record_value
+		var scenario := MarketContent.adaptive_scenario(String(record.get("scenario_id", "")))
+		if scenario.is_empty() or String(scenario.get("failure_response", {}).get("faction_id", "")) != faction_id or int(record.get("activated_day", 0)) < 1 or int(record.get("activated_day", 0)) > int(data.get("day", 1)):
+			return {"ok": false, "reason": "save references an invalid emergent faction"}
+		var scenario_state_value: Variant = saved_scenarios.get(String(scenario.get("id", "")), {})
+		var scenario_state: Dictionary = scenario_state_value if typeof(scenario_state_value) == TYPE_DICTIONARY else {}
+		if not ["delayed", "failed", "expired"].has(String(scenario_state.get("state", ""))) or int(record.get("activated_day", 0)) < int(scenario.get("response_day", 0)):
+			return {"ok": false, "reason": "save emergent faction does not match its adaptive scenario state"}
 	return {"ok": true, "reason": ""}
 
 func _validate_pending_event_bases(pending: Dictionary, authored_event: Dictionary) -> Dictionary:
@@ -725,7 +803,86 @@ func migrate_serialized(data: Dictionary) -> Dictionary:
 		migrated["save_version"] = 11
 		migrated["ending_id"] = migrated.get("ending_id", "")
 		migrated["ending_summary"] = migrated.get("ending_summary", "")
+	if source_version < 12:
+		migrated["save_version"] = 12
+		migrated["scenario_states"] = migrated.get("scenario_states", {})
+		migrated["emergent_factions"] = migrated.get("emergent_factions", {})
 	return {"ok": true, "data": migrated, "migrated_from": source_version}
+
+func _initialize_adaptive_scenarios() -> void:
+	scenario_states.clear()
+	for scenario in MarketContent.adaptive_scenarios():
+		var scenario_id := String(scenario.get("id", ""))
+		scenario_states[scenario_id] = {"id": scenario_id, "state": String(scenario.get("initial_state", "offered")), "updated_day": day}
+
+func _evaluate_adaptive_scenarios() -> void:
+	for scenario in MarketContent.adaptive_scenarios():
+		var scenario_id := String(scenario.get("id", ""))
+		var contract_id := String(scenario.get("contract_id", ""))
+		var next_state := "offered"
+		var outcome_status := ""
+		for outcome in contract_history:
+			if String(outcome.get("id", "")) == contract_id:
+				outcome_status = String(outcome.get("status", ""))
+		if outcome_status == "completed":
+			next_state = "resolved"
+		elif outcome_status == "failed":
+			next_state = "failed"
+		elif not active_contract(contract_id).is_empty():
+			next_state = "delayed" if day > int(active_contract(contract_id).get("deadline_day", day)) else "accepted"
+		elif day >= int(scenario.get("response_day", 0)):
+			next_state = "expired"
+		var previous := scenario_state(scenario_id)
+		if String(previous.get("state", "")) != next_state:
+			scenario_states[scenario_id] = {"id": scenario_id, "state": next_state, "updated_day": day}
+		if ["delayed", "failed", "expired"].has(next_state):
+			_activate_adaptive_response(scenario)
+
+func _activate_adaptive_response(scenario: Dictionary) -> void:
+	var response: Dictionary = scenario.get("failure_response", {})
+	var faction_id := String(response.get("faction_id", ""))
+	if faction_id.is_empty() or emergent_factions.has(faction_id):
+		return
+	emergent_factions[faction_id] = {
+		"id": faction_id,
+		"scenario_id": String(scenario.get("id", "")),
+		"activated_day": day,
+		"settlement_id": String(response.get("settlement_id", "")),
+		"information_id": String(response.get("information_id", "")),
+	}
+	var resilience_settlement := String(response.get("settlement_id", ""))
+	if not resilience_settlement.is_empty():
+		adjust_settlement_resilience(resilience_settlement, int(response.get("resilience_delta", 0)))
+	add_log("%s emerged on Day %d. %s" % [String(response.get("name", faction_id)), day, String(response.get("trade_footprint", "A replacement market opened."))])
+
+func _sanitize_scenario_states(value: Variant) -> Dictionary:
+	var sanitized: Dictionary = {}
+	var records: Dictionary = value if typeof(value) == TYPE_DICTIONARY else {}
+	for scenario in MarketContent.adaptive_scenarios():
+		var scenario_id := String(scenario.get("id", ""))
+		var raw_state: Variant = records.get(scenario_id, {})
+		var state: Dictionary = raw_state if typeof(raw_state) == TYPE_DICTIONARY else {}
+		var state_id := String(state.get("state", scenario.get("initial_state", "offered")))
+		if not ["offered", "accepted", "delayed", "failed", "resolved", "expired"].has(state_id):
+			state_id = String(scenario.get("initial_state", "offered"))
+		sanitized[scenario_id] = {"id": scenario_id, "state": state_id, "updated_day": clampi(int(state.get("updated_day", 1)), 1, day)}
+	return sanitized
+
+func _sanitize_emergent_factions(value: Variant) -> Dictionary:
+	var sanitized: Dictionary = {}
+	var records: Dictionary = value if typeof(value) == TYPE_DICTIONARY else {}
+	for faction_id_value in records.keys():
+		var raw_record: Variant = records.get(faction_id_value, {})
+		if typeof(raw_record) != TYPE_DICTIONARY:
+			continue
+		var record: Dictionary = raw_record
+		var scenario := MarketContent.adaptive_scenario(String(record.get("scenario_id", "")))
+		var response: Dictionary = scenario.get("failure_response", {})
+		var faction_id := String(faction_id_value)
+		if scenario.is_empty() or String(response.get("faction_id", "")) != faction_id:
+			continue
+		sanitized[faction_id] = {"id": faction_id, "scenario_id": String(scenario.get("id", "")), "activated_day": clampi(int(record.get("activated_day", 1)), 1, day), "settlement_id": String(response.get("settlement_id", "")), "information_id": String(response.get("information_id", ""))}
+	return sanitized
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:
 	if typeof(value) != TYPE_DICTIONARY:

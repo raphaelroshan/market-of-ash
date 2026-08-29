@@ -1715,6 +1715,8 @@ func _apply_bazaar_section() -> void:
 		"outlook": "TOWN OUTLOOK — Review the wider campaign when you need it.",
 	}
 	bazaar_section_label.text = String(section_names.get(active_bazaar_section, "BAZAAR — Choose a stall."))
+	if trade_active and not world.emergent_faction("well_commons").is_empty():
+		bazaar_section_label.text += "\nWELL COMMONS — Reedwatch water stabilized; charcoal wanted."
 	for button in bazaar_navigation_buttons:
 		button.set_pressed_no_signal(String(button.get_meta("web_accessibility_id", "")).trim_prefix("bazaar_") == active_bazaar_section)
 	if shop_market_scroll:
@@ -2804,6 +2806,9 @@ func _web_ui_state() -> Dictionary:
 		"provisions": world.provisions if world != null else 0,
 		"cargo_weight": int(world.cargo.get("weight", 0)) if world != null else 0,
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
+		"adaptive_scenario_state": String(world.scenario_state("reedwatch_water_relief").get("state", "")) if world != null else "",
+		"emergent_factions": world.emergent_factions.keys() if world != null else [],
+		"adaptive_response": world.adaptive_response_summary() if world != null else "",
 		"travel_phase": map_panel.travel_phase if map_panel != null else "rest",
 		"road_scene_id": String(map_panel._road_profile(map_panel.travel_route_id).get("scene_id", "")) if map_panel != null and map_panel._is_road_view() else "",
 		"road_waypoint": map_panel._road_waypoint_label() if map_panel != null and map_panel._is_road_view() else "",
@@ -2983,7 +2988,8 @@ func _refresh_forecasts() -> void:
 		if bool(trade_story.get("ok", false)):
 			var status_lines := shop_status_label.text.split("\n")
 			if status_lines.size() >= 2:
-				status_lines[1] = "TODAY'S TRADE — %s: %d here → %d at %s · %+d expected · NO CONTRACT" % [good_id.capitalize(), int(trade_story.origin_price), int(trade_story.destination_price), String(trade_story.destination_name), int(trade_story.expected_net_profit)]
+				var trade_path_label := "COMMONS / NO CONTRACT" if good_id == "charcoal" and destination_id == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else "NO CONTRACT"
+				status_lines[1] = "TODAY'S TRADE — %s: %d here → %d at %s · %+d expected · %s" % [good_id.capitalize(), int(trade_story.origin_price), int(trade_story.destination_price), String(trade_story.destination_name), int(trade_story.expected_net_profit), trade_path_label]
 				shop_status_label.text = "\n".join(status_lines)
 	var market_text := _market_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 	market_preview_label.text = market_text
@@ -3056,7 +3062,7 @@ func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary
 	var gross_text := "%+d" % int(story.gross_margin)
 	var net_text := "%+d" % int(story.expected_net_profit)
 	var provision_word := "provision" if int(story.provisions) == 1 else "provisions"
-	return "ORDINARY TRADE — NO CONTRACT REQUIRED\n%s x%d · %s → %s via %s\nSOURCE — %s\nNEED — %s\nSPREAD — buy %d · sell %d · %s each · load total %s\nROAD — %d ashmarks · %d %s · %d%% exposed-unit risk\nEXPECTED NET %s ashmarks after travel, time, and expected loss\nWhy this price: %s%s\nMarket factors: local %.2f · demand %.2f · crisis %.2f · faction %.2f · memory %.2f\nOther markets: %s" % [good_id.capitalize(), quantity, story.origin_name, story.destination_name, story.route_name, story.source_reason, story.need_reason, int(story.origin_price), int(story.destination_price), spread_text, gross_text, int(story.route_cost), int(story.provisions), provision_word, int(round(float(story.risk) * 100.0)), net_text, reason_text, memory_text, float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.market_memory_modifier), "; ".join(comparison)]
+	return "ORDINARY TRADE — NO CONTRACT REQUIRED\n%s x%d · %s → %s via %s\nSOURCE — %s\nNEED — %s\nSPREAD — buy %d · sell %d · %s each · load total %s\nROAD — %d ashmarks · %d %s · %d%% exposed-unit risk\nEXPECTED NET %s ashmarks after travel, time, and expected loss\nWhy this price: %s%s\nMarket factors: local %.2f · demand %.2f · crisis %.2f · faction %.2f · response %.2f · memory %.2f\nOther markets: %s" % [good_id.capitalize(), quantity, story.origin_name, story.destination_name, story.route_name, story.source_reason, story.need_reason, int(story.origin_price), int(story.destination_price), spread_text, gross_text, int(story.route_cost), int(story.provisions), provision_word, int(round(float(story.risk) * 100.0)), net_text, reason_text, memory_text, float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.adaptive_modifier), float(details.market_memory_modifier), "; ".join(comparison)]
 
 func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
 	var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, world_context)
@@ -4043,6 +4049,8 @@ func _campaign_outlook_text() -> String:
 	if not world.ending_id.is_empty():
 		return "CAMPAIGN OUTLOOK — Conclusion recorded: %s." % String(MarketContent.ending(world.ending_id).get("title", world.ending_id))
 	var relief_mark := "done" if _has_completed_contract("reedwatch_water_relief_01") else "needed"
+	if not world.emergent_faction("well_commons").is_empty():
+		relief_mark = "Commons active"
 	return "CAMPAIGN OUTLOOK — Outcomes are checked at crisis stage 3 (Day 10).\nOpen Routes: relief %s · Reedwatch %d/2 resilience · arms %d/1 max.\nOrder at the Cistern: Wardens %d/3 · Caravans %d/1 max · arms %d/1 max.\nNo Road Owns the Sky: Caravans %d/2 · Wardens %d/1 max · arms %d/1 max.\nThe Best Margin: %d/220 ashmarks · Reedwatch %d/1 max resilience · arms %d/1 max." % [relief_mark, world.resilience_for("reedwatch"), world.arms_escalation, int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, int(world.reputation.get("caravans", 0)), int(world.reputation.get("wardens", 0)), world.arms_escalation, world.money, world.resilience_for("reedwatch"), world.arms_escalation]
 
 func _set_event(text: String) -> void:
@@ -4582,7 +4590,7 @@ class MapPanel extends Control:
 			if String(active.get("destination_id", "")) == settlement_id:
 				return "accepted"
 		for contract in MarketContent.contracts_from(world.current_settlement):
-			if String(contract.get("destination_id", "")) == settlement_id and not world.has_contract_outcome(String(contract.get("id", ""))):
+			if String(contract.get("destination_id", "")) == settlement_id and not world.has_contract_outcome(String(contract.get("id", ""))) and world.contract_offer_closed_reason(String(contract.get("id", ""))).is_empty():
 				return "available"
 		return ""
 
@@ -4606,7 +4614,8 @@ class MapPanel extends Control:
 		var route: Dictionary = world.route(route_id, world.current_settlement, settlement_id)
 		var assignment := _assignment_state(settlement_id)
 		var assignment_text := " · accepted assignment" if assignment == "accepted" else " · assignment available" if assignment == "available" else ""
-		return "%s%s · %s\n%s · %d ashmarks · %d provisions · %d day" % [String(settlement.get("name", settlement_id)), assignment_text, String(settlement.get("role", "market")), String(route.get("name", route_id)), int(route.get("cost", 0)), world.route_provision_cost(route_id, settlement_id), int(route.get("days", 0))]
+		var response_text := " · Well Commons exchange active" if settlement_id == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else ""
+		return "%s%s%s · %s\n%s · %d ashmarks · %d provisions · %d day" % [String(settlement.get("name", settlement_id)), assignment_text, response_text, String(settlement.get("role", "market")), String(route.get("name", route_id)), int(route.get("cost", 0)), world.route_provision_cost(route_id, settlement_id), int(route.get("days", 0))]
 
 	func _font_size(base_size: int) -> int:
 		return int(round(float(base_size) * text_scale))

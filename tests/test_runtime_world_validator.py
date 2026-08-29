@@ -127,6 +127,56 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_adaptive = copy.deepcopy(runtime)
+    invalid_adaptive["adaptive_scenarios"] = {
+        "records": [
+            {
+                "id": "Bad Scenario",
+                "contract_id": "missing_contract",
+                "initial_state": "complete",
+                "response_day": 1,
+                "offered_summary": "",
+                "expired_summary": "",
+                "failure_response": {
+                    "type": "penalty",
+                    "faction_id": "",
+                    "name": "",
+                    "settlement_id": "missing",
+                    "material_basis": "",
+                    "legitimacy_claim": "",
+                    "trade_footprint": "",
+                    "resilience_delta": 0,
+                    "information_id": "",
+                    "market_modifiers": {"missing_good": 3.0},
+                    "opportunity": {"title": "", "good_id": "water", "summary": ""},
+                },
+            }
+        ]
+    }
+    adaptive_errors = validate(invalid_adaptive)
+    expected_adaptive_fragments = (
+        "must use a lower_snake_case id",
+        "must reference a known contract",
+        "initial_state must equal offered",
+        "response_day must be an integer of at least 2",
+        "must declare offered_summary",
+        "failure_response.type must equal emergent_faction",
+        "failure_response must reference a known settlement",
+        "resilience_delta must be an integer from 1 through 10",
+        "market modifier missing_good must reference a known good",
+        "opportunity must reference a modified known good",
+    )
+    missing_adaptive = [
+        fragment
+        for fragment in expected_adaptive_fragments
+        if not any(fragment in error for error in adaptive_errors)
+    ]
+    if missing_adaptive:
+        print("FAIL: invalid adaptive-scenario fixture did not produce expected errors")
+        for fragment in missing_adaptive:
+            print(f"- missing: {fragment}")
+        return 1
+
     invalid_events = copy.deepcopy(runtime)
     invalid_events["events"] = json.loads(
         (ROOT / "tests/fixtures/events_invalid.json").read_text(encoding="utf-8")

@@ -1,5 +1,7 @@
 extends SceneTree
 
+const AshWorldState = preload("res://src/core/world_state.gd")
+
 var failures: Array[String] = []
 
 func _initialize() -> void:
@@ -298,7 +300,7 @@ func _initialize() -> void:
 	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v11") and ui.diagnostics_label.text.contains("content 1.17.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.18.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -483,7 +485,7 @@ func _initialize() -> void:
 	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "guided test action did not use the explicit command boundary")
 	_expect(ui.event_label.text.contains("NEXT —") and ui.event_label.text.contains("Plan departure"), "a successful shop command should end with a concrete next action")
 	_expect(not ui.guided_test_button.visible, "the legacy direct helper should remain absent from the player-facing Bazaar")
-	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v11"), "successful commands should expose a versioned autosave summary")
+	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v12"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "normal play should retain a game-facing regional objective after trade")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "the guided purchase should move focus from its disabled button to the stated Plan departure action")
 	_expect(ui.first_trade_elapsed_msec >= 0, "the first successful trade should record privacy-safe elapsed session timing")
@@ -1063,6 +1065,35 @@ func _initialize() -> void:
 	_expect(ui.new_game_confirmation_dialog.visible and ui.new_game_confirmation_dialog.position.y >= 0 and ui.new_game_confirmation_dialog.position.y + ui.new_game_confirmation_dialog.size.y <= int(ui.get_viewport().get_visible_rect().end.y), "large text should keep the new-game replacement warning fully visible")
 	ui.new_game_confirmation_dialog.canceled.emit()
 	ui.new_game_confirmation_dialog.hide()
+
+	ui.world = AshWorldState.new(1107)
+	ui.world.advance_day(3)
+	ui._show_shop()
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("assignments")
+	_expect(ui.contract_buttons[0].disabled and ui.contract_buttons[0].tooltip_text.contains("offer closed on Day 4") and ui.contract_buttons[0].tooltip_text.contains("Well Commons"), "an ignored relief offer should close with its causal replacement named in the Job Board")
+	_expect(ui.map_panel._assignment_state("reedwatch").is_empty() and ui.map_panel._hover_text("reedwatch").contains("Well Commons exchange active"), "the map should remove the stale assignment and expose the replacement market")
+	ui._on_bazaar_navigation_pressed("outlook")
+	_expect(ui.campaign_outlook_label.text.contains("relief Commons active"), "Town Outlook should summarize the replacement response without presenting the expired contract as required")
+	var adaptive_web_state: Dictionary = ui._web_ui_state()
+	_expect(adaptive_web_state.get("adaptive_scenario_state", "") == "expired" and adaptive_web_state.get("emergent_factions", []).has("well_commons") and String(adaptive_web_state.get("adaptive_response", "")).contains("ordinary charcoal deliveries"), "Web diagnostics should expose the adaptive scenario, actor, and new trade opportunity")
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._populate_destination_options()
+	ui._select_option_by_id(ui.destination_option, "reedwatch")
+	ui._populate_route_options()
+	ui._select_option_by_id(ui.route_option, "old_road")
+	ui._select_option_by_id(ui.shop_good_option, "charcoal")
+	ui.shop_quantity.value = 4
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	_expect(ui.shop_status_label.text.contains("+7 expected · COMMONS / NO CONTRACT") and ui.bazaar_section_label.text.contains("Reedwatch water stabilized; charcoal wanted"), "the replacement charcoal trade should be visible above the fold as ordinary trade")
+	ui.world.current_settlement = "reedwatch"
+	ui._populate_destination_options()
+	ui._select_option_by_id(ui.destination_option, "ashgate")
+	ui._populate_route_options()
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._select_option_by_id(ui.shop_good_option, "charcoal")
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	_expect(ui.shop_market_preview_label.text.contains("local replacement exchange is increasing demand") and ui.shop_market_preview_label.text.contains("response 1.30"), "Reedwatch market details should explain the Well Commons charcoal premium")
 
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):

@@ -10,6 +10,8 @@ const CAPTURE_SCREENS := [
 	"pause",
 	"departure_desk",
 	"returned_shop",
+	"well_commons_jobs",
+	"well_commons_market",
 	"main_menu_large_text",
 	"settlement_shop_large_text",
 	"pause_large_text",
@@ -79,6 +81,21 @@ func _run() -> void:
 	await _capture(ui, "departure_desk", "departure-desk")
 	ui._on_return_to_shop_pressed()
 	await _capture(ui, "returned_shop", "returned-shop")
+
+	ui.pending_tutorial_enabled = false
+	ui._on_start_game_pressed()
+	ui.world.advance_day(3)
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("assignments")
+	await _capture(ui, "well_commons_jobs", "well-commons-jobs")
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._select_option_by_id(ui.shop_good_option, "charcoal")
+	ui.shop_quantity.value = 4
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	await _capture(ui, "well_commons_market", "well-commons-market")
+
+	ui.pending_tutorial_enabled = true
+	ui._on_start_game_pressed()
 	ui._on_plan_departure_pressed()
 
 	ui.large_text_checkbox.set_pressed_no_signal(true)

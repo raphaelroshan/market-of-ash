@@ -38,8 +38,9 @@ The simulator tests the initial one-trade loop plus an adaptive three-delivery p
 | Multiple viable openings         | PASS     | 7 positive choices across 4 goods and 2 routes                                       |
 | Ordinary trade families          | PASS     | 4/4 staple, repair, medicine, and industrial fixtures are positive without contracts |
 | Ordinary trade / contract parity | PASS     | ordinary 99 vs contract 70 expected net (141%)                                       |
+| Adaptive failure creates trade   | PASS     | charcoal expected net -10 → 7; Reedwatch resilience 1                                |
 | No permanent route winner        | PASS     | 3 best choices across 2 routes in 4 world states                                     |
-| Cargo-loss recovery              | PASS     | seed 3; recovered to 306 ashmarks in 1 outbound trade(s)                             |
+| Cargo-loss recovery              | PASS     | seed 3; recovered to 278 ashmarks in 1 outbound trade(s)                             |
 | Short preparation                | PASS     | first cargo purchase is command 2                                                    |
 
 These gates make the audit's minimum playability promises executable: the taught opening preserves a recovery floor across every deterministic seed, several positive opening plans exist, changing market/access state changes the best plan, a real cargo-loss run can recover, and the tutorial reaches its first trade without excessive preparation.

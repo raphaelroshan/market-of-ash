@@ -243,9 +243,18 @@
     }
   ],
   "quality_metrics": {
+    "adaptive_failure_recovery": {
+      "baseline_charcoal_net": -10,
+      "faction_active": true,
+      "new_trade_viable": true,
+      "offer_closed": true,
+      "reedwatch_resilience": 1,
+      "replacement_charcoal_net": 7,
+      "scenario_state": "expired"
+    },
     "cargo_loss_recovery": {
       "cargo_loss_observed": true,
-      "ending_money": 306,
+      "ending_money": 278,
       "ending_provisions": 9,
       "minimum_money": 114,
       "money_after_loss": 118,
@@ -386,6 +395,11 @@
       "evidence": "ordinary 99 vs contract 70 expected net (141%)"
     },
     {
+      "gate": "Adaptive failure creates trade",
+      "passed": true,
+      "evidence": "charcoal expected net -10 \u2192 7; Reedwatch resilience 1"
+    },
+    {
       "gate": "No permanent route winner",
       "passed": true,
       "evidence": "3 best choices across 2 routes in 4 world states"
@@ -393,7 +407,7 @@
     {
       "gate": "Cargo-loss recovery",
       "passed": true,
-      "evidence": "seed 3; recovered to 306 ashmarks in 1 outbound trade(s)"
+      "evidence": "seed 3; recovered to 278 ashmarks in 1 outbound trade(s)"
     },
     {
       "gate": "Short preparation",

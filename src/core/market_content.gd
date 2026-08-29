@@ -117,6 +117,29 @@ static func contracts_from(settlement_id: String) -> Array[Dictionary]:
 			matches.append(contract_record.duplicate(true))
 	return matches
 
+static func adaptive_scenario_rules() -> Dictionary:
+	var rules: Variant = runtime_world().get("adaptive_scenarios", {})
+	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
+
+static func adaptive_scenarios() -> Array[Dictionary]:
+	var records: Array[Dictionary] = []
+	for raw_scenario in adaptive_scenario_rules().get("records", []):
+		if typeof(raw_scenario) == TYPE_DICTIONARY:
+			records.append(raw_scenario.duplicate(true))
+	return records
+
+static func adaptive_scenario(scenario_id: String) -> Dictionary:
+	for scenario in adaptive_scenarios():
+		if String(scenario.get("id", "")) == scenario_id:
+			return scenario
+	return {}
+
+static func adaptive_scenario_for_contract(contract_id: String) -> Dictionary:
+	for scenario in adaptive_scenarios():
+		if String(scenario.get("contract_id", "")) == contract_id:
+			return scenario
+	return {}
+
 static func event_rules() -> Dictionary:
 	var rules: Variant = runtime_world().get("events", {})
 	if typeof(rules) != TYPE_DICTIONARY:
@@ -352,6 +375,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	_validate_settlement_actions(data.get("settlement_actions", {}), errors)
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
 	_validate_contracts(data.get("contracts", {}), data.get("factions", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
+	_validate_adaptive_scenarios(data.get("adaptive_scenarios", {}), data.get("contracts", {}), errors)
 	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_factions(data.get("factions", {}), errors)
 	_validate_arms_trade(data.get("arms_trade", {}), errors)
@@ -640,6 +664,74 @@ static func _validate_contracts(value: Variant, factions_value: Variant, visit_s
 					errors.append("contract %s minimum reputation for %s is below the authored faction bound" % [contract_id, faction_id])
 				elif reputation_field == "minimum_reputation" and int(reputation_effects.get(faction_id_value, 0)) > int(authored_factions.get(faction_id, {}).get("maximum", 10)):
 					errors.append("contract %s minimum reputation for %s is above the authored faction bound" % [contract_id, faction_id])
+
+static func _validate_adaptive_scenarios(value: Variant, contracts_value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("adaptive_scenarios must be an object")
+		return
+	var records_value: Variant = value.get("records", [])
+	if typeof(records_value) != TYPE_ARRAY or records_value.is_empty():
+		errors.append("adaptive_scenarios records must be a non-empty array")
+		return
+	var seen_ids: Dictionary = {}
+	var known_contract_ids: Dictionary = {}
+	if typeof(contracts_value) == TYPE_DICTIONARY:
+		for raw_contract in contracts_value.get("records", []):
+			if typeof(raw_contract) == TYPE_DICTIONARY:
+				known_contract_ids[String(raw_contract.get("id", ""))] = true
+	for raw_scenario in records_value:
+		if typeof(raw_scenario) != TYPE_DICTIONARY:
+			errors.append("each adaptive scenario must be an object")
+			continue
+		var scenario: Dictionary = raw_scenario
+		var scenario_id := String(scenario.get("id", ""))
+		if scenario_id.is_empty() or not scenario_id.is_valid_identifier() or scenario_id != scenario_id.to_lower():
+			errors.append("adaptive scenario ids must use lower_snake_case")
+		elif seen_ids.has(scenario_id):
+			errors.append("duplicate adaptive scenario id: %s" % scenario_id)
+		seen_ids[scenario_id] = true
+		if not known_contract_ids.has(String(scenario.get("contract_id", ""))):
+			errors.append("adaptive scenario %s must reference a known contract" % scenario_id)
+		if String(scenario.get("initial_state", "")) != "offered":
+			errors.append("adaptive scenario %s initial_state must be offered" % scenario_id)
+		if int(scenario.get("response_day", 0)) < 2:
+			errors.append("adaptive scenario %s response_day must be at least 2" % scenario_id)
+		for field in ["offered_summary", "expired_summary"]:
+			if String(scenario.get(field, "")).is_empty():
+				errors.append("adaptive scenario %s must declare %s" % [scenario_id, field])
+		var response_value: Variant = scenario.get("failure_response", {})
+		if typeof(response_value) != TYPE_DICTIONARY:
+			errors.append("adaptive scenario %s failure_response must be an object" % scenario_id)
+			continue
+		var response: Dictionary = response_value
+		if String(response.get("type", "")) != "emergent_faction":
+			errors.append("adaptive scenario %s failure_response type must be emergent_faction" % scenario_id)
+		for field in ["faction_id", "name", "material_basis", "legitimacy_claim", "trade_footprint", "information_id"]:
+			if String(response.get(field, "")).is_empty():
+				errors.append("adaptive scenario %s failure_response must declare %s" % [scenario_id, field])
+		if not REQUIRED_SETTLEMENT_IDS.has(String(response.get("settlement_id", ""))):
+			errors.append("adaptive scenario %s failure_response must reference a known settlement" % scenario_id)
+		if int(response.get("resilience_delta", 0)) <= 0 or int(response.get("resilience_delta", 0)) > 10:
+			errors.append("adaptive scenario %s resilience_delta must be between 1 and 10" % scenario_id)
+		var market_modifiers_value: Variant = response.get("market_modifiers", {})
+		if typeof(market_modifiers_value) != TYPE_DICTIONARY or market_modifiers_value.is_empty():
+			errors.append("adaptive scenario %s market_modifiers must be a non-empty object" % scenario_id)
+		else:
+			for good_id_value in market_modifiers_value.keys():
+				var good_id := String(good_id_value)
+				var modifier := float(market_modifiers_value.get(good_id_value, 0.0))
+				if not REQUIRED_GOOD_IDS.has(good_id) or modifier < 0.5 or modifier > 2.0:
+					errors.append("adaptive scenario %s market modifier %s must reference a known good and stay between 0.5 and 2" % [scenario_id, good_id])
+		var opportunity_value: Variant = response.get("opportunity", {})
+		if typeof(opportunity_value) != TYPE_DICTIONARY:
+			errors.append("adaptive scenario %s opportunity must be an object" % scenario_id)
+		else:
+			var opportunity: Dictionary = opportunity_value
+			if not REQUIRED_GOOD_IDS.has(String(opportunity.get("good_id", ""))) or not market_modifiers_value.has(String(opportunity.get("good_id", ""))):
+				errors.append("adaptive scenario %s opportunity must reference a modified known good" % scenario_id)
+			for field in ["title", "summary"]:
+				if String(opportunity.get(field, "")).is_empty():
+					errors.append("adaptive scenario %s opportunity must declare %s" % [scenario_id, field])
 
 static func _validate_events(value: Variant, errors: Array[String]) -> void:
 	if typeof(value) != TYPE_DICTIONARY:

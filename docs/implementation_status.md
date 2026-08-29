@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The updated vertical-slice roadmap's open-trade Feed A is also implemented: authored production/consumption roles, differentiated replenishment, ordinary-trade-first Bazaar language, four non-contract trade fixtures, and contract-parity enforcement. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. Remaining hardware and comprehension gates require Windows display scaling, hands-on assistive technology, or moderated players; Feed B's adaptive Well Commons failure chain remains next.
+**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The updated vertical-slice roadmap's open-trade Feeds A–B are also implemented: authored production/consumption roles, differentiated replenishment, ordinary-trade-first Bazaar language, four non-contract trade fixtures, contract-parity enforcement, and a causal Well Commons response to ignored or overdue relief. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. Remaining hardware and comprehension gates require Windows display scaling, hands-on assistive technology, or moderated players; Feed C's reversible replacement-faction interactions remain next.
 
 ## Implemented player-facing spine
 
@@ -31,12 +31,13 @@
 - Buy, sell, and departure mutations pass through a serializable command/result boundary; runtime and loaded histories both retain only the newest 100 command records.
 - The human-readable campaign log retains the newest 200 entries both during play and after load, preventing long sessions or imported saves from inflating saves and diagnostic reports without bound.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.
-- Saves declare save version 11 and runtime content version `1.17.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event terms, or future versions cannot replace the active run.
+- Saves declare save version 12 and runtime content version `1.18.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event/scenario terms, or future versions cannot replace the active run.
 - A deterministic 100-seed policy simulation records opening-route incentives, forecast error, safe-opening resource floors, viable strategy breadth, best-choice rotation across changed world states, real cargo-loss recovery, and tutorial preparation overhead.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it. Consumer markets replenish at 150% of baseline decay, neutral markets at 100%, and producer markets at 75%, keeping recurring needs useful without erasing recent deliveries.
 - Settlement visits expose a two-slot auxiliary-action budget. Ashgate's provisions and escalation recovery, Brine Cross's cistern queue, Cinderford's repair bench, Hollow Market's route rumor, and Reedwatch's supply shelter create local tradeoffs with visible dependency reasons.
 - Ashgate offers a fixed-term Reedwatch water-relief contract and a Warden-gated Brine Cross medicine escort. Accepted terms, prerequisites, and relationship effects are visible, frozen, pinned during departure, and resolved deterministically on arrival.
+- Reedwatch relief now has an authoritative offered/accepted/delayed/failed/resolved/expired state machine. Ignoring it through Day 4 or letting an accepted load run overdue activates the Well Commons once, closes the stale offer, adds one local resilience, stabilizes water, and turns charcoal into a new profitable ordinary-trade opportunity; successful relief prevents that response.
 - Eligible Toll Road journeys can pause at `The Gatekeeper's Chalk`, with visible pay, detour, and wait choices and a guaranteed recovery option.
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
@@ -102,6 +103,8 @@ Successful and failed commands append to `command_history`, bounded to 100 recor
 - `crew_reports`
 - `arms_escalation`
 - `arms_trade_history`
+- `scenario_states`
+- `emergent_factions`
 - `ending_id`
 - `ending_summary`
 - `log`
@@ -213,6 +216,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - The opening contains seven positive strategies across four goods and both the exposed and regulated road types.
 - Four named ordinary-trade fixtures cover staple, repair, medicine, and industrial cargo; all remain profitable without accepting a contract.
 - The best opening ordinary trade must retain at least 70% of the accessible relief contract's expected net value; the current deterministic result is 99 versus 70 ashmarks.
+- Ignored relief must expire causally, activate the Well Commons once, raise Reedwatch resilience to one, close the stale assignment, and turn a four-charcoal Ashgate run from -10 to +7 expected net.
 - Four representative market/access states rotate the best forecast across three choices and two routes, preventing a permanent route winner in the measured slice.
 - A real command-path cargo-loss run recovers starting cash in one outbound trade while retaining positive money and provisions.
 - The guided contract flow reaches its first cargo purchase in two authoritative commands, with one non-trade action before meaningful trade.
@@ -306,7 +310,7 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Unqualified day-ten states remain playable in `Settlement decision`; a qualified state records an immutable ending ID and regional summary.
 - Ending rules are ordered: when a state qualifies for both, completed shared relief takes precedence over regulated reserve control.
 - Ending evaluation occurs after the complete command, so a day-ten event choice or arrival consequence can change the selected conclusion before it becomes immutable.
-- Save version 11 preserves either ending. Tests cover every stage boundary, unmet predicates, both successful resolutions, precedence, save/load, migration, and UI presentation.
+- Save version 12 preserves endings plus adaptive scenario and emergent-faction state. Tests cover every stage boundary, unmet predicates, both successful resolutions, precedence, save/load, migration, and UI presentation.
 - Four fresh command campaigns reach different endings: relief plus public resilience, regulated medicine trade plus Warden recognition, exposed-route information plus publicly shared water for Free Caravan standing, and repeated arbitrage plus a scarcity-premium sale for concentrated merchant profit.
 - Reached endings appear in a dedicated scrollable campaign-conclusion card, remain saved, and do not prevent post-ending trade inspection.
 
