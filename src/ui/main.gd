@@ -4,6 +4,7 @@ const MarketContent = preload("res://src/core/market_content.gd")
 const MarketEconomy = preload("res://src/core/economy.gd")
 const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
+const TutorialDirector = preload("res://src/ui/tutorial_director.gd")
 
 const PLAYTEST_SEED := 1107
 const PLAYTEST_GOOD := "water"
@@ -43,10 +44,32 @@ const PLAYTEST_PATHS := {
 		"opening": "Ashgate market is open. Review the relief contract and crew offers before buying 4 Water for Reedwatch.",
 	},
 }
+const INTRO_PAGES := [
+	{
+		"eyebrow": "THE FIVE-WELL BASIN",
+		"title": "The roads are open. The wells are failing.",
+		"body": "Settlements are rebuilding after the ash years, but water, medicine, and trust rarely reach the same place at the same time. A small caravan can turn scarcity into relief, influence, or profit.",
+		"scene": "basin",
+	},
+	{
+		"eyebrow": "YOUR CARAVAN",
+		"title": "Every load is a promise.",
+		"body": "Ashmarks buy cargo and passage. Provisions keep the caravan moving. Hold space limits what you can carry. Crew can reveal roads, conserve supplies, or change how people receive you.",
+		"scene": "caravan",
+	},
+	{
+		"eyebrow": "TRADE · ROAD · CONSEQUENCE",
+		"title": "A cheap road always exposes something.",
+		"body": "Read why a market needs a good. Compare the route fee, time, provisions, and cargo at risk. Face what happens between settlements, then arrive somewhere changed and decide what to do next.",
+		"scene": "road",
+	},
+]
 const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
 const WEB_REPORT_FILENAME := "market_of_ash_playtest_report.json"
+const SAVE_ENVELOPE_FORMAT := "market_of_ash_campaign"
+const SAVE_ENVELOPE_VERSION := 1
 const MAX_SAVE_BYTES := 5 * 1024 * 1024
 const REMAPPABLE_ACTIONS := ["ui_accept", "ui_cancel", "ui_pause"]
 const ACTION_LABELS := {"ui_accept": "Accept", "ui_cancel": "Back", "ui_pause": "Pause"}
@@ -69,6 +92,20 @@ var world: AshWorldState
 var game_layer: Control
 var shop_layer: Control
 var menu_layer: Control
+var intro_layer: Control
+var intro_scene
+var intro_title_label: Label
+var intro_body_label: Label
+var intro_progress_label: Label
+var intro_back_button: Button
+var intro_next_button: Button
+var intro_skip_button: Button
+var intro_page := 0
+var settings_panel: Control
+var credits_panel: Control
+var developer_panel: Control
+var settings_button: Button
+var credits_button: Button
 var pause_layer: Control
 var pause_resume_button: Button
 var pause_save_button: Button
@@ -179,7 +216,15 @@ var audio_cues: Dictionary = {}
 var run_started_msec := 0
 var first_trade_elapsed_msec := -1
 var active_playtest_path_id := ""
-var pending_new_game_path_id := PLAYTEST_PATH_GUIDED
+var pending_new_game_path_id := PLAYTEST_PATH_CAMPAIGN
+var pending_tutorial_enabled := true
+var tutorial := TutorialDirector.new()
+var last_tutorial_presented_step := ""
+var tutorial_panel: PanelContainer
+var tutorial_chapter_label: Label
+var tutorial_title_label: Label
+var tutorial_body_label: Label
+var tutorial_skip_button: Button
 var last_input_device := "unknown"
 var map_panel
 var web_accessibility_callback: Variant
@@ -200,6 +245,7 @@ func _ready() -> void:
 	_build_ui()
 	_build_shop()
 	_build_main_menu()
+	_build_intro()
 	_build_pause_menu()
 	_refresh_continue_availability()
 	if large_text_enabled:
@@ -213,16 +259,29 @@ func _build_main_menu() -> void:
 	add_child(menu_layer)
 
 	var backdrop := ColorRect.new()
-	backdrop.color = Color("#17130f")
+	backdrop.color = Color("#100d0a")
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	menu_layer.add_child(backdrop)
-
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	menu_layer.add_child(center)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 36)
+	margin.add_theme_constant_override("margin_top", 32)
+	margin.add_theme_constant_override("margin_right", 36)
+	margin.add_theme_constant_override("margin_bottom", 32)
+	menu_layer.add_child(margin)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 28)
+	margin.add_child(columns)
+	var title_scene := TitleScene.new()
+	title_scene.custom_minimum_size = Vector2(420, 0)
+	title_scene.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_scene.size_flags_stretch_ratio = 1.5
+	columns.add_child(title_scene)
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(600, 640)
-	center.add_child(card)
+	card.custom_minimum_size = Vector2(440, 0)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.size_flags_stretch_ratio = 1.0
+	columns.add_child(card)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -233,58 +292,93 @@ func _build_main_menu() -> void:
 	content.add_theme_constant_override("separation", 16)
 	scroll.add_child(content)
 
-	var title := Label.new()
-	title.text = "MARKET OF ASH"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 38)
-	title.add_theme_color_override("font_color", Color("#e6c58d"))
-	content.add_child(title)
-	var subtitle := Label.new()
-	subtitle.text = "A trade route is a promise you make to the road."
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_color_override("font_color", Color("#b5a18b"))
-	content.add_child(subtitle)
-	var preset := Label.new()
-	preset.text = "QUICK PLAYTEST PATHS\nEvery path begins the same canonical Ashgate campaign. Paths only change the opening selections and guidance; every action still uses the normal game rules."
-	preset.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	preset.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	preset.add_theme_color_override("font_color", Color("#f0d2a0"))
-	content.add_child(preset)
+	var heading := Label.new()
+	heading.text = "CARAVAN LEDGER"
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	heading.add_theme_font_size_override("font_size", 24)
+	heading.add_theme_color_override("font_color", Color("#e6c58d"))
+	content.add_child(heading)
+	var welcome := Label.new()
+	welcome.text = "Trade between settlements. Choose what the road may cost. Help decide what the basin becomes."
+	welcome.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	welcome.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	welcome.add_theme_color_override("font_color", Color("#c7b49a"))
+	content.add_child(welcome)
+	start_game_button = Button.new()
+	start_game_button.text = "New Game"
+	start_game_button.custom_minimum_size = Vector2(0, 58)
+	start_game_button.tooltip_text = "Begin a new campaign, with an optional guided first caravan run."
+	start_game_button.pressed.connect(_on_new_game_pressed)
+	content.add_child(start_game_button)
+	continue_game_button = Button.new()
+	continue_game_button.text = "Continue"
+	continue_game_button.custom_minimum_size = Vector2(0, 52)
+	continue_game_button.disabled = not FileAccess.file_exists(save_path)
+	continue_game_button.tooltip_text = "No saved campaign exists yet." if continue_game_button.disabled else "Validate and continue the saved campaign."
+	continue_game_button.pressed.connect(_on_load_pressed)
+	content.add_child(continue_game_button)
+	settings_button = Button.new()
+	settings_button.text = "Settings"
+	settings_button.custom_minimum_size = Vector2(0, 48)
+	settings_button.pressed.connect(_on_settings_pressed)
+	content.add_child(settings_button)
+	credits_button = Button.new()
+	credits_button.text = "Credits"
+	credits_button.custom_minimum_size = Vector2(0, 48)
+	credits_button.pressed.connect(_on_credits_pressed)
+	content.add_child(credits_button)
+	menu_save_status_label = Label.new()
+	menu_save_status_label.text = save_status_text
+	menu_save_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	menu_save_status_label.add_theme_font_size_override("font_size", 11)
+	menu_save_status_label.add_theme_color_override("font_color", Color("#8f8374"))
+	content.add_child(menu_save_status_label)
+
+	settings_panel = VBoxContainer.new()
+	settings_panel.visible = false
+	settings_panel.add_theme_constant_override("separation", 10)
+	content.add_child(settings_panel)
+	var settings_title := Label.new()
+	settings_title.text = "SETTINGS"
+	settings_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	settings_title.add_theme_color_override("font_color", Color("#e6c58d"))
+	settings_panel.add_child(settings_title)
 	controls_hint_label = Label.new()
 	controls_hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	controls_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	controls_hint_label.add_theme_color_override("font_color", Color("#c7b49a"))
-	content.add_child(controls_hint_label)
+	settings_panel.add_child(controls_hint_label)
 	reduce_motion_checkbox = CheckBox.new()
 	reduce_motion_checkbox.text = "Reduce travel motion"
 	reduce_motion_checkbox.custom_minimum_size = Vector2(0, 44)
 	reduce_motion_checkbox.tooltip_text = "Show the caravan at its destination immediately; route outcomes and timing are unchanged."
 	reduce_motion_checkbox.button_pressed = reduce_motion_enabled
 	reduce_motion_checkbox.toggled.connect(_on_reduce_motion_toggled)
-	content.add_child(reduce_motion_checkbox)
+	settings_panel.add_child(reduce_motion_checkbox)
 	large_text_checkbox = CheckBox.new()
 	large_text_checkbox.text = "Large text"
 	large_text_checkbox.custom_minimum_size = Vector2(0, 44)
 	large_text_checkbox.tooltip_text = "Increase interface text by 25%. Long shop and route panels remain scrollable."
 	large_text_checkbox.button_pressed = large_text_enabled
 	large_text_checkbox.toggled.connect(_on_large_text_toggled)
-	content.add_child(large_text_checkbox)
+	settings_panel.add_child(large_text_checkbox)
 	interface_sounds_checkbox = CheckBox.new()
 	interface_sounds_checkbox.text = "Interface sounds"
 	interface_sounds_checkbox.custom_minimum_size = Vector2(0, 44)
 	interface_sounds_checkbox.tooltip_text = "Play restrained confirmation, blocked-action, and travel cues. All essential feedback remains visible as text."
 	interface_sounds_checkbox.button_pressed = interface_sounds_enabled
 	interface_sounds_checkbox.toggled.connect(_on_interface_sounds_toggled)
-	content.add_child(interface_sounds_checkbox)
+	settings_panel.add_child(interface_sounds_checkbox)
 	var bindings_title := Label.new()
 	bindings_title.text = "INPUT BINDINGS"
 	bindings_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bindings_title.add_theme_color_override("font_color", Color("#e6c58d"))
-	content.add_child(bindings_title)
+	settings_panel.add_child(bindings_title)
 	var binding_row := HBoxContainer.new()
 	binding_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	binding_row.add_theme_constant_override("separation", 8)
-	content.add_child(binding_row)
+	settings_panel.add_child(binding_row)
 	for action_name in REMAPPABLE_ACTIONS:
 		var binding_button := Button.new()
 		binding_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -301,48 +395,50 @@ func _build_main_menu() -> void:
 	restore_bindings_button.tooltip_text = "Restore the default keyboard and controller bindings for Accept, Back, and Pause."
 	restore_bindings_button.set_meta("web_accessibility_id", "restore_default_bindings")
 	restore_bindings_button.pressed.connect(_on_restore_default_bindings)
-	content.add_child(restore_bindings_button)
+	settings_panel.add_child(restore_bindings_button)
 	binding_status_label = Label.new()
 	binding_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	binding_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	binding_status_label.add_theme_font_size_override("font_size", 11)
 	binding_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
-	content.add_child(binding_status_label)
-	start_game_button = Button.new()
-	start_game_button.text = "Start Guided Trade — Water to Reedwatch"
-	start_game_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	start_game_button.custom_minimum_size = Vector2(0, 56)
-	start_game_button.tooltip_text = "Start the canonical campaign with the two-Water teaching trade selected."
-	start_game_button.pressed.connect(_on_start_game_requested.bind(PLAYTEST_PATH_GUIDED))
-	content.add_child(start_game_button)
+	settings_panel.add_child(binding_status_label)
+
+	credits_panel = VBoxContainer.new()
+	credits_panel.visible = false
+	content.add_child(credits_panel)
+	var credits_text := Label.new()
+	credits_text.text = "MARKET OF ASH\nA trade-and-travel RPG in development.\n\nDesigned around commerce, consequence, and the people who keep a road open."
+	credits_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	credits_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	credits_text.add_theme_color_override("font_color", Color("#c7b49a"))
+	credits_panel.add_child(credits_text)
+
+	developer_panel = VBoxContainer.new()
+	developer_panel.visible = false
+	developer_panel.add_theme_constant_override("separation", 8)
+	content.add_child(developer_panel)
+	var developer_title := Label.new()
+	developer_title.text = "DEVELOPER TOOLS"
+	developer_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	developer_title.add_theme_color_override("font_color", Color("#d08b62"))
+	developer_panel.add_child(developer_title)
 	start_conflict_button = Button.new()
-	start_conflict_button.text = "Start Conflict & Recovery — Medicine on the Toll Road"
+	start_conflict_button.text = "Scenario: Toll Road conflict"
 	start_conflict_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	start_conflict_button.custom_minimum_size = Vector2(0, 56)
-	start_conflict_button.tooltip_text = "Start the same campaign with a deterministic Gatekeeper conflict route selected."
-	start_conflict_button.pressed.connect(_on_start_game_requested.bind(PLAYTEST_PATH_CONFLICT))
-	content.add_child(start_conflict_button)
+	start_conflict_button.custom_minimum_size = Vector2(0, 44)
+	start_conflict_button.pressed.connect(_on_developer_scenario_requested.bind(PLAYTEST_PATH_CONFLICT))
+	developer_panel.add_child(start_conflict_button)
 	start_campaign_button = Button.new()
-	start_campaign_button.text = "Start Contract & Crew — Reedwatch Relief"
+	start_campaign_button.text = "Scenario: Contract and crew"
 	start_campaign_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	start_campaign_button.custom_minimum_size = Vector2(0, 56)
-	start_campaign_button.tooltip_text = "Start the same campaign with the relief-contract load selected and local crew offers visible."
-	start_campaign_button.pressed.connect(_on_start_game_requested.bind(PLAYTEST_PATH_CAMPAIGN))
-	content.add_child(start_campaign_button)
-	continue_game_button = Button.new()
-	continue_game_button.text = "Continue saved game"
-	continue_game_button.custom_minimum_size = Vector2(0, 44)
-	continue_game_button.disabled = not FileAccess.file_exists(save_path)
-	continue_game_button.tooltip_text = "No saved campaign exists yet." if continue_game_button.disabled else "Validate and continue the saved campaign."
-	continue_game_button.pressed.connect(_on_load_pressed)
-	content.add_child(continue_game_button)
-	menu_save_status_label = Label.new()
-	menu_save_status_label.text = save_status_text
-	menu_save_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	menu_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	menu_save_status_label.add_theme_font_size_override("font_size", 11)
-	menu_save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
-	content.add_child(menu_save_status_label)
+	start_campaign_button.custom_minimum_size = Vector2(0, 44)
+	start_campaign_button.pressed.connect(_on_developer_scenario_requested.bind(PLAYTEST_PATH_CAMPAIGN))
+	developer_panel.add_child(start_campaign_button)
+	var developer_report_button := Button.new()
+	developer_report_button.text = "Export diagnostic report"
+	developer_report_button.custom_minimum_size = Vector2(0, 44)
+	developer_report_button.pressed.connect(_on_export_report_pressed)
+	developer_panel.add_child(developer_report_button)
 	quit_button = Button.new()
 	quit_button.text = "Quit"
 	quit_button.custom_minimum_size = Vector2(0, 44)
@@ -350,12 +446,145 @@ func _build_main_menu() -> void:
 	quit_button.visible = not OS.has_feature("web")
 	quit_button.pressed.connect(_on_quit_pressed)
 	content.add_child(quit_button)
-	content.move_child(start_game_button, 4)
-	content.move_child(start_conflict_button, 5)
-	content.move_child(start_campaign_button, 6)
-	content.move_child(continue_game_button, 7)
-	content.move_child(menu_save_status_label, 8)
 	_refresh_binding_labels()
+
+func _on_settings_pressed() -> void:
+	settings_panel.visible = not settings_panel.visible
+	credits_panel.visible = false
+	developer_panel.visible = false
+	_link_main_menu_focus_cycle()
+	if settings_panel.visible:
+		_grab_focus_if_available(reduce_motion_checkbox)
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
+
+func _on_credits_pressed() -> void:
+	credits_panel.visible = not credits_panel.visible
+	settings_panel.visible = false
+	developer_panel.visible = false
+	_link_main_menu_focus_cycle()
+	_grab_focus_if_available(credits_button)
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
+
+func _on_developer_scenario_requested(path_id: String) -> void:
+	pending_tutorial_enabled = false
+	_on_start_game_requested(path_id)
+
+func _build_intro() -> void:
+	intro_layer = Control.new()
+	intro_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	intro_layer.visible = false
+	add_child(intro_layer)
+	var backdrop := ColorRect.new()
+	backdrop.color = Color("#100d0a")
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	intro_layer.add_child(backdrop)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	margin.add_theme_constant_override("margin_left", 48)
+	margin.add_theme_constant_override("margin_top", 40)
+	margin.add_theme_constant_override("margin_right", 48)
+	margin.add_theme_constant_override("margin_bottom", 40)
+	intro_layer.add_child(margin)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 30)
+	margin.add_child(columns)
+	intro_scene = IntroScene.new()
+	intro_scene.custom_minimum_size = Vector2(620, 0)
+	intro_scene.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro_scene.size_flags_stretch_ratio = 1.55
+	columns.add_child(intro_scene)
+	var card := PanelContainer.new()
+	card.custom_minimum_size = Vector2(420, 0)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	columns.add_child(card)
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 18)
+	card.add_child(content)
+	intro_progress_label = Label.new()
+	intro_progress_label.add_theme_color_override("font_color", Color("#d08b62"))
+	content.add_child(intro_progress_label)
+	intro_title_label = Label.new()
+	intro_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro_title_label.add_theme_font_size_override("font_size", 28)
+	intro_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	content.add_child(intro_title_label)
+	intro_body_label = Label.new()
+	intro_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	intro_body_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	intro_body_label.add_theme_font_size_override("font_size", 18)
+	intro_body_label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	content.add_child(intro_body_label)
+	var note := Label.new()
+	note.text = "The tutorial uses the real campaign, economy, events, and save. Guidance never grants cargo or changes an outcome."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	note.add_theme_font_size_override("font_size", 12)
+	note.add_theme_color_override("font_color", Color("#8f8374"))
+	content.add_child(note)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 10)
+	content.add_child(buttons)
+	intro_back_button = Button.new()
+	intro_back_button.text = "Back"
+	intro_back_button.custom_minimum_size = Vector2(0, 52)
+	intro_back_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro_back_button.pressed.connect(_on_intro_back_pressed)
+	buttons.add_child(intro_back_button)
+	intro_next_button = Button.new()
+	intro_next_button.text = "Next"
+	intro_next_button.custom_minimum_size = Vector2(0, 52)
+	intro_next_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro_next_button.pressed.connect(_on_intro_next_pressed)
+	buttons.add_child(intro_next_button)
+	intro_skip_button = Button.new()
+	intro_skip_button.text = "Start without guidance"
+	intro_skip_button.custom_minimum_size = Vector2(0, 48)
+	intro_skip_button.pressed.connect(_on_intro_skip_pressed)
+	content.add_child(intro_skip_button)
+	_link_focus_cycle([intro_back_button, intro_next_button, intro_skip_button])
+
+func _on_new_game_pressed() -> void:
+	intro_page = 0
+	menu_layer.visible = false
+	intro_layer.visible = true
+	_refresh_intro_page()
+	_grab_focus_if_available(intro_next_button)
+
+func _refresh_intro_page() -> void:
+	var page: Dictionary = INTRO_PAGES[intro_page]
+	intro_progress_label.text = "%s\nINTRODUCTION %d OF %d" % [String(page.get("eyebrow", "")), intro_page + 1, INTRO_PAGES.size()]
+	intro_title_label.text = String(page.get("title", ""))
+	intro_body_label.text = String(page.get("body", ""))
+	intro_back_button.text = "Main Menu" if intro_page == 0 else "Back"
+	intro_next_button.text = "Begin Guided Campaign" if intro_page == INTRO_PAGES.size() - 1 else "Next"
+	intro_scene.set_scene(String(page.get("scene", "basin")))
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
+
+func _on_intro_back_pressed() -> void:
+	if intro_page > 0:
+		intro_page -= 1
+		_refresh_intro_page()
+		_grab_focus_if_available(intro_next_button)
+		return
+	intro_layer.visible = false
+	_show_main_menu()
+
+func _on_intro_next_pressed() -> void:
+	if intro_page < INTRO_PAGES.size() - 1:
+		intro_page += 1
+		_refresh_intro_page()
+		return
+	_begin_new_campaign(true)
+
+func _on_intro_skip_pressed() -> void:
+	_begin_new_campaign(false)
+
+func _begin_new_campaign(with_tutorial: bool) -> void:
+	pending_tutorial_enabled = with_tutorial
+	pending_new_game_path_id = PLAYTEST_PATH_CAMPAIGN if with_tutorial else PLAYTEST_PATH_GUIDED
+	_on_start_game_requested(pending_new_game_path_id)
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
@@ -398,27 +627,28 @@ func _build_pause_menu() -> void:
 	pause_resume_button.pressed.connect(_close_pause)
 	content.add_child(pause_resume_button)
 	pause_save_button = Button.new()
-	pause_save_button.text = "Save campaign"
+	pause_save_button.text = "Save Game"
 	pause_save_button.custom_minimum_size = Vector2(0, 44)
 	pause_save_button.pressed.connect(_on_save_pressed)
 	content.add_child(pause_save_button)
 	pause_load_button = Button.new()
-	pause_load_button.text = "Load saved campaign"
+	pause_load_button.text = "Load Game"
 	pause_load_button.custom_minimum_size = Vector2(0, 44)
 	pause_load_button.pressed.connect(_on_pause_load_pressed)
 	content.add_child(pause_load_button)
 	pause_report_button = Button.new()
-	pause_report_button.text = "Export playtest report"
+	pause_report_button.text = "Export diagnostic report"
 	pause_report_button.custom_minimum_size = Vector2(0, 44)
 	pause_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
 	pause_report_button.pressed.connect(_on_export_report_pressed)
 	content.add_child(pause_report_button)
+	pause_report_button.visible = false
 	pause_main_menu_button = Button.new()
 	pause_main_menu_button.text = "Return to main menu"
 	pause_main_menu_button.custom_minimum_size = Vector2(0, 44)
 	pause_main_menu_button.pressed.connect(_on_pause_main_menu_pressed)
 	content.add_child(pause_main_menu_button)
-	_link_focus_cycle([pause_resume_button, pause_save_button, pause_load_button, pause_report_button, pause_main_menu_button])
+	_link_focus_cycle([pause_resume_button, pause_save_button, pause_load_button, pause_main_menu_button])
 
 func _show_main_menu() -> void:
 	get_tree().paused = false
@@ -426,24 +656,22 @@ func _show_main_menu() -> void:
 		pause_layer.visible = false
 	game_layer.visible = false
 	shop_layer.visible = false
+	intro_layer.visible = false
 	menu_layer.visible = true
+	settings_panel.visible = false
+	credits_panel.visible = false
+	developer_panel.visible = false
+	_link_main_menu_focus_cycle()
 	if start_game_button:
 		start_game_button.grab_focus()
 	_publish_web_ui_state()
 	_queue_web_ui_state_after_layout()
 
 func _refresh_start_button_labels(requires_confirmation: bool) -> void:
-	var prefix := "New" if requires_confirmation else "Start"
 	var confirmation_note := " Existing campaign files remain until the new run's first successful autosave." if requires_confirmation else ""
 	if start_game_button:
-		start_game_button.text = "%s Guided Trade — Water to Reedwatch" % prefix
-		start_game_button.tooltip_text = "Begin the canonical campaign with the two-Water teaching trade selected.%s" % confirmation_note
-	if start_conflict_button:
-		start_conflict_button.text = "%s Conflict & Recovery — Medicine on the Toll Road" % prefix
-		start_conflict_button.tooltip_text = "Begin the same campaign with a deterministic Gatekeeper conflict route selected.%s" % confirmation_note
-	if start_campaign_button:
-		start_campaign_button.text = "%s Contract & Crew — Reedwatch Relief" % prefix
-		start_campaign_button.tooltip_text = "Begin the same campaign with the relief-contract load selected and local crew offers visible.%s" % confirmation_note
+		start_game_button.text = "New Game"
+		start_game_button.tooltip_text = "Begin a new campaign, with an optional guided first caravan run.%s" % confirmation_note
 
 func _refresh_continue_availability() -> void:
 	if continue_game_button == null:
@@ -476,6 +704,7 @@ func _refresh_continue_availability() -> void:
 
 func _show_shop() -> void:
 	menu_layer.visible = false
+	intro_layer.visible = false
 	game_layer.visible = false
 	shop_layer.visible = true
 	arrival_pending = false
@@ -497,6 +726,7 @@ func _show_shop() -> void:
 
 func _show_departure() -> void:
 	shop_layer.visible = false
+	intro_layer.visible = false
 	game_layer.visible = true
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
 	commit_departure_button.disabled = journey_locked
@@ -948,6 +1178,7 @@ func _build_shop() -> void:
 	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
 	guided_test_button.set_meta("web_accessibility_id", "guided_trade")
 	guided_test_button.pressed.connect(_on_guided_test_action)
+	guided_test_button.visible = false
 	market_shell.add_child(guided_test_button)
 	shop_good_option.item_selected.connect(_on_shop_plan_changed)
 	shop_quantity.value_changed.connect(_on_shop_quantity_changed)
@@ -979,6 +1210,32 @@ func _build_shop() -> void:
 	bazaar_section_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bazaar_section_label.add_theme_color_override("font_color", Color("#d08b62"))
 	actions.add_child(bazaar_section_label)
+	tutorial_panel = PanelContainer.new()
+	tutorial_panel.name = "CaravanLedgerTutorial"
+	tutorial_panel.visible = false
+	actions.add_child(tutorial_panel)
+	var tutorial_shell := VBoxContainer.new()
+	tutorial_shell.add_theme_constant_override("separation", 6)
+	tutorial_panel.add_child(tutorial_shell)
+	tutorial_chapter_label = Label.new()
+	tutorial_chapter_label.add_theme_font_size_override("font_size", 11)
+	tutorial_chapter_label.add_theme_color_override("font_color", Color("#d08b62"))
+	tutorial_shell.add_child(tutorial_chapter_label)
+	tutorial_title_label = Label.new()
+	tutorial_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_title_label.add_theme_font_size_override("font_size", 17)
+	tutorial_title_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	tutorial_shell.add_child(tutorial_title_label)
+	tutorial_body_label = Label.new()
+	tutorial_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_body_label.add_theme_font_size_override("font_size", 12)
+	tutorial_body_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	tutorial_shell.add_child(tutorial_body_label)
+	tutorial_skip_button = Button.new()
+	tutorial_skip_button.text = "Hide tutorial guidance"
+	tutorial_skip_button.custom_minimum_size = Vector2(0, 40)
+	tutorial_skip_button.pressed.connect(_on_tutorial_skip_pressed)
+	tutorial_shell.add_child(tutorial_skip_button)
 	campaign_outlook_label = Label.new()
 	campaign_outlook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_outlook_label.add_theme_font_size_override("font_size", 12)
@@ -1031,11 +1288,12 @@ func _build_shop() -> void:
 	plan_departure_button.pressed.connect(_on_plan_departure_pressed)
 	action_shell.add_child(plan_departure_button)
 	shop_save_button = Button.new()
-	shop_save_button.text = "Save prototype state"
+	shop_save_button.text = "Save Game"
 	shop_save_button.custom_minimum_size = Vector2(0, 44)
 	shop_save_button.set_meta("web_accessibility_id", "shop_save")
 	shop_save_button.pressed.connect(_on_save_pressed)
 	actions.add_child(shop_save_button)
+	shop_save_button.visible = false
 	shop_load_button = Button.new()
 	shop_load_button.text = "Load saved state"
 	shop_load_button.custom_minimum_size = Vector2(0, 44)
@@ -1043,17 +1301,20 @@ func _build_shop() -> void:
 	shop_load_button.set_meta("web_accessibility_id", "shop_load")
 	shop_load_button.pressed.connect(_on_load_pressed)
 	actions.add_child(shop_load_button)
+	shop_load_button.visible = false
 	save_status_label = Label.new()
 	save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	save_status_label.add_theme_font_size_override("font_size", 11)
 	save_status_label.add_theme_color_override("font_color", Color("#b5a18b"))
 	actions.add_child(save_status_label)
+	save_status_label.visible = false
 	shop_reset_button = Button.new()
 	shop_reset_button.text = "Reset run"
 	shop_reset_button.custom_minimum_size = Vector2(0, 44)
 	shop_reset_button.set_meta("web_accessibility_id", "shop_reset")
 	shop_reset_button.pressed.connect(_on_reset_pressed)
 	actions.add_child(shop_reset_button)
+	shop_reset_button.visible = false
 	shop_report_button = Button.new()
 	shop_report_button.text = "Export playtest report"
 	shop_report_button.custom_minimum_size = Vector2(0, 44)
@@ -1061,11 +1322,13 @@ func _build_shop() -> void:
 	shop_report_button.set_meta("web_accessibility_id", "shop_report")
 	shop_report_button.pressed.connect(_on_export_report_pressed)
 	actions.add_child(shop_report_button)
+	shop_report_button.visible = false
 	diagnostics_label = Label.new()
 	diagnostics_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	diagnostics_label.add_theme_font_size_override("font_size", 11)
 	diagnostics_label.add_theme_color_override("font_color", Color("#8f8374"))
 	actions.add_child(diagnostics_label)
+	diagnostics_label.visible = false
 
 func _build_ui() -> void:
 	var background := ColorRect.new()
@@ -1241,7 +1504,7 @@ func _build_ui() -> void:
 	event_content.add_theme_constant_override("separation", 8)
 	event_card.add_child(event_content)
 	event_mode_label = Label.new()
-	event_mode_label.text = "CARAVAN CONFLICT SIMULATION"
+	event_mode_label.text = "ROADSIDE DECISION"
 	event_mode_label.add_theme_font_size_override("font_size", 12)
 	event_mode_label.add_theme_color_override("font_color", Color("#d08b62"))
 	event_content.add_child(event_mode_label)
@@ -1323,16 +1586,18 @@ func _build_ui() -> void:
 	controls.add_child(departure_status_label)
 
 	var save_button := Button.new()
-	save_button.text = "Save prototype state"
+	save_button.text = "Save Game"
 	save_button.custom_minimum_size = Vector2(0, 44)
 	save_button.pressed.connect(_on_save_pressed)
 	controls.add_child(save_button)
+	save_button.visible = false
 	var load_button := Button.new()
-	load_button.text = "Load saved state"
+	load_button.text = "Load Game"
 	load_button.custom_minimum_size = Vector2(0, 44)
 	load_button.tooltip_text = "Validate and load the saved campaign. A malformed or newer save leaves the current run unchanged."
 	load_button.pressed.connect(_on_load_pressed)
 	controls.add_child(load_button)
+	load_button.visible = false
 	_link_focus_cycle([
 		destination_option,
 		route_option,
@@ -1404,6 +1669,11 @@ func _style_bazaar_navigation_button(button: Button, index: int) -> void:
 
 func _on_bazaar_navigation_pressed(section_id: String) -> void:
 	active_bazaar_section = section_id
+	if section_id == "outlook" and tutorial.enabled:
+		tutorial.mark_outlook_seen()
+		tutorial.refresh(world, _current_ui_state_id(), arrival_pending)
+		if autosave_enabled:
+			_write_save("AUTOSAVED")
 	_refresh_playtest_status()
 	_apply_bazaar_section()
 	var target: Control
@@ -1426,6 +1696,12 @@ func _on_bazaar_navigation_pressed(section_id: String) -> void:
 	else:
 		shop_transaction_status_label.text = "BAZAAR — No %s option is available at this settlement today." % section_id.replace("_", " ")
 	_publish_web_ui_state()
+
+func _on_tutorial_skip_pressed() -> void:
+	tutorial.skip()
+	last_tutorial_presented_step = ""
+	_set_event("Tutorial guidance hidden. The campaign and every current decision remain unchanged. Replay is available from the New Game introduction.")
+	_refresh_ui()
 
 func _apply_bazaar_section() -> void:
 	if opportunity_list == null:
@@ -1467,15 +1743,21 @@ func _apply_bazaar_section() -> void:
 func _link_main_menu_focus_cycle() -> void:
 	if start_game_button == null or continue_game_button == null:
 		return
-	var controls: Array = [start_game_button, start_conflict_button, start_campaign_button]
+	var controls: Array = [start_game_button]
 	if not continue_game_button.disabled:
 		controls.append(continue_game_button)
-	controls.append(reduce_motion_checkbox)
-	controls.append(large_text_checkbox)
-	controls.append(interface_sounds_checkbox)
-	for action_name in REMAPPABLE_ACTIONS:
-		controls.append(binding_buttons[action_name])
-	controls.append(restore_bindings_button)
+	controls.append(settings_button)
+	controls.append(credits_button)
+	if settings_panel != null and settings_panel.visible:
+		controls.append(reduce_motion_checkbox)
+		controls.append(large_text_checkbox)
+		controls.append(interface_sounds_checkbox)
+		for action_name in REMAPPABLE_ACTIONS:
+			controls.append(binding_buttons[action_name])
+		controls.append(restore_bindings_button)
+	if developer_panel != null and developer_panel.visible:
+		controls.append(start_conflict_button)
+		controls.append(start_campaign_button)
 	if quit_button.visible:
 		controls.append(quit_button)
 	_link_focus_cycle(controls)
@@ -1486,6 +1768,8 @@ func _link_shop_focus_cycle() -> void:
 	var controls: Array = []
 	for control in bazaar_navigation_buttons:
 		controls.append(control)
+	if tutorial_skip_button != null and tutorial_skip_button.visible and not tutorial_skip_button.disabled:
+		controls.append(tutorial_skip_button)
 	if active_bazaar_section == "trade":
 		controls.append(shop_good_option)
 		controls.append(shop_quantity.get_line_edit())
@@ -1497,7 +1781,8 @@ func _link_shop_focus_cycle() -> void:
 			if control.visible and not control.disabled:
 				controls.append(control)
 	for control in [shop_save_button, shop_load_button, shop_reset_button, shop_report_button, plan_departure_button]:
-		controls.append(control)
+		if control.visible and not control.disabled:
+			controls.append(control)
 	_link_focus_cycle(controls)
 
 func _link_focus_cycle(controls: Array) -> void:
@@ -1591,14 +1876,21 @@ func _on_start_game_pressed(path_id: String = PLAYTEST_PATH_GUIDED) -> void:
 	_populate_destination_options()
 	_populate_route_options()
 	_apply_playtest_path_defaults(path_id)
-	guided_test_button.disabled = false
+	if pending_tutorial_enabled:
+		tutorial.start()
+		_set_event("The caravan begins its first morning in Ashgate. The Reedwatch Wellkeepers are looking for a carrier before the wells fall further.")
+	else:
+		tutorial.skip()
+		_set_event("Ashgate market is open. Inspect local prices, opportunities, and roads before committing the caravan.")
+	guided_test_button.disabled = true
+	guided_test_button.visible = false
 	arrival_pending = false
 	enter_settlement_button.visible = false
 	commit_departure_button.disabled = false
 	return_to_shop_button.disabled = false
 	_show_shop()
 
-func _on_start_game_requested(path_id: String = PLAYTEST_PATH_GUIDED) -> void:
+func _on_start_game_requested(path_id: String = PLAYTEST_PATH_CAMPAIGN) -> void:
 	pending_new_game_path_id = path_id if PLAYTEST_PATHS.has(path_id) else PLAYTEST_PATH_GUIDED
 	var save_files_exist := FileAccess.file_exists(save_path) or FileAccess.file_exists(save_path + ".bak")
 	if not save_files_exist:
@@ -1679,6 +1971,17 @@ func _input(event: InputEvent) -> void:
 		last_input_device = "mouse"
 
 func _unhandled_input(event: InputEvent) -> void:
+	if OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_D and event.ctrl_pressed and event.shift_pressed and menu_layer != null and menu_layer.visible:
+		developer_panel.visible = not developer_panel.visible
+		settings_panel.visible = false
+		credits_panel.visible = false
+		_link_main_menu_focus_cycle()
+		if developer_panel.visible:
+			_grab_focus_if_available(start_conflict_button)
+		_publish_web_ui_state()
+		_queue_web_ui_state_after_layout()
+		get_viewport().set_input_as_handled()
+		return
 	if not remapping_action.is_empty():
 		if event is InputEventKey and event.pressed and not event.echo:
 			_capture_keyboard_binding(event)
@@ -1687,7 +1990,19 @@ func _unhandled_input(event: InputEvent) -> void:
 			_capture_controller_binding(event)
 			get_viewport().set_input_as_handled()
 		return
-	if pause_layer != null and pause_layer.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_pause")):
+	if intro_layer != null and intro_layer.visible and event.is_action_pressed("ui_cancel"):
+		_on_intro_back_pressed()
+		get_viewport().set_input_as_handled()
+	elif menu_layer != null and menu_layer.visible and event.is_action_pressed("ui_cancel") and ((settings_panel != null and settings_panel.visible) or (credits_panel != null and credits_panel.visible) or (developer_panel != null and developer_panel.visible)):
+		settings_panel.visible = false
+		credits_panel.visible = false
+		developer_panel.visible = false
+		_link_main_menu_focus_cycle()
+		_grab_focus_if_available(settings_button)
+		_publish_web_ui_state()
+		_queue_web_ui_state_after_layout()
+		get_viewport().set_input_as_handled()
+	elif pause_layer != null and pause_layer.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("ui_pause")):
 		_close_pause()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("ui_pause") and menu_layer != null and not menu_layer.visible:
@@ -1846,6 +2161,8 @@ func _current_ui_state_id() -> String:
 		return "reset_confirmation"
 	if pause_layer != null and pause_layer.visible:
 		return "pause"
+	if intro_layer != null and intro_layer.visible:
+		return "introduction"
 	if menu_layer != null and menu_layer.visible:
 		return "main_menu"
 	if shop_layer != null and shop_layer.visible:
@@ -2185,6 +2502,12 @@ func _set_web_accessibility_checkbox(control: CheckBox, requested_value: String)
 func _web_accessibility_action_control(action_id: String) -> Variant:
 	match action_id:
 		"start_game": return start_game_button
+		"menu_settings": return settings_button
+		"menu_credits": return credits_button
+		"intro_back": return intro_back_button
+		"intro_next": return intro_next_button
+		"intro_skip": return intro_skip_button
+		"tutorial_skip": return tutorial_skip_button
 		"start_conflict": return start_conflict_button
 		"start_campaign": return start_campaign_button
 		"continue_game": return continue_game_button
@@ -2288,9 +2611,10 @@ func _web_accessibility_controls() -> Array:
 	var controls: Array = []
 	match _current_ui_state_id():
 		"main_menu":
-			_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("reduce_motion", reduce_motion_checkbox))
-			_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("large_text", large_text_checkbox))
-			_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("interface_sounds", interface_sounds_checkbox))
+			if settings_panel != null and settings_panel.visible:
+				_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("reduce_motion", reduce_motion_checkbox))
+				_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("large_text", large_text_checkbox))
+				_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("interface_sounds", interface_sounds_checkbox))
 		"settlement_shop":
 			_append_web_accessibility_control(controls, _web_accessibility_option_control("shop_good", "Cargo", shop_good_option))
 			_append_web_accessibility_control(controls, _web_accessibility_quantity_control("shop_quantity", "Quantity", shop_quantity))
@@ -2306,14 +2630,20 @@ func _web_accessibility_actions() -> Array:
 	match _current_ui_state_id():
 		"main_menu":
 			_append_web_accessibility_action(actions, "start_game", start_game_button)
-			_append_web_accessibility_action(actions, "start_conflict", start_conflict_button)
-			_append_web_accessibility_action(actions, "start_campaign", start_campaign_button)
 			_append_web_accessibility_action(actions, "continue_game", continue_game_button)
-			for action_name in REMAPPABLE_ACTIONS:
-				_append_web_accessibility_action(actions, "rebind_%s" % action_name, binding_buttons.get(action_name))
-			_append_web_accessibility_action(actions, "restore_default_bindings", restore_bindings_button)
+			_append_web_accessibility_action(actions, "menu_settings", settings_button)
+			_append_web_accessibility_action(actions, "menu_credits", credits_button)
+			if settings_panel != null and settings_panel.visible:
+				for action_name in REMAPPABLE_ACTIONS:
+					_append_web_accessibility_action(actions, "rebind_%s" % action_name, binding_buttons.get(action_name))
+				_append_web_accessibility_action(actions, "restore_default_bindings", restore_bindings_button)
+		"introduction":
+			_append_web_accessibility_action(actions, "intro_back", intro_back_button)
+			_append_web_accessibility_action(actions, "intro_next", intro_next_button)
+			_append_web_accessibility_action(actions, "intro_skip", intro_skip_button)
 		"settlement_shop":
 			_append_tagged_web_accessibility_actions(actions, bazaar_navigation_buttons)
+			_append_web_accessibility_action(actions, "tutorial_skip", tutorial_skip_button)
 			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
 			_append_web_accessibility_action(actions, "shop_sell", shop_sell_button)
 			_append_web_accessibility_action(actions, "guided_trade", guided_test_button)
@@ -2352,7 +2682,7 @@ func _web_accessibility_actions() -> Array:
 func _web_accessibility_order(actions: Array, controls: Array) -> Array:
 	var order: Array = []
 	if _current_ui_state_id() == "main_menu":
-		for action_id in ["start_game", "start_conflict", "start_campaign", "continue_game"]:
+		for action_id in ["start_game", "continue_game", "menu_settings", "menu_credits"]:
 			for action in actions:
 				if action.get("id") == action_id:
 					order.append("action:%s" % action_id)
@@ -2361,7 +2691,7 @@ func _web_accessibility_order(actions: Array, controls: Array) -> Array:
 			order.append("control:%s" % String(control.get("id", "")))
 		for action in actions:
 			var action_id := String(action.get("id", ""))
-			if action_id not in ["start_game", "start_conflict", "start_campaign", "continue_game"]:
+			if action_id not in ["start_game", "continue_game", "menu_settings", "menu_credits"]:
 				order.append("action:%s" % action_id)
 		return order
 	if _current_ui_state_id() == "settlement_shop":
@@ -2394,10 +2724,12 @@ func _web_accessibility_announcement() -> String:
 		"main_menu":
 			if not remapping_action.is_empty() and binding_status_label != null:
 				return "Market of Ash input remapping. %s" % binding_status_label.text
-			var menu_announcement := "Market of Ash main menu. Start Guided Trade is focused, followed by Conflict and Recovery, Contract and Crew, and Continue. Every new path uses the same canonical campaign rules. Accept uses %s or controller %s. Accessibility and input settings follow the launch actions." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
+			var menu_announcement := "Market of Ash main menu. New Game is focused, followed by Continue, Settings, and Credits. Accept uses %s or controller %s." % [_keyboard_binding_text("ui_accept"), _controller_binding_text("ui_accept")]
 			if binding_status_label != null and not binding_status_label.text.is_empty():
 				menu_announcement += " %s" % binding_status_label.text
 			return menu_announcement
+		"introduction":
+			return "Market of Ash introduction, page %d of %d. %s %s Next, Back, and Start without guidance are available." % [intro_page + 1, INTRO_PAGES.size(), intro_title_label.text, intro_body_label.text]
 		"settlement_shop":
 			var recent_conflict_text := _latest_conflict_outcome_text()
 			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
@@ -2407,7 +2739,7 @@ func _web_accessibility_announcement() -> String:
 		"route_travel":
 			return "On the road. %s. The committed corridor is shown before any encounter or arrival. Continue journey is focused when the road observation is ready." % map_panel._road_waypoint_label()
 		"route_event":
-			return "Caravan conflict simulation: %s. Threat, readiness, costs, risk, and expected outcomes are stated before the first available response; unavailable tactics include written reasons." % String(world.pending_event.get("title", "travel event"))
+			return "Roadside decision: %s. Threat, available responses, costs, risk, and expected outcomes are stated before the first available response; unavailable choices include written reasons." % String(world.pending_event.get("title", "travel event"))
 		"arrival_handoff":
 			var comparison_note := " " + last_conflict_outcome_text.replace("\n", " ") if not last_conflict_outcome_text.is_empty() else ""
 			return "Arrival report for %s.%s Enter settlement is focused." % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), comparison_note]
@@ -2433,6 +2765,11 @@ func _web_ui_state() -> Dictionary:
 		"logical_viewport": {"width": logical_size.x, "height": logical_size.y},
 		"targets": {
 			"start_game": _web_control_rect(start_game_button),
+			"menu_settings": _web_control_rect(settings_button),
+			"menu_credits": _web_control_rect(credits_button),
+			"intro_back": _web_control_rect(intro_back_button),
+			"intro_next": _web_control_rect(intro_next_button),
+			"intro_skip": _web_control_rect(intro_skip_button),
 			"start_conflict": _web_control_rect(start_conflict_button),
 			"start_campaign": _web_control_rect(start_campaign_button),
 			"bazaar_trade": _web_control_rect(bazaar_navigation_buttons[0]),
@@ -2456,6 +2793,8 @@ func _web_ui_state() -> Dictionary:
 		"reduced_motion": reduce_motion_enabled,
 		"interface_sounds": interface_sounds_enabled,
 		"playtest_path_id": active_playtest_path_id,
+		"intro_page": intro_page,
+		"tutorial": tutorial.serialize(),
 		"remapping_action": remapping_action,
 		"binding_status": binding_status_label.text if binding_status_label != null else "",
 		"input_bindings": _input_bindings_report(),
@@ -2665,7 +3004,7 @@ func _refresh_forecasts() -> void:
 	if shop_transaction_status_label:
 		shop_transaction_status_label.text = "Buy or sell the selected load." if transaction_notes.is_empty() else " ".join(transaction_notes)
 	if departure_load_label:
-		departure_load_label.text = "FORECAST SCENARIO\n%s x%d · actually held %d · total hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get(good_id, 0)), int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
+		departure_load_label.text = "JOURNEY ESTIMATE\n%s x%d · actually held %d · total hold %d/%d · cash %d · provisions %d" % [good_id.capitalize(), quantity, int(world.cargo.get(good_id, 0)), int(world.cargo.get("weight", 0)), world.cargo_capacity, world.money, world.provisions]
 	if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		route_preview_label.text = "ROUTE FORECAST\nChoose a directly connected destination and route."
 		if commit_departure_button:
@@ -2810,6 +3149,7 @@ func _on_continue_journey_pressed() -> void:
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
 		var result_text := String(result.message)
+		tutorial.refresh(world, _current_ui_state_id(), arrival_pending)
 		var save_succeeded := true
 		if autosave_enabled:
 			save_succeeded = _write_save("AUTOSAVED")
@@ -2839,7 +3179,7 @@ func _on_save_pressed() -> void:
 	var save_succeeded := _write_save("SAVED")
 	_play_ui_cue("success" if save_succeeded else "blocked")
 	if save_succeeded:
-		_set_event("Versioned prototype state saved. Command history is included for deterministic review.")
+		_set_event("Campaign saved. Your caravan, contracts, road history, and tutorial progress are preserved.")
 	else:
 		_set_event("Save failed. The current run remains active and unchanged.")
 	_refresh_ui()
@@ -2861,7 +3201,12 @@ func _write_save(status_prefix: String) -> bool:
 	if file == null:
 		save_status_text = "SAVE ERROR — Could not open a temporary save file. Current run unchanged."
 		return false
-	file.store_string(JSON.stringify(world.serialize()))
+	file.store_string(JSON.stringify({
+		"format": SAVE_ENVELOPE_FORMAT,
+		"format_version": SAVE_ENVELOPE_VERSION,
+		"world": world.serialize(),
+		"presentation": {"tutorial": tutorial.serialize()},
+	}))
 	file.flush()
 	if file.get_error() != OK:
 		file = null
@@ -2932,6 +3277,8 @@ func _on_load_pressed() -> bool:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = candidate
+	tutorial.load_serialized(load_attempt.get("tutorial", {}))
+	last_tutorial_presented_step = ""
 	if loaded_from_main_menu:
 		active_playtest_path_id = PLAYTEST_PATH_CONTINUED
 	arrival_pending = false
@@ -2969,11 +3316,23 @@ func _load_candidate(candidate_path: String) -> Dictionary:
 	var parsed: Variant = parser.data
 	if parse_error != OK or typeof(parsed) != TYPE_DICTIONARY:
 		return {"ok": false, "reason": "The file is not a valid save object"}
+	var parsed_record: Dictionary = parsed
+	if parsed_record.has("world"):
+		if String(parsed_record.get("format", "")) != SAVE_ENVELOPE_FORMAT:
+			return {"ok": false, "reason": "The campaign save uses an unknown container format"}
+		var format_version := int(parsed_record.get("format_version", 0))
+		if format_version != SAVE_ENVELOPE_VERSION:
+			return {"ok": false, "reason": "The campaign save container version is not supported by this build"}
+	var world_data: Variant = parsed_record.get("world", parsed_record)
+	if typeof(world_data) != TYPE_DICTIONARY:
+		return {"ok": false, "reason": "The save does not contain a valid campaign"}
 	var candidate := AshWorldState.new(world.seed)
-	var load_result := candidate.load_serialized(parsed)
+	var load_result := candidate.load_serialized(world_data)
 	if not bool(load_result.get("ok", false)):
 		return {"ok": false, "reason": String(load_result.get("reason", "Save validation failed"))}
-	return {"ok": true, "world": candidate, "result": load_result}
+	var presentation: Variant = parsed_record.get("presentation", {}) if parsed_record.has("world") else {}
+	var tutorial_data: Variant = presentation.get("tutorial", {}) if typeof(presentation) == TYPE_DICTIONARY else {}
+	return {"ok": true, "world": candidate, "result": load_result, "tutorial": tutorial_data}
 
 func _on_reset_pressed() -> void:
 	if reset_confirmation_dialog == null:
@@ -3027,113 +3386,64 @@ func _on_map_settlement_selected(settlement_id: String) -> void:
 func _refresh_playtest_status() -> void:
 	if playtest_status_label == null:
 		return
-	if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
-		if guided_test_button:
-			guided_test_button.visible = false
-		playtest_status_label.text = "ON THE ROAD — Follow the committed route, inspect the travel stop, then continue toward the next event or settlement."
+	if tutorial.enabled or tutorial.completed:
+		_refresh_tutorial_guidance()
 		return
-	if active_playtest_path_id == PLAYTEST_PATH_CONFLICT:
-		_refresh_conflict_playtest_status()
-		return
-	if active_playtest_path_id == PLAYTEST_PATH_CAMPAIGN:
-		_refresh_campaign_playtest_status()
-		return
-	if active_playtest_path_id == PLAYTEST_PATH_CONTINUED:
-		if guided_test_button:
-			guided_test_button.visible = false
-		playtest_status_label.text = "CONTINUED CAMPAIGN — Resume from the saved market, route, contract, crew, and campaign evidence; no opening-path assumptions are applied."
-		return
-	if active_playtest_path_id != PLAYTEST_PATH_GUIDED:
-		if guided_test_button:
-			guided_test_button.visible = false
-		playtest_status_label.text = "FREE PLAY — Use the live market, route, contract, crew, and campaign outlook to choose the next test."
-		return
-	var guided_cargo_held := int(world.cargo.get(PLAYTEST_GOOD, 0))
-	var guided_cargo_bought := _guided_trade_quantity(MarketCommandProcessor.BUY_GOODS)
-	var guided_cargo_sold := _guided_trade_quantity(MarketCommandProcessor.SELL_GOODS, PLAYTEST_DESTINATION)
-	if guided_test_button:
-		guided_test_button.visible = active_playtest_path_id == PLAYTEST_PATH_GUIDED and world.current_settlement == "ashgate" and world.day == 1 and guided_cargo_sold < PLAYTEST_QUANTITY
-		var origin := world.settlement(world.current_settlement)
-		var guided_total := MarketEconomy.price_for(PLAYTEST_GOOD, origin, world.pricing_context()) * PLAYTEST_QUANTITY
-		var guided_validation := MarketEconomy.validate_trade(world.cargo, PLAYTEST_GOOD, PLAYTEST_QUANTITY, world.cargo_capacity)
-		var guided_completed := guided_cargo_bought >= PLAYTEST_QUANTITY or guided_cargo_held >= PLAYTEST_QUANTITY or guided_cargo_sold >= PLAYTEST_QUANTITY
-		guided_test_button.text = "Optional: Buy 2 Water — %d ashmarks" % guided_total
-		guided_test_button.disabled = guided_completed or not bool(guided_validation.get("ok", false)) or world.money < guided_total
-		if guided_completed:
-			guided_test_button.tooltip_text = "The opening purchase has already been completed or superseded."
-		elif not bool(guided_validation.get("ok", false)):
-			guided_test_button.tooltip_text = "The opening purchase is unavailable: %s." % String(guided_validation.get("reason", "invalid cargo load"))
-		elif world.money < guided_total:
-			guided_test_button.tooltip_text = "The opening purchase needs %d ashmarks; the caravan has %d." % [guided_total, world.money]
-		else:
-			guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
-	if guided_cargo_sold >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "RUN COMPLETE — You moved water to Reedwatch and sold it. Compare the opening forecast with the realized result, then reset or keep trading."
-	elif world.current_settlement == PLAYTEST_DESTINATION and guided_cargo_held >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "STEP 3 OF 3 — You reached Reedwatch with water. Sell 2 water to see the delivery result."
-	elif world.current_settlement == PLAYTEST_DESTINATION and guided_cargo_held > 0 and guided_cargo_bought >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "RECOVERY — Only %d of the planned 2 water reached Reedwatch. Sell what remains, trade onward, or reset; the run is still playable." % guided_cargo_held
-	elif guided_cargo_held >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "STEP 2 OF 3 — Water is loaded. Read the Old Road forecast, compare it with the Toll Road, then choose whether to depart for Reedwatch."
-	elif guided_cargo_bought >= PLAYTEST_QUANTITY:
-		playtest_status_label.text = "RECOVERY — The planned water is no longer in the hold. Review the latest result, then trade onward or reset; no restart is required."
-	elif world.current_settlement != "ashgate" or world.day > 1:
-		playtest_status_label.text = "FREE PLAY — The optional opening example was skipped. Use the live market, route, contract, and campaign outlook to choose the next trade."
-	else:
-		playtest_status_label.text = "STEP 1 OF 3 — Read the Water market price and route forecast. Buy 2 water when you are ready; the marked test button simply executes that normal trade."
-
-func _refresh_conflict_playtest_status() -> void:
 	if guided_test_button:
 		guided_test_button.visible = false
-	if world.has_resolved_event("gatekeepers_chalk"):
-		playtest_status_label.text = "RUN COMPLETE — You resolved the Gatekeeper conflict. Compare Plan vs Actual, follow any recovery guidance, then enter Brine Cross."
-	elif String(world.pending_event.get("id", "")) == "gatekeepers_chalk":
-		playtest_status_label.text = "STEP 3 OF 3 — The Gatekeeper conflict is active. Compare every tactic's certainty, cost, and expected outcome before choosing."
-	elif world.current_settlement == "ashgate" and int(world.cargo.get("medicine", 0)) >= 2:
-		playtest_status_label.text = "STEP 2 OF 3 — Medicine is loaded. Plan Brine Cross by the Toll Road, confirm the exposed unit, then commit."
-	elif world.current_settlement == "ashgate" and world.day == 1:
-		playtest_status_label.text = "STEP 1 OF 3 — Buy 2 Medicine. The selected Toll Road plan will surface a deterministic Gatekeeper conflict without bypassing normal trade rules."
-	else:
-		playtest_status_label.text = "FREE PLAY — The conflict test path was left behind. Use the live market, route, and campaign state to continue."
+	var crisis := MarketContent.crisis_stage(world.crisis_stage)
+	playtest_banner.text = "REGIONAL OBJECTIVE — %s" % String(crisis.get("label", "Five-Well Basin"))
+	playtest_status_label.text = String(crisis.get("objective", "Inspect the market, prepare the caravan, and choose the next road."))
 
-func _refresh_campaign_playtest_status() -> void:
-	if guided_test_button:
-		guided_test_button.visible = false
-	if _has_completed_contract("reedwatch_water_relief_01"):
-		playtest_status_label.text = "RUN COMPLETE — Reedwatch Water Relief is complete. Review the reward, market response, resilience options, and campaign outlook."
-	elif not world.active_contract("reedwatch_water_relief_01").is_empty() and int(world.cargo.get("water", 0)) >= 4:
-		playtest_status_label.text = "STEP 3 OF 3 — The relief terms and 4 Water are ready. Compare crew-informed routes, then commit to Reedwatch before the deadline."
-	elif not world.active_contract("reedwatch_water_relief_01").is_empty():
-		playtest_status_label.text = "STEP 2 OF 3 — The relief contract is active. Buy enough Water to reach 4/4; crew recruitment remains optional and costs a visit slot."
-	elif world.current_settlement == "ashgate" and world.day == 1:
-		playtest_status_label.text = "STEP 1 OF 3 — Accept Reedwatch Water Relief. Recruit and assign one crew member if their tradeoff fits the plan, then prepare 4 Water."
-	else:
-		playtest_status_label.text = "FREE PLAY — The contract-and-crew test path was left behind. Use the live opportunities and campaign outlook to continue."
+func _refresh_tutorial_guidance() -> void:
+	var objective := tutorial.objective()
+	var chapter := String(objective.get("chapter", "CARAVAN LEDGER"))
+	var title := String(objective.get("title", "Choose the next road"))
+	var body := String(objective.get("body", "Inspect the current market and decide what the caravan should carry next."))
+	if playtest_banner:
+		playtest_banner.text = "CARAVAN LEDGER — %s" % chapter
+	if playtest_status_label:
+		playtest_status_label.text = "%s\n%s" % [title, body]
+	if tutorial_panel:
+		tutorial_panel.visible = true
+		tutorial_chapter_label.text = chapter
+		tutorial_title_label.text = title
+		tutorial_body_label.text = body
+		tutorial_skip_button.visible = not tutorial.completed
+		tutorial_skip_button.disabled = tutorial.completed
+	if last_tutorial_presented_step == tutorial.current_step:
+		return
+	last_tutorial_presented_step = tutorial.current_step
+	match tutorial.current_step:
+		TutorialDirector.STEP_BUY_WATER:
+			_select_option_by_id(shop_good_option, "water")
+			_select_option_by_id(cargo_good_option, "water")
+			shop_quantity.value = 4
+			cargo_quantity.value = 4
+		TutorialDirector.STEP_PLAN_REEDWATCH:
+			_select_option_by_id(destination_option, "reedwatch")
+			_populate_route_options()
+			_select_option_by_id(route_option, "old_road")
+			_select_option_by_id(cargo_good_option, "water")
+			cargo_quantity.value = 4
+		TutorialDirector.STEP_BUY_GRAIN:
+			_select_option_by_id(shop_good_option, "grain")
+			_select_option_by_id(cargo_good_option, "grain")
+			shop_quantity.value = 4
+			cargo_quantity.value = 4
+		TutorialDirector.STEP_RETURN_ASHGATE:
+			_select_option_by_id(destination_option, "ashgate")
+			_populate_route_options()
+			_select_option_by_id(route_option, "old_road")
+			_select_option_by_id(cargo_good_option, "grain")
+			cargo_quantity.value = 4
+		TutorialDirector.STEP_SELL_GRAIN:
+			_select_option_by_id(shop_good_option, "grain")
+			shop_quantity.value = mini(4, int(world.cargo.get("grain", 0)))
 
-func _guided_trade_quantity(command_id: String, settlement_id: String = "") -> int:
-	var total := 0
-	for entry in world.command_history:
-		if not bool(entry.get("ok", false)) or String(entry.get("id", "")) != command_id:
-			continue
-		var inputs_value: Variant = entry.get("inputs", {})
-		if typeof(inputs_value) != TYPE_DICTIONARY:
-			continue
-		var inputs: Dictionary = inputs_value
-		if String(inputs.get("good_id", "")) != PLAYTEST_GOOD:
-			continue
-		if not settlement_id.is_empty():
-			var state_delta_value: Variant = entry.get("state_delta", {})
-			if typeof(state_delta_value) != TYPE_DICTIONARY:
-				continue
-			var state_delta: Dictionary = state_delta_value
-			var market_memory_value: Variant = state_delta.get("market_memory", {})
-			if typeof(market_memory_value) != TYPE_DICTIONARY:
-				continue
-			var market_memory: Dictionary = market_memory_value
-			if String(market_memory.get("settlement_id", "")) != settlement_id:
-				continue
-		total += maxi(0, int(inputs.get("quantity", 0)))
-	return total
+func _hide_tutorial_guidance() -> void:
+	if tutorial_panel:
+		tutorial_panel.visible = false
 
 func _refresh_opportunities() -> void:
 	if opportunity_list == null or opportunity_status_label == null:
@@ -3369,8 +3679,8 @@ func _refresh_event_card() -> void:
 		if typeof(raw_choice) == TYPE_DICTIONARY:
 			maximum_cargo_risk = maxf(maximum_cargo_risk, float(raw_choice.get("cargo_risk", 0.0)))
 	var maximum_risk_percent := int(round(maximum_cargo_risk * 100.0))
-	var threat_summary := "No tactic uses a cargo-loss roll." if maximum_risk_percent == 0 else "Highest disclosed cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
-	event_stakes_label.text = "THREAT — %s\nROUTE — %s to %s via %s.%s%s\nAT STAKE — %s\nMODEL — This is an abstract caravan conflict: outcomes spend only the resources, time, cargo, or standing written below; there is no hidden health damage." % [threat_summary, String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), material_context, trade_context, String(pending.get("stakes", ""))]
+	var threat_summary := "No choice uses a cargo-loss roll." if maximum_risk_percent == 0 else "Highest disclosed cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
+	event_stakes_label.text = "DANGER — %s\nROAD — %s to %s via %s.%s%s\nAT STAKE — %s\nWHAT COUNTS — Only the written money, provisions, cargo, time, or standing can change. There is no hidden health damage." % [threat_summary, String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), material_context, trade_context, String(pending.get("stakes", ""))]
 	for raw_choice in pending.get("choices", []):
 		if typeof(raw_choice) != TYPE_DICTIONARY:
 			continue
@@ -3444,7 +3754,7 @@ func _refresh_event_card() -> void:
 	if not enabled_choice_buttons.is_empty():
 		_link_focus_cycle(enabled_choice_buttons)
 	if event_readiness_label:
-		event_readiness_label.text = "READINESS — %d of %d tactics ready. Disabled tactics remain visible and name the missing money, cargo, provisions, contract, or crew leverage." % [enabled_choice_buttons.size(), event_choice_buttons.size()]
+		event_readiness_label.text = "READINESS — %d of %d choices available. Unavailable choices remain visible and name the missing money, cargo, provisions, contract, or crew leverage." % [enabled_choice_buttons.size(), event_choice_buttons.size()]
 	if pause_layer == null or not pause_layer.visible:
 		if _grab_first_enabled(event_choice_buttons) and not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 			get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
@@ -3507,7 +3817,7 @@ func _conflict_outcome_comparison_from_event(event_record: Dictionary) -> String
 	var actual_cargo := _actual_conflict_cargo_text(Dictionary(outcome.get("cargo", {})))
 	var risk_variance := _conflict_risk_variance_text(event_record, outcome)
 	var persistent_effects := _conflict_persistent_effects_text(outcome)
-	var comparison := "PLAN VS ACTUAL\nTACTIC — %s / %s — %s\nPLAN — %s · %s · %s · %s · %s · %s.\nACTUAL — %s · %s · %s · %s · arrived at %s.\nVARIANCE — %s\nEXPECTED — %s" % [
+	var comparison := "JOURNEY RESULT\nCHOICE — %s / %s — %s\nEXPECTED — %s · %s · %s · %s · %s · %s.\nARRIVAL — %s · %s · %s · %s · arrived at %s.\nWHAT CHANGED — %s\nWHY — %s" % [
 		tactic_label,
 		certainty_label,
 		String(choice.get("label", "Choice")),
@@ -3709,6 +4019,9 @@ func _set_event(text: String) -> void:
 		event_scroll.scroll_vertical = 0
 
 func _refresh_ui() -> void:
+	tutorial.refresh(world, _current_ui_state_id(), arrival_pending)
+	if not tutorial.enabled and not tutorial.completed:
+		_hide_tutorial_guidance()
 	_refresh_caravan_status()
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
 	var road_waiting: bool = map_panel != null and map_panel.travel_phase == "road"
@@ -3796,8 +4109,6 @@ func _refresh_ui() -> void:
 	if enter_settlement_button:
 		enter_settlement_button.text = "Enter %s" % String(world.settlement(world.current_settlement).get("name", "settlement"))
 		enter_settlement_button.visible = arrival_pending and map_panel != null and map_panel.travel_phase == "arrived"
-	if playtest_banner and playtest_banner.text.is_empty():
-		playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
 	_refresh_playtest_status()
 	var cargo_lines: Array[String] = []
 	for good in MarketContent.good_ids():
@@ -3826,13 +4137,114 @@ func _refresh_ui() -> void:
 func _refresh_caravan_status() -> void:
 	status_label.text = "%s · %s\nDay %d · Crisis %d\n%d ashmarks · %d provisions\nHold %d/%d" % [String(world.settlement(world.current_settlement).name), map_panel._caravan_motion_label() if map_panel else "AT REST", world.day, world.crisis_stage, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity]
 	if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
-		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — %s" % map_panel._road_waypoint_label()
+		caravan_context_label.text = "JOURNEY — %s\nNEXT — Watch the road and continue at the travel stop." % map_panel._road_waypoint_label()
 	elif not world.pending_event.is_empty():
-		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — %s" % String(world.pending_event.get("title", "Route encounter"))
+		caravan_context_label.text = "ROADSIDE DECISION — %s\nNEXT — Choose what the caravan will spend or risk." % String(world.pending_event.get("title", "Route encounter"))
 	elif arrival_pending:
-		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — ARRIVAL REPORT"
+		caravan_context_label.text = "ARRIVAL\nNEXT — Review the journey result, then enter the settlement."
 	else:
-		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — PLAN ROUTE"
+		caravan_context_label.text = "CARAVAN AT REST\nNEXT — Choose a destination and compare its roads."
+
+class TitleScene extends Control:
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var bounds := Rect2(Vector2.ZERO, size)
+		draw_rect(bounds, Color("#17110d"), true)
+		for band in range(7):
+			var y := size.y * (0.32 + band * 0.045)
+			draw_colored_polygon(PackedVector2Array([
+				Vector2(0, y + 18), Vector2(size.x * 0.18, y - 8 + band * 2), Vector2(size.x * 0.38, y + 5),
+				Vector2(size.x * 0.58, y - 14), Vector2(size.x * 0.78, y + 2), Vector2(size.x, y - 10), Vector2(size.x, size.y), Vector2(0, size.y),
+			]), Color("#2a211b").lightened(float(band) * 0.025))
+		var sun := Vector2(size.x * 0.72, size.y * 0.24)
+		draw_circle(sun, minf(size.x, size.y) * 0.09, Color("#b86842"))
+		draw_circle(sun, minf(size.x, size.y) * 0.065, Color("#d89a61"))
+		var road := PackedVector2Array([
+			Vector2(size.x * 0.43, size.y), Vector2(size.x * 0.57, size.y),
+			Vector2(size.x * 0.53, size.y * 0.50), Vector2(size.x * 0.49, size.y * 0.50),
+		])
+		draw_colored_polygon(road, Color("#6e5a43"))
+		_draw_caravan(Vector2(size.x * 0.51, size.y * 0.61), minf(size.x, size.y) / 540.0)
+		draw_string(ThemeDB.fallback_font, Vector2(30, 56), "MARKET OF ASH", HORIZONTAL_ALIGNMENT_LEFT, -1, 38, Color("#f0cf91"))
+		draw_string(ThemeDB.fallback_font, Vector2(32, 86), "A TRADE ROUTE IS A PROMISE YOU MAKE TO THE ROAD", HORIZONTAL_ALIGNMENT_LEFT, maxf(0, size.x - 64), 13, Color("#c7b49a"))
+		draw_string(ThemeDB.fallback_font, Vector2(32, size.y - 30), "THE FIVE-WELL BASIN", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#d08b62"))
+
+	func _draw_caravan(center: Vector2, scale: float) -> void:
+		draw_colored_polygon(PackedVector2Array([
+			center + Vector2(-45, -14) * scale, center + Vector2(34, -14) * scale,
+			center + Vector2(44, 13) * scale, center + Vector2(-48, 13) * scale,
+		]), Color("#9b5237"))
+		draw_colored_polygon(PackedVector2Array([
+			center + Vector2(-34, -15) * scale, center + Vector2(-19, -42) * scale,
+			center + Vector2(18, -42) * scale, center + Vector2(32, -15) * scale,
+		]), Color("#d0a062"))
+		draw_line(center + Vector2(-19, -42) * scale, center + Vector2(-19, 4) * scale, Color("#493127"), 3.0 * scale)
+		draw_line(center + Vector2(18, -42) * scale, center + Vector2(18, 4) * scale, Color("#493127"), 3.0 * scale)
+		draw_circle(center + Vector2(-27, 15) * scale, 11 * scale, Color("#241a15"))
+		draw_circle(center + Vector2(27, 15) * scale, 11 * scale, Color("#241a15"))
+		draw_circle(center + Vector2(-27, 15) * scale, 4 * scale, Color("#c08b52"))
+		draw_circle(center + Vector2(27, 15) * scale, 4 * scale, Color("#c08b52"))
+
+class IntroScene extends Control:
+	var scene_id := "basin"
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func set_scene(next_scene_id: String) -> void:
+		scene_id = next_scene_id
+		queue_redraw()
+
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), Color("#17110d"), true)
+		match scene_id:
+			"caravan":
+				_draw_caravan_ledger()
+			"road":
+				_draw_road_choice()
+			_:
+				_draw_basin()
+
+	func _draw_basin() -> void:
+		draw_circle(Vector2(size.x * 0.76, size.y * 0.20), minf(size.x, size.y) * 0.10, Color("#bd7047"))
+		for layer in range(5):
+			var y := size.y * (0.34 + layer * 0.10)
+			draw_colored_polygon(PackedVector2Array([Vector2(0, y), Vector2(size.x * 0.18, y - 42), Vector2(size.x * 0.36, y + 4), Vector2(size.x * 0.58, y - 55), Vector2(size.x * 0.79, y - 5), Vector2(size.x, y - 38), Vector2(size.x, size.y), Vector2(0, size.y)]), Color("#332820").lightened(layer * 0.035))
+		for well_index in range(5):
+			var point := Vector2(size.x * (0.14 + well_index * 0.17), size.y * (0.56 + (well_index % 2) * 0.08))
+			draw_circle(point, 12, Color("#5f817b"), false, 3.0)
+			draw_line(point + Vector2(-20, 18), point + Vector2(20, 18), Color("#a97951"), 3.0)
+		draw_string(ThemeDB.fallback_font, Vector2(24, size.y - 32), "FIVE MARKETS · THREE ROADS · ONE FAILING RESERVOIR", HORIZONTAL_ALIGNMENT_LEFT, size.x - 48, 14, Color("#e6c58d"))
+
+	func _draw_caravan_ledger() -> void:
+		var center := Vector2(size.x * 0.50, size.y * 0.48)
+		var scale := minf(size.x, size.y) / 500.0
+		draw_circle(center, 118 * scale, Color("#2a211b"))
+		draw_rect(Rect2(center + Vector2(-120, -48) * scale, Vector2(240, 96) * scale), Color("#8c4e35"), true)
+		draw_colored_polygon(PackedVector2Array([center + Vector2(-96, -50) * scale, center + Vector2(-52, -112) * scale, center + Vector2(56, -112) * scale, center + Vector2(98, -50) * scale]), Color("#c69a61"))
+		for wheel_x in [-72, 72]:
+			draw_circle(center + Vector2(wheel_x, 56) * scale, 28 * scale, Color("#201814"))
+			draw_circle(center + Vector2(wheel_x, 56) * scale, 9 * scale, Color("#d1a268"))
+		var labels := ["ASHMARKS", "PROVISIONS", "HOLD", "CREW"]
+		for index in range(labels.size()):
+			var x := size.x * (0.16 + index * 0.23)
+			draw_circle(Vector2(x, size.y * 0.76), 18, Color(["#c6a15b", "#71835c", "#9a795f", "#6f9b87"][index]), true)
+			draw_string(ThemeDB.fallback_font, Vector2(x - 45, size.y * 0.83), labels[index], HORIZONTAL_ALIGNMENT_CENTER, 90, 12, Color("#e6c58d"))
+
+	func _draw_road_choice() -> void:
+		var origin := Vector2(size.x * 0.16, size.y * 0.70)
+		var destination := Vector2(size.x * 0.84, size.y * 0.28)
+		var colors := [Color("#c46f45"), Color("#c6a15b"), Color("#6f9b87")]
+		var bends := [Vector2(size.x * 0.38, size.y * 0.40), Vector2(size.x * 0.52, size.y * 0.62), Vector2(size.x * 0.67, size.y * 0.22)]
+		for index in range(3):
+			draw_polyline(PackedVector2Array([origin, bends[index], destination]), colors[index], 8.0)
+		draw_circle(origin, 18, Color("#f0cf91"))
+		draw_circle(destination, 18, Color("#5f817b"))
+		var captions := ["CHEAP · EXPOSED", "GUARDED · COSTLY", "FAST · THIRSTY"]
+		for index in range(captions.size()):
+			draw_string(ThemeDB.fallback_font, Vector2(28, 48 + index * 32), captions[index], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, colors[index])
 
 class BazaarScene extends Control:
 	const SECTION_IDS := ["trade", "assignments", "information", "crew", "outlook"]

@@ -2,6 +2,9 @@ extends SceneTree
 
 const CAPTURE_SCREENS := [
 	"main_menu",
+	"introduction_basin",
+	"introduction_caravan",
+	"introduction_road",
 	"settlement_shop",
 	"bazaar_jobs",
 	"pause",
@@ -58,8 +61,13 @@ func _run() -> void:
 	ui._refresh_continue_availability()
 	ui._show_main_menu()
 	await _capture(ui, "main_menu", "main-menu")
-
-	ui._on_start_game_requested()
+	ui._on_new_game_pressed()
+	await _capture(ui, "introduction_basin", "introduction-basin")
+	ui._on_intro_next_pressed()
+	await _capture(ui, "introduction_caravan", "introduction-caravan")
+	ui._on_intro_next_pressed()
+	await _capture(ui, "introduction_road", "introduction-road")
+	ui._on_intro_next_pressed()
 	await _capture(ui, "settlement_shop", "settlement-shop")
 	ui._on_bazaar_navigation_pressed("assignments")
 	await _capture(ui, "bazaar_jobs", "bazaar-jobs")
@@ -86,6 +94,7 @@ func _run() -> void:
 
 	ui.large_text_checkbox.set_pressed_no_signal(false)
 	ui._on_large_text_toggled(false)
+	ui.pending_tutorial_enabled = false
 	ui._on_start_game_pressed()
 	ui._select_option_by_id(ui.shop_good_option, "medicine")
 	ui.shop_quantity.value = 2

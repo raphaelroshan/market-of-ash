@@ -20,17 +20,21 @@ func _run() -> void:
 	ui._show_main_menu()
 	await process_frame
 
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_game_button, "Main Menu should start controller navigation on Guided Trade")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_game_button, "Main Menu should start controller navigation on New Game")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_conflict_button, "D-pad Down should reach the Conflict & Recovery path")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.settings_button, "D-pad Down should reach Settings when Continue is unavailable")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_campaign_button, "D-pad Down should reach the Contract & Crew path")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.credits_button, "D-pad Down should reach Credits")
 	await _press_joypad(JOY_BUTTON_DPAD_UP)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_conflict_button, "D-pad Up should reverse through the playtest paths")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.settings_button, "D-pad Up should reverse through the player-facing menu")
 	await _press_joypad(JOY_BUTTON_DPAD_UP)
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.start_game_button, "D-pad Up should reverse the Main Menu focus cycle")
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(ui.shop_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should start the campaign and focus the Shop cargo selector")
+	_expect(ui.intro_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.intro_next_button, "controller Accept should open the illustrated introduction and focus Next")
+	await _press_joypad(JOY_BUTTON_A)
+	await _press_joypad(JOY_BUTTON_A)
+	await _press_joypad(JOY_BUTTON_A)
+	_expect(ui.shop_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should complete the introduction and focus the Shop cargo selector")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_quantity.get_line_edit(), "D-pad Down should move from cargo selection to quantity")
 	var starting_quantity: float = ui.shop_quantity.value
@@ -73,6 +77,7 @@ func _run() -> void:
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should activate Resume and restore Shop focus")
 
+	ui.pending_tutorial_enabled = false
 	ui._on_start_game_pressed()
 	await process_frame
 	await _press_joypad(JOY_BUTTON_A)

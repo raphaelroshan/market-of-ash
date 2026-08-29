@@ -425,3 +425,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The repeatable Frontier-inspired loop needs both familiarity and a sense of arrival. Keeping navigation fixed lets players build muscle memory, while a distinct place silhouette makes travel feel like movement between actual markets rather than a text swap on one universal screen.
 
 **Trade-off:** These are restrained code-drawn landmarks rather than final environment art. They add no settlement state or gameplay rules; future authored art should preserve the stable scene IDs, captions, action order, and compact-versus-expanded layout contract.
+
+## ADR-054: First-run guidance is a persistent campaign layer, not a scenario menu
+
+**Decision:** Replace the visible QA-path selector with a conventional New Game flow: three illustrated introduction cards followed by an optional two-journey tutorial. The tutorial observes authoritative world state and command history, recommends existing Bazaar and travel actions, and stores only presentation progress beside the serialized world in a versioned save envelope. Debug builds retain the deterministic QA fixtures behind Ctrl+Shift+D; release-facing navigation never advertises them.
+
+**Reason:** A strong vertical slice must teach the caravan, trade, contracts, roads, recovery, crew, and regional consequences as one coherent campaign. Visible test scenarios make the opening read like a harness and divide learning into artificial starts, while a state-derived guide can survive saves and reasonable mistakes without bypassing simulation rules.
+
+**Trade-off:** The introduction and environments currently use deliberate code-drawn illustration with stable scene identities rather than final raster art. Tutorial completion is per campaign save rather than a profile-wide preference, and skipping guidance is explicit but does not suppress future authored onboarding across all saves.
