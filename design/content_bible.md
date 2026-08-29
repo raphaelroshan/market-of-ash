@@ -110,9 +110,11 @@ A returning player should be able to reach the ending with different combination
 
 ## Endings
 
-The endings are regional reports, not cinematic morality judgments. Each report should show a map or settlement summary with three material measures: water stability, route openness, and wealth concentration. The four endings are:
+The endings are regional reports, not cinematic morality judgments. Each report should show a map or settlement summary with three material measures: water stability, route openness, and wealth concentration. The five endings are:
 
 **The Wells Remember Everyone** is the shared infrastructure ending. The player spends capital and relationships to stabilize the water network. The region becomes slower and more accountable. The player earns less immediate profit but creates the strongest recovery state.
+
+**The Wells Belong to Those Who Carry** is the adaptive Commons ending. Official relief failed, but post-failure ordinary charcoal deliveries and direct support let Reedwatch build a legitimate public exchange. The player proves that neglect can create a different institution rather than resetting the original quest.
 
 **Order at the Cistern** is the Warden ending. The player gives the Wardens enough legitimacy to secure reservoirs and roads. Travel becomes safer, but access is regulated. The region is stable, more unequal, and less open to independent traders.
 

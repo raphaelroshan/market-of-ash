@@ -329,6 +329,8 @@ Compare ordinary trade, contract, civic, and faction income per ten-minute fixtu
 
 Connect the replacement faction and ordinary trade outcomes to existing ending dimensions. Add one alternate ending fixture reachable through scenario failure followed by ordinary trading.
 
+**Implemented foundation:** Runtime content `1.21.0` adds `The Wells Belong to Those Who Carry`. It requires the relief scenario to expire or fail, the Well Commons to hold positive support, Reedwatch resilience to reach two, and at least four charcoal to be sold into Reedwatch after the Commons activates. The executable fixture reaches it through the normal buy, travel, sell, and settlement-action commands; an identical delivery made before activation does not qualify. The ending is evaluated before the broad faction outcomes, so the replacement institution remains causally legible rather than collapsing into the generic Free Caravan result.
+
 ## 11. Final recommendation
 
 The best structure for Market of Ash is a **deterministic systemic sandbox with authored pressure, not a quest-led trading campaign**. The player should begin with a broad economic playground, receive situations that tempt them to specialize or intervene, and see the basin reorganize itself when they do something else. The world should remember trade volume, delays, shortages, political exposure, and local recovery. That memory should create new geography of value.

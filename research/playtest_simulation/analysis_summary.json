@@ -243,6 +243,17 @@
     }
   ],
   "quality_metrics": {
+    "adaptive_ending": {
+      "activation_day": 4,
+      "commands_completed": true,
+      "delivery_day": 5,
+      "delivery_quantity": 4,
+      "ending_id": "ending_commons_exchange",
+      "passed": true,
+      "reedwatch_resilience": 2,
+      "scenario_state": "expired",
+      "support": 1
+    },
     "adaptive_failure_recovery": {
       "baseline_charcoal_net": -10,
       "faction_active": true,
@@ -476,6 +487,11 @@
       "gate": "Replacement faction agency",
       "passed": true,
       "evidence": "2 cooperation paths; support -1 \u2192 0 after opposition/reconciliation"
+    },
+    {
+      "gate": "Adaptive ordinary-trade ending",
+      "passed": true,
+      "evidence": "expired relief; 4 charcoal delivered Day 5 after Commons Day 4; support 1"
     },
     {
       "gate": "No permanent route winner",

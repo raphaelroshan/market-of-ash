@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "game_id": "market-of-ash",
-  "content_version": "0.5.0",
+  "content_version": "0.6.0",
   "campaign": {
     "title": "The Wells Remember",
     "premise": "A caravan crosses a recovering ashland as a spreading water shortage turns ordinary trade into a contest over trust, access, and the future of the region.",
@@ -275,6 +275,14 @@
       "summary": "The caravan spends its advantage on a shared water network. Trade becomes slower and more accountable, but no single faction can close every well.",
       "regional_changes": ["water_prices_stabilize", "reedwatch_grows", "caravan_margin_reduced"],
       "crew_note": "Jorun stays to audit the new stores; Nara maps the public routes."
+    },
+    {
+      "id": "ending_commons_exchange",
+      "title": "The Wells Belong to Those Who Carry",
+      "requirements": ["reedwatch_water_relief in [expired, failed]", "well_commons.support >= 1", "reedwatch.resilience >= 2", "post_activation_charcoal_delivery >= 4"],
+      "summary": "Official relief never arrives, but ordinary charcoal trade and direct support turn Reedwatch's improvised water exchange into a durable public institution.",
+      "regional_changes": ["commons_exchange_persists", "reedwatch_boilers_stabilize", "ordinary_trade_gains_legitimacy"],
+      "crew_note": "Nara marks the Commons fires as permanent landmarks; Jorun records the deliveries that kept them lit."
     },
     {
       "id": "ending_warden_reserve",

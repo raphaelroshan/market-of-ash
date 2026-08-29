@@ -40,6 +40,10 @@ Commons support is bounded from -3 to +3. Positive support strengthens the charc
 
 A four-charcoal Ashgate-to-Reedwatch Old Road fixture changes from `-10` expected net before the response to `+7` afterward. This is ordinary spot trade: no contract or faction action is required.
 
+## Alternate ending
+
+`The Wells Belong to Those Who Carry` is reachable only after official relief expires or fails. The caravan must then sell at least four charcoal into Reedwatch after the Commons activates, raise Commons support above zero, and bring Reedwatch resilience to at least two while keeping arms escalation contained. This makes the replacement actor, the ordinary market delivery, and direct cooperation all necessary parts of the outcome. Earlier deliveries and contract/event transfers do not count. Qualifying totals are stored on the Commons record, so later trading cannot erase the earned outcome when the bounded market-history log rolls over.
+
 ## Persistence and validation
 
-Save version 12 stores `scenario_states` and `emergent_factions`. Older saves initialize missing adaptive state, then evaluate it against their current day and contract history. Current saves reject unknown scenario/faction references and impossible state timestamps. Runtime and Python validators enforce the authored trigger, response, market effect, and opportunity schema.
+Save version 12 stores `scenario_states` and `emergent_factions`, including bounded support, completed interaction IDs, and durable ordinary-delivery totals. Older saves initialize missing adaptive state, then evaluate it against their current day and contract history. Current saves reject unknown scenario/faction references, impossible state timestamps, and invalid delivery ledgers. Runtime and Python validators enforce the authored trigger, response, market effect, and opportunity schema.

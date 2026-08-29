@@ -2742,6 +2742,8 @@ func _web_accessibility_announcement() -> String:
 		"introduction":
 			return "Market of Ash introduction, page %d of %d. %s %s Next, Back, and Start without guidance are available." % [intro_page + 1, INTRO_PAGES.size(), intro_title_label.text, intro_body_label.text]
 		"settlement_shop":
+			if not world.ending_id.is_empty():
+				return "Campaign conclusion: %s. %s You may continue trading to inspect the resulting region." % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 			var recent_conflict_text := _latest_conflict_outcome_text()
 			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
 			return "Settlement Bazaar at %s. Trade, Jobs, Services and Intel, Crew, Outlook, and Departure form the repeatable hub.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
@@ -2818,6 +2820,8 @@ func _web_ui_state() -> Dictionary:
 		"adaptive_scenario_state": String(world.scenario_state("reedwatch_water_relief").get("state", "")) if world != null else "",
 		"emergent_factions": world.emergent_factions.keys() if world != null else [],
 		"adaptive_response": world.adaptive_response_summary() if world != null else "",
+		"ending_id": world.ending_id if world != null else "",
+		"ending_summary": world.ending_summary if world != null else "",
 		"travel_phase": map_panel.travel_phase if map_panel != null else "rest",
 		"road_scene_id": String(map_panel._road_profile(map_panel.travel_route_id).get("scene_id", "")) if map_panel != null and map_panel._is_road_view() else "",
 		"road_waypoint": map_panel._road_waypoint_label() if map_panel != null and map_panel._is_road_view() else "",

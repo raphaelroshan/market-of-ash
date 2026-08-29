@@ -262,6 +262,7 @@ def main() -> int:
     path_reward_balance = quality_metrics.get("path_reward_balance", {})
     adaptive_failure_recovery = quality_metrics.get("adaptive_failure_recovery", {})
     replacement_faction_agency = quality_metrics.get("replacement_faction_agency", {})
+    adaptive_ending = quality_metrics.get("adaptive_ending", {})
     world_state_variety = quality_metrics.get("world_state_variety", {})
     cargo_loss_recovery = quality_metrics.get("cargo_loss_recovery", {})
     preparation_overhead = quality_metrics.get("preparation_overhead", {})
@@ -314,6 +315,13 @@ def main() -> int:
                 and replacement_faction_agency.get("reconciliation_completed", False)
                 and replacement_faction_agency.get("ordinary_trade_open", False),
                 "evidence": f"{replacement_faction_agency.get('cooperation_paths_completed', 0)} cooperation paths; support {replacement_faction_agency.get('opposed_support', 0)} → {replacement_faction_agency.get('reconciled_support', 0)} after opposition/reconciliation",
+            },
+            {
+                "gate": "Adaptive ordinary-trade ending",
+                "passed": adaptive_ending.get("passed", False)
+                and adaptive_ending.get("commands_completed", False)
+                and adaptive_ending.get("delivery_day", 0) >= adaptive_ending.get("activation_day", 0),
+                "evidence": f"{adaptive_ending.get('scenario_state', 'missing')} relief; {adaptive_ending.get('delivery_quantity', 0)} charcoal delivered Day {adaptive_ending.get('delivery_day', 0)} after Commons Day {adaptive_ending.get('activation_day', 0)}; support {adaptive_ending.get('support', 0)}",
             },
             {
                 "gate": "No permanent route winner",

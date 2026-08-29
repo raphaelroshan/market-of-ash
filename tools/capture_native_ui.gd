@@ -13,6 +13,7 @@ const CAPTURE_SCREENS := [
 	"well_commons_jobs",
 	"well_commons_market",
 	"well_commons_actions",
+	"commons_ending",
 	"main_menu_large_text",
 	"settlement_shop_large_text",
 	"pause_large_text",
@@ -29,6 +30,8 @@ const CAPTURE_SCREENS := [
 var output_directory := ""
 var requested_size := Vector2i.ZERO
 var captures: Array[Dictionary] = []
+
+const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 
 func _initialize() -> void:
 	call_deferred("_run")
@@ -98,6 +101,27 @@ func _run() -> void:
 	ui._refresh_ui()
 	ui._on_bazaar_navigation_pressed("information")
 	await _capture(ui, "well_commons_actions", "well-commons-actions")
+	ui.world.current_settlement = "ashgate"
+	ui.world.cargo = {"weight": 0}
+	ui.world.resolved_event_ids.clear()
+	ui.world.resolved_event_ids.append("span_at_cinderford")
+	ui.world.resolved_event_ids.append("three_riders_no_banner")
+	var commons_buy := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "charcoal", "quantity": 6}})
+	var commons_depart := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "old_road", "destination_id": "reedwatch"}}) if commons_buy.ok else {"ok": false}
+	var commons_sale := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.SELL_GOODS, "inputs": {"good_id": "charcoal", "quantity": 4}}) if commons_depart.ok and ui.world.pending_event.is_empty() else {"ok": false}
+	var commons_support := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.USE_SETTLEMENT_ACTION, "inputs": {"action_id": "reedwatch_commons_boiler_fuel"}}) if commons_sale.ok else {"ok": false}
+	if not commons_support.ok:
+		push_error("Native capture could not complete the ordinary-trade Commons ending fixture.")
+		quit(1)
+		return
+	ui.world.advance_day(maxi(0, 10 - ui.world.day))
+	ui._refresh_ui()
+	if ui.world.ending_id != "ending_commons_exchange" or not ui.ending_panel.visible:
+		push_error("Native capture expected the Commons alternate ending.")
+		quit(1)
+		return
+	ui._on_bazaar_navigation_pressed("outlook")
+	await _capture(ui, "commons_ending", "commons-ending")
 
 	ui.pending_tutorial_enabled = true
 	ui._on_start_game_pressed()
