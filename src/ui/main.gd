@@ -101,6 +101,13 @@ var shop_sell_button: Button
 var shop_transaction_status_label: Label
 var shop_status_label: Label
 var shop_cargo_label: Label
+var shop_title_label: Label
+var bazaar_navigation_buttons: Array[Button] = []
+var bazaar_section_label: Label
+var bazaar_scene
+var shop_market_scroll: ScrollContainer
+var shop_purchase_row: HBoxContainer
+var active_bazaar_section := "trade"
 var shop_save_button: Button
 var shop_load_button: Button
 var shop_reset_button: Button
@@ -120,10 +127,12 @@ var plan_departure_button: Button
 var departure_travel_actions: HBoxContainer
 var return_to_shop_button: Button
 var commit_departure_button: Button
+var continue_journey_button: Button
 var enter_settlement_button: Button
 var departure_load_label: Label
 var departure_contract_label: Label
 var departure_status_label: Label
+var departure_planning_panel: VBoxContainer
 var event_card: PanelContainer
 var event_mode_label: Label
 var event_title_label: Label
@@ -136,11 +145,13 @@ var event_choice_reason_labels: Array[Label] = []
 var conflict_outcome_panel: PanelContainer
 var conflict_outcome_label: Label
 var last_conflict_outcome_text := ""
+var committed_journey_message := ""
 var arrival_pending := false
 var guided_test_button: Button
 var playtest_banner: Label
 var playtest_status_label: Label
 var status_label: Label
+var caravan_context_label: Label
 var map_hint: Label
 var event_scroll: ScrollContainer
 var event_label: Label
@@ -469,6 +480,10 @@ func _show_shop() -> void:
 	shop_layer.visible = true
 	arrival_pending = false
 	last_conflict_outcome_text = ""
+	committed_journey_message = ""
+	active_bazaar_section = "trade"
+	if map_panel:
+		map_panel.reset_travel(world.current_settlement)
 	if conflict_outcome_panel:
 		conflict_outcome_panel.visible = false
 	if enter_settlement_button:
@@ -486,7 +501,7 @@ func _show_departure() -> void:
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
 	commit_departure_button.disabled = journey_locked
 	return_to_shop_button.disabled = journey_locked
-	enter_settlement_button.visible = arrival_pending
+	enter_settlement_button.visible = arrival_pending and map_panel != null and map_panel.travel_phase == "arrived"
 	_refresh_ui()
 	_request_map_layout_update()
 	if not world.pending_event.is_empty():
@@ -500,7 +515,7 @@ func _update_map_layout() -> void:
 	if map_panel == null or map_hint == null or event_label == null or game_layer == null or not game_layer.visible:
 		return
 	map_panel.fit_vertical_space(
-		map_hint.get_global_rect().end.y + 16.0,
+		map_hint.get_global_rect().end.y + 18.0,
 		event_scroll.get_global_rect().position.y - 16.0,
 		event_scroll.get_global_rect().size.x
 	)
@@ -529,6 +544,8 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
 	if map_panel:
 		map_panel.set_text_scale(1.25 if enabled else 1.0)
+	if bazaar_scene:
+		bazaar_scene.set_text_scale(1.25 if enabled else 1.0)
 	_request_map_layout_update()
 	_save_presentation_settings()
 	_publish_web_ui_state()
@@ -821,28 +838,60 @@ func _build_shop() -> void:
 	var market_shell := VBoxContainer.new()
 	market_shell.add_theme_constant_override("separation", 10)
 	market_card.add_child(market_shell)
-	var market_scroll := ScrollContainer.new()
-	market_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	market_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	market_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	market_shell.add_child(market_scroll)
-	var market := VBoxContainer.new()
-	market.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	market.add_theme_constant_override("separation", 14)
-	market_scroll.add_child(market)
-	var title := Label.new()
-	title.text = "SETTLEMENT SHOP"
-	title.add_theme_font_size_override("font_size", 30)
-	title.add_theme_color_override("font_color", Color("#e6c58d"))
-	market.add_child(title)
+	shop_title_label = Label.new()
+	shop_title_label.text = "SETTLEMENT BAZAAR"
+	shop_title_label.add_theme_font_size_override("font_size", 30)
+	shop_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	market_shell.add_child(shop_title_label)
+	var bazaar_prompt := Label.new()
+	bazaar_prompt.text = "Choose a stall, then return here after each road."
+	bazaar_prompt.add_theme_color_override("font_color", Color("#b5a18b"))
+	market_shell.add_child(bazaar_prompt)
+	var bazaar_navigation := HBoxContainer.new()
+	bazaar_navigation.add_theme_constant_override("separation", 8)
+	market_shell.add_child(bazaar_navigation)
+	var bazaar_entries := [
+		{"id": "trade", "label": "Market Stall"},
+		{"id": "assignments", "label": "Job Board"},
+		{"id": "information", "label": "Guide / Intel"},
+		{"id": "crew", "label": "Crew Yard"},
+		{"id": "outlook", "label": "Town Outlook"},
+	]
+	for entry_index in range(bazaar_entries.size()):
+		var entry: Dictionary = bazaar_entries[entry_index]
+		var bazaar_button := Button.new()
+		bazaar_button.text = String(entry.label)
+		bazaar_button.toggle_mode = true
+		bazaar_button.custom_minimum_size = Vector2(0, 58)
+		bazaar_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_style_bazaar_navigation_button(bazaar_button, entry_index)
+		bazaar_button.set_meta("web_accessibility_id", "bazaar_%s" % String(entry.id))
+		bazaar_button.pressed.connect(_on_bazaar_navigation_pressed.bind(String(entry.id)))
+		bazaar_navigation.add_child(bazaar_button)
+		bazaar_navigation_buttons.append(bazaar_button)
 	shop_status_label = Label.new()
 	shop_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_status_label.add_theme_color_override("font_color", Color("#f0d2a0"))
-	market.add_child(shop_status_label)
+	market_shell.add_child(shop_status_label)
 	shop_cargo_label = Label.new()
 	shop_cargo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_cargo_label.add_theme_color_override("font_color", Color("#f4e6c7"))
-	market.add_child(shop_cargo_label)
+	market_shell.add_child(shop_cargo_label)
+	bazaar_scene = BazaarScene.new()
+	bazaar_scene.custom_minimum_size = Vector2(620, 140)
+	bazaar_scene.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bazaar_scene.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	bazaar_scene.set_text_scale(1.25 if large_text_enabled else 1.0)
+	market_shell.add_child(bazaar_scene)
+	shop_market_scroll = ScrollContainer.new()
+	shop_market_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	shop_market_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	shop_market_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	market_shell.add_child(shop_market_scroll)
+	var market := VBoxContainer.new()
+	market.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	market.add_theme_constant_override("separation", 14)
+	shop_market_scroll.add_child(market)
 	var ledger_label := Label.new()
 	ledger_label.text = "MARKET LEDGER — Select a good to see its local price, reason, and regional comparison."
 	ledger_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -866,9 +915,9 @@ func _build_shop() -> void:
 	shop_market_preview_label = _forecast_label()
 	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
 	market.add_child(shop_market_preview_label)
-	var purchase_row := HBoxContainer.new()
-	purchase_row.add_theme_constant_override("separation", 12)
-	market_shell.add_child(purchase_row)
+	shop_purchase_row = HBoxContainer.new()
+	shop_purchase_row.add_theme_constant_override("separation", 12)
+	market_shell.add_child(shop_purchase_row)
 	shop_buy_button = Button.new()
 	shop_buy_button.name = "BuyCargoButton"
 	shop_buy_button.text = "Buy cargo"
@@ -877,7 +926,7 @@ func _build_shop() -> void:
 	shop_buy_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_buy_button.tooltip_text = "Buy the selected cargo from this settlement."
 	shop_buy_button.pressed.connect(_on_buy_pressed)
-	purchase_row.add_child(shop_buy_button)
+	shop_purchase_row.add_child(shop_buy_button)
 	shop_sell_button = Button.new()
 	shop_sell_button.name = "SellCargoButton"
 	shop_sell_button.text = "Sell selected cargo"
@@ -886,7 +935,7 @@ func _build_shop() -> void:
 	shop_sell_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
 	shop_sell_button.pressed.connect(_on_sell_pressed)
-	purchase_row.add_child(shop_sell_button)
+	shop_purchase_row.add_child(shop_sell_button)
 	shop_transaction_status_label = Label.new()
 	shop_transaction_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_transaction_status_label.add_theme_font_size_override("font_size", 12)
@@ -922,14 +971,19 @@ func _build_shop() -> void:
 	actions.add_theme_constant_override("separation", 14)
 	action_scroll.add_child(actions)
 	var caravan_title := Label.new()
-	caravan_title.text = "CARAVAN"
+	caravan_title.text = "BAZAAR STALLS"
 	caravan_title.add_theme_font_size_override("font_size", 20)
 	caravan_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(caravan_title)
+	bazaar_section_label = Label.new()
+	bazaar_section_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bazaar_section_label.add_theme_color_override("font_color", Color("#d08b62"))
+	actions.add_child(bazaar_section_label)
 	campaign_outlook_label = Label.new()
 	campaign_outlook_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	campaign_outlook_label.add_theme_font_size_override("font_size", 12)
 	campaign_outlook_label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	campaign_outlook_label.visible = false
 	actions.add_child(campaign_outlook_label)
 	recent_conflict_panel = PanelContainer.new()
 	recent_conflict_panel.name = "RecentConflictPanel"
@@ -949,7 +1003,7 @@ func _build_shop() -> void:
 	ending_label.add_theme_color_override("font_color", Color("#e6c58d"))
 	ending_panel.add_child(ending_label)
 	var opportunity_title := Label.new()
-	opportunity_title.text = "LOCAL OPPORTUNITIES"
+	opportunity_title.text = "LOCAL STALLS & OPPORTUNITIES"
 	opportunity_title.add_theme_font_size_override("font_size", 18)
 	opportunity_title.add_theme_color_override("font_color", Color("#e6c58d"))
 	actions.add_child(opportunity_title)
@@ -1025,6 +1079,7 @@ func _build_ui() -> void:
 	map_panel.world = world
 	map_panel.set_text_scale(1.25 if large_text_enabled else 1.0)
 	map_panel.settlement_selected.connect(_on_map_settlement_selected)
+	map_panel.travel_state_changed.connect(_on_map_travel_state_changed)
 	game_layer.add_child(map_panel)
 
 	var margin := MarginContainer.new()
@@ -1063,12 +1118,6 @@ func _build_ui() -> void:
 	playtest_status_label.add_theme_color_override("font_color", Color("#e6c58d"))
 	left.add_child(playtest_status_label)
 
-	status_label = Label.new()
-	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	status_label.add_theme_font_size_override("font_size", 18)
-	status_label.add_theme_color_override("font_color", Color("#f4e6c7"))
-	left.add_child(status_label)
-
 	map_hint = Label.new()
 	map_hint.name = "MapHint"
 	map_hint.text = "Choose a settlement. HERE = current location; RES = resilience."
@@ -1106,6 +1155,27 @@ func _build_ui() -> void:
 	var controls_shell := VBoxContainer.new()
 	controls_shell.add_theme_constant_override("separation", 10)
 	right.add_child(controls_shell)
+	var control_title := Label.new()
+	control_title.text = "DEPARTURE DESK"
+	control_title.add_theme_font_size_override("font_size", 20)
+	control_title.add_theme_color_override("font_color", Color("#e6c58d"))
+	controls_shell.add_child(control_title)
+	var caravan_status_title := Label.new()
+	caravan_status_title.text = "CARAVAN STATUS"
+	caravan_status_title.add_theme_font_size_override("font_size", 13)
+	caravan_status_title.add_theme_color_override("font_color", Color("#d08b62"))
+	controls_shell.add_child(caravan_status_title)
+	status_label = Label.new()
+	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	status_label.add_theme_font_size_override("font_size", 15)
+	status_label.add_theme_color_override("font_color", Color("#f4e6c7"))
+	controls_shell.add_child(status_label)
+	caravan_context_label = Label.new()
+	caravan_context_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	caravan_context_label.add_theme_font_size_override("font_size", 13)
+	caravan_context_label.add_theme_color_override("font_color", Color("#d08b62"))
+	controls_shell.add_child(caravan_context_label)
+	controls_shell.add_child(HSeparator.new())
 	var controls_scroll := ScrollContainer.new()
 	controls_scroll.name = "DepartureControlsScroll"
 	controls_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -1116,24 +1186,21 @@ func _build_ui() -> void:
 	controls.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	controls.add_theme_constant_override("separation", 10)
 	controls_scroll.add_child(controls)
-
-	var control_title := Label.new()
-	control_title.text = "DEPARTURE DESK"
-	control_title.add_theme_font_size_override("font_size", 20)
-	control_title.add_theme_color_override("font_color", Color("#e6c58d"))
-	controls.add_child(control_title)
+	departure_planning_panel = VBoxContainer.new()
+	departure_planning_panel.add_theme_constant_override("separation", 10)
+	controls.add_child(departure_planning_panel)
 
 	destination_option = OptionButton.new()
 	destination_option.custom_minimum_size = Vector2(0, 44)
 	destination_option.tooltip_text = "Choose a connected settlement for the next journey."
 	_populate_destination_options()
-	controls.add_child(_labeled_control("Destination", destination_option))
+	departure_planning_panel.add_child(_labeled_control("Destination", destination_option))
 
 	route_option = OptionButton.new()
 	route_option.custom_minimum_size = Vector2(0, 44)
 	route_option.tooltip_text = "Choose one legal route to the selected destination."
 	_populate_route_options()
-	controls.add_child(_labeled_control("Route", route_option))
+	departure_planning_panel.add_child(_labeled_control("Route", route_option))
 
 	cargo_good_option = OptionButton.new()
 	cargo_good_option.custom_minimum_size = Vector2(0, 44)
@@ -1141,7 +1208,7 @@ func _build_ui() -> void:
 	for good in MarketContent.good_ids():
 		cargo_good_option.add_item(good.capitalize())
 		cargo_good_option.set_item_metadata(cargo_good_option.item_count - 1, good)
-	controls.add_child(_labeled_control("Forecast cargo", cargo_good_option))
+	departure_planning_panel.add_child(_labeled_control("Forecast cargo", cargo_good_option))
 
 	cargo_quantity = SpinBox.new()
 	cargo_quantity.custom_minimum_size = Vector2(0, 44)
@@ -1150,22 +1217,22 @@ func _build_ui() -> void:
 	cargo_quantity.step = 1
 	cargo_quantity.value = PLAYTEST_QUANTITY
 	cargo_quantity.tooltip_text = "Controller: Left/Right changes forecast quantity."
-	controls.add_child(_labeled_control("Forecast quantity", cargo_quantity))
+	departure_planning_panel.add_child(_labeled_control("Forecast quantity", cargo_quantity))
 
 	departure_load_label = Label.new()
 	departure_load_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_load_label.add_theme_color_override("font_color", Color("#f4e6c7"))
-	controls.add_child(departure_load_label)
+	departure_planning_panel.add_child(departure_load_label)
 	departure_contract_label = Label.new()
 	departure_contract_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_contract_label.add_theme_color_override("font_color", Color("#f0d2a0"))
-	controls.add_child(departure_contract_label)
+	departure_planning_panel.add_child(departure_contract_label)
 
 	market_preview_label = _forecast_label()
 	market_preview_label.visible = false
-	controls.add_child(market_preview_label)
+	departure_planning_panel.add_child(market_preview_label)
 	route_preview_label = _forecast_label()
-	controls.add_child(route_preview_label)
+	departure_planning_panel.add_child(route_preview_label)
 
 	event_card = PanelContainer.new()
 	event_card.visible = false
@@ -1232,6 +1299,15 @@ func _build_ui() -> void:
 	commit_departure_button.pressed.connect(_on_depart_pressed)
 	departure_travel_actions.add_child(commit_departure_button)
 
+	continue_journey_button = Button.new()
+	continue_journey_button.text = "Continue along the road"
+	continue_journey_button.custom_minimum_size = Vector2(0, 52)
+	continue_journey_button.tooltip_text = "Leave the road view and continue to the next encounter or arrival."
+	continue_journey_button.set_meta("web_accessibility_id", "continue_journey")
+	continue_journey_button.pressed.connect(_on_continue_journey_pressed)
+	continue_journey_button.visible = false
+	controls_shell.add_child(continue_journey_button)
+
 	arrival_pending = false
 	enter_settlement_button = Button.new()
 	enter_settlement_button.text = "Enter settlement"
@@ -1297,6 +1373,97 @@ func _wrapped_action_button(minimum_height: float = 42.0) -> Button:
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	return button
 
+func _style_bazaar_navigation_button(button: Button, index: int) -> void:
+	var accents := [Color("#c46f45"), Color("#c6a15b"), Color("#6f9b87"), Color("#9a795f"), Color("#788aa3")]
+	var accent: Color = accents[index % accents.size()]
+	var normal := StyleBoxFlat.new()
+	normal.bg_color = Color("#211a15")
+	normal.border_color = accent.darkened(0.28)
+	normal.set_border_width_all(2)
+	normal.corner_radius_top_left = 3
+	normal.corner_radius_top_right = 3
+	normal.corner_radius_bottom_left = 3
+	normal.corner_radius_bottom_right = 3
+	var hover := normal.duplicate()
+	hover.bg_color = accent.darkened(0.58)
+	hover.border_color = accent
+	var pressed := normal.duplicate()
+	pressed.bg_color = accent.darkened(0.42)
+	pressed.border_color = Color("#f1d39d")
+	pressed.set_border_width_all(3)
+	var focus := pressed.duplicate()
+	focus.border_color = Color("#fff0bd")
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("hover_pressed", pressed)
+	button.add_theme_stylebox_override("focus", focus)
+	button.add_theme_color_override("font_color", Color("#e6d5b8"))
+	button.add_theme_color_override("font_pressed_color", Color("#fff0bd"))
+	button.add_theme_font_size_override("font_size", 13)
+
+func _on_bazaar_navigation_pressed(section_id: String) -> void:
+	active_bazaar_section = section_id
+	_refresh_playtest_status()
+	_apply_bazaar_section()
+	var target: Control
+	match section_id:
+		"trade":
+			target = shop_good_option
+		"assignments":
+			target = contract_buttons[0] if not contract_buttons.is_empty() else null
+		"information":
+			target = opportunity_buttons[0] if not opportunity_buttons.is_empty() else null
+		"crew":
+			target = crew_buttons[0] if not crew_buttons.is_empty() else null
+		"outlook":
+			shop_transaction_status_label.text = "BAZAAR — Regional outlook opened."
+			_publish_web_ui_state()
+			return
+	if target != null and _grab_focus_if_available(target):
+		_ensure_focused_control_visible()
+		shop_transaction_status_label.text = "BAZAAR — %s is ready." % section_id.replace("_", " ").capitalize()
+	else:
+		shop_transaction_status_label.text = "BAZAAR — No %s option is available at this settlement today." % section_id.replace("_", " ")
+	_publish_web_ui_state()
+
+func _apply_bazaar_section() -> void:
+	if opportunity_list == null:
+		return
+	var trade_active := active_bazaar_section == "trade"
+	var section_names := {
+		"trade": "MARKET STALL — Buy and sell the selected cargo on the left.",
+		"assignments": "JOB BOARD — Review local delivery work and accepted terms.",
+		"information": "GUIDE / INTEL — Buy supplies, repairs, and route knowledge.",
+		"crew": "CREW YARD — Hire or assign people for the next road.",
+		"outlook": "TOWN OUTLOOK — Review the wider campaign when you need it.",
+	}
+	bazaar_section_label.text = String(section_names.get(active_bazaar_section, "BAZAAR — Choose a stall."))
+	for button in bazaar_navigation_buttons:
+		button.set_pressed_no_signal(String(button.get_meta("web_accessibility_id", "")).trim_prefix("bazaar_") == active_bazaar_section)
+	if shop_market_scroll:
+		shop_market_scroll.visible = trade_active
+	if shop_purchase_row:
+		shop_purchase_row.visible = trade_active
+	if guided_test_button:
+		guided_test_button.visible = guided_test_button.visible and trade_active
+	if bazaar_scene:
+		bazaar_scene.visible = not trade_active
+		bazaar_scene.custom_minimum_size.y = 236.0
+		bazaar_scene.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var settlement := world.settlement(world.current_settlement)
+		bazaar_scene.set_context(
+			world.current_settlement,
+			String(settlement.get("name", world.current_settlement)),
+			String(settlement.get("role", "market")),
+			active_bazaar_section,
+		)
+	campaign_outlook_label.visible = active_bazaar_section == "outlook"
+	active_contract_label.visible = active_bazaar_section == "assignments" and not world.active_contracts.is_empty()
+	for child in opportunity_list.get_children():
+		child.visible = String(child.get_meta("bazaar_section", "")) == active_bazaar_section
+	_link_shop_focus_cycle()
+
 func _link_main_menu_focus_cycle() -> void:
 	if start_game_button == null or continue_game_button == null:
 		return
@@ -1316,10 +1483,15 @@ func _link_main_menu_focus_cycle() -> void:
 func _link_shop_focus_cycle() -> void:
 	if shop_good_option == null or plan_departure_button == null:
 		return
-	var controls: Array = [shop_good_option, shop_quantity.get_line_edit()]
-	for control in [shop_buy_button, shop_sell_button, guided_test_button]:
-		if control.visible and not control.disabled:
-			controls.append(control)
+	var controls: Array = []
+	for control in bazaar_navigation_buttons:
+		controls.append(control)
+	if active_bazaar_section == "trade":
+		controls.append(shop_good_option)
+		controls.append(shop_quantity.get_line_edit())
+		for control in [shop_buy_button, shop_sell_button, guided_test_button]:
+			if control.visible and not control.disabled:
+				controls.append(control)
 	for group in [contract_buttons, opportunity_buttons, crew_buttons]:
 		for control in group:
 			if control.visible and not control.disabled:
@@ -1679,6 +1851,8 @@ func _current_ui_state_id() -> String:
 	if shop_layer != null and shop_layer.visible:
 		return "settlement_shop"
 	if game_layer != null and game_layer.visible:
+		if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
+			return "route_travel"
 		if not world.pending_event.is_empty():
 			return "route_event"
 		if arrival_pending:
@@ -1746,12 +1920,16 @@ func _publish_web_ui_state() -> void:
 		}, true);
 		document.body.appendChild(controlsRegion);
 	}
-	const focusedControlId = document.activeElement && document.activeElement.dataset
+	const activeControlId = document.activeElement && document.activeElement.dataset
 		? document.activeElement.dataset.control || ''
 		: '';
-	const focusedActionId = document.activeElement && document.activeElement.dataset
+	const activeActionId = document.activeElement && document.activeElement.dataset
 		? document.activeElement.dataset.action || ''
 		: '';
+	// A travel animation can temporarily publish no semantic action. Carry focus
+	// through that empty frame, then hand it to the first action on the road.
+	const focusedControlId = activeControlId || controlsRegion.dataset.pendingFocusedControl || '';
+	const focusedActionId = activeActionId || controlsRegion.dataset.pendingFocusedAction || '';
 	controlsRegion.dataset.screen = state.screen;
 	controlsRegion.dataset.renderSequence = String(Number(controlsRegion.dataset.renderSequence || '0') + 1);
 	controlsRegion.replaceChildren();
@@ -1864,6 +2042,14 @@ func _publish_web_ui_state() -> void:
 	}
 	if (focusTarget) {
 		focusTarget.focus();
+		controlsRegion.dataset.pendingFocusedControl = '';
+		controlsRegion.dataset.pendingFocusedAction = '';
+	} else if (focusedControlId || focusedActionId) {
+		controlsRegion.dataset.pendingFocusedControl = focusedControlId;
+		controlsRegion.dataset.pendingFocusedAction = focusedActionId;
+	} else {
+		controlsRegion.dataset.pendingFocusedControl = '';
+		controlsRegion.dataset.pendingFocusedAction = '';
 	}
 	const canvas = document.getElementById('canvas');
 	if (canvas) {
@@ -2012,6 +2198,7 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 		"pause_main_menu": return pause_main_menu_button
 		"return_to_shop": return return_to_shop_button
 		"commit_departure": return commit_departure_button
+		"continue_journey": return continue_journey_button
 		"enter_settlement": return enter_settlement_button
 		"keep_saved_campaign": return new_game_confirmation_dialog.get_cancel_button() if new_game_confirmation_dialog != null else null
 		"start_new_campaign": return new_game_confirmation_dialog.get_ok_button() if new_game_confirmation_dialog != null else null
@@ -2027,7 +2214,7 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 	for control in binding_buttons.values():
 		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 			return control
-	for controls in [contract_buttons, opportunity_buttons, crew_buttons]:
+	for controls in [bazaar_navigation_buttons, contract_buttons, opportunity_buttons, crew_buttons]:
 		for control in controls:
 			if is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 				return control
@@ -2093,21 +2280,25 @@ func _web_accessibility_checkbox_control(control_id: String, control: CheckBox) 
 		"description": control.tooltip_text,
 	}
 
+func _append_web_accessibility_control(controls: Array, control_record: Dictionary) -> void:
+	if not control_record.is_empty():
+		controls.append(control_record)
+
 func _web_accessibility_controls() -> Array:
 	var controls: Array = []
 	match _current_ui_state_id():
 		"main_menu":
-			controls.append(_web_accessibility_checkbox_control("reduce_motion", reduce_motion_checkbox))
-			controls.append(_web_accessibility_checkbox_control("large_text", large_text_checkbox))
-			controls.append(_web_accessibility_checkbox_control("interface_sounds", interface_sounds_checkbox))
+			_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("reduce_motion", reduce_motion_checkbox))
+			_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("large_text", large_text_checkbox))
+			_append_web_accessibility_control(controls, _web_accessibility_checkbox_control("interface_sounds", interface_sounds_checkbox))
 		"settlement_shop":
-			controls.append(_web_accessibility_option_control("shop_good", "Cargo", shop_good_option))
-			controls.append(_web_accessibility_quantity_control("shop_quantity", "Quantity", shop_quantity))
+			_append_web_accessibility_control(controls, _web_accessibility_option_control("shop_good", "Cargo", shop_good_option))
+			_append_web_accessibility_control(controls, _web_accessibility_quantity_control("shop_quantity", "Quantity", shop_quantity))
 		"departure_desk":
-			controls.append(_web_accessibility_option_control("destination", "Destination", destination_option))
-			controls.append(_web_accessibility_option_control("route", "Route", route_option))
-			controls.append(_web_accessibility_option_control("cargo_good", "Forecast cargo", cargo_good_option))
-			controls.append(_web_accessibility_quantity_control("cargo_quantity", "Forecast quantity", cargo_quantity))
+			_append_web_accessibility_control(controls, _web_accessibility_option_control("destination", "Destination", destination_option))
+			_append_web_accessibility_control(controls, _web_accessibility_option_control("route", "Route", route_option))
+			_append_web_accessibility_control(controls, _web_accessibility_option_control("cargo_good", "Forecast cargo", cargo_good_option))
+			_append_web_accessibility_control(controls, _web_accessibility_quantity_control("cargo_quantity", "Forecast quantity", cargo_quantity))
 	return controls
 
 func _web_accessibility_actions() -> Array:
@@ -2122,6 +2313,7 @@ func _web_accessibility_actions() -> Array:
 				_append_web_accessibility_action(actions, "rebind_%s" % action_name, binding_buttons.get(action_name))
 			_append_web_accessibility_action(actions, "restore_default_bindings", restore_bindings_button)
 		"settlement_shop":
+			_append_tagged_web_accessibility_actions(actions, bazaar_navigation_buttons)
 			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
 			_append_web_accessibility_action(actions, "shop_sell", shop_sell_button)
 			_append_web_accessibility_action(actions, "guided_trade", guided_test_button)
@@ -2136,6 +2328,8 @@ func _web_accessibility_actions() -> Array:
 		"departure_desk":
 			_append_web_accessibility_action(actions, "return_to_shop", return_to_shop_button)
 			_append_web_accessibility_action(actions, "commit_departure", commit_departure_button)
+		"route_travel":
+			_append_web_accessibility_action(actions, "continue_journey", continue_journey_button)
 		"route_event":
 			for choice_index in range(event_choice_buttons.size()):
 				_append_web_accessibility_action(actions, "event_choice_%d" % choice_index, event_choice_buttons[choice_index])
@@ -2170,6 +2364,18 @@ func _web_accessibility_order(actions: Array, controls: Array) -> Array:
 			if action_id not in ["start_game", "start_conflict", "start_campaign", "continue_game"]:
 				order.append("action:%s" % action_id)
 		return order
+	if _current_ui_state_id() == "settlement_shop":
+		for action in actions:
+			var action_id := String(action.get("id", ""))
+			if action_id.begins_with("bazaar_"):
+				order.append("action:%s" % action_id)
+		for control in controls:
+			order.append("control:%s" % String(control.get("id", "")))
+		for action in actions:
+			var action_id := String(action.get("id", ""))
+			if not action_id.begins_with("bazaar_"):
+				order.append("action:%s" % action_id)
+		return order
 	for control in controls:
 		order.append("control:%s" % String(control.get("id", "")))
 	for action in actions:
@@ -2195,9 +2401,11 @@ func _web_accessibility_announcement() -> String:
 		"settlement_shop":
 			var recent_conflict_text := _latest_conflict_outcome_text()
 			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
-			return "Settlement Shop at %s. Cargo is selected first; trade and local actions lead to Plan departure.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
+			return "Settlement Bazaar at %s. Trade, Jobs, Services and Intel, Crew, Outlook, and Departure form the repeatable hub.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
 		"departure_desk":
 			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
+		"route_travel":
+			return "On the road. %s. The committed corridor is shown before any encounter or arrival. Continue journey is focused when the road observation is ready." % map_panel._road_waypoint_label()
 		"route_event":
 			return "Caravan conflict simulation: %s. Threat, readiness, costs, risk, and expected outcomes are stated before the first available response; unavailable tactics include written reasons." % String(world.pending_event.get("title", "travel event"))
 		"arrival_handoff":
@@ -2227,10 +2435,16 @@ func _web_ui_state() -> Dictionary:
 			"start_game": _web_control_rect(start_game_button),
 			"start_conflict": _web_control_rect(start_conflict_button),
 			"start_campaign": _web_control_rect(start_campaign_button),
+			"bazaar_trade": _web_control_rect(bazaar_navigation_buttons[0]),
+			"bazaar_assignments": _web_control_rect(bazaar_navigation_buttons[1]),
+			"bazaar_information": _web_control_rect(bazaar_navigation_buttons[2]),
+			"bazaar_crew": _web_control_rect(bazaar_navigation_buttons[3]),
+			"bazaar_outlook": _web_control_rect(bazaar_navigation_buttons[4]),
 			"large_text": _web_control_rect(large_text_checkbox),
 			"plan_departure": _web_control_rect(plan_departure_button),
 			"return_to_shop": _web_control_rect(return_to_shop_button),
 			"commit_departure": _web_control_rect(commit_departure_button),
+			"continue_journey": _web_control_rect(continue_journey_button),
 			"enter_settlement": _web_control_rect(enter_settlement_button),
 			"pause_main_menu": _web_control_rect(pause_main_menu_button),
 			"shop_good": _web_control_rect(shop_good_option),
@@ -2251,6 +2465,10 @@ func _web_ui_state() -> Dictionary:
 		"provisions": world.provisions if world != null else 0,
 		"cargo_weight": int(world.cargo.get("weight", 0)) if world != null else 0,
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
+		"travel_phase": map_panel.travel_phase if map_panel != null else "rest",
+		"road_scene_id": String(map_panel._road_profile(map_panel.travel_route_id).get("scene_id", "")) if map_panel != null and map_panel._is_road_view() else "",
+		"road_waypoint": map_panel._road_waypoint_label() if map_panel != null and map_panel._is_road_view() else "",
+		"bazaar_section": active_bazaar_section,
 		"selected_good_id": selected_good_id,
 		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
 		"selected_route_id": _selected_id(route_option) if route_option != null else "",
@@ -2354,6 +2572,8 @@ func _on_event_choice_pressed(event_id: String, choice_id: String) -> void:
 		last_conflict_outcome_text = _conflict_outcome_comparison(result)
 		arrival_pending = true
 		enter_settlement_button.visible = true
+		if map_panel:
+			map_panel.complete_travel()
 		_populate_destination_options()
 		_populate_route_options()
 	_show_command_result(result, "Route decision")
@@ -2402,6 +2622,8 @@ func _refresh_forecasts() -> void:
 	var good_id := _selected_id(cargo_good_option)
 	var destination_id := _selected_id(destination_option)
 	var route_id := _selected_id(route_option)
+	if map_panel:
+		map_panel.set_plan(route_id, destination_id)
 	var quantity := int(cargo_quantity.value)
 	var origin := world.settlement(world.current_settlement)
 	var destination := world.settlement(destination_id)
@@ -2453,7 +2675,7 @@ func _refresh_forecasts() -> void:
 	if commit_departure_button:
 		var provision_count := int(selected_route.get("provisions", 0))
 		var provision_label := "provision" if provision_count == 1 else "provisions"
-		commit_departure_button.text = "Commit — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
+		commit_departure_button.text = "Confirm and set out — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
 	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 
 func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, world_context: Dictionary) -> String:
@@ -2553,15 +2775,36 @@ func _on_depart_pressed() -> void:
 	})
 	if result.ok:
 		last_conflict_outcome_text = ""
+		committed_journey_message = String(result.get("message", "Journey committed."))
 		arrival_pending = world.pending_event.is_empty()
 		commit_departure_button.disabled = true
 		return_to_shop_button.disabled = true
-		enter_settlement_button.visible = arrival_pending
+		enter_settlement_button.visible = false
 		if map_panel:
 			map_panel.begin_travel(route_id, previous_settlement, destination_id)
 		_populate_destination_options()
 		_populate_route_options()
 	_show_command_result(result, "Departure")
+
+func _on_map_travel_state_changed(_state: String) -> void:
+	if status_label == null or world == null:
+		return
+	_refresh_ui()
+	if map_panel.travel_phase == "road":
+		_grab_focus_if_available(continue_journey_button)
+	elif map_panel.travel_phase == "encounter":
+		_grab_first_enabled(event_choice_buttons)
+	elif map_panel.travel_phase == "arrived":
+		_grab_focus_if_available(enter_settlement_button)
+
+func _on_continue_journey_pressed() -> void:
+	if map_panel == null or map_panel.travel_phase != "road":
+		return
+	map_panel.continue_from_road()
+	if map_panel.travel_phase == "encounter":
+		_set_event("%s — %s\nNEXT — %s" % [String(world.pending_event.get("title", "Route encounter")), String(world.pending_event.get("setup", "The road is blocked.")), _next_step_text()])
+		_refresh_ui()
+		_grab_first_enabled(event_choice_buttons)
 
 func _show_command_result(result: Dictionary, label: String) -> void:
 	if result.ok:
@@ -2579,6 +2822,10 @@ func _show_command_result(result: Dictionary, label: String) -> void:
 	_refresh_ui()
 
 func _next_step_text() -> String:
+	if map_panel != null and map_panel.travel_phase in ["moving_out", "moving_in"]:
+		return "Watch the committed road; the next action appears when the caravan reaches its travel stop."
+	if map_panel != null and map_panel.travel_phase == "road":
+		return "Review the road view, then choose Continue along the road."
 	if not world.pending_event.is_empty():
 		return "Choose one available route response; unavailable prerequisites are listed below their choices."
 	if arrival_pending:
@@ -2692,6 +2939,8 @@ func _on_load_pressed() -> bool:
 		map_panel.world = world
 		map_panel.reduce_motion = reduce_motion_checkbox != null and reduce_motion_checkbox.button_pressed
 		map_panel.reset_travel(world.current_settlement)
+		if not world.pending_event.is_empty() and not world.journey_context.is_empty():
+			map_panel.restore_pending_travel(String(world.journey_context.get("route_id", "")), String(world.journey_context.get("origin_id", world.current_settlement)), String(world.journey_context.get("destination_id", world.current_settlement)))
 	_populate_destination_options()
 	_populate_route_options()
 	var migrated_from := int(load_result.get("migrated_from", AshWorldState.SAVE_VERSION))
@@ -2776,6 +3025,11 @@ func _on_map_settlement_selected(settlement_id: String) -> void:
 
 func _refresh_playtest_status() -> void:
 	if playtest_status_label == null:
+		return
+	if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
+		if guided_test_button:
+			guided_test_button.visible = false
+		playtest_status_label.text = "ON THE ROAD — Follow the committed route, inspect the travel stop, then continue toward the next event or settlement."
 		return
 	if active_playtest_path_id == PLAYTEST_PATH_CONFLICT:
 		_refresh_conflict_playtest_status()
@@ -2918,6 +3172,7 @@ func _refresh_opportunities() -> void:
 				contract_reason = "Needs %d free cargo space; only %d is available." % [required_weight, free_capacity]
 		contract_button.tooltip_text = contract_reason if contract_button.disabled else String(contract_record.get("tradeoff", ""))
 		contract_button.set_meta("web_accessibility_id", "accept_contract_%s" % contract_id)
+		contract_button.set_meta("bazaar_section", "assignments")
 		contract_button.pressed.connect(_on_accept_contract_pressed.bind(contract_id))
 		opportunity_list.add_child(contract_button)
 		contract_buttons.append(contract_button)
@@ -2926,6 +3181,7 @@ func _refresh_opportunities() -> void:
 		contract_details.add_theme_font_size_override("font_size", 12)
 		contract_details.add_theme_color_override("font_color", Color("#aa9a87"))
 		contract_details.text = contract_reason if contract_button.disabled else "%s Sponsor: %s. Deliver %d %s to %s within %d days for %d ashmarks. Failure: %d ashmarks. %s" % [String(contract_record.get("description", "")), String(contract_record.get("sponsor", "")), int(contract_record.get("quantity", 0)), String(contract_record.get("good_id", "")), String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination")), int(contract_record.get("deadline_days", 0)), int(contract_record.get("reward", 0)), int(contract_record.get("failure_penalty", 0)), String(contract_record.get("failure_recovery", ""))]
+		contract_details.set_meta("bazaar_section", "assignments")
 		opportunity_list.add_child(contract_details)
 	var active_ids: Array = world.active_contracts.keys()
 	active_ids.sort()
@@ -2943,6 +3199,7 @@ func _refresh_opportunities() -> void:
 		else:
 			resolve_button.tooltip_text = "Resolve the contract using the currently carried cargo and deadline."
 		resolve_button.set_meta("web_accessibility_id", "resolve_contract_%s" % active_id)
+		resolve_button.set_meta("bazaar_section", "assignments")
 		resolve_button.pressed.connect(_on_resolve_contract_pressed.bind(active_id))
 		opportunity_list.add_child(resolve_button)
 		contract_buttons.append(resolve_button)
@@ -2994,6 +3251,7 @@ func _refresh_opportunities() -> void:
 			unavailable_reason = "Arms escalation is already zero; no audit is needed."
 		action_button.tooltip_text = unavailable_reason if action_button.disabled else "%s %s" % [String(action.get("description", "")), String(action.get("tradeoff", ""))]
 		action_button.set_meta("web_accessibility_id", "settlement_action_%s" % String(action.get("id", "")))
+		action_button.set_meta("bazaar_section", "information")
 		action_button.pressed.connect(_on_settlement_action_pressed.bind(String(action.get("id", ""))))
 		opportunity_list.add_child(action_button)
 		opportunity_buttons.append(action_button)
@@ -3002,8 +3260,10 @@ func _refresh_opportunities() -> void:
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color("#aa9a87"))
 		details.text = unavailable_reason if action_button.disabled else "%s Cost: %d ashmarks, %d visit slot, %s. %s" % [String(action.get("description", "")), cost, slots, "no day" if time_cost == 0 else "%d day" % time_cost, String(action.get("tradeoff", ""))]
+		details.set_meta("bazaar_section", "information")
 		opportunity_list.add_child(details)
 	_append_crew_opportunity()
+	_apply_bazaar_section()
 
 func _append_crew_opportunity() -> void:
 	for crew in MarketContent.crew_records():
@@ -3033,6 +3293,7 @@ func _append_crew_opportunity() -> void:
 			button.pressed.connect(_on_assign_crew_pressed.bind(crew_id))
 		button.tooltip_text = reason if button.disabled else String(crew.get("hook", ""))
 		button.set_meta("web_accessibility_id", "%s_crew_%s" % ["assign" if recruited else "recruit", crew_id])
+		button.set_meta("bazaar_section", "crew")
 		opportunity_list.add_child(button)
 		crew_buttons.append(button)
 		var details := Label.new()
@@ -3040,6 +3301,7 @@ func _append_crew_opportunity() -> void:
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color("#aa9a87"))
 		details.text = reason if button.disabled else "%s — %s %s" % [String(crew.get("role", "Crew")), String(crew.get("personality", "")), String(crew.get("limitation", ""))]
+		details.set_meta("bazaar_section", "crew")
 		opportunity_list.add_child(details)
 
 func _refresh_contract_summary() -> void:
@@ -3049,8 +3311,10 @@ func _refresh_contract_summary() -> void:
 	contract_ids.sort()
 	if contract_ids.is_empty():
 		active_contract_label.text = "ACTIVE CONTRACT — none. Spot trade remains unrestricted."
+		active_contract_label.visible = false
 		departure_contract_label.text = "ACTIVE CONTRACT — none."
 		return
+	active_contract_label.visible = true
 	var contract_record := world.active_contract(String(contract_ids[0]))
 	var good_id := String(contract_record.get("good_id", ""))
 	var quantity := int(contract_record.get("quantity", 0))
@@ -3071,13 +3335,16 @@ func _refresh_event_card() -> void:
 	event_choice_reason_labels.clear()
 	var enabled_choice_buttons: Array = []
 	var pending := world.pending_event
-	event_card.visible = not pending.is_empty()
+	var event_revealed: bool = not pending.is_empty() and map_panel != null and map_panel.travel_phase == "encounter"
+	event_card.visible = event_revealed
 	if conflict_outcome_panel and conflict_outcome_label:
 		conflict_outcome_panel.visible = pending.is_empty() and arrival_pending and not last_conflict_outcome_text.is_empty()
 		conflict_outcome_label.text = last_conflict_outcome_text
 	if pending.is_empty():
 		if arrival_pending and (pause_layer == null or not pause_layer.visible):
 			_grab_focus_if_available(enter_settlement_button)
+		return
+	if not event_revealed:
 		return
 	event_title_label.text = String(pending.get("title", "Route decision"))
 	event_setup_label.text = String(pending.get("setup", ""))
@@ -3441,10 +3708,35 @@ func _set_event(text: String) -> void:
 		event_scroll.scroll_vertical = 0
 
 func _refresh_ui() -> void:
-	status_label.text = "Day %d   |   %s   |   Ashmarks %d   |   Provisions %d   |   Cargo %d/%d   |   Crisis %d" % [world.day, world.settlement(world.current_settlement).name, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity, world.crisis_stage]
+	_refresh_caravan_status()
 	var journey_locked := not world.pending_event.is_empty() or arrival_pending
+	var road_waiting: bool = map_panel != null and map_panel.travel_phase == "road"
+	var actively_traveling: bool = map_panel != null and map_panel.travel_phase in ["moving_out", "moving_in"]
+	if map_hint:
+		if actively_traveling:
+			map_hint.text = "%s — The caravan is crossing the committed road. Presentation cannot change resolved costs or risk." % map_panel._road_waypoint_label()
+		elif road_waiting:
+			map_hint.text = "%s — Continue when you are ready to reveal the next road event or arrival." % map_panel._road_waypoint_label()
+		elif map_panel != null and map_panel.travel_phase == "encounter":
+			map_hint.text = "Road encounter. Review the visible stakes and choose one available response."
+		elif arrival_pending:
+			map_hint.text = "Journey complete. Review the outcome, then enter the destination bazaar."
+		else:
+			map_hint.text = "Choose a settlement. HERE = current location; JOB = available assignment; ASSIGNED = accepted work."
+	if event_label:
+		if actively_traveling:
+			event_label.text = "The caravan is moving through the selected corridor.\nNEXT — Watch for the road stop before any encounter or arrival."
+		elif road_waiting:
+			event_label.text = "MID-ROUTE — The caravan has reached a readable road stop.\nNEXT — Inspect the route, then continue the journey."
+		elif arrival_pending and world.pending_event.is_empty() and last_conflict_outcome_text.is_empty() and not committed_journey_message.is_empty():
+			event_label.text = "%s\nNEXT — Review the result, then choose Enter %s to trade at the destination." % [committed_journey_message, String(world.settlement(world.current_settlement).get("name", "the settlement"))]
 	if departure_travel_actions:
 		departure_travel_actions.visible = not journey_locked
+	if departure_planning_panel:
+		departure_planning_panel.visible = not journey_locked
+	if continue_journey_button:
+		continue_journey_button.visible = road_waiting
+		continue_journey_button.disabled = actively_traveling
 	if destination_option:
 		destination_option.disabled = journey_locked
 	if route_option:
@@ -3456,16 +3748,12 @@ func _refresh_ui() -> void:
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
 		var crisis := MarketContent.crisis_stage(world.crisis_stage)
-		shop_status_label.text = "%s — %s\nDay %d · Crisis %d: %s\nObjective: %s\n%s" % [String(settlement.get("name", "Unknown settlement")), String(settlement.get("role", "market")), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), String(event_label.text if event_label else "Inspect the local need, then load only what your plan can carry.")]
-		shop_status_label.text += "\nSettlement resilience: %d/10" % world.resilience_for(world.current_settlement)
-		if not world.known_information.is_empty():
-			shop_status_label.text += " · Known leads: %d" % world.known_information.size()
-		var warden_status := world.faction_status("wardens")
-		var caravan_status := world.faction_status("caravans")
-		shop_status_label.text += " · Wardens %+d (%s; threshold %+d) · Caravans %+d (%s; threshold %+d)" % [int(world.reputation.get("wardens", 0)), String(warden_status.get("tier", "Unknown")), int(warden_status.get("next_threshold", 0)), int(world.reputation.get("caravans", 0)), String(caravan_status.get("tier", "Unknown")), int(caravan_status.get("next_threshold", 0))]
+		if shop_title_label:
+			shop_title_label.text = "%s BAZAAR" % String(settlement.get("name", "Settlement")).to_upper()
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
-		shop_status_label.text += "\nArms escalation: %d/6 — %s" % [world.arms_escalation, arms_label]
+		var leads_text := " · Leads %d" % world.known_information.size() if not world.known_information.is_empty() else ""
+		shop_status_label.text = "%s · Day %d · Crisis %d: %s\nTODAY'S NEED — %s\nResilience %d/10 · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), world.resilience_for(world.current_settlement), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if ending_panel and ending_label:
@@ -3494,7 +3782,11 @@ func _refresh_ui() -> void:
 	if menu_save_status_label:
 		menu_save_status_label.text = save_status_text
 	if departure_status_label:
-		if not world.pending_event.is_empty():
+		if actively_traveling:
+			departure_status_label.text = "ON THE ROAD — %s. No additional choice is being resolved yet." % map_panel._road_waypoint_label()
+		elif road_waiting:
+			departure_status_label.text = "ROAD VIEW — %s. Inspect the corridor, then continue to the next authored encounter or arrival." % map_panel._road_waypoint_label()
+		elif not world.pending_event.is_empty():
 			departure_status_label.text = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."
 		elif arrival_pending:
 			departure_status_label.text = "ARRIVAL REPORT — %s\n%s\nReview what changed, then enter the settlement to trade again." % [String(world.settlement(world.current_settlement).get("name", "Unknown settlement")), String(event_label.text)]
@@ -3502,6 +3794,7 @@ func _refresh_ui() -> void:
 			departure_status_label.text = "COMMITMENT CHECK — The map only shows legal corridors. Returning to the shop preserves this plan and spends nothing."
 	if enter_settlement_button:
 		enter_settlement_button.text = "Enter %s" % String(world.settlement(world.current_settlement).get("name", "settlement"))
+		enter_settlement_button.visible = arrival_pending and map_panel != null and map_panel.travel_phase == "arrived"
 	if playtest_banner and playtest_banner.text.is_empty():
 		playtest_banner.text = "QUICK PLAYTEST — Guidance is optional; every trade and route remains available."
 	_refresh_playtest_status()
@@ -3529,8 +3822,126 @@ func _refresh_ui() -> void:
 	_publish_web_ui_state()
 	_queue_web_ui_state_after_layout()
 
+func _refresh_caravan_status() -> void:
+	status_label.text = "%s · %s\nDay %d · Crisis %d\n%d ashmarks · %d provisions\nHold %d/%d" % [String(world.settlement(world.current_settlement).name), map_panel._caravan_motion_label() if map_panel else "AT REST", world.day, world.crisis_stage, world.money, world.provisions, int(world.cargo.get("weight", 0)), world.cargo_capacity]
+	if map_panel != null and map_panel.travel_phase in ["moving_out", "road", "moving_in"]:
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — %s" % map_panel._road_waypoint_label()
+	elif not world.pending_event.is_empty():
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — %s" % String(world.pending_event.get("title", "Route encounter"))
+	elif arrival_pending:
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — ARRIVAL REPORT"
+	else:
+		caravan_context_label.text = "PATH — SETTLEMENT > MAP > ROAD > ARRIVAL\nCURRENT — PLAN ROUTE"
+
+class BazaarScene extends Control:
+	const SECTION_IDS := ["trade", "assignments", "information", "crew", "outlook"]
+	const SECTION_LABELS := ["TRADE", "JOBS", "INTEL", "CREW", "OUTLOOK"]
+	const SECTION_ACCENTS := ["#c46f45", "#c6a15b", "#6f9b87", "#9a795f", "#788aa3"]
+
+	var settlement_id := "ashgate"
+	var settlement_name := "Ashgate"
+	var settlement_role := "regulated hub"
+	var active_section := "trade"
+	var text_scale := 1.0
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func set_context(next_id: String, next_name: String, next_role: String, next_section: String) -> void:
+		settlement_id = next_id
+		settlement_name = next_name
+		settlement_role = next_role
+		active_section = next_section
+		queue_redraw()
+
+	func set_text_scale(next_scale: float) -> void:
+		text_scale = next_scale
+		queue_redraw()
+
+	func _font_size(base_size: int) -> int:
+		return int(round(float(base_size) * text_scale))
+
+	func _settlement_tint() -> Color:
+		var tints := {
+			"ashgate": Color("#8f5742"),
+			"brine_cross": Color("#557b79"),
+			"cinderford": Color("#8d684b"),
+			"hollow_market": Color("#796985"),
+			"reedwatch": Color("#71835c"),
+		}
+		return tints.get(settlement_id, Color("#80634d"))
+
+	func _draw_person(center: Vector2, coat: Color, scale: float = 1.0) -> void:
+		draw_circle(center + Vector2(0, -14) * scale, 6.5 * scale, Color("#d6ad7b"))
+		draw_colored_polygon(PackedVector2Array([
+			center + Vector2(-9, -7) * scale,
+			center + Vector2(9, -7) * scale,
+			center + Vector2(13, 18) * scale,
+			center + Vector2(-13, 18) * scale,
+		]), coat)
+		draw_line(center + Vector2(-4, 18) * scale, center + Vector2(-7, 29) * scale, Color("#34251d"), 3.0 * scale)
+		draw_line(center + Vector2(4, 18) * scale, center + Vector2(7, 29) * scale, Color("#34251d"), 3.0 * scale)
+
+	func _draw_stall_icon(index: int, center: Vector2, color: Color) -> void:
+		match index:
+			0:
+				draw_rect(Rect2(center + Vector2(-13, -5), Vector2(11, 11)), color, false, 2.0)
+				draw_rect(Rect2(center + Vector2(2, -10), Vector2(11, 16)), color, false, 2.0)
+			1:
+				draw_rect(Rect2(center + Vector2(-12, -12), Vector2(24, 22)), color, false, 2.0)
+				draw_line(center + Vector2(-7, -5), center + Vector2(7, -5), color, 2.0)
+				draw_line(center + Vector2(-7, 1), center + Vector2(5, 1), color, 2.0)
+			2:
+				draw_circle(center + Vector2(0, -2), 8, color, false, 2.0)
+				draw_line(center + Vector2(0, 6), center + Vector2(0, 14), color, 2.0)
+				draw_line(center + Vector2(-7, 14), center + Vector2(7, 14), color, 2.0)
+			3:
+				draw_circle(center + Vector2(-7, -5), 5, color, false, 2.0)
+				draw_circle(center + Vector2(7, -5), 5, color, false, 2.0)
+				draw_line(center + Vector2(-12, 10), center + Vector2(12, 10), color, 3.0)
+			4:
+				draw_line(center + Vector2(-11, 10), center + Vector2(6, -9), color, 3.0)
+				draw_circle(center + Vector2(9, -12), 5, color, false, 2.0)
+				draw_line(center + Vector2(-3, 1), center + Vector2(8, 11), color, 2.0)
+
+	func _draw() -> void:
+		var bounds := Rect2(Vector2.ZERO, size)
+		var tint := _settlement_tint()
+		draw_rect(bounds, Color("#19140f"), true)
+		draw_rect(Rect2(1, 1, size.x - 2, size.y - 2), tint.darkened(0.52), false, 2.0)
+		draw_rect(Rect2(2, 2, size.x - 4, 36), tint.darkened(0.62), true)
+		draw_string(ThemeDB.fallback_font, Vector2(16, 25), "%s — %s" % [settlement_name.to_upper(), settlement_role.to_upper()], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(14), Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, Vector2(size.x - 195, 25), "A LIVING MARKET BETWEEN ROADS", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#b5a18b"))
+
+		var gap := 8.0
+		var left_margin := 10.0
+		var stall_width := (size.x - left_margin * 2.0 - gap * 4.0) / 5.0
+		var stall_top := 49.0
+		var stall_height := maxf(150.0, size.y - stall_top - 12.0)
+		var active_index := SECTION_IDS.find(active_section)
+		for index in range(5):
+			var accent := Color(SECTION_ACCENTS[index])
+			var stall_rect := Rect2(left_margin + index * (stall_width + gap), stall_top, stall_width, stall_height)
+			var selected := index == active_index
+			draw_rect(stall_rect, accent.darkened(0.68 if selected else 0.78), true)
+			draw_rect(stall_rect, Color("#f1d39d") if selected else accent.darkened(0.25), false, 3.0 if selected else 1.5)
+			var canopy := Rect2(stall_rect.position, Vector2(stall_width, 30))
+			draw_rect(canopy, accent.darkened(0.22), true)
+			var stripe_width := stall_width / 6.0
+			for stripe in range(6):
+				if stripe % 2 == 0:
+					draw_rect(Rect2(canopy.position.x + stripe * stripe_width, canopy.position.y, stripe_width, canopy.size.y), accent.lightened(0.13), true)
+			draw_rect(Rect2(stall_rect.position + Vector2(7, stall_height - 42), Vector2(stall_width - 14, 24)), Color("#3b2a1f"), true)
+			var figure_color := accent.lightened(0.08) if selected else accent.darkened(0.05)
+			_draw_person(Vector2(stall_rect.get_center().x - 18, stall_rect.position.y + stall_height - 70), figure_color, 0.9)
+			_draw_stall_icon(index, Vector2(stall_rect.get_center().x + 23, stall_rect.position.y + 73), Color("#e7d3aa") if selected else Color("#a9987c"))
+			draw_string(ThemeDB.fallback_font, Vector2(stall_rect.position.x, stall_rect.position.y + 24), SECTION_LABELS[index], HORIZONTAL_ALIGNMENT_CENTER, stall_width, _font_size(12), Color("#fff0bd") if selected else Color("#d3c0a0"))
+			if selected:
+				draw_circle(Vector2(stall_rect.get_center().x, stall_rect.end.y - 8), 3.5, Color("#fff0bd"))
+
 class MapPanel extends Control:
 	signal settlement_selected(settlement_id: String)
+	signal travel_state_changed(state: String)
 
 	const GRID_SIZE := Vector2i(17, 11)
 	const NORMAL_BOARD_ORIGIN := Vector2(34, 230)
@@ -3540,21 +3951,28 @@ class MapPanel extends Control:
 	const NORMAL_CELL_HEIGHT := 20.0
 	const MIN_CELL_HEIGHT := 14.0
 	const MAP_HEADER_HEIGHT := 30.0
+	const ENCOUNTER_PROGRESS := 0.39
 	const ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
 	const ROUTE_PROFILES := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
 	const SETTLEMENT_CELLS := {
-		"ashgate": Vector2i(2, 7),
+		"ashgate": Vector2i(7, 6),
 		"brine_cross": Vector2i(13, 2),
-		"cinderford": Vector2i(5, 7),
-		"hollow_market": Vector2i(9, 3),
-		"reedwatch": Vector2i(13, 8)
+		"cinderford": Vector2i(11, 6),
+		"hollow_market": Vector2i(4, 3),
+		"reedwatch": Vector2i(14, 9)
 	}
 
 	var world
 	var travel_route_id: String = ""
+	var travel_origin_id: String = ""
+	var travel_destination_id: String = ""
+	var selected_route_id: String = ""
+	var selected_destination_id: String = ""
+	var hovered_settlement_id: String = ""
 	var travel_points: Array[Vector2] = []
 	var travel_progress: float = 1.0
 	var traveling: bool = false
+	var travel_phase: String = "rest"
 	var reduce_motion: bool = false
 	var text_scale: float = 1.0
 	var board_origin: Vector2 = NORMAL_BOARD_ORIGIN
@@ -3567,9 +3985,12 @@ class MapPanel extends Control:
 	func _process(delta: float) -> void:
 		if not traveling:
 			return
-		travel_progress = minf(1.0, travel_progress + delta / 1.8)
-		if is_equal_approx(travel_progress, 1.0):
+		var target_progress: float = ENCOUNTER_PROGRESS if travel_phase == "moving_out" else 1.0
+		travel_progress = minf(target_progress, travel_progress + delta / 1.8)
+		if is_equal_approx(travel_progress, target_progress):
 			traveling = false
+			travel_phase = "road" if travel_phase == "moving_out" else "arrived"
+			travel_state_changed.emit(_caravan_motion_label())
 		queue_redraw()
 
 	func set_text_scale(value: float) -> void:
@@ -3581,6 +4002,11 @@ class MapPanel extends Control:
 		cell_width = clampf((available_width - board_origin.x - 24.0) / float(GRID_SIZE.x), MIN_CELL_WIDTH, MAX_CELL_WIDTH)
 		var available_height := maxf(0.0, bottom - board_origin.y)
 		cell_height = clampf(available_height / float(GRID_SIZE.y), MIN_CELL_HEIGHT, NORMAL_CELL_HEIGHT)
+		queue_redraw()
+
+	func set_plan(route_id: String, destination_id: String) -> void:
+		selected_route_id = route_id
+		selected_destination_id = destination_id
 		queue_redraw()
 
 	func _board_rect() -> Rect2:
@@ -3634,14 +4060,65 @@ class MapPanel extends Control:
 	func _settlement_marker_detail(settlement_id: String) -> String:
 		if world == null:
 			return "Settlement"
-		var location_prefix := "HERE · " if settlement_id == world.current_settlement else ""
-		return "%sRES %d/10" % [location_prefix, world.resilience_for(settlement_id)]
+		var state_prefix := ""
+		if settlement_id == world.current_settlement:
+			state_prefix = "HERE · "
+		elif _assignment_state(settlement_id) == "accepted":
+			state_prefix = "ASSIGNED · "
+		elif _assignment_state(settlement_id) == "available":
+			state_prefix = "JOB · "
+		elif settlement_id == selected_destination_id:
+			state_prefix = "NEXT · "
+		return "%sRES %d/10" % [state_prefix, world.resilience_for(settlement_id)]
+
+	func _assignment_state(settlement_id: String) -> String:
+		if world == null:
+			return ""
+		for contract_id_value in world.active_contracts.keys():
+			var active: Dictionary = world.active_contract(String(contract_id_value))
+			if String(active.get("destination_id", "")) == settlement_id:
+				return "accepted"
+		for contract in MarketContent.contracts_from(world.current_settlement):
+			if String(contract.get("destination_id", "")) == settlement_id and not world.has_contract_outcome(String(contract.get("id", ""))):
+				return "available"
+		return ""
+
+	func _route_to(settlement_id: String) -> String:
+		if world == null:
+			return ""
+		for route_id in ROUTE_IDS:
+			if MarketContent.route_connects(route_id, world.current_settlement, settlement_id):
+				return route_id
+		return ""
+
+	func _hover_text(settlement_id: String) -> String:
+		if world == null or settlement_id.is_empty():
+			return ""
+		var settlement: Dictionary = world.settlement(settlement_id)
+		if settlement_id == world.current_settlement:
+			return "%s\nCurrent bazaar · no travel cost" % String(settlement.get("name", settlement_id))
+		var route_id := _route_to(settlement_id)
+		if route_id.is_empty():
+			return "%s\nNo direct road from %s" % [String(settlement.get("name", settlement_id)), String(world.settlement(world.current_settlement).get("name", "here"))]
+		var route: Dictionary = world.route(route_id, world.current_settlement, settlement_id)
+		var assignment := _assignment_state(settlement_id)
+		var assignment_text := " · accepted assignment" if assignment == "accepted" else " · assignment available" if assignment == "available" else ""
+		return "%s%s · %s\n%s · %d ashmarks · %d provisions · %d day" % [String(settlement.get("name", settlement_id)), assignment_text, String(settlement.get("role", "market")), String(route.get("name", route_id)), int(route.get("cost", 0)), world.route_provision_cost(route_id, settlement_id), int(route.get("days", 0))]
 
 	func _font_size(base_size: int) -> int:
 		return int(round(float(base_size) * text_scale))
 
 	func _caravan_motion_label() -> String:
-		return "MOVING" if traveling else ""
+		match travel_phase:
+			"moving_out", "moving_in":
+				return "MOVING"
+			"road":
+				return "ON ROAD"
+			"encounter":
+				return "ENCOUNTER"
+			"arrived":
+				return "ARRIVED"
+		return "AT REST"
 
 	func _route_footer_rect(route_index: int) -> Rect2:
 		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
@@ -3655,13 +4132,18 @@ class MapPanel extends Control:
 
 	func reset_travel(settlement_id: String) -> void:
 		travel_route_id = ""
+		travel_origin_id = settlement_id
+		travel_destination_id = settlement_id
 		travel_points.clear()
 		travel_progress = 1.0
 		traveling = false
+		travel_phase = "rest"
 		queue_redraw()
 
 	func begin_travel(route_id: String, origin_id: String, destination_id: String) -> void:
 		travel_route_id = route_id
+		travel_origin_id = origin_id
+		travel_destination_id = destination_id
 		var origin: Vector2 = _settlement_point(origin_id)
 		var destination: Vector2 = _settlement_point(destination_id)
 		var route: Array[Vector2] = _route_points(route_id)
@@ -3673,9 +4155,87 @@ class MapPanel extends Control:
 		else:
 			travel_points.append(origin.lerp(destination, 0.5) + Vector2(0, -28))
 		travel_points.append(destination)
-		travel_progress = 1.0 if reduce_motion else 0.0
+		travel_progress = ENCOUNTER_PROGRESS if reduce_motion else 0.0
 		traveling = not reduce_motion
+		travel_phase = "road" if reduce_motion else "moving_out"
+		travel_state_changed.emit(_caravan_motion_label())
 		queue_redraw()
+
+	func continue_from_road() -> void:
+		if travel_phase != "road":
+			return
+		if world != null and not world.pending_event.is_empty():
+			travel_phase = "encounter"
+			traveling = false
+		else:
+			travel_phase = "arrived" if reduce_motion else "moving_in"
+			traveling = not reduce_motion
+			if reduce_motion:
+				travel_progress = 1.0
+		travel_state_changed.emit(_caravan_motion_label())
+		queue_redraw()
+
+	func restore_pending_travel(route_id: String, origin_id: String, destination_id: String) -> void:
+		begin_travel(route_id, origin_id, destination_id)
+		travel_progress = ENCOUNTER_PROGRESS
+		traveling = false
+		travel_phase = "encounter"
+		travel_state_changed.emit(_caravan_motion_label())
+		queue_redraw()
+
+	func complete_travel() -> void:
+		if travel_route_id.is_empty():
+			travel_route_id = "completed_journey"
+		travel_progress = 1.0
+		traveling = false
+		travel_phase = "arrived"
+		travel_state_changed.emit(_caravan_motion_label())
+		queue_redraw()
+
+	func _caravan_position() -> Vector2:
+		if travel_phase in ["moving_out", "road", "moving_in", "encounter"]:
+			return _polyline_position(travel_points, travel_progress)
+		return _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
+
+	func _caravan_heading() -> float:
+		if travel_points.size() < 2:
+			return 0.0
+		var before := _polyline_position(travel_points, maxf(0.0, travel_progress - 0.015))
+		var after := _polyline_position(travel_points, minf(1.0, travel_progress + 0.015))
+		return before.angle_to_point(after)
+
+	func _draw_caravan(position: Vector2) -> void:
+		var state := _caravan_motion_label()
+		var accent := Color("#f0d27d")
+		if state == "ENCOUNTER":
+			accent = Color("#e07151")
+			draw_circle(position, 28.0, Color(0.88, 0.33, 0.22, 0.16))
+			draw_arc(position, 28.0, 0.0, TAU, 32, accent, 3.0, true)
+		elif state == "MOVING":
+			draw_line(position - Vector2(34, 0), position - Vector2(22, 0), Color(0.94, 0.82, 0.49, 0.42), 4.0)
+		else:
+			draw_line(position - Vector2(28, 20), position + Vector2(28, 20), Color("#85694e"), 2.0)
+			draw_line(position + Vector2(28, -20), position - Vector2(28, 20), Color("#85694e"), 2.0)
+
+		draw_set_transform(position, _caravan_heading() if state == "MOVING" else 0.0, Vector2.ONE)
+		draw_colored_polygon(PackedVector2Array([Vector2(-24, 10), Vector2(-20, -9), Vector2(-12, -14), Vector2(13, -14), Vector2(24, -6), Vector2(25, 10)]), Color("#211914"))
+		draw_polyline(PackedVector2Array([Vector2(-24, 10), Vector2(-20, -9), Vector2(-12, -14), Vector2(13, -14), Vector2(24, -6), Vector2(25, 10), Vector2(-24, 10)]), accent, 3.0, true)
+		draw_rect(Rect2(-17, -18, 10, 14), Color("#4b382a"), true)
+		draw_rect(Rect2(6, -20, 11, 16), Color("#4b382a"), true)
+		draw_line(Vector2(-12, -18), Vector2(-12, -24), accent, 2.0)
+		draw_line(Vector2(12, -20), Vector2(12, -27), accent, 2.0)
+		draw_circle(Vector2(-13, 11), 6.0, Color("#17130f"))
+		draw_circle(Vector2(15, 11), 6.0, Color("#17130f"))
+		draw_circle(Vector2(-13, 11), 3.0, accent)
+		draw_circle(Vector2(15, 11), 3.0, accent)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		var label_size := ThemeDB.fallback_font.get_string_size(state, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11))
+		var label_offset_y := -43.0
+		var label_rect := Rect2(position + Vector2(-label_size.x / 2.0 - 5.0, label_offset_y), label_size + Vector2(10.0, 6.0))
+		draw_rect(label_rect, Color("#17130f"), true)
+		draw_rect(label_rect, accent, false, 1.0)
+		draw_string(ThemeDB.fallback_font, label_rect.position + Vector2(5.0, label_size.y + 1.0), state, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), accent)
 
 	func _polyline_position(points: Array[Vector2], progress: float) -> Vector2:
 		if points.is_empty():
@@ -3696,7 +4256,208 @@ class MapPanel extends Control:
 			walked += segment
 		return points.back()
 
+	func _is_road_view() -> bool:
+		return travel_phase in ["moving_out", "road", "moving_in", "encounter"]
+
+	func _road_profile(route_id: String) -> Dictionary:
+		match route_id:
+			"old_road":
+				return {
+					"scene_id": "ashen_milestones",
+					"title": "ASHEN MILESTONES",
+					"waypoint": "The broken mileposts",
+					"sky": Color("#40332b"),
+					"ground": Color("#251b17"),
+					"road": Color("#5a4030"),
+					"accent": Color("#c47c52"),
+				}
+			"toll_road":
+				return {
+					"scene_id": "warden_causeway",
+					"title": "WARDEN CAUSEWAY",
+					"waypoint": "The next inspection post",
+					"sky": Color("#33383a"),
+					"ground": Color("#202425"),
+					"road": Color("#655f50"),
+					"accent": Color("#e6c58d"),
+				}
+			"dry_cut":
+				return {
+					"scene_id": "saltwind_cut",
+					"title": "SALTWIND CUT",
+					"waypoint": "The wind-carved marker",
+					"sky": Color("#3a4141"),
+					"ground": Color("#2b2924"),
+					"road": Color("#665f4e"),
+					"accent": Color("#7d9ca4"),
+				}
+		return {
+			"scene_id": "basin_road",
+			"title": "BASIN ROAD",
+			"waypoint": "The road ahead",
+			"sky": Color("#40352b"),
+			"ground": Color("#241c17"),
+			"road": Color("#594635"),
+			"accent": Color("#c7b49a"),
+		}
+
+	func _road_waypoint_label() -> String:
+		var origin_name := String(world.settlement(travel_origin_id).get("name", travel_origin_id)) if world != null else travel_origin_id
+		var destination_name := String(world.settlement(travel_destination_id).get("name", travel_destination_id)) if world != null else travel_destination_id
+		var profile := _road_profile(travel_route_id)
+		match travel_phase:
+			"moving_out":
+				return "LEAVING %s" % origin_name.to_upper()
+			"road":
+				return "ROAD STOP — %s" % String(profile.get("waypoint", "The road ahead")).to_upper()
+			"encounter":
+				return "ENCOUNTER — %s" % String(world.pending_event.get("title", "Road obstruction")).to_upper() if world != null else "ENCOUNTER"
+			"moving_in":
+				return "APPROACHING %s" % destination_name.to_upper()
+		return "AT REST"
+
+	func _draw_road_settlement(position: Vector2, name: String, color: Color, right_aligned: bool) -> void:
+		var direction := -1.0 if right_aligned else 1.0
+		draw_rect(Rect2(position + Vector2(-26, -22), Vector2(52, 22)), color.darkened(0.56), true)
+		draw_rect(Rect2(position + Vector2(-18, -35), Vector2(16, 35)), color.darkened(0.42), true)
+		draw_rect(Rect2(position + Vector2(6, -29), Vector2(13, 29)), color.darkened(0.34), true)
+		draw_line(position + Vector2(0, -36), position + Vector2(0, -49), color, 2.0)
+		draw_colored_polygon(PackedVector2Array([
+			position + Vector2(0, -49),
+			position + Vector2(14 * direction, -44),
+			position + Vector2(0, -39),
+		]), color)
+		var label_width := 150.0
+		var label_x := position.x - label_width if right_aligned else position.x
+		draw_string(ThemeDB.fallback_font, Vector2(label_x, position.y + 18), name.to_upper(), HORIZONTAL_ALIGNMENT_RIGHT if right_aligned else HORIZONTAL_ALIGNMENT_LEFT, label_width, _font_size(10), Color("#c7b49a"))
+
+	func _draw_old_road_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(5):
+			var drift := fmod(float(index * 183) - travel_progress * 540.0, board.size.x + 130.0) - 65.0
+			var x := board.position.x + drift
+			var y := horizon_y + 32.0 + float(index % 2) * 34.0
+			draw_line(Vector2(x, y), Vector2(x, y - 31), accent.darkened(0.32), 4.0)
+			draw_line(Vector2(x - 8, y - 24), Vector2(x + 8, y - 24), accent.darkened(0.18), 3.0)
+		if travel_phase in ["road", "encounter"]:
+			var arch_center := Vector2(board.position.x + board.size.x * 0.72, horizon_y + 16)
+			draw_line(arch_center + Vector2(-22, 18), arch_center + Vector2(-22, -23), Color("#76513e"), 7.0)
+			draw_line(arch_center + Vector2(22, 18), arch_center + Vector2(22, -23), Color("#76513e"), 7.0)
+			draw_arc(arch_center + Vector2(0, -21), 22, PI, TAU, 18, Color("#76513e"), 7.0)
+
+	func _draw_toll_road_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(7):
+			var drift := fmod(float(index * 141) - travel_progress * 620.0, board.size.x + 100.0) - 50.0
+			var x := board.position.x + drift
+			var y := horizon_y + 26.0 + float(index % 3) * 20.0
+			draw_line(Vector2(x, y), Vector2(x, y - 27), accent.darkened(0.38), 3.0)
+			draw_rect(Rect2(x - 5, y - 32, 10, 7), accent.darkened(0.08), true)
+		for stripe in range(5):
+			var stripe_y := lerpf(horizon_y + 22.0, board.end.y - 34.0, float(stripe) / 5.0)
+			var half_width := lerpf(34.0, board.size.x * 0.30, float(stripe) / 5.0)
+			draw_line(Vector2(board.get_center().x - half_width, stripe_y), Vector2(board.get_center().x + half_width, stripe_y), Color(0.82, 0.73, 0.58, 0.18), 2.0)
+
+	func _draw_dry_cut_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for ridge in range(3):
+			var ridge_y := horizon_y + 24.0 + ridge * 30.0
+			var points := PackedVector2Array()
+			for point_index in range(9):
+				var x := board.position.x + float(point_index) * board.size.x / 8.0
+				var y := ridge_y + sin(float(point_index + ridge) * 1.35 + travel_progress * 4.0) * (8.0 + ridge * 2.0)
+				points.append(Vector2(x, y))
+			draw_polyline(points, accent.darkened(0.38 + ridge * 0.08), 3.0, true)
+		var marker := Vector2(board.position.x + board.size.x * 0.72, horizon_y + 38)
+		draw_line(marker, marker + Vector2(0, -42), accent, 4.0)
+		draw_line(marker + Vector2(0, -39), marker + Vector2(17, -31), accent, 3.0)
+		draw_line(marker + Vector2(0, -27), marker + Vector2(-14, -19), accent.darkened(0.15), 3.0)
+
+	func _draw_road_scene() -> void:
+		var board := _board_rect()
+		var profile := _road_profile(travel_route_id)
+		var accent: Color = profile.get("accent", Color("#c7b49a"))
+		draw_rect(board.grow(8), Color("#2a211b"), true)
+		draw_rect(board, Color("#29231d"), true)
+		var horizon_y := board.position.y + board.size.y * 0.43
+		draw_colored_polygon(PackedVector2Array([
+			board.position,
+			board.position + Vector2(board.size.x, 0),
+			Vector2(board.end.x, horizon_y - 8),
+			Vector2(board.position.x, horizon_y + 18),
+		]), profile.get("sky", Color("#40352b")))
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(board.position.x, horizon_y + 8),
+			Vector2(board.end.x, horizon_y - 16),
+			board.end,
+			Vector2(board.position.x, board.end.y),
+		]), profile.get("ground", Color("#241c17")))
+		var road_center := board.position.x + board.size.x * 0.52
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(road_center - 26, horizon_y),
+			Vector2(road_center + 26, horizon_y),
+			Vector2(road_center + board.size.x * 0.34, board.end.y),
+			Vector2(road_center - board.size.x * 0.34, board.end.y),
+		]), profile.get("road", Color("#594635")))
+		match travel_route_id:
+			"old_road":
+				_draw_old_road_landmarks(board, horizon_y, accent)
+			"toll_road":
+				_draw_toll_road_landmarks(board, horizon_y, accent)
+			"dry_cut":
+				_draw_dry_cut_landmarks(board, horizon_y, accent)
+		var route_name := _route_label(travel_route_id).to_upper()
+		var origin_name := String(world.settlement(travel_origin_id).get("name", travel_origin_id)) if world != null else travel_origin_id
+		var destination_name := String(world.settlement(travel_destination_id).get("name", travel_destination_id)) if world != null else travel_destination_id
+		draw_rect(Rect2(board.position, Vector2(board.size.x, MAP_HEADER_HEIGHT + 34.0)), Color("#17130f"), true)
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 20), "%s — %s" % [route_name, String(profile.get("title", "BASIN ROAD"))], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(15), Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 39), _road_waypoint_label(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), accent)
+		var route_description := String(world.route(travel_route_id, travel_origin_id, travel_destination_id).get("description", "Committed caravan corridor.")) if world != null else "Committed caravan corridor."
+		draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 56), route_description, HORIZONTAL_ALIGNMENT_LEFT, board.size.x - 24.0, _font_size(10), Color("#b5a18b"))
+		_draw_road_settlement(Vector2(board.position.x + 34, horizon_y + 5), origin_name, accent, false)
+		_draw_road_settlement(Vector2(board.end.x - 34, horizon_y - 5), destination_name, accent, true)
+		var progress_y := board.end.y - 18.0
+		draw_line(Vector2(board.position.x + 24, progress_y), Vector2(board.end.x - 24, progress_y), Color("#705746"), 4.0)
+		draw_line(Vector2(board.position.x + 24, progress_y), Vector2(lerpf(board.position.x + 24, board.end.x - 24, travel_progress), progress_y), _route_color(travel_route_id), 4.0)
+		var road_stop_x := lerpf(board.position.x + 24, board.end.x - 24, ENCOUNTER_PROGRESS)
+		draw_circle(Vector2(road_stop_x, progress_y), 5.0, Color("#17130f"))
+		draw_circle(Vector2(road_stop_x, progress_y), 3.0, accent)
+		draw_string(ThemeDB.fallback_font, Vector2(board.position.x + 24, progress_y - 7), "DEPART", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10), Color("#c7b49a"))
+		var arrive_text_size := ThemeDB.fallback_font.get_string_size("ARRIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10))
+		draw_string(ThemeDB.fallback_font, Vector2(board.end.x - 24 - arrive_text_size.x, progress_y - 7), "ARRIVE", HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10), Color("#c7b49a"))
+		var caravan_position := Vector2(road_center, board.position.y + board.size.y * 0.67)
+		if travel_phase == "encounter":
+			draw_line(caravan_position + Vector2(58, -26), caravan_position + Vector2(58, 22), Color("#d08b62"), 5.0)
+			draw_line(caravan_position + Vector2(42, -18), caravan_position + Vector2(74, -18), Color("#d08b62"), 4.0)
+		_draw_caravan(caravan_position)
+
+	func _draw_hover_card(settlement_id: String) -> void:
+		var text := _hover_text(settlement_id)
+		if text.is_empty():
+			return
+		var board := _board_rect()
+		var marker := _settlement_marker_rect(settlement_id)
+		var card_size := Vector2(minf(290.0, board.size.x * 0.42), 58.0)
+		var card_position := marker.end + Vector2(8, -4)
+		if card_position.x + card_size.x > board.end.x - 8:
+			card_position.x = marker.position.x - card_size.x - 8
+		card_position.y = clampf(card_position.y, board.position.y + MAP_HEADER_HEIGHT + 8.0, board.end.y - 34.0 - card_size.y)
+		var card := Rect2(card_position, card_size)
+		draw_rect(card, Color("#17130f"), true)
+		draw_rect(card, Color("#e6c58d"), false, 2.0)
+		draw_multiline_string(ThemeDB.fallback_font, card.position + Vector2(8, 18), text, HORIZONTAL_ALIGNMENT_LEFT, card.size.x - 16.0, _font_size(11), -1, Color("#f4e6c7"))
+
 	func _gui_input(event: InputEvent) -> void:
+		if _is_road_view():
+			return
+		if event is InputEventMouseMotion:
+			var next_hover := ""
+			for settlement_id_value in SETTLEMENT_CELLS.keys():
+				var candidate_id := String(settlement_id_value)
+				if _settlement_footprint(candidate_id).has_point(event.position):
+					next_hover = candidate_id
+					break
+			if hovered_settlement_id != next_hover:
+				hovered_settlement_id = next_hover
+				queue_redraw()
+			return
 		if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
 			return
 		for settlement_id_value in SETTLEMENT_CELLS.keys():
@@ -3707,6 +4468,9 @@ class MapPanel extends Control:
 				return
 
 	func _draw() -> void:
+		if _is_road_view():
+			_draw_road_scene()
+			return
 		var board := _board_rect()
 		draw_rect(board.grow(8), Color("#2a211b"), true)
 		draw_rect(board, Color("#574437"), true)
@@ -3723,7 +4487,13 @@ class MapPanel extends Control:
 			var route_points: Array[Vector2] = _route_points(route_id)
 			if route_points.size() < 2:
 				continue
-			draw_polyline(PackedVector2Array(route_points), _route_color(route_id), 6.0, true)
+			var is_selected: bool = route_id == selected_route_id
+			var route_color := _route_color(route_id)
+			if not selected_route_id.is_empty() and not is_selected:
+				route_color.a = 0.28
+			if is_selected:
+				draw_polyline(PackedVector2Array(route_points), Color("#17130f"), 11.0, true)
+			draw_polyline(PackedVector2Array(route_points), route_color, 7.0 if is_selected else 4.0, true)
 			for point_index in range(route_points.size() - 1):
 				var midpoint: Vector2 = route_points[point_index].lerp(route_points[point_index + 1], 0.5)
 				if route_id == "old_road":
@@ -3739,16 +4509,20 @@ class MapPanel extends Control:
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
 			var is_current: bool = world != null and settlement_id == world.current_settlement
-			draw_rect(footprint, Color("#5a4027") if is_current else Color("#3b2b24"), true)
-			draw_rect(footprint, Color("#f0d27d") if is_current else (Color("#7d9ca4") if settlement_id == "brine_cross" else Color("#bd8553")), false, 4.0 if is_current else 3.0)
+			var is_selected := settlement_id == selected_destination_id
+			var assignment_state := _assignment_state(settlement_id)
+			var fill := Color("#5a4027") if is_current else Color("#3b2b24")
+			if assignment_state == "available":
+				fill = Color("#34312d")
+			elif assignment_state == "accepted":
+				fill = Color("#28434a")
+			draw_rect(footprint, fill, true)
+			var outline := Color("#f0d27d") if is_current or is_selected else Color("#7d9ca4") if assignment_state == "accepted" else Color("#7b746d") if assignment_state == "available" else Color("#bd8553")
+			draw_rect(footprint, outline, false, 4.0 if is_current or is_selected else 3.0)
 			var name_text: String = String(settlement_id).replace("_", " ").capitalize()
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 20), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
-			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(5, 37), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
-		var caravan_position: Vector2 = _settlement_point(world.current_settlement) if world != null else _settlement_point("ashgate")
-		if traveling:
-			caravan_position = _polyline_position(travel_points, travel_progress)
-		draw_circle(caravan_position, 10.0, Color("#17130f"))
-		draw_circle(caravan_position, 7.0, Color("#f0d27d"))
-		var motion_label := _caravan_motion_label()
-		if not motion_label.is_empty():
-			draw_string(ThemeDB.fallback_font, caravan_position + Vector2(12, 4), motion_label, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f0d27d"))
+			var text_inset := 56.0 if is_current else 5.0
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(text_inset, 18), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
+			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(text_inset, 35), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
+		_draw_caravan(_caravan_position())
+		var info_settlement := hovered_settlement_id if not hovered_settlement_id.is_empty() else selected_destination_id
+		_draw_hover_card(info_settlement)

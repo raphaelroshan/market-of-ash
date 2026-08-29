@@ -13,6 +13,7 @@ from capture_validation import png_dimensions, require_distinct_screen, validate
 REQUIRED_NATIVE_SCREENS = {
     "main_menu",
     "settlement_shop",
+    "bazaar_jobs",
     "pause",
     "departure_desk",
     "returned_shop",
@@ -20,6 +21,7 @@ REQUIRED_NATIVE_SCREENS = {
     "settlement_shop_large_text",
     "pause_large_text",
     "departure_desk_large_text",
+    "route_travel",
     "route_event",
     "route_event_large_text",
     "route_event_result",
@@ -29,6 +31,7 @@ REQUIRED_NATIVE_SCREENS = {
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
 EXPECTED_UI_STATE = {
+    "bazaar_jobs": "settlement_shop",
     "returned_shop": "settlement_shop",
     "destination_shop": "settlement_shop",
     "route_event_large_text": "route_event",
@@ -109,15 +112,22 @@ def main() -> int:
         expected_state_screen = EXPECTED_UI_STATE.get(screen, screen.removesuffix("_large_text"))
         if ui_state.get("screen") != expected_state_screen:
             raise AssertionError(f"{file_name}: UI state does not match {expected_state_screen}")
+        if screen == "route_travel" and (
+            ui_state.get("road_scene_id") != "warden_causeway"
+            or ui_state.get("road_waypoint") != "ROAD STOP — THE NEXT INSPECTION POST"
+        ):
+            raise AssertionError(f"{file_name}: Toll Road capture is missing its corridor identity")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
         by_viewport.setdefault(viewport, {})[screen] = file_path
 
     for viewport, screens in by_viewport.items():
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
+        require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
-        require_distinct_screen(screens["departure_desk"], screens["route_event"], f"{viewport} Route event")
+        require_distinct_screen(screens["departure_desk"], screens["route_travel"], f"{viewport} Begin road travel")
+        require_distinct_screen(screens["route_travel"], screens["route_event"], f"{viewport} Reveal route event")
         require_distinct_screen(screens["route_event"], screens["route_event_result"], f"{viewport} Resolve event")
         require_distinct_screen(screens["route_event_result"], screens["route_event_loss_result"], f"{viewport} Realized loss recovery")
         require_distinct_screen(screens["route_event_result"], screens["destination_shop"], f"{viewport} Enter settlement")
