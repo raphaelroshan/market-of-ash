@@ -1,12 +1,14 @@
 # Market of Ash — GPT Agent Development Handoff Roadmap
 
-**Owner:** Product lead and GPT implementation agent  
-**Target:** A coherent, testable Five-Well Basin alpha for structured external playtests  
+**Owner:** Product lead and GPT implementation agent
+**Target:** A coherent, testable Five-Well Basin alpha for structured external playtests
 **Operating principle:** Build the smallest complete campaign that proves the trade-and-travel fantasy. Do not broaden the game to disguise a weak core loop.
 
 > **Product promise:** *Market of Ash is a 2D illustrated trade-and-travel RPG in which a small caravan crosses a recovering ashland, turning volatile local needs into profit, trust, and difficult choices while every cheap route creates a new vulnerability.* [1]
 
 This roadmap is a persistent operating document, not a request to implement every system at once. The GPT agent should receive the charter in Section 2 as standing context, then receive **one numbered slice at a time** from Section 6. A slice is complete only when its player-facing behavior, data shape, command rules, UI feedback, tests, save behavior, and documentation agree.
+
+The companion [`docs/game_quality_vertical_slice_roadmap.md`](game_quality_vertical_slice_roadmap.md) defines how the current systems become a convincing game: first-session flow, Bazaar and route hierarchy, settlement identity, travel and event presentation, visual/audio priorities, debrief, human playtesting, content-slice rules, and alpha acceptance gates. Use that document when a task concerns presentation, UX, game feel, or player comprehension; use this document for the dependency-ordered implementation contract.
 
 ## 1. Current Baseline
 
@@ -415,9 +417,9 @@ The alpha is not complete because all planned screens exist. It is complete beca
 
 ## References
 
-[1]: [Full Agent Design Prompt](../design/design_prompt.md)  
-[2]: [Agent Operating Contract](../AGENTS.md)  
+[1]: [Full Agent Design Prompt](../design/design_prompt.md)
+[2]: [Agent Operating Contract](../AGENTS.md)
 [3]: [Current Implementation Status](implementation_status.md)
-[4]: [Alpha Experience Flow and UX Polish Specification](ux/alpha_experience_flow_spec.md)  
+[4]: [Alpha Experience Flow and UX Polish Specification](ux/alpha_experience_flow_spec.md)
 [5]: [Current Agent Feeding Guide](agent_feeding_guide.md)
 [6]: [Event, Occurrence, and Regional Development Catalogue](events/event_occurrence_catalogue.md)

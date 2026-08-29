@@ -44,6 +44,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `AGENTS.md` | Operating rules for agents working in this repository. |
 | `docs/agent_feeding_guide.md` | Recommended prompt sequence and review loop. |
 | `docs/gpt_agent_handoff_roadmap.md` | Dependency-ordered development roadmap and quality gates. |
+| `docs/game_quality_vertical_slice_roadmap.md` | Complete game-quality vertical-slice plan for the basin journey, economy UX, route/map, settlements, events, factions, visual identity, audio, testing, playtesting, and alpha gates. |
 | `docs/implementation_status.md` | Current implementation, verification evidence, and remaining manual gates. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
@@ -56,7 +57,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 
 ## Agent-first operating model
 
-The agent is given a persistent product brief, a small task, a definition of done, and a command for verification. It edits the repository, runs tests, launches the game when possible, reports what changed, and stops when the acceptance criteria are met. Do not ask the agent to “make the game better” without naming the player-facing behavior to change.
+The current agent is given a persistent product brief, a small task, a definition of done, and a command for verification. The complete game-quality sequence is in [`docs/game_quality_vertical_slice_roadmap.md`](docs/game_quality_vertical_slice_roadmap.md); use it to prioritize player-facing quality before adding broad new content. It edits the repository, runs tests, launches the game when possible, reports what changed, and stops when the acceptance criteria are met. Do not ask the agent to “make the game better” without naming the player-facing behavior to change.
 
 The preferred unit of work is one vertical slice. For example: “Add the toll dispute event. It must read the current route, cargo, provisions, and reputation; offer two understandable choices; modify state deterministically; show a result message; serialize correctly; and include tests.” This is better than “add events.”
 
