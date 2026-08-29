@@ -300,7 +300,7 @@ func _initialize() -> void:
 	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.18.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.19.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -1087,6 +1087,7 @@ func _initialize() -> void:
 	ui._on_shop_plan_changed(ui.shop_good_option.selected)
 	_expect(ui.shop_status_label.text.contains("+7 expected · COMMONS / NO CONTRACT") and ui.bazaar_section_label.text.contains("Reedwatch water stabilized; charcoal wanted"), "the replacement charcoal trade should be visible above the fold as ordinary trade")
 	ui.world.current_settlement = "reedwatch"
+	ui._refresh_ui()
 	ui._populate_destination_options()
 	ui._select_option_by_id(ui.destination_option, "ashgate")
 	ui._populate_route_options()
@@ -1094,6 +1095,11 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.shop_good_option, "charcoal")
 	ui._on_shop_plan_changed(ui.shop_good_option.selected)
 	_expect(ui.shop_market_preview_label.text.contains("local replacement exchange is increasing demand") and ui.shop_market_preview_label.text.contains("response 1.30"), "Reedwatch market details should explain the Well Commons charcoal premium")
+	ui._on_bazaar_navigation_pressed("information")
+	var commons_action_texts: Array[String] = []
+	for button in ui.opportunity_buttons:
+		commons_action_texts.append(button.text)
+	_expect(commons_action_texts.any(func(label: String) -> bool: return label.contains("Fuel the Commons boilers")) and commons_action_texts.any(func(label: String) -> bool: return label.contains("Publish the Commons ledger")) and commons_action_texts.any(func(label: String) -> bool: return label.contains("Warden cistern permit")), "Reedwatch should expose two Commons cooperation paths and one Warden bypass")
 
 	for test_path in [absolute_test_save_path, absolute_test_backup_path, absolute_test_temporary_path]:
 		if FileAccess.file_exists(test_path):

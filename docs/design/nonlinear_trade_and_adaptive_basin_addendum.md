@@ -317,6 +317,8 @@ Implement one complete scenario state machine with a visible failure response. T
 
 Give the emergent faction at least two cooperation paths and one bypass or opposition path. Ensure its presence changes the map and outlook rather than adding another isolated dialogue screen.
 
+**Implemented foundation:** Runtime content `1.19.0` adds three Reedwatch actions after the Commons emerges. Fueling public boilers spends two ordinary charcoal for resilience and support; publishing the ration ledger spends money, time, and a visit slot for support and safer Dry Cut water stations; buying a Warden cistern permit provides an opposition/bypass path that lowers Commons support without closing trade. Support is bounded, saved, visible in the adaptive summary, affects the same water/charcoal market response, and can be reversed by later cooperation.
+
 ### Feed D — Rebalance authored rewards
 
 Compare ordinary trade, contract, civic, and faction income per ten-minute fixture. Adjust rewards so contracts are attractive but not mandatory. Track ashmarks, provisions, capacity, standing, and time separately; do not introduce a new currency to compensate for a broken baseline.

@@ -27,6 +27,11 @@ func _init() -> void:
 	_expect(int(adaptive.reedwatch_resilience) == 1 and bool(adaptive.offer_closed), "the replacement response must change durable state and close the stale offer")
 	_expect(bool(adaptive.new_trade_viable) and int(adaptive.replacement_charcoal_net) > 0, "the failure response must create a profitable contract-free charcoal trade that was not viable before")
 
+	var faction_agency: Dictionary = metrics.replacement_faction_agency
+	_expect(int(faction_agency.cooperation_paths_completed) >= 2 and int(faction_agency.cooperative_support) == 2, "the Well Commons must expose two distinct executable cooperation paths")
+	_expect(bool(faction_agency.opposition_path_completed) and int(faction_agency.opposed_support) == -1, "the Well Commons must expose a disclosed Warden bypass or opposition path")
+	_expect(bool(faction_agency.reconciliation_completed) and int(faction_agency.reconciled_support) == 0 and bool(faction_agency.ordinary_trade_open), "Commons pressure must be reversible without closing ordinary trade")
+
 	var world_states: Dictionary = metrics.world_state_variety
 	_expect(int(world_states.choice_count) >= 3, "changing market and access state must rotate the best visible trade across at least three choices")
 	_expect(int(world_states.route_count) >= 2, "no one route may dominate every tested world state")

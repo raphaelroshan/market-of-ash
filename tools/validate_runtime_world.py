@@ -176,10 +176,33 @@ def validate_settlement_actions(value: Any, errors: list[str]) -> None:
         required_contract_id = action.get("requires_completed_contract_id", "")
         if not isinstance(required_contract_id, str):
             fail(errors, f"settlement action {action_id}.requires_completed_contract_id must be a string")
+        if not isinstance(action.get("requires_emergent_faction_id", ""), str):
+            fail(errors, f"settlement action {action_id}.requires_emergent_faction_id must be a string")
         effects = action.get("effects")
         if not isinstance(effects, dict):
             fail(errors, f"settlement action {action_id}.effects must be an object")
-        elif action.get("category") == "arms_trade":
+        else:
+            cargo_cost = effects.get("cargo_cost", {})
+            if not isinstance(cargo_cost, dict):
+                fail(errors, f"settlement action {action_id}.cargo_cost must be an object")
+            elif cargo_cost and (
+                cargo_cost.get("good_id") not in REQUIRED_GOODS
+                or not isinstance(cargo_cost.get("quantity"), int)
+                or cargo_cost["quantity"] <= 0
+            ):
+                fail(errors, f"settlement action {action_id}.cargo_cost must name a known good and positive quantity")
+            support = effects.get("emergent_faction_support", {})
+            if not isinstance(support, dict):
+                fail(errors, f"settlement action {action_id}.emergent_faction_support must be an object")
+            elif support and (
+                not isinstance(support.get("faction_id"), str)
+                or not support["faction_id"]
+                or not isinstance(support.get("delta"), int)
+                or support["delta"] == 0
+                or abs(support["delta"]) > 3
+            ):
+                fail(errors, f"settlement action {action_id}.emergent_faction_support must name a faction and non-zero delta within 3")
+        if isinstance(effects, dict) and action.get("category") == "arms_trade":
             arms_sale = effects.get("arms_sale")
             if not isinstance(arms_sale, dict):
                 fail(errors, f"settlement action {action_id}.arms_sale must be an object")
@@ -338,6 +361,14 @@ def validate_adaptive_scenarios(
         for good_id, modifier in modifiers.items():
             if good_id not in REQUIRED_GOODS or not isinstance(modifier, (int, float)) or not 0.5 <= modifier <= 2:
                 fail(errors, f"adaptive scenario {scenario_id}.market modifier {good_id} must reference a known good and stay between 0.5 and 2")
+        support_steps = as_object(
+            response.get("support_market_steps"),
+            f"adaptive scenario {scenario_id}.support_market_steps",
+            errors,
+        )
+        for good_id, step in support_steps.items():
+            if good_id not in modifiers or not isinstance(step, (int, float)) or not -0.25 <= step <= 0.25:
+                fail(errors, f"adaptive scenario {scenario_id}.support step {good_id} must modify an active good and stay between -0.25 and 0.25")
         opportunity = as_object(
             response.get("opportunity"),
             f"adaptive scenario {scenario_id}.opportunity",
@@ -348,6 +379,27 @@ def validate_adaptive_scenarios(
         for field in ("title", "summary"):
             if not isinstance(opportunity.get(field), str) or not opportunity[field]:
                 fail(errors, f"adaptive scenario {scenario_id}.opportunity must declare {field}")
+
+
+def validate_adaptive_action_links(actions_value: Any, scenarios_value: Any, errors: list[str]) -> None:
+    actions = actions_value.get("actions", []) if isinstance(actions_value, dict) else []
+    scenarios = scenarios_value.get("records", []) if isinstance(scenarios_value, dict) else []
+    faction_ids = {
+        scenario.get("failure_response", {}).get("faction_id")
+        for scenario in scenarios
+        if isinstance(scenario, dict) and isinstance(scenario.get("failure_response"), dict)
+    }
+    for action in actions:
+        if not isinstance(action, dict):
+            continue
+        required_id = action.get("requires_emergent_faction_id", "")
+        if required_id and required_id not in faction_ids:
+            fail(errors, f"settlement action {action.get('id', '')} requires unknown emergent faction {required_id}")
+        effects = action.get("effects", {})
+        support = effects.get("emergent_faction_support", {}) if isinstance(effects, dict) else {}
+        support_id = support.get("faction_id", "") if isinstance(support, dict) else ""
+        if support_id and (support_id not in faction_ids or support_id != required_id):
+            fail(errors, f"settlement action {action.get('id', '')} support must target its required emergent faction")
 
 
 def validate_events(value: Any, errors: list[str]) -> None:
@@ -647,6 +699,7 @@ def validate(data: Any) -> list[str]:
         and isinstance(contract.get("id"), str)
     }
     validate_adaptive_scenarios(root.get("adaptive_scenarios"), known_contract_ids, errors)
+    validate_adaptive_action_links(root.get("settlement_actions"), root.get("adaptive_scenarios"), errors)
     validate_crew(root.get("crew"), visit_slot_limit, errors)
     validate_factions(root.get("factions"), errors)
     validate_arms_trade(root.get("arms_trade"), errors)

@@ -22,6 +22,7 @@ REQUIRED_NATIVE_SCREENS = {
     "returned_shop",
     "well_commons_jobs",
     "well_commons_market",
+    "well_commons_actions",
     "main_menu_large_text",
     "settlement_shop_large_text",
     "pause_large_text",
@@ -43,6 +44,7 @@ EXPECTED_UI_STATE = {
     "returned_shop": "settlement_shop",
     "well_commons_jobs": "settlement_shop",
     "well_commons_market": "settlement_shop",
+    "well_commons_actions": "settlement_shop",
     "destination_shop": "settlement_shop",
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
@@ -131,7 +133,7 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Ashgate capture is missing its gate-market identity")
         if screen == "destination_shop" and ui_state.get("bazaar_scene_id") != "brine_pan_exchange":
             raise AssertionError(f"{file_name}: destination capture is missing Brine Cross's salt-market identity")
-        if screen in {"well_commons_jobs", "well_commons_market"} and (
+        if screen in {"well_commons_jobs", "well_commons_market", "well_commons_actions"} and (
             ui_state.get("adaptive_scenario_state") != "expired"
             or "well_commons" not in ui_state.get("emergent_factions", [])
             or "ordinary charcoal deliveries" not in ui_state.get("adaptive_response", "")
@@ -150,6 +152,7 @@ def main() -> int:
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
         require_distinct_screen(screens["bazaar_jobs"], screens["well_commons_jobs"], f"{viewport} Expire relief offer")
         require_distinct_screen(screens["well_commons_jobs"], screens["well_commons_market"], f"{viewport} Open Commons market")
+        require_distinct_screen(screens["well_commons_market"], screens["well_commons_actions"], f"{viewport} Open Commons interactions")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
         require_distinct_screen(screens["departure_desk"], screens["route_travel"], f"{viewport} Begin road travel")

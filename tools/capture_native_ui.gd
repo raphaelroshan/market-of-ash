@@ -12,6 +12,7 @@ const CAPTURE_SCREENS := [
 	"returned_shop",
 	"well_commons_jobs",
 	"well_commons_market",
+	"well_commons_actions",
 	"main_menu_large_text",
 	"settlement_shop_large_text",
 	"pause_large_text",
@@ -93,6 +94,10 @@ func _run() -> void:
 	ui.shop_quantity.value = 4
 	ui._on_shop_plan_changed(ui.shop_good_option.selected)
 	await _capture(ui, "well_commons_market", "well-commons-market")
+	ui.world.current_settlement = "reedwatch"
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("information")
+	await _capture(ui, "well_commons_actions", "well-commons-actions")
 
 	ui.pending_tutorial_enabled = true
 	ui._on_start_game_pressed()

@@ -376,6 +376,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 	var settlement_action_rules_value: Dictionary = data.get("settlement_actions", {}) if typeof(data.get("settlement_actions", {})) == TYPE_DICTIONARY else {}
 	_validate_contracts(data.get("contracts", {}), data.get("factions", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_adaptive_scenarios(data.get("adaptive_scenarios", {}), data.get("contracts", {}), errors)
+	_validate_adaptive_action_links(data.get("settlement_actions", {}), data.get("adaptive_scenarios", {}), errors)
 	_validate_crew(data.get("crew", {}), int(settlement_action_rules_value.get("visit_slots_per_arrival", 0)), errors)
 	_validate_factions(data.get("factions", {}), errors)
 	_validate_arms_trade(data.get("arms_trade", {}), errors)
@@ -555,10 +556,23 @@ static func _validate_settlement_actions(value: Variant, errors: Array[String]) 
 			errors.append("settlement action %s once_per_campaign must be boolean" % action_id)
 		if typeof(action.get("requires_completed_contract_id", "")) != TYPE_STRING:
 			errors.append("settlement action %s requires_completed_contract_id must be a string" % action_id)
+		if typeof(action.get("requires_emergent_faction_id", "")) != TYPE_STRING:
+			errors.append("settlement action %s requires_emergent_faction_id must be a string" % action_id)
 		var effects_value: Variant = action.get("effects", {})
 		if typeof(effects_value) != TYPE_DICTIONARY:
 			errors.append("settlement action %s effects must be an object" % action_id)
-		elif String(action.get("category", "")) == "arms_trade":
+		else:
+			var cargo_cost_value: Variant = effects_value.get("cargo_cost", {})
+			if typeof(cargo_cost_value) != TYPE_DICTIONARY:
+				errors.append("settlement action %s cargo_cost must be an object" % action_id)
+			elif not cargo_cost_value.is_empty() and (not REQUIRED_GOOD_IDS.has(String(cargo_cost_value.get("good_id", ""))) or int(cargo_cost_value.get("quantity", 0)) <= 0):
+				errors.append("settlement action %s cargo_cost must name a known good and positive quantity" % action_id)
+			var support_value: Variant = effects_value.get("emergent_faction_support", {})
+			if typeof(support_value) != TYPE_DICTIONARY:
+				errors.append("settlement action %s emergent_faction_support must be an object" % action_id)
+			elif not support_value.is_empty() and (String(support_value.get("faction_id", "")).is_empty() or int(support_value.get("delta", 0)) == 0 or absi(int(support_value.get("delta", 0))) > 3):
+				errors.append("settlement action %s emergent_faction_support must name a faction and non-zero delta within 3" % action_id)
+		if typeof(effects_value) == TYPE_DICTIONARY and String(action.get("category", "")) == "arms_trade":
 			var arms_sale_value: Variant = effects_value.get("arms_sale", {})
 			if typeof(arms_sale_value) != TYPE_DICTIONARY:
 				errors.append("settlement action %s arms_sale must be an object" % action_id)
@@ -722,6 +736,15 @@ static func _validate_adaptive_scenarios(value: Variant, contracts_value: Varian
 				var modifier := float(market_modifiers_value.get(good_id_value, 0.0))
 				if not REQUIRED_GOOD_IDS.has(good_id) or modifier < 0.5 or modifier > 2.0:
 					errors.append("adaptive scenario %s market modifier %s must reference a known good and stay between 0.5 and 2" % [scenario_id, good_id])
+		var support_steps_value: Variant = response.get("support_market_steps", {})
+		if typeof(support_steps_value) != TYPE_DICTIONARY:
+			errors.append("adaptive scenario %s support_market_steps must be an object" % scenario_id)
+		else:
+			for good_id_value in support_steps_value.keys():
+				var good_id := String(good_id_value)
+				var step := float(support_steps_value.get(good_id_value, 1.0))
+				if not market_modifiers_value.has(good_id) or step < -0.25 or step > 0.25:
+					errors.append("adaptive scenario %s support step %s must modify an active good and stay between -0.25 and 0.25" % [scenario_id, good_id])
 		var opportunity_value: Variant = response.get("opportunity", {})
 		if typeof(opportunity_value) != TYPE_DICTIONARY:
 			errors.append("adaptive scenario %s opportunity must be an object" % scenario_id)
@@ -732,6 +755,29 @@ static func _validate_adaptive_scenarios(value: Variant, contracts_value: Varian
 			for field in ["title", "summary"]:
 				if String(opportunity.get(field, "")).is_empty():
 					errors.append("adaptive scenario %s opportunity must declare %s" % [scenario_id, field])
+
+static func _validate_adaptive_action_links(actions_value: Variant, scenarios_value: Variant, errors: Array[String]) -> void:
+	if typeof(actions_value) != TYPE_DICTIONARY or typeof(scenarios_value) != TYPE_DICTIONARY:
+		return
+	var faction_ids: Dictionary = {}
+	for raw_scenario in scenarios_value.get("records", []):
+		if typeof(raw_scenario) == TYPE_DICTIONARY:
+			var response: Dictionary = raw_scenario.get("failure_response", {})
+			faction_ids[String(response.get("faction_id", ""))] = true
+	for raw_action in actions_value.get("actions", []):
+		if typeof(raw_action) != TYPE_DICTIONARY:
+			continue
+		var action: Dictionary = raw_action
+		var required_id := String(action.get("requires_emergent_faction_id", ""))
+		if not required_id.is_empty() and not faction_ids.has(required_id):
+			errors.append("settlement action %s requires unknown emergent faction %s" % [String(action.get("id", "")), required_id])
+		var effects_value: Variant = action.get("effects", {})
+		var effects: Dictionary = effects_value if typeof(effects_value) == TYPE_DICTIONARY else {}
+		var support_value: Variant = effects.get("emergent_faction_support", {})
+		var support: Dictionary = support_value if typeof(support_value) == TYPE_DICTIONARY else {}
+		var support_id := String(support.get("faction_id", ""))
+		if not support_id.is_empty() and (not faction_ids.has(support_id) or support_id != required_id):
+			errors.append("settlement action %s support must target its required emergent faction" % String(action.get("id", "")))
 
 static func _validate_events(value: Variant, errors: Array[String]) -> void:
 	if typeof(value) != TYPE_DICTIONARY:

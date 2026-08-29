@@ -224,9 +224,12 @@ func adaptive_market_modifiers() -> Dictionary:
 		if settlement_id.is_empty():
 			continue
 		var settlement_modifiers: Dictionary = modifiers.get(settlement_id, {}).duplicate(true)
+		var support := int(faction.get("support", 0))
+		var support_steps: Dictionary = response.get("support_market_steps", {})
 		for good_id_value in response.get("market_modifiers", {}).keys():
 			var good_id := String(good_id_value)
-			settlement_modifiers[good_id] = float(settlement_modifiers.get(good_id, 1.0)) * float(response.get("market_modifiers", {}).get(good_id_value, 1.0))
+			var support_factor := 1.0 + float(support_steps.get(good_id, 0.0)) * float(support)
+			settlement_modifiers[good_id] = float(settlement_modifiers.get(good_id, 1.0)) * float(response.get("market_modifiers", {}).get(good_id_value, 1.0)) * support_factor
 		modifiers[settlement_id] = settlement_modifiers
 	return modifiers
 
@@ -238,7 +241,7 @@ func adaptive_response_summary() -> String:
 		var scenario := MarketContent.adaptive_scenario(String(faction.get("scenario_id", "")))
 		var response: Dictionary = scenario.get("failure_response", {})
 		var opportunity: Dictionary = response.get("opportunity", {})
-		return "%s — %s\n%s" % [String(response.get("name", faction_id_value)), String(response.get("legitimacy_claim", "A local actor responded to an unmet need.")), String(opportunity.get("summary", response.get("trade_footprint", "A replacement market is now active.")))]
+		return "%s · support %+d — %s\n%s" % [String(response.get("name", faction_id_value)), int(faction.get("support", 0)), String(response.get("legitimacy_claim", "A local actor responded to an unmet need.")), String(opportunity.get("summary", response.get("trade_footprint", "A replacement market is now active.")))]
 	return ""
 
 func contract_offer_closed_reason(contract_id: String) -> String:
@@ -249,6 +252,20 @@ func contract_offer_closed_reason(contract_id: String) -> String:
 	if String(state.get("state", "offered")) == "expired":
 		return "offer closed on Day %d; %s now responds to the unmet need" % [int(scenario.get("response_day", 0)), String(scenario.get("failure_response", {}).get("name", "a local exchange"))]
 	return ""
+
+func adjust_emergent_faction_support(faction_id: String, delta: int, interaction_id: String) -> Dictionary:
+	var faction := emergent_faction(faction_id)
+	if faction.is_empty():
+		return {"ok": false, "reason": "emergent faction is not active"}
+	var before := int(faction.get("support", 0))
+	var after := clampi(before + delta, -3, 3)
+	faction["support"] = after
+	var interactions: Array = faction.get("interaction_ids", []).duplicate()
+	if not interaction_id.is_empty() and not interactions.has(interaction_id):
+		interactions.append(interaction_id)
+	faction["interaction_ids"] = interactions
+	emergent_factions[faction_id] = faction
+	return {"ok": true, "before": before, "after": after, "delta": after - before, "interaction_id": interaction_id}
 
 func market_pressure_for(settlement_id: String, good_id: String) -> float:
 	if not has_settlement(settlement_id) or MarketContent.good(good_id).is_empty():
@@ -706,6 +723,12 @@ func _validate_serialized_shape(data: Dictionary) -> Dictionary:
 		var scenario_state: Dictionary = scenario_state_value if typeof(scenario_state_value) == TYPE_DICTIONARY else {}
 		if not ["delayed", "failed", "expired"].has(String(scenario_state.get("state", ""))) or int(record.get("activated_day", 0)) < int(scenario.get("response_day", 0)):
 			return {"ok": false, "reason": "save emergent faction does not match its adaptive scenario state"}
+		if int(record.get("support", 0)) < -3 or int(record.get("support", 0)) > 3 or typeof(record.get("interaction_ids", [])) != TYPE_ARRAY:
+			return {"ok": false, "reason": "save emergent faction has invalid support state"}
+		for interaction_id_value in record.get("interaction_ids", []):
+			var interaction := MarketContent.settlement_action(String(interaction_id_value))
+			if interaction.is_empty() or String(interaction.get("requires_emergent_faction_id", "")) != faction_id:
+				return {"ok": false, "reason": "save emergent faction references an invalid interaction"}
 	return {"ok": true, "reason": ""}
 
 func _validate_pending_event_bases(pending: Dictionary, authored_event: Dictionary) -> Dictionary:
@@ -849,6 +872,8 @@ func _activate_adaptive_response(scenario: Dictionary) -> void:
 		"activated_day": day,
 		"settlement_id": String(response.get("settlement_id", "")),
 		"information_id": String(response.get("information_id", "")),
+		"support": 0,
+		"interaction_ids": [],
 	}
 	var resilience_settlement := String(response.get("settlement_id", ""))
 	if not resilience_settlement.is_empty():
@@ -881,7 +906,12 @@ func _sanitize_emergent_factions(value: Variant) -> Dictionary:
 		var faction_id := String(faction_id_value)
 		if scenario.is_empty() or String(response.get("faction_id", "")) != faction_id:
 			continue
-		sanitized[faction_id] = {"id": faction_id, "scenario_id": String(scenario.get("id", "")), "activated_day": clampi(int(record.get("activated_day", 1)), 1, day), "settlement_id": String(response.get("settlement_id", "")), "information_id": String(response.get("information_id", ""))}
+		var interactions: Array = []
+		for interaction_id_value in record.get("interaction_ids", []):
+			var interaction_id := String(interaction_id_value)
+			if not interaction_id.is_empty() and not interactions.has(interaction_id):
+				interactions.append(interaction_id)
+		sanitized[faction_id] = {"id": faction_id, "scenario_id": String(scenario.get("id", "")), "activated_day": clampi(int(record.get("activated_day", 1)), 1, day), "settlement_id": String(response.get("settlement_id", "")), "information_id": String(response.get("information_id", "")), "support": clampi(int(record.get("support", 0)), -3, 3), "interaction_ids": interactions}
 	return sanitized
 
 func _sanitize_settlement_resilience(value: Variant) -> Dictionary:
