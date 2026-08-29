@@ -237,8 +237,8 @@
       "policy": "non_arms_relief",
       "runs": 100,
       "completion_rate": 0.85,
-      "median_economic_profit": 71.0,
-      "mean_economic_profit": 53.0,
+      "median_economic_profit": 101.0,
+      "mean_economic_profit": 78.5,
       "mean_escalation": 0.0
     }
   ],
@@ -263,12 +263,12 @@
       "seed": 3
     },
     "contract_parity": {
-      "contract_expected_net_profit": 70,
+      "contract_expected_net_profit": 100,
       "contract_id": "reedwatch_water_relief_01",
       "minimum_ratio": 0.7,
       "ordinary_choice": "water \u2192 reedwatch / old_road",
       "ordinary_expected_net_profit": 99,
-      "ordinary_to_contract_ratio": 1.41428571428571,
+      "ordinary_to_contract_ratio": 0.99,
       "passed": true
     },
     "opening_variety": {
@@ -284,6 +284,65 @@
       "good_count": 4,
       "positive_strategy_count": 7,
       "route_count": 2
+    },
+    "path_reward_balance": {
+      "all_dimensions_tracked": true,
+      "contract_id": "reedwatch_water_relief_01",
+      "contract_to_ordinary_expected_net_ratio": 1.01010101010101,
+      "fixture_minutes": 10,
+      "maximum_contract_ratio": 1.2,
+      "minimum_contract_ratio": 1.0,
+      "non_cash_paths_are_explicit": true,
+      "ordinary_choice": "water \u2192 reedwatch / old_road",
+      "passed": true,
+      "paths": {
+        "civic": {
+          "ashmarks_after_direct_costs": 0,
+          "capacity_committed": 0,
+          "expected_net_profit": 0,
+          "provisions_used": 0,
+          "resilience": 1,
+          "standing": {
+            "caravans": 1.0
+          },
+          "support": 0,
+          "time_days": 1,
+          "visit_slots": 1
+        },
+        "contract": {
+          "ashmarks_after_direct_costs": 116,
+          "capacity_committed": 4,
+          "expected_net_profit": 100,
+          "provisions_used": 1,
+          "standing": {
+            "caravans": 1.0
+          },
+          "time_days": 1,
+          "visit_slots": 1
+        },
+        "faction": {
+          "ashmarks_after_direct_costs": 0,
+          "capacity_committed": 2,
+          "expected_net_profit": 0,
+          "provisions_used": 0,
+          "resilience": 1,
+          "standing": {
+            "caravans": 1.0
+          },
+          "support": 1,
+          "time_days": 0,
+          "visit_slots": 1
+        },
+        "ordinary": {
+          "ashmarks_after_direct_costs": 115,
+          "capacity_committed": 7,
+          "expected_net_profit": 99,
+          "provisions_used": 1,
+          "standing": {},
+          "time_days": 1,
+          "visit_slots": 0
+        }
+      }
     },
     "preparation_overhead": {
       "commands_through_first_trade": 2,
@@ -401,7 +460,12 @@
     {
       "gate": "Ordinary trade / contract parity",
       "passed": true,
-      "evidence": "ordinary 99 vs contract 70 expected net (141%)"
+      "evidence": "ordinary 99 vs contract 100 expected net (99%)"
+    },
+    {
+      "gate": "Cross-path reward balance",
+      "passed": true,
+      "evidence": "10-minute fixture; contract/ordinary expected net 101%; cash, provisions, hold, standing, time, and slots tracked separately"
     },
     {
       "gate": "Adaptive failure creates trade",

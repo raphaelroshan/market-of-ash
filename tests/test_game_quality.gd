@@ -22,6 +22,11 @@ func _init() -> void:
 	var parity: Dictionary = metrics.contract_parity
 	_expect(bool(parity.passed), "the best ordinary opening must retain at least 70% of the accessible relief contract's expected value")
 
+	var reward_balance: Dictionary = metrics.path_reward_balance
+	_expect(bool(reward_balance.passed), "the ten-minute reward fixture must keep the contract attractive without eclipsing ordinary trade")
+	_expect(bool(reward_balance.all_dimensions_tracked), "ordinary, contract, civic, and faction paths must report cash, provisions, hold, standing, time, and visit slots separately")
+	_expect(bool(reward_balance.non_cash_paths_are_explicit), "civic and faction paths must expose their non-cash resilience and support rewards")
+
 	var adaptive: Dictionary = metrics.adaptive_failure_recovery
 	_expect(adaptive.scenario_state == "expired" and bool(adaptive.faction_active), "ignored relief must causally create the Well Commons replacement actor")
 	_expect(int(adaptive.reedwatch_resilience) == 1 and bool(adaptive.offer_closed), "the replacement response must change durable state and close the stale offer")

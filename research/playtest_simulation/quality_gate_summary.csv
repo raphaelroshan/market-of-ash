@@ -2,7 +2,8 @@ gate,passed,evidence
 Safe first expedition,True,100/100 complete; floor 118 ashmarks and 11 provisions
 Multiple viable openings,True,7 positive choices across 4 goods and 2 routes
 Ordinary trade families,True,"4/4 staple, repair, medicine, and industrial fixtures are positive without contracts"
-Ordinary trade / contract parity,True,ordinary 99 vs contract 70 expected net (141%)
+Ordinary trade / contract parity,True,ordinary 99 vs contract 100 expected net (99%)
+Cross-path reward balance,True,"10-minute fixture; contract/ordinary expected net 101%; cash, provisions, hold, standing, time, and slots tracked separately"
 Adaptive failure creates trade,True,charcoal expected net -10 → 7; Reedwatch resilience 1
 Replacement faction agency,True,2 cooperation paths; support -1 → 0 after opposition/reconciliation
 No permanent route winner,True,3 best choices across 2 routes in 4 world states

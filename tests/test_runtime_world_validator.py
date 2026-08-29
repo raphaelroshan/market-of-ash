@@ -23,6 +23,24 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
+    invalid_reward_assumptions = copy.deepcopy(runtime)
+    invalid_reward_assumptions["planning_assumptions"]["reward_fixture_minutes"] = 0
+    invalid_reward_assumptions["planning_assumptions"]["contract_expected_net_min_ratio"] = 1.3
+    invalid_reward_assumptions["planning_assumptions"]["contract_expected_net_max_ratio"] = 1.1
+    reward_errors = validate(invalid_reward_assumptions)
+    expected_reward_fragments = (
+        "reward_fixture_minutes must be a positive integer",
+        "contract reward ratios must form an ordered positive band",
+    )
+    missing_reward_errors = [
+        fragment for fragment in expected_reward_fragments if not any(fragment in error for error in reward_errors)
+    ]
+    if missing_reward_errors:
+        print("FAIL: invalid reward assumptions did not produce expected errors")
+        for fragment in missing_reward_errors:
+            print(f"- missing: {fragment}")
+        return 1
+
     invalid = copy.deepcopy(runtime)
     invalid["market_memory"] = json.loads(
         (ROOT / "tests/fixtures/market_memory_invalid.json").read_text(encoding="utf-8")

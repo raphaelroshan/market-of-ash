@@ -300,7 +300,7 @@ func _initialize() -> void:
 	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.19.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.20.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -461,6 +461,8 @@ func _initialize() -> void:
 	ui._on_settlement_action_pressed("reedwatch_supply_shelter")
 	_expect(ui.world.resilience_for("reedwatch") == 1 and int(ui.world.reputation.get("caravans", 0)) == 1, "Reedwatch shelter UI should apply its local and faction results")
 	ui._on_start_game_pressed()
+	ui._on_bazaar_navigation_pressed("assignments")
+	_expect(ui.opportunity_list.get_child_count() > 1 and String(ui.opportunity_list.get_child(1).text).contains("PATH VALUE — +100 expected") and String(ui.opportunity_list.get_child(1).text).contains("4/12 hold") and String(ui.opportunity_list.get_child(1).text).contains("+1 standing"), "contract card should compare expected cash, hold, and standing without collapsing them into one score")
 	ui._on_accept_contract_pressed("reedwatch_water_relief_01")
 	_expect(not ui.world.active_contract("reedwatch_water_relief_01").is_empty(), "contract card did not accept the relief contract through the command boundary")
 	_expect(ui.active_contract_label.text.contains("4 water at Reedwatch by Day 3"), "shop did not show the frozen active-contract terms")

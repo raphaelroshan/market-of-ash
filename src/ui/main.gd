@@ -3519,7 +3519,8 @@ func _refresh_opportunities() -> void:
 		contract_details.add_theme_font_size_override("font_size", 12)
 		contract_details.add_theme_color_override("font_color", Color("#aa9a87"))
 		var relationship_terms := _contract_relationship_terms(contract_record)
-		var compact_terms := "SPONSOR — %s · LOAD — %d %s → %s · DUE — %d days\nREWARD — %d ashmarks · LATE COST — up to %d%s\nDECISION — %s RECOVERY — %s" % [String(contract_record.get("sponsor", "")), int(contract_record.get("quantity", 0)), String(contract_record.get("good_id", "")).capitalize(), String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination")), int(contract_record.get("deadline_days", 0)), int(contract_record.get("reward", 0)), int(contract_record.get("failure_penalty", 0)), relationship_terms, String(contract_record.get("decision_summary", "")), String(contract_record.get("recovery_summary", ""))]
+		var value_terms := _contract_value_terms(contract_record)
+		var compact_terms := "SPONSOR — %s · LOAD — %d %s → %s · DUE — %d days\nREWARD — %d ashmarks · LATE COST — up to %d%s\n%s\nDECISION — %s RECOVERY — %s" % [String(contract_record.get("sponsor", "")), int(contract_record.get("quantity", 0)), String(contract_record.get("good_id", "")).capitalize(), String(world.settlement(String(contract_record.get("destination_id", ""))).get("name", "destination")), int(contract_record.get("deadline_days", 0)), int(contract_record.get("reward", 0)), int(contract_record.get("failure_penalty", 0)), relationship_terms, value_terms, String(contract_record.get("decision_summary", "")), String(contract_record.get("recovery_summary", ""))]
 		contract_details.text = ("LOCKED — %s\n" % contract_reason if contract_button.disabled else "") + compact_terms
 		contract_details.set_meta("bazaar_section", "assignments")
 		opportunity_list.add_child(contract_details)
@@ -3693,6 +3694,31 @@ func _contract_relationship_terms(contract_record: Dictionary) -> String:
 				var faction_id := String(faction_id_value)
 				parts.append("%s %s %+d" % [String(field_and_label[1]).to_lower(), String(MarketContent.faction(faction_id).get("name", faction_id)), delta])
 	return " · " + " · ".join(parts) if not parts.is_empty() else ""
+
+func _contract_value_terms(contract_record: Dictionary) -> String:
+	var origin_id := String(contract_record.get("origin_id", ""))
+	var destination_id := String(contract_record.get("destination_id", ""))
+	var best_preview: Dictionary = {}
+	for route_id_value in MarketContent.routes_from(origin_id):
+		var route_id := String(route_id_value)
+		if not MarketContent.route_connects(route_id, origin_id, destination_id):
+			continue
+		var preview := MarketEconomy.contract_reward_preview(
+			contract_record,
+			world.settlement(origin_id),
+			world.settlement(destination_id),
+			world.route(route_id, origin_id, destination_id),
+			world.pricing_context(),
+		)
+		if bool(preview.get("ok", false)) and (best_preview.is_empty() or int(preview.get("expected_net_profit", 0)) > int(best_preview.get("expected_net_profit", 0))):
+			best_preview = preview
+	if best_preview.is_empty():
+		return "PATH VALUE — unavailable until a route connects the sponsor and destination"
+	var vector: Dictionary = best_preview.get("reward_vector", {})
+	var standing_total := 0
+	for delta_value in vector.get("standing", {}).values():
+		standing_total += int(delta_value)
+	return "PATH VALUE — %+d expected · %d provisions · %d/%d hold · %+d standing · %d day · %d visit slot" % [int(vector.get("expected_net_profit", 0)), int(vector.get("provisions_used", 0)), int(vector.get("capacity_committed", 0)), world.cargo_capacity, standing_total, int(vector.get("time_days", 0)), int(vector.get("visit_slots", 0))]
 
 func _refresh_event_card() -> void:
 	if event_card == null or event_choice_list == null:

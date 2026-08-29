@@ -684,6 +684,19 @@ def validate(data: Any) -> list[str]:
         or planning["time_opportunity_cost_per_day"] < 0
     ):
         fail(errors, "planning_assumptions.time_opportunity_cost_per_day must be a non-negative integer")
+    if not isinstance(planning.get("reward_fixture_minutes"), int) or planning["reward_fixture_minutes"] <= 0:
+        fail(errors, "planning_assumptions.reward_fixture_minutes must be a positive integer")
+    minimum_ratio = planning.get("contract_expected_net_min_ratio")
+    maximum_ratio = planning.get("contract_expected_net_max_ratio")
+    if (
+        not isinstance(minimum_ratio, (int, float))
+        or isinstance(minimum_ratio, bool)
+        or not isinstance(maximum_ratio, (int, float))
+        or isinstance(maximum_ratio, bool)
+        or minimum_ratio <= 0
+        or maximum_ratio < minimum_ratio
+    ):
+        fail(errors, "planning_assumptions contract reward ratios must form an ordered positive band")
 
     validate_market_memory(root.get("market_memory"), errors)
     validate_settlement_actions(root.get("settlement_actions"), errors)

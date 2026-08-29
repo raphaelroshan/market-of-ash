@@ -55,7 +55,9 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.19.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.20.0", "runtime content should expose content version")
+	var planning := MarketContent.planning_assumptions()
+	_expect(int(planning.get("reward_fixture_minutes", 0)) == 10 and float(planning.get("contract_expected_net_min_ratio", 0.0)) == 1.0, "runtime content should expose the ten-minute cross-path reward benchmark")
 	_expect(MarketContent.ending_records().size() == 4 and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
 	var memory_rules := MarketContent.market_memory_rules()
 	_expect(float(memory_rules.get("pressure_max", 0.0)) == 0.35, "runtime content should expose bounded market-memory rules")
@@ -162,7 +164,11 @@ func _test_ordinary_trade_story() -> void:
 	_expect(bool(story.origin_is_source) and bool(story.destination_is_consumer), "ordinary trade story should connect an authored source to an authored recurring need")
 	_expect(int(story.origin_price) == 15 and int(story.destination_price) == 32 and int(story.unit_spread) == 17, "ordinary trade story should expose the authoritative unit spread")
 	_expect(int(story.gross_margin) == 34 and int(story.expected_net_profit) == 14, "ordinary trade story should expose the authoritative load margin and expected net")
+	_expect(int(story.reward_vector.capacity_committed) == 2 and int(story.reward_vector.provisions_used) == 1 and int(story.reward_vector.visit_slots) == 0, "ordinary trade should expose its capacity, provisions, and unrestricted visit-slot value separately")
 	_expect(String(story.source_reason).contains("cistern releases") and String(story.need_reason).contains("Frontier wells"), "ordinary trade story should carry authored source and need explanations")
+	var contract_preview := MarketEconomy.contract_reward_preview(MarketContent.contract("reedwatch_water_relief_01"), world.settlement("ashgate"), world.settlement("reedwatch"), route, world.pricing_context())
+	_expect(contract_preview.ok and int(contract_preview.expected_net_profit) == 100, "the rebalanced relief contract should offer a small expected premium over the best ordinary opening")
+	_expect(int(contract_preview.reward_vector.capacity_committed) == 4 and int(contract_preview.reward_vector.provisions_used) == 1 and int(contract_preview.reward_vector.standing.get("caravans", 0)) == 1 and int(contract_preview.reward_vector.visit_slots) == 1, "contract value should track hold, provisions, standing, and visit time separately")
 	var invalid := MarketEconomy.ordinary_trade_story("missing", 2, world.settlement("ashgate"), world.settlement("reedwatch"), route, context)
 	_expect(not invalid.ok, "ordinary trade story should reject an unknown good")
 
@@ -544,7 +550,7 @@ func _test_reedwatch_relief_contract() -> void:
 	_expect(accept.ok, "Reedwatch relief contract should be accepted at Ashgate")
 	var snapshot := world.active_contract("reedwatch_water_relief_01")
 	_expect(int(snapshot.accepted_day) == 1 and int(snapshot.deadline_day) == 3, "accepted contract should freeze its acceptance day and deadline")
-	_expect(int(snapshot.quantity) == 4 and int(snapshot.reward) == 150, "accepted contract should snapshot quantity and reward")
+	_expect(int(snapshot.quantity) == 4 and int(snapshot.reward) == 180, "accepted contract should snapshot quantity and rebalanced reward")
 	_expect(world.visit_slots_remaining == 1 and int(world.cargo.get("water", 0)) == 0, "acceptance should consume one visit slot without creating cargo")
 	var duplicate_accept := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.ACCEPT_CONTRACT,
@@ -564,7 +570,7 @@ func _test_reedwatch_relief_contract() -> void:
 	_expect(world.active_contract("reedwatch_water_relief_01").is_empty(), "completed contract should leave the active set")
 	_expect(world.contract_history.size() == 1 and world.contract_history.back().status == "completed", "completed contract should be archived once")
 	_expect(world.command_history[-2].id == MarketCommandProcessor.RESOLVE_CONTRACT, "automatic arrival completion should be logged through the contract command boundary")
-	_expect(int(world.cargo.get("water", 0)) == 0 and world.money == 206, "contract completion should consume four water and pay the frozen reward")
+	_expect(int(world.cargo.get("water", 0)) == 0 and world.money == 236, "contract completion should consume four water and pay the frozen reward")
 	_expect(is_equal_approx(world.market_pressure_for("reedwatch", "water"), 0.16), "contract delivery should update local market memory")
 	_expect(int(world.reputation.get("caravans", 0)) == 1, "relief completion should apply its visible Free Caravan relationship effect")
 	var duplicate_completion := MarketCommandProcessor.execute(world, {
@@ -1001,7 +1007,7 @@ func _test_last_clean_barrel_event() -> void:
 		"inputs": {"event_id": "last_clean_barrel", "choice_id": "honor_relief_commitment"},
 	})
 	_expect(honor.ok and contract_world.contract_history.size() == 1 and contract_world.contract_history.back().status == "completed", "commitment choice should preserve cargo for normal arrival contract completion")
-	_expect(int(contract_world.cargo.get("water", 0)) == 0 and contract_world.money == 266, "completed relief commitment should pay its frozen reward after base route cost")
+	_expect(int(contract_world.cargo.get("water", 0)) == 0 and contract_world.money == 296, "completed relief commitment should pay its frozen reward after base route cost")
 
 	var no_contract_world := AshWorldState.new(4)
 	no_contract_world.crisis_stage = 1
@@ -1500,7 +1506,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.19.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.20.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})

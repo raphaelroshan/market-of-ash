@@ -318,6 +318,12 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			errors.append("planning_assumptions must declare a positive provision_value")
 		if int(planning.get("time_opportunity_cost_per_day", 0)) < 0:
 			errors.append("planning_assumptions must declare a non-negative time_opportunity_cost_per_day")
+		if int(planning.get("reward_fixture_minutes", 0)) <= 0:
+			errors.append("planning_assumptions must declare positive reward_fixture_minutes")
+		var contract_min_ratio := float(planning.get("contract_expected_net_min_ratio", 0.0))
+		var contract_max_ratio := float(planning.get("contract_expected_net_max_ratio", 0.0))
+		if contract_min_ratio <= 0.0 or contract_max_ratio < contract_min_ratio:
+			errors.append("planning_assumptions must declare an ordered positive contract reward ratio band")
 
 	_validate_market_memory(data.get("market_memory", {}), errors)
 

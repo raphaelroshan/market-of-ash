@@ -134,7 +134,50 @@ static func ordinary_trade_story(good: String, quantity: int, origin: Dictionary
 		"origin_is_source": bool(origin_role.is_source),
 		"destination_is_consumer": bool(destination_role.is_consumer),
 		"no_contract_required": true,
+		"reward_vector": reward_vector_from_trade_preview(preview),
 	}
+
+static func reward_vector_from_trade_preview(preview: Dictionary) -> Dictionary:
+	if not bool(preview.get("ok", false)):
+		return {}
+	return {
+		"ashmarks_after_direct_costs": int(preview.get("gross_trade_margin", 0)) - int(preview.get("route_cost", 0)),
+		"expected_net_profit": int(preview.get("expected_net_profit", 0)),
+		"provisions_used": int(preview.get("provisions", 0)),
+		"capacity_committed": int(preview.get("capacity_committed", 0)),
+		"standing": {},
+		"time_days": int(preview.get("time_days", preview.get("provisions", 0))),
+		"visit_slots": 0,
+	}
+
+static func contract_reward_preview(contract: Dictionary, origin: Dictionary, destination: Dictionary, route: Dictionary, world: Dictionary) -> Dictionary:
+	var good_id := String(contract.get("good_id", ""))
+	var quantity := int(contract.get("quantity", 0))
+	var simulated_world := world.duplicate(true)
+	var cargo_value: Variant = simulated_world.get("cargo", {})
+	var cargo: Dictionary = cargo_value.duplicate(true) if typeof(cargo_value) == TYPE_DICTIONARY else {}
+	cargo[good_id] = int(cargo.get(good_id, 0)) + quantity
+	cargo["weight"] = int(cargo.get("weight", 0)) + quantity * int(MarketContent.good(good_id).get("weight", 0))
+	simulated_world["cargo"] = cargo
+	var trade_preview := route_profit_preview(good_id, quantity, origin, destination, route, simulated_world)
+	if not bool(trade_preview.get("ok", false)):
+		return trade_preview
+	var reward := int(contract.get("reward", 0))
+	var expected_net := reward - int(trade_preview.get("purchase_total", 0)) - int(trade_preview.get("route_cost", 0)) - int(trade_preview.get("provision_cost", 0)) - int(trade_preview.get("expected_loss", 0)) - int(trade_preview.get("time_cost", 0))
+	var reward_vector := {
+		"ashmarks_after_direct_costs": reward - int(trade_preview.get("purchase_total", 0)) - int(trade_preview.get("route_cost", 0)),
+		"expected_net_profit": expected_net,
+		"provisions_used": int(trade_preview.get("provisions", 0)),
+		"capacity_committed": int(trade_preview.get("capacity_committed", 0)),
+		"standing": contract.get("success_reputation", {}).duplicate(true),
+		"time_days": int(trade_preview.get("time_days", trade_preview.get("provisions", 0))),
+		"visit_slots": int(contract.get("service_slots", 0)),
+	}
+	var result := trade_preview.duplicate(true)
+	result["reward"] = reward
+	result["expected_net_profit"] = expected_net
+	result["reward_vector"] = reward_vector
+	return result
 
 static func projected_profit(good: String, quantity: int, origin: Dictionary, destination: Dictionary, world: Dictionary) -> int:
 	var buy_price := price_for(good, origin, world)
@@ -221,6 +264,8 @@ static func route_profit_preview(good: String, quantity: int, origin: Dictionary
 		"loss_value_basis": String(loss_basis.loss_value_basis),
 		"risk_source": String(route.get("description", "Route conditions are uncertain.")),
 		"time_cost": time_cost,
+		"time_days": int(route.get("days", provisions)),
+		"capacity_committed": quantity * int(MarketContent.good(good).get("weight", 0)),
 		"expected_net_profit": expected_net_profit,
 		"origin_price": buy_price,
 		"destination_price": sell_price,
