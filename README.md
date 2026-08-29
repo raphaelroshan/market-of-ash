@@ -49,6 +49,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/economy/open_trade_foundation.md` | Executable Feed A contract for production, consumption, replenishment, Bazaar trade language, and ordinary-trade balance gates. |
 | `docs/implementation_status.md` | Current implementation, verification evidence, and remaining manual gates. |
 | `docs/visual_evidence_gallery.md` | Versioned internal screenshots from the `v0.12.0-alpha-quality` visual audit with Kickstarter archive guidance. |
+| `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
 | `src/ui/main.gd` | Prototype UI and actionable procedural route map. Keep presentation logic here, not in the simulation. |
