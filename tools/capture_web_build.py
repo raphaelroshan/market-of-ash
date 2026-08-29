@@ -644,6 +644,8 @@ def main() -> int:
                 }
             )
             if use_accessibility_actions:
+                activate_accessibility_action(driver, "menu_settings")
+                wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
                 set_accessibility_checkbox(driver, "reduce_motion", True)
                 wait_for_ui_state(
                     driver, "main_menu", args.timeout, large_text=False, expected_values={"reduced_motion": True}
@@ -678,6 +680,57 @@ def main() -> int:
                 if restored_bindings.get("ui_pause", {}).get("keyboard_label") != "P":
                     raise AssertionError(f"Restore defaults did not restore Pause to P: {restored_bindings!r}")
             activate_game_action(driver, "start_game", use_accessibility_actions)
+            intro_state = wait_for_ui_state(
+                driver, "introduction", args.timeout, large_text=False, expected_values={"intro_page": 0}
+            )
+            intro_output = args.output_dir / f"introduction-basin-{width}x{height}.png"
+            intro_bytes = capture_frame(driver, intro_output, (actual_width, actual_height))
+            captures.append(
+                {
+                    "screen": "introduction_basin",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": intro_output.name,
+                    "bytes": intro_bytes,
+                    "changed_pixel_ratio": round(require_distinct_screen(output, intro_output, "Open introduction"), 4),
+                    "ui_state": intro_state,
+                }
+            )
+            activate_game_action(driver, "intro_next", use_accessibility_actions)
+            intro_caravan_state = wait_for_ui_state(
+                driver, "introduction", args.timeout, large_text=False, expected_values={"intro_page": 1}
+            )
+            intro_caravan_output = args.output_dir / f"introduction-caravan-{width}x{height}.png"
+            intro_caravan_bytes = capture_frame(driver, intro_caravan_output, (actual_width, actual_height))
+            captures.append(
+                {
+                    "screen": "introduction_caravan",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": intro_caravan_output.name,
+                    "bytes": intro_caravan_bytes,
+                    "changed_pixel_ratio": round(require_distinct_screen(intro_output, intro_caravan_output, "Advance introduction"), 4),
+                    "ui_state": intro_caravan_state,
+                }
+            )
+            activate_game_action(driver, "intro_next", use_accessibility_actions)
+            intro_road_state = wait_for_ui_state(
+                driver, "introduction", args.timeout, large_text=False, expected_values={"intro_page": 2}
+            )
+            intro_road_output = args.output_dir / f"introduction-road-{width}x{height}.png"
+            intro_road_bytes = capture_frame(driver, intro_road_output, (actual_width, actual_height))
+            captures.append(
+                {
+                    "screen": "introduction_road",
+                    "requested_window": {"width": width, "height": height},
+                    "captured_viewport": {"width": actual_width, "height": actual_height},
+                    "file": intro_road_output.name,
+                    "bytes": intro_road_bytes,
+                    "changed_pixel_ratio": round(require_distinct_screen(intro_caravan_output, intro_road_output, "Advance introduction"), 4),
+                    "ui_state": intro_road_state,
+                }
+            )
+            activate_game_action(driver, "intro_next", use_accessibility_actions)
             shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=False, settlement_id="ashgate")
             shop_output = args.output_dir / f"settlement-shop-{width}x{height}.png"
             shop_bytes = capture_frame(driver, shop_output, (actual_width, actual_height))
@@ -853,6 +906,8 @@ def main() -> int:
             activate_game_action(driver, "pause_main_menu", use_accessibility_actions)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False, settlement_id="reedwatch")
             activate_game_action(driver, "start_game", use_accessibility_actions)
+            wait_for_ui_state(driver, "introduction", args.timeout, large_text=False, settlement_id="reedwatch")
+            activate_game_action(driver, "intro_skip", use_accessibility_actions)
             confirmation_state = wait_for_ui_state(
                 driver, "new_game_confirmation", args.timeout, large_text=False, settlement_id="reedwatch"
             )
@@ -883,6 +938,8 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
+            activate_accessibility_action(driver, "menu_settings")
+            wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
             set_accessibility_checkbox(driver, "large_text", True)
             large_menu_state = wait_for_ui_state(driver, "main_menu", args.timeout, large_text=True)
             large_menu_output = args.output_dir / f"main-menu-large-text-{width}x{height}.png"
@@ -903,6 +960,8 @@ def main() -> int:
                 }
             )
             activate_game_action(driver, "start_game", use_accessibility_actions)
+            wait_for_ui_state(driver, "introduction", args.timeout, large_text=True, expected_values={"intro_page": 0})
+            activate_game_action(driver, "intro_skip", use_accessibility_actions)
             large_shop_state = wait_for_ui_state(driver, "settlement_shop", args.timeout, large_text=True, settlement_id="ashgate")
             large_shop_output = args.output_dir / f"settlement-shop-large-text-{width}x{height}.png"
             large_shop_bytes = capture_frame(driver, large_shop_output, (actual_width, actual_height))
@@ -967,7 +1026,9 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            activate_game_action(driver, "start_conflict", use_accessibility_actions)
+            activate_game_action(driver, "start_game", use_accessibility_actions)
+            wait_for_ui_state(driver, "introduction", args.timeout, large_text=False, expected_values={"intro_page": 0})
+            activate_game_action(driver, "intro_skip", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
@@ -975,13 +1036,15 @@ def main() -> int:
                 large_text=False,
                 settlement_id="ashgate",
                 expected_values={
-                    "playtest_path_id": "conflict_recovery",
-                    "selected_good_id": "medicine",
+                    "playtest_path_id": "guided_trade",
+                    "selected_good_id": "water",
                     "selected_quantity": 2,
-                    "selected_destination_id": "brine_cross",
-                    "selected_route_id": "toll_road",
+                    "selected_destination_id": "reedwatch",
+                    "selected_route_id": "old_road",
                 },
             )
+            select_accessibility_option(driver, "shop_good", "medicine")
+            set_accessibility_quantity(driver, "shop_quantity", 2)
             activate_game_action(driver, "shop_buy", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
@@ -997,11 +1060,16 @@ def main() -> int:
                 large_text=False,
                 settlement_id="ashgate",
                 expected_values={
-                    "playtest_path_id": "conflict_recovery",
+                    "playtest_path_id": "guided_trade",
                     "selected_good_id": "medicine",
-                    "selected_destination_id": "brine_cross",
-                    "selected_route_id": "toll_road",
                 },
+            )
+            select_accessibility_option(driver, "destination", "brine_cross")
+            wait_for_ui_state(
+                driver,
+                "departure_desk",
+                args.timeout,
+                expected_values={"selected_destination_id": "brine_cross", "selected_route_id": "toll_road"},
             )
             if use_accessibility_actions:
                 select_accessibility_option(driver, "cargo_good", "water")
@@ -1084,7 +1152,13 @@ def main() -> int:
             driver.get(args.url)
             wait_for_game(driver, args.timeout)
             wait_for_ui_state(driver, "main_menu", args.timeout, large_text=False)
-            activate_game_action(driver, "start_campaign", use_accessibility_actions)
+            activate_game_action(driver, "start_game", use_accessibility_actions)
+            wait_for_ui_state(driver, "introduction", args.timeout, large_text=False, expected_values={"intro_page": 0})
+            activate_game_action(driver, "intro_next", use_accessibility_actions)
+            wait_for_ui_state(driver, "introduction", args.timeout, expected_values={"intro_page": 1})
+            activate_game_action(driver, "intro_next", use_accessibility_actions)
+            wait_for_ui_state(driver, "introduction", args.timeout, expected_values={"intro_page": 2})
+            activate_game_action(driver, "intro_next", use_accessibility_actions)
             wait_for_ui_state(
                 driver,
                 "settlement_shop",
@@ -1097,6 +1171,7 @@ def main() -> int:
                     "selected_quantity": 4,
                     "selected_destination_id": "reedwatch",
                     "selected_route_id": "old_road",
+                    "tutorial": {"version": 1, "enabled": True, "intro_seen": True, "completed": False, "outlook_seen": False, "current_step": "accept_contract", "completed_steps": []},
                 },
             )
         validate_capture_matrix(captures)
@@ -1104,14 +1179,14 @@ def main() -> int:
         (args.output_dir / "capture_manifest.json").write_text(
             json.dumps(
                 {
-                    "manifest_version": 10,
+                    "manifest_version": 11,
                     "browser": args.browser,
                     "url": args.url,
                     "loading_overlay_cleared": True,
                     "assistive_action_bridge": "actions focused and keyboard-activated with Enter at 960x540; canvas pointer retained at 1280x720",
                     "assistive_planning_controls": "Shop and Departure native HTML fields exercised at 960x540",
                     "assistive_dynamic_actions": "Reedwatch Water Relief accepted through its generated semantic button at 960x540",
-                    "playtest_path_coverage": "Guided Trade, Conflict & Recovery, and Contract & Crew launched through semantic actions at 960x540 and canvas pointer actions at 1280x720",
+                    "tutorial_coverage": "New Game introduction, guided campaign, skip path, trade planning, road event, arrival, and tutorial state validated through semantic actions at 960x540 and canvas pointer actions at 1280x720",
                     "assistive_presentation_controls": "Reduce motion, Large text, and Interface sounds toggled through native HTML checkboxes at 960x540",
                     "assistive_input_remapping": "Pause rebound to R and default bindings restored through semantic HTML at 960x540",
                     "assistive_shortcut_safety": "Ctrl+R rejected without browser navigation and remapping cancelled with Escape at 960x540",

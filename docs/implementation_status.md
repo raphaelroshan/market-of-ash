@@ -2,12 +2,14 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations and B0–B8 are implemented. B9 now has four distinct fresh-save strategy/ending proofs. B10 build operations and automated accessibility safeguards, including keyboard-operated semantic Web actions, generated Shop actions, planning fields, presentation settings, and keyboard remapping, are configured; the remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
+**Roadmap status:** A0–A1 foundations and B0–B10's automated scope are implemented. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. Remaining gates require physical hardware, Windows display scaling, hands-on assistive technology, or moderated players.
 
 ## Implemented player-facing spine
 
-- Main Menu starts a deterministic Ashgate day-one playtest state.
-- Main Menu offers Guided Trade, Conflict & Recovery, and Contract & Crew start paths. All three create the same seed-1107 Ashgate world and only change initial cargo quantity, destination, route selection, and guidance; existing saves remain protected by the same confirmation flow.
+- Main Menu presents New Game, validated Continue, Settings, Credits, and desktop Quit as a restrained game menu. Debug-only QA scenarios and diagnostics are hidden behind Ctrl+Shift+D.
+- New Game opens three illustrated story cards that establish the basin crisis, caravan resources, and route tradeoffs before entering Ashgate. The player can begin the guided campaign or explicitly start without guidance; existing saves remain protected by the same confirmation flow.
+- The optional tutorial follows two complete journeys through authoritative commands: accept Reedwatch Water Relief, buy four Water, plan and resolve the Old Road, recover and complete the delivery, buy Grain, return to Ashgate, sell the surviving load, recruit and assign crew, and review Town Outlook.
+- Tutorial progress is derived from world state and bounded command evidence rather than duplicated simulation flags. Presentation progress is stored beside the world in a versioned campaign-save envelope; legacy direct-world saves still load safely.
 - Privacy-safe playtest reports record the selected fresh-run path; Main Menu Continue is identified separately so resumed saves are not misclassified as a guided opening.
 - The Settlement Bazaar owns local price inspection, buying, selling, jobs, services/intelligence, crew, optional outlook, and the handoff to travel planning through a stable stall directory.
 - The Bazaar keeps that directory spatially consistent while giving all five settlements stable visual identities: a Warden gate, brine pans, forge span, lantern market, or watched reed-water store. A compact identity strip remains visible during Trade and expands around non-trade stalls.
@@ -37,8 +39,8 @@
 - Repair-material loads on the Old Road can pause at `The Span at Cinderford`; public choices persist a visible lower-risk route condition while a turn-back option preserves the load.
 - Shortage-stage water arrivals can pause at `The Last Clean Barrel`; the player can take a frozen premium, share supply, honor an active relief contract, or preserve the load for ordinary trade.
 - High-value Old Road or Dry Cut loads can meet `Three Riders, No Banner`; money, medicine, disclosed one-unit risk, and a time-for-information recovery create distinct responses without combat.
-- Every route decision now presents a `Caravan Conflict Simulation` summary with the highest disclosed cargo-loss chance, exposed asset, route context, available-tactic count, and explicit tactic/certainty/cost/result/expected-outcome lines. This clarifies confrontation resolution without adding hidden health, real-time combat, or a second simulation path.
-- Resolving a route conflict now replaces the choice card with a `Plan vs Actual` comparison derived from the archived event and authoritative command outcome. It shows planned versus realized money, provisions, cargo, days, destination, the deterministic risk roll, and persistent route/resilience/information/reputation effects; the Web arrival announcement reads the same comparison.
+- Every route decision presents a `Roadside Decision` summary with the highest disclosed cargo-loss chance, exposed asset, route context, available-choice count, and explicit certainty/cost/result/expected-outcome lines. This clarifies confrontation resolution without adding hidden health, real-time combat, or a second simulation path.
+- Resolving a route conflict replaces the choice card with a `Journey Result` comparison derived from the archived event and authoritative command outcome. It shows expected versus arrival money, provisions, cargo, days, destination, the deterministic risk roll, and persistent route/resilience/information/reputation effects; the Web arrival announcement reads the same comparison.
 - Entering the destination clears the transient arrival card but preserves the latest comparison in a `Since Your Last Visit — Last Conflict` shop panel. The panel and its Web announcement are rebuilt from bounded saved event history after load, so this continuity requires no additional UI save state or migration.
 - When a disclosed conflict risk actually removes cargo, the same report adds a concrete recovery line. It selects the highest-value uncommitted surviving local sale, prices that stack at the current market, and names the lowest-risk route affordable with current funds plus that sale; contract-reserved cargo is protected, and if neither option exists the report directs the player to the visible opportunity blockers instead of implying a restart.
 - Disabled route-event responses render their prerequisite as persistent text below the control, so keyboard/controller players do not need hover access to understand unavailable choices.
@@ -118,6 +120,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 - `tests/test_economy.gd`: content loading, prices, crisis modifiers, capacity, route forecasts, command success/failure/history, route topology, travel resources, save normalization, and migration.
 - `tests/test_map_ui.gd`: main-menu start, non-mutating forecast/navigation, guided purchase command use, Shop → Departure Desk transition, legal route filtering, forecast presentation, route geometry, and predictable keyboard/controller focus across screen and event transitions.
+- `tests/test_tutorial_flow.gd`: game-facing menu and introduction, hidden developer tools, the complete two-journey guided campaign, recovery, trade, crew, Outlook completion, and tutorial save/load persistence.
 - `tests/test_controller_flow.gd`: dispatches joypad A/B/Menu/D-pad events through Godot to verify Main Menu traversal, controller quantity adjustment, Pause/Resume, safe Back, non-mutating planning, and a complete Medicine → Toll Road → Gatekeeper event → Brine Cross journey.
 - `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and canonical save/load restoration.
 - `tests/test_capture_validation.py`, `tests/test_policy_check.py`, and `tests/test_windows_export_validation.py`: dependency-free regression coverage for screenshot evidence, release policy, and embedded-PCK x86-64 PE structure.
@@ -127,7 +130,8 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 | From | Action | To | Authoritative mutation |
 | --- | --- | --- | --- |
-| Main Menu | Start Game | Settlement Bazaar | Creates deterministic fresh world state. |
+| Main Menu | New Game | Introduction | None. Story-card navigation is presentation-only. |
+| Introduction | Begin Guided Campaign / Start without guidance | Settlement Bazaar | Creates deterministic fresh world state and initializes or skips tutorial presentation. |
 | Settlement Bazaar | Choose stall / Buy / Sell / local action | Settlement Bazaar | Stall navigation is presentation-only; transactions use the command processor. |
 | Settlement Bazaar | Plan Departure | Departure Desk | None. Planning selection is preserved. |
 | Departure Desk | Return to Bazaar | Settlement Bazaar | None. |
@@ -334,4 +338,4 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 
 ## Next permitted task
 
-Run the portable candidate on physical Windows hardware through the documented 125%/150%/200% scaling, controller, browser-shortcut, assistive-technology, antivirus/reputation, and installer/storefront matrix. Keep any resulting fixes narrow; do not broaden into beta content or storefront integration until those observations are recorded.
+Run a moderated first-time-player comprehension session through the complete introduction and two-journey tutorial, then make only evidence-backed clarity fixes before expanding content.

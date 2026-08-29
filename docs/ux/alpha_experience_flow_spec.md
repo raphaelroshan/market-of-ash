@@ -25,7 +25,9 @@ This is inspired by the useful structure of Frontier-style play—local preparat
 
 ```mermaid
 flowchart LR
-    M[Main Menu] -->|Start / Continue| S[Settlement Shop]
+    M[Main Menu] -->|New Game| I[Illustrated Introduction]
+    M -->|Continue| S[Settlement Bazaar]
+    I -->|Guided / Skip guidance| S
     S -->|Buy, sell, inspect prices| S
     S -->|Plan departure| D[Departure Desk and Regional Map]
     D -->|Edit destination or route| D
@@ -57,8 +59,8 @@ Every response should acknowledge cause and effect in the same format: an outcom
 
 | Element | Purpose | Alpha behavior | Polish requirement |
 | --- | --- | --- | --- |
-| **Start Game / Continue** | Enter a deterministic first-run preset or validate and restore an existing campaign. | Starts Ashgate, day one, 120 ashmarks, 12 provisions, and empty cargo; Continue is separately enabled when a save exists and shows save status. | Add multiple save slots only if playtesting demonstrates a need. |
-| **Quick Playtest card** | Explain the test state and avoid false promises. | States the first-run preset and optional two-water learning move, whose forecast remains positive after disclosed route costs and expected loss. | Shows estimated loop length and what feedback is being tested. |
+| **New Game / Continue** | Begin the authored opening or validate and restore an existing campaign. | New Game opens the illustrated introduction; Continue is separately enabled when a save exists and shows save status. | Add multiple save slots only if playtesting demonstrates a need. |
+| **Introduction** | Establish the crisis, caravan ledger, and route tradeoffs before controls become dense. | Three short illustrated cards lead to the guided campaign; Start without guidance enters the same world without objectives. | Replace the stable illustration hooks with final authored art while preserving layout and semantics. |
 | **Settings** | Make comfort and control discoverable before play. | Main Menu exposes persisted large text, reduced motion, interface-sound, and keyboard/controller-remapping controls alongside mouse/keyboard/controller guidance. | Validate controller remapping on physical hardware and perform hands-on assistive-technology review of the current semantic Web mirror. |
 | **Quit** | Give a conventional, safe exit. | Desktop-only. | Confirms only if unsaved changes exist; never presents an intrusive quit prompt during the first minute. |
 
@@ -72,7 +74,7 @@ The shop is a quiet local scene with a readable market desk in the foreground. I
 | **Market ledger** | What is worth buying or selling? | Goods list, unit price, selected load cost, short price reason, regional comparison. | Icons, supply/demand arrows, price-change badges, rumors, stale-information markings, contract pins. |
 | **Caravan load** | What do I hold and what room remains? | Hold used/capacity, cargo rows, selected quantity, ashmarks, provisions. | Drag/reorder option, cargo risk/spoilage tags, reserve-space indicator, clear estimated sale destinations. |
 | **Local opportunities** | What else can I do here? | Not yet interactive; a compact placeholder label only if required. | Contracts, services, crew, rumors, faction permits, debt/obligation cards. One is spotlighted, never a wall. |
-| **Action rail** | What is my next meaningful action? | Buy cargo, sell cargo, optional guided purchase, **Plan Departure**, save, reset. | Disabled-state explanations, keyboard hints, controller glyphs, one-click repeat buy/sell, safe undo only before departure. |
+| **Action rail** | What is my next meaningful action? | Buy cargo, sell cargo, contextual tutorial objective, and **Plan Departure**. Save and Load live in Pause; debug utilities are hidden from release-facing navigation. | Disabled-state explanations, keyboard hints, controller glyphs, one-click repeat buy/sell, safe undo only before departure. |
 | **Outcome ribbon** | What just changed? | Last command result and cargo summary. | Animated deltas, new rumor badges, world-change callouts, “why this mattered” expansion. |
 
 **Shop interaction flow**
@@ -139,9 +141,9 @@ Travel must be short enough to respect the player’s time and rich enough to ma
 | **Resolution** | Delta line plus causal reason; route continues or arrives. | Do not hide an important loss in flavor text. |
 | **Arrival** | Settlement banner, final cargo, money/provisions/day changes, new local need. | Return to an actionable shop state, not a dead-end end card. |
 
-For the alpha, confrontations are presented as a **Caravan Conflict Simulation** rather than a separate combat mode. The card names the maximum disclosed cargo-loss chance and exposed asset, counts currently usable tactics, and gives every response a tactic type, certainty or risk roll, exact costs, travel result, and expected consequence. There is no hidden health damage or real-time combat state.
+For the alpha, confrontations are presented as a **Roadside Decision** rather than a separate combat mode. The card names the maximum disclosed cargo-loss chance and exposed asset, counts currently usable choices, and gives every response a certainty or risk roll, exact costs, travel result, and expected consequence. There is no hidden health damage or real-time combat state.
 
-After resolution, the same rail becomes a **Plan vs Actual** report. It compares the selected tactic's frozen resource, cargo, time, risk, and destination commitment with the command result, names whether the risk roll was avoided or realized, and lists any persistent route, settlement, information, contract, or faction effect before the player enters the settlement. The latest report remains available in the destination shop and is reconstructed from saved event history after loading.
+After resolution, the same rail becomes a **Journey Result** report. It compares the selected choice's expected resource, cargo, time, risk, and destination commitment with the arrival result, names whether the risk roll was avoided or realized, and lists any persistent route, settlement, information, contract, or faction effect before the player enters the settlement. The latest report remains available in the destination shop and is reconstructed from saved event history after loading.
 
 ### 4.5 Arrival and Reinvestment
 
@@ -153,7 +155,7 @@ The first arrival after a route incident must distinguish planning failure from 
 
 ### 5.1 First-run learning path
 
-The first run is guidance, not a script. The Main Menu exposes three deterministic entry paths into the same canonical campaign: **Guided Trade** selects the two-Water Reedwatch lesson, **Conflict & Recovery** selects two Medicine and the Brine Cross Toll Road confrontation, and **Contract & Crew** selects the four-Water relief plan while leaving contract acceptance and recruitment to the player. No path grants cargo or bypasses a command. The shop calls out **Plan Departure** only after the player has inspected or made a trade, and every selection remains editable. Each path completes only when its real trade, route, event, or commitment evidence exists.
+The first run is guidance, not a script. New Game presents three short story cards, then offers one coherent two-journey campaign tutorial: accept Reedwatch Water Relief, buy four Water, choose the Old Road, resolve its roadside decision, recover and deliver, buy Grain for the return, sell what arrives, recruit and assign crew, then inspect Town Outlook. No step grants cargo or bypasses a command, every selection remains editable, and progress is reconstructed from authoritative state after loading. Start without guidance enters the same canonical campaign with the objective card disabled.
 
 ### 5.2 Returning-player loop
 

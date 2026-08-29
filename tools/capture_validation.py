@@ -12,6 +12,9 @@ from pathlib import Path
 VIEWPORTS = ((960, 540), (1280, 720))
 REQUIRED_CAPTURE_SCREENS = {
     "main_menu",
+    "introduction_basin",
+    "introduction_caravan",
+    "introduction_road",
     "settlement_shop",
     "bazaar_jobs",
     "pause",

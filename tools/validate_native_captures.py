@@ -12,6 +12,9 @@ from capture_validation import png_dimensions, require_distinct_screen, validate
 
 REQUIRED_NATIVE_SCREENS = {
     "main_menu",
+    "introduction_basin",
+    "introduction_caravan",
+    "introduction_road",
     "settlement_shop",
     "bazaar_jobs",
     "pause",
@@ -31,6 +34,9 @@ REQUIRED_NATIVE_SCREENS = {
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
 EXPECTED_UI_STATE = {
+    "introduction_basin": "introduction",
+    "introduction_caravan": "introduction",
+    "introduction_road": "introduction",
     "bazaar_jobs": "settlement_shop",
     "returned_shop": "settlement_shop",
     "destination_shop": "settlement_shop",
@@ -126,6 +132,10 @@ def main() -> int:
         by_viewport.setdefault(viewport, {})[screen] = file_path
 
     for viewport, screens in by_viewport.items():
+        require_distinct_screen(screens["main_menu"], screens["introduction_basin"], f"{viewport} Open introduction")
+        require_distinct_screen(screens["introduction_basin"], screens["introduction_caravan"], f"{viewport} Introduction caravan page")
+        require_distinct_screen(screens["introduction_caravan"], screens["introduction_road"], f"{viewport} Introduction road page")
+        require_distinct_screen(screens["introduction_road"], screens["settlement_shop"], f"{viewport} Begin guided campaign")
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")

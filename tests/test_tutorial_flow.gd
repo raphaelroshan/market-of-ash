@@ -1,0 +1,121 @@
+extends SceneTree
+
+const MainScene = preload("res://scenes/Main.tscn")
+const TutorialDirector = preload("res://src/ui/tutorial_director.gd")
+
+var failures: Array[String] = []
+
+func _init() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	var ui: Control = MainScene.instantiate()
+	root.add_child(ui)
+	await process_frame
+	var prefix := "user://market_of_ash_tutorial_test_%d" % OS.get_process_id()
+	ui.save_path = prefix + ".save"
+	ui.settings_path = prefix + ".cfg"
+	ui.report_path = prefix + ".json"
+	ui.autosave_enabled = false
+	ui.settings_persistence_enabled = false
+
+	_expect(ui._current_ui_state_id() == "main_menu", "the game should begin at the player-facing main menu")
+	_expect(ui.start_game_button.text == "New Game" and ui.settings_button.text == "Settings" and ui.credits_button.text == "Credits", "the main menu should use game-facing actions")
+	_expect(not ui.developer_panel.visible and not ui.shop_report_button.visible and not ui.diagnostics_label.visible, "developer utilities should be absent from normal play")
+
+	ui._on_new_game_pressed()
+	_expect(ui._current_ui_state_id() == "introduction" and ui.intro_page == 0, "New Game should open the introduction before creating a campaign")
+	_expect(ui.intro_title_label.text.contains("roads are open"), "the first introduction card should establish the basin")
+	var intro_state: Dictionary = ui._web_ui_state()
+	var intro_actions: Array = intro_state.get("accessibility_actions", [])
+	_expect(intro_actions.any(func(action: Dictionary) -> bool: return action.get("id", "") == "intro_next") and intro_actions.any(func(action: Dictionary) -> bool: return action.get("id", "") == "intro_skip"), "the introduction should expose semantic next and skip actions")
+	ui._on_intro_next_pressed()
+	_expect(ui.intro_page == 1 and ui.intro_title_label.text.contains("promise"), "the second introduction card should explain the caravan")
+	ui._on_intro_next_pressed()
+	_expect(ui.intro_page == 2 and ui.intro_title_label.text.contains("cheap road"), "the third introduction card should explain route tradeoffs")
+	ui._on_intro_next_pressed()
+	await process_frame
+	_expect(ui._current_ui_state_id() == "settlement_shop" and ui.tutorial.enabled, "the final introduction card should begin the guided campaign")
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ACCEPT_CONTRACT and ui.tutorial_panel.visible, "the first tutorial objective should be the relief contract")
+	_expect(int(ui.shop_quantity.value) == 4 and ui._selected_id(ui.shop_good_option) == "water", "the canonical tutorial should prepare the four-Water relief plan")
+
+	ui._on_bazaar_navigation_pressed("assignments")
+	ui._on_accept_contract_pressed("reedwatch_water_relief_01")
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_BUY_WATER, "accepting the contract should advance to loading Water")
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._on_buy_pressed()
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_PLAN_REEDWATCH and int(ui.world.cargo.get("water", 0)) == 4, "buying the contract load should advance to route planning")
+
+	ui._on_plan_departure_pressed()
+	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "the tutorial should prepare Reedwatch by the Old Road without committing it")
+	ui._on_depart_pressed()
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ROAD_DECISION and ui.world.pending_event.get("id", "") == "three_riders_no_banner", "the first committed journey should teach the seeded roadside decision")
+	ui.map_panel._process(2.0)
+	_expect(ui.map_panel.travel_phase == "road", "the tutorial may not bypass the road observation")
+	ui._on_continue_journey_pressed()
+	ui._on_event_choice_pressed("three_riders_no_banner", "pay_for_escort")
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ENTER_REEDWATCH and ui.arrival_pending, "resolving the roadside decision should advance to arrival review")
+	ui._on_enter_settlement_pressed()
+	_expect(ui.world.current_settlement == "reedwatch" and ui.tutorial.current_step == TutorialDirector.STEP_BUY_GRAIN, "completed relief should lead into the return trade")
+	_expect(ui._selected_id(ui.shop_good_option) == "grain" and int(ui.shop_quantity.value) == 4, "the return lesson should prepare four Grain")
+
+	ui._on_buy_pressed()
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_RETURN_ASHGATE and int(ui.world.cargo.get("grain", 0)) == 4, "buying Grain should advance to the return journey")
+	ui._on_plan_departure_pressed()
+	_expect(ui._selected_id(ui.destination_option) == "ashgate" and ui._selected_id(ui.route_option) == "old_road", "the second journey should point back to Ashgate")
+	ui._on_depart_pressed()
+	ui.map_panel._process(2.0)
+	ui._on_continue_journey_pressed()
+	ui.map_panel._process(2.0)
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ENTER_ASHGATE and ui.arrival_pending, "the return journey should end at an explicit arrival handoff")
+	ui._on_enter_settlement_pressed()
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_SELL_GRAIN, "entering Ashgate should teach closing the trade loop")
+	ui._on_sell_pressed()
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_RECRUIT_CREW, "selling the return load should advance to crew; step=%s cargo=%s history=%s" % [ui.tutorial.current_step, JSON.stringify(ui.world.cargo), JSON.stringify(ui.world.command_history.back())])
+
+	ui._on_bazaar_navigation_pressed("crew")
+	ui._on_recruit_crew_pressed("nara_vey")
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ASSIGN_CREW, "recruitment should advance to route assignment")
+	ui._on_assign_crew_pressed("nara_vey")
+	_expect(ui.tutorial.current_step == TutorialDirector.STEP_REVIEW_OUTLOOK, "crew assignment should advance to the wider campaign")
+	ui._on_bazaar_navigation_pressed("outlook")
+	_expect(ui.tutorial.completed and not ui.tutorial.enabled and ui.tutorial.current_step == TutorialDirector.STEP_COMPLETE, "opening Town Outlook should complete the two-journey tutorial")
+
+	_expect(ui._write_save("SAVED"), "the completed tutorial campaign should save")
+	var saved_file := FileAccess.open(ui.save_path, FileAccess.READ)
+	var saved_data: Variant = JSON.parse_string(saved_file.get_as_text()) if saved_file != null else null
+	_expect(typeof(saved_data) == TYPE_DICTIONARY and saved_data.has("world") and saved_data.has("presentation"), "new saves should wrap world and presentation state")
+	var loaded: Dictionary = ui._load_candidate(ui.save_path)
+	_expect(bool(loaded.get("ok", false)) and bool(Dictionary(loaded.get("tutorial", {})).get("completed", false)), "tutorial completion should survive validated loading")
+	ui.tutorial.start()
+	_expect(ui._on_load_pressed() and ui.tutorial.completed and not ui.tutorial.enabled, "loading should restore completed tutorial presentation state into the active campaign")
+
+	var future_path := prefix + "_future.save"
+	var future_file := FileAccess.open(future_path, FileAccess.WRITE)
+	if future_file != null:
+		future_file.store_string(JSON.stringify({"format": ui.SAVE_ENVELOPE_FORMAT, "format_version": ui.SAVE_ENVELOPE_VERSION + 1, "world": ui.world.serialize()}))
+		future_file = null
+	_expect(not bool(ui._load_candidate(future_path).get("ok", true)), "a future campaign save envelope should fail closed")
+	if FileAccess.file_exists(future_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(future_path))
+
+	_cleanup(prefix)
+	ui.queue_free()
+	if failures.is_empty():
+		print("Tutorial flow: PASS")
+		quit(0)
+	else:
+		for failure in failures:
+			push_error(failure)
+		print("Tutorial flow: FAIL (%d)" % failures.size())
+		quit(1)
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)
+
+func _cleanup(prefix: String) -> void:
+	for suffix in [".save", ".save.tmp", ".save.bak", ".cfg", ".json"]:
+		var path: String = prefix + suffix
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
