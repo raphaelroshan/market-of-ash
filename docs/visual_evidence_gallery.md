@@ -1,65 +1,83 @@
-# Market of Ash — Visual Evidence Gallery
+# Market of Ash — Basin Vertical-Slice Gallery
 
-This gallery preserves the strongest screenshots from the `v0.12.0-alpha-quality` visual audit as dated development evidence. These are prototype/alpha captures, not final promotional key art. They are useful for showing progression, design intent, and the evolution from technical prototype toward a polished Frontier-inspired trade-and-travel RPG.
-
-## Capture record
+These are local real-renderer captures from `v0.13.0-alpha-basin-vertical-slice`. They document the current game flow rather than final promotional art. Every image below is backed by a native capture manifest that records the exact viewport, screen state, focus and required-control bounds, platform, and display scale.
 
 | Field | Value |
 |---|---|
-| Build | `v0.12.0-alpha-quality` |
-| Capture set | Latest UI audit from the game-quality vertical-slice review |
-| Logical presentation | 1280×720 design canvas; desktop target 1600×900 |
-| Capture scope | Main Menu, introduction, Bazaar, Departure, road observation, event, arrival handoff |
-| Evidence status | Existing internal development screenshots; exact capture timestamp was not preserved |
+| Build | `v0.13.0-alpha-basin-vertical-slice` |
+| Engine | Godot 4.4.1 |
+| Capture origin | Local macOS OpenGL real-renderer run |
+| Primary journey size | 1600×900 |
+| Constrained checks | 1280×720 normal and Large text |
+| Full capture inventory | 25 states per viewport; 50 validated frames |
+| Manifests | [`1280×720`](visual_evidence/v0.13.0-alpha-basin-vertical-slice/native-capture-1280x720.json), [`1600×900`](visual_evidence/v0.13.0-alpha-basin-vertical-slice/native-capture-1600x900.json) |
 
-## Screenshots
+## Complete journey
 
-### Main Menu
+### 1. Choose a caravan journey
 
-![Market of Ash main menu](visual_evidence/v0.12.0-alpha-quality/01_main_menu.png)
+![Main Menu](visual_evidence/v0.13.0-alpha-basin-vertical-slice/01_main_menu_1600x900.png)
 
-The title establishes the ash-frontier setting and presents the entry into the journey.
+The clean profile has one primary start action and states the trade-and-consequence premise before play.
 
-### Introduction
+### 2. Learn what the road changes
 
-![Market of Ash introduction](visual_evidence/v0.12.0-alpha-quality/02_introduction.png)
+![Introduction](visual_evidence/v0.13.0-alpha-basin-vertical-slice/02_introduction_1600x900.png)
 
-The introduction communicates the game’s trade-and-travel premise before the player reaches the market.
+Three short illustrated cards teach local needs, caravan limits, roads, and promises without replacing the real game flow.
 
-### Bazaar
+### 3. Read the Bazaar as a place
 
-![Market of Ash Bazaar](visual_evidence/v0.12.0-alpha-quality/03_bazaar.png)
+![Ashgate Bazaar](visual_evidence/v0.13.0-alpha-basin-vertical-slice/03_bazaar_1600x900.png)
 
-The Bazaar is the central commerce screen: local needs, price information, cargo, and the player’s trade thesis are brought together.
+Settlement identity, stall navigation, cargo, resources, local pressure, and ordinary trade share one game-facing scene.
 
-### Departure map
+### 4. Compare every legal itinerary
 
-![Market of Ash departure map](visual_evidence/v0.12.0-alpha-quality/04_departure.png)
+![Departure Desk](visual_evidence/v0.13.0-alpha-basin-vertical-slice/04_departure_1600x900.png)
 
-The Departure state shows route choice, distance, risk, and the relationship between a settlement and the wider basin.
+Fee, time, provisions, cargo value, risk, confidence, and net consequence remain visible before commitment. Unfavorable routes are not hidden.
 
-### Road observation
+### 5. Travel through an in-between place
 
-![Market of Ash road observation](visual_evidence/v0.12.0-alpha-quality/05_road_observation.png)
+![Road observation](visual_evidence/v0.13.0-alpha-basin-vertical-slice/05_road_1600x900.png)
 
-The road view demonstrates the intended rhythm between planning, uncertainty, and the next arrival.
+The selected road has its own corridor, landmark, progress, origin, destination, and status instead of bypassing travel.
 
-### Event
+### 6. Resolve a disclosed road problem
 
-![Market of Ash event](visual_evidence/v0.12.0-alpha-quality/06_event.png)
+![Road event](visual_evidence/v0.13.0-alpha-basin-vertical-slice/06_event_1600x900.png)
 
-The event state shows how a roadside decision interrupts trade without replacing the wider economic loop.
+Each response names its exact cost, expected outcome, and missing prerequisites. The event does not hide an extra damage system.
 
-### Arrival handoff
+### 7. See the consequence
 
-![Market of Ash arrival handoff](visual_evidence/v0.12.0-alpha-quality/07_arrival_handoff.png)
+![Event result](visual_evidence/v0.13.0-alpha-basin-vertical-slice/07_event_result_1600x900.png)
 
-The arrival state closes one journey and hands the player back into settlement commerce and recovery.
+The result holds long enough to read and connects the choice to the remaining journey.
 
-## Kickstarter bonus-content framing
+### 8. Return to trade in a different place
 
-A Kickstarter campaign could present this set as **“The Basin Takes Shape: Alpha Screenshots”**. The strongest bonus-content promise is not that these images are finished art; it is that backers can see the actual design process: how a market, route, event, and arrival connect into one deterministic trading journey.
+![Destination Bazaar](visual_evidence/v0.13.0-alpha-basin-vertical-slice/08_arrival_bazaar_1600x900.png)
 
-Recommended reward language is “development archive access” or “digital production journal,” including versioned screenshots, short design commentary, and selected before/after comparisons. Avoid promising unreleased features, final art, a fixed launch date, or a complete campaign until those items have passed human testing and owner approval.
+Arrival hands the caravan into a settlement-specific market, preserving the loop rather than ending at a report screen.
 
-The repository’s binding economic design remains in [`docs/design/nonlinear_trade_and_adaptive_basin_addendum.md`](design/nonlinear_trade_and_adaptive_basin_addendum.md). Ordinary buying and selling must remain valuable; contracts are optional pressure, not a mandatory quest rail.
+### 9. Finish with a causal replay prompt
+
+![Campaign debrief](visual_evidence/v0.13.0-alpha-basin-vertical-slice/09_campaign_debrief_1600x900.png)
+
+The ending explains the recent route, trade, resources, event decisions, regional consequence, causal lesson, and one concrete replay experiment.
+
+## Constrained and Large text checks
+
+![Departure at 1280×720](visual_evidence/v0.13.0-alpha-basin-vertical-slice/10_departure_1280x720.png)
+
+![Departure with Large text at 1280×720](visual_evidence/v0.13.0-alpha-basin-vertical-slice/11_departure_large_text_1280x720.png)
+
+![Event with Large text at 1280×720](visual_evidence/v0.13.0-alpha-basin-vertical-slice/12_event_large_text_1280x720.png)
+
+The manifests validate that required controls remain inside the active layer. Scrollable detail is allowed; required state, decision context, and primary action may not be clipped.
+
+## Use and limits
+
+This set is suitable for test instructions, development history, and an alpha production journal. It is not final key art. The source remains procedural and replaceable, and the release notes retain the remaining human hardware, accessibility, comprehension, and storefront gates.

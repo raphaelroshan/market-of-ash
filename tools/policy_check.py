@@ -12,7 +12,7 @@ SECRET_PATTERNS = [
     # Match assignments or literal credentials, not harmless references such as os.environ.get("OPENAI_API_KEY").
     re.compile(r"(?:OPENAI_API_KEY|BUILT_IN_FORGE_API_KEY|AWS_SECRET_ACCESS_KEY)\s*[:=]\s*['\"][^'\"]{12,}['\"]", re.I),
     re.compile(r"Authorization:\s*Bearer\s+[A-Za-z0-9._-]{20,}", re.I),
-    re.compile(r"(?:ghp_|github_pat_|sk-)[A-Za-z0-9_-]{16,}"),
+    re.compile(r"(?<![A-Za-z0-9_-])(?:ghp_|github_pat_|sk-)[A-Za-z0-9_-]{16,}"),
     re.compile(r"BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY", re.I),
 ]
 WINDOWS_VERSION_PATTERN = re.compile(r"^[0-9]+(?:\.[0-9]+){0,3}$")
@@ -20,6 +20,10 @@ WINDOWS_VERSION_PATTERN = re.compile(r"^[0-9]+(?:\.[0-9]+){0,3}$")
 
 def valid_windows_version(value: str) -> bool:
     return bool(WINDOWS_VERSION_PATTERN.fullmatch(value))
+
+
+def contains_secret(text: str) -> bool:
+    return any(pattern.search(text) for pattern in SECRET_PATTERNS)
 
 
 def git_diff_names(base: str, root: Path) -> list[str]:
@@ -86,10 +90,8 @@ def main() -> int:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:
             continue
-        for pattern in SECRET_PATTERNS:
-            if pattern.search(text):
-                errors.append(f"possible secret pattern in: {relative}")
-                break
+        if contains_secret(text):
+            errors.append(f"possible secret pattern in: {relative}")
 
     print(f"repository={args.repo}")
     for warning in warnings:

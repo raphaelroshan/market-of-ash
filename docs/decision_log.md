@@ -521,3 +521,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** An ending title alone does not teach the player how market, road, event, and political decisions combined. A causal receipt closes the vertical slice and turns replay into a purposeful comparison instead of presenting a canonical winning path or implying that the seed reproduces player choices.
 
 **Trade-off:** The compact debrief summarizes the most recent six routes and trades while the exported report retains the full bounded history. Continuing dismisses the debrief for the current session but leaves the immutable ending visible in Bazaar status and the saved campaign.
+
+## ADR-066: The basin vertical slice ships as a provenance-bound portable alpha
+
+**Decision:** Version the completed automated vertical slice as `0.13.0-alpha-basin-vertical-slice` and distribute its Windows build as both a standalone executable and a clean-extracted portable ZIP. The tagged build must carry exact commit/run provenance, numeric Windows resource version `0.13.0.0`, SHA-256 checksums, a packaged GUI capture, and a source snapshot. Curated full-flow screenshots record their version, viewport, state, and local real-renderer origin. The public repository release is marked as a prerelease intended for limited alpha testing, with external hardware and human-playtest gates listed explicitly.
+
+**Reason:** A testable vertical slice needs a reproducible artifact and evidence trail, not only a passing development branch. Binding package, visuals, source, and checksums to one tag lets testers report against the exact game they ran and prevents automated coverage from being mistaken for human or storefront certification.
+
+**Trade-off:** The portable package has no installer, signing certificate, auto-update channel, or storefront integration. Public prerelease availability does not remove the roadmap's physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated-comprehension gates.

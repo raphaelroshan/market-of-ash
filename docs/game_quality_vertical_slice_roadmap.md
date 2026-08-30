@@ -1,7 +1,7 @@
 # Market of Ash — Game-Quality Vertical-Slice Roadmap
 
 **Project:** Market of Ash
-**Current baseline:** `0.12.0-alpha-quality`
+**Current baseline:** `0.13.0-alpha-basin-vertical-slice`
 **Target milestone:** `0.13.0-alpha-basin-vertical-slice`
 **Platform:** Windows desktop first, Web as a verification surface
 **Engine:** Godot 4.4.1, GDScript

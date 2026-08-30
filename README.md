@@ -8,6 +8,8 @@ The repository contains a complete, replayable alpha vertical slice presented as
 
 The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, create and validate a single-file portable Windows ZIP, clean-extract and launch-smoke that executable, and upload GUI evidence, checksums, provenance, and a source snapshot.
 
+The current public test build is [`v0.13.0-alpha-basin-vertical-slice`](docs/releases/v0.13.0-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
+
 ## Run the prototype
 
 From the repository root:
@@ -51,7 +53,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/economy/path_reward_balance.md` | Feed D contract for comparing ordinary, contract, civic, and faction value without hiding non-cash tradeoffs. |
 | `docs/scenarios/well_commons_response.md` | Feed B state-machine and replacement-market contract for ignored or failed Reedwatch relief. |
 | `docs/implementation_status.md` | Current implementation, verification evidence, and remaining manual gates. |
-| `docs/visual_evidence_gallery.md` | Versioned internal screenshots from the `v0.12.0-alpha-quality` visual audit with Kickstarter archive guidance. |
+| `docs/visual_evidence_gallery.md` | Versioned screenshots from the `v0.13.0-alpha-basin-vertical-slice` full-flow visual audit with provenance and limitations. |
 | `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/latest_test_report_2026-08-30.md` | Latest main-branch automated and visual smoke-test results, screenshots, findings, and next roadmap steps. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
