@@ -45,7 +45,7 @@ func _test_trade_presenter() -> void:
 	for comparison in comparisons:
 		selected_count += 1 if bool(comparison.get("selected", false)) else 0
 		var text := String(comparison.get("text", ""))
-		_expect(text.contains("FEE") and text.contains("TIME") and text.contains("SUPPLY") and text.contains("PLAN Water x2") and text.contains("HELD 0") and text.contains("VALUE") and text.contains("RISK") and text.contains("CONF") and text.contains("NET") and text.contains("IF BOUGHT"), "an unloaded route comparison should expose its hypothetical plan, actual hold, fee, time, provisions, value, risk, confidence, and consequence")
+		_expect(text.contains("FEE") and text.contains("DAY") and text.contains("PROV") and text.contains("PLAN Water x2") and text.contains("HELD 0") and text.contains("VALUE") and text.contains("RISK") and text.contains("CONF") and text.contains("NET") and text.contains("IF BOUGHT"), "an unloaded route comparison should expose its hypothetical plan, actual hold, fee, time, provisions, value, risk, confidence, and consequence")
 		_expect(String(comparison.get("tooltip", "")).contains("Hypothetical Water x2 forecast") and String(comparison.get("tooltip", "")).contains("empty travel remains legal"), "an unloaded route comparison should explain how to carry the plan without blocking empty travel")
 	_expect(selected_count == 1, "route comparison should mark only the existing explicit plan as selected")
 	world.cargo = {"water": 2, "weight": 2}

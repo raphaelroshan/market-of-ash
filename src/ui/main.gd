@@ -80,6 +80,8 @@ const DEFAULT_CONTROLLER_BINDINGS := {"ui_accept": [JOY_BUTTON_A], "ui_cancel": 
 const RESERVED_REMAP_KEYS := [KEY_TAB, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 const RESERVED_CONTROLLER_BUTTONS := [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]
 const COMPACT_OPENING_WINDOW_WIDTH := 1100
+const ROUTE_CARD_HEIGHT := 200.0
+const ROUTE_CARD_LARGE_TEXT_HEIGHT := 260.0
 const CONTROLLER_BUTTON_LABELS := {
 	JOY_BUTTON_A: "A / Cross",
 	JOY_BUTTON_B: "B / Circle",
@@ -851,6 +853,8 @@ func _on_large_text_toggled(enabled: bool) -> void:
 	large_text_enabled = enabled
 	theme.default_font_size = 20 if enabled else 16
 	_apply_text_scale(self, 1.25 if enabled else 1.0)
+	for route_card in route_comparison_buttons:
+		route_card.custom_minimum_size.y = ROUTE_CARD_LARGE_TEXT_HEIGHT if enabled else ROUTE_CARD_HEIGHT
 	if map_panel:
 		map_panel.set_text_scale(1.25 if enabled else 1.0)
 	if bazaar_scene:
@@ -2037,7 +2041,7 @@ func _refresh_route_comparison(world_context: Dictionary) -> void:
 		button.tooltip_text = String(view.get("tooltip", ""))
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.custom_minimum_size = Vector2(158, 200)
+		button.custom_minimum_size = Vector2(158, ROUTE_CARD_LARGE_TEXT_HEIGHT if large_text_enabled else ROUTE_CARD_HEIGHT)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.add_theme_font_size_override("font_size", 16 if large_text_enabled else 14)
 		button.toggle_mode = true

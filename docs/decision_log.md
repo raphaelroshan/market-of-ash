@@ -537,3 +537,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A positive cargo and net forecast beside an empty hold can read as value already aboard, especially to a first-time player scanning the comparison board before the detailed load check. The route forecast is useful as a hypothetical shopping plan, but its status must be visible on the card where the value appears.
 
 **Trade-off:** The cards gain one compact line and therefore use slightly more vertical space inside the existing scrollable planning rail. They still compare every legal itinerary and do not turn the forecast into an automatic purchase or a departure gate.
+
+## ADR-068: Large-text itinerary cards preserve the selected-state label
+
+**Decision:** Give itinerary cards enough additional minimum height to preserve their standalone `SELECTED` label when Large text is enabled, while leaving their normal-text height unchanged. The planning rail remains scrollable and the Commit and Return actions remain pinned outside it.
+
+**Reason:** The 960×540 Windows evidence showed every route value but clipped the first `SELECTED` line from the active card. A focus border alone is not an adequate selection signal because route state must remain legible without relying on color or focus styling.
+
+**Trade-off:** Large text shows less of the next itinerary row before scrolling. The full active card becomes readable, and all alternatives remain present in the same scrollable comparison board.
