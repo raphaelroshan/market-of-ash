@@ -8,7 +8,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.policy_check import valid_windows_version
+from tools.policy_check import contains_secret, valid_windows_version
 
 
 def main() -> int:
@@ -16,6 +16,8 @@ def main() -> int:
         assert valid_windows_version(version), version
     for version in ("", "0.9.0-alpha", "0..9", ".9.0", "0.9.0.0.1", "v0.9.0"):
         assert not valid_windows_version(version), version
+    assert not contains_secret("departure-desk-large-text-1280x720.png")
+    assert contains_secret("token=" + "s" + "k-" + "a" * 24)
     print("Repository policy helper tests: PASS")
     return 0
 

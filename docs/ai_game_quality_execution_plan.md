@@ -1,6 +1,6 @@
 # Market of Ash — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.12.0-alpha-quality` and later
+**Applies to:** `v0.13.0-alpha-basin-vertical-slice` and later
 
 **Purpose:** Move the game from a technically sound deterministic prototype toward a presentable vertical slice. Automated tests, scripted launches, screenshot inspection, and deterministic replay evidence are the active development gates. Human playtesting is valuable later, but it is not a prerequisite for the following work.
 
@@ -25,7 +25,7 @@ The game must preserve two equally legitimate ways to play: ordinary buying and 
 | **M9** | Compose outcomes and replay | Debrief route, cargo, event, profit/loss, political pressure, and consequence. Offer a replay experiment without requiring one canonical ending. |
 | **M10** | Package the private alpha | Run all verification suites, capture a complete 1600×900 journey, check 1280×720 and large text, verify clean install and save migration, and publish an internal artifact with known limitations. Human sessions remain optional follow-up evidence. |
 
-**Progress:** M1–M9 are implemented. The responsive shell, Bazaar decision card, extracted presenters, and selectable all-itinerary Departure comparison are complete. The normal flow enforces a short road-observation beat before event or arrival, supports reduced motion and save restoration, and returns to a location-specific Bazaar. All five settlement identities are validated runtime data with distinct landmarks and market-reading copy. The Well Commons replaces missed relief with a new ordinary charcoal opportunity and reversible faction interactions. The Last Clean Barrel is covered from authored data through deterministic command resolution, persistence, destination acknowledgment, debrief, and later market consequences. Reached endings now open a causal campaign debrief with route, trade, resources, event, political consequence, and an ending-specific replay experiment plus Continue, Replay, Title, and report actions. M10 packaging and release evidence is next.
+**Progress:** M1–M10 are implemented for the automated vertical-slice scope. The responsive shell, Bazaar decision card, extracted presenters, selectable all-itinerary Departure comparison, mandatory road beat, data-driven settlement identity, adaptive Well Commons response, complete Last Clean Barrel event, and causal campaign debrief are all integrated. The `v0.13.0-alpha-basin-vertical-slice` candidate is versioned for a clean portable Windows package, complete 1600×900 journey evidence, 1280×720 and Large text coverage, save migration/recovery checks, browser verification, and an honest limitations record. Physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated human-playtest evidence remain external follow-up gates rather than unverified claims.
 
 ## Acceptance tests for every AI task
 

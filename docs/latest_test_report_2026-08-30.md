@@ -1,48 +1,50 @@
-# Market of Ash — Latest Main Test Report
+# Market of Ash — Basin Vertical-Slice Test Report
 
-## Build and verification
+## Candidate
 
 | Field | Result |
 |---|---|
-| Branch tested | `origin/main` |
-| Build | `v0.12.0-alpha-quality` |
+| Release | `v0.13.0-alpha-basin-vertical-slice` |
 | Engine | Godot 4.4.1 |
-| Visual test display | 1280×720 Xvfb display |
-| Automated verification | PASS: repository policy, content validators, economy, map UI, tutorial, controller, campaign, and game-quality suites |
-| Runtime smoke | PASS: project launched and advanced through the title into the introduction |
+| Content | Runtime content `1.22.0`; save schema `12` |
+| Desktop target | Windows x86-64 portable executable and ZIP |
+| Verification surfaces | macOS real renderer, Linux/Windows headless CI, Windows packaged GUI, Chrome, Firefox, and Edge |
+| Release claim | Public prerelease for limited alpha testing; not storefront-ready |
 
-## Captured evidence
+## Result
 
-The screenshots were captured from the actual latest main build and are stored under [`docs/visual_evidence/v0.12.0-alpha-quality-latest-test-2026-08-30/`](visual_evidence/v0.12.0-alpha-quality-latest-test-2026-08-30/).
+The automated M1–M10 vertical-slice scope passes. A clean player path can move from the title through the illustrated introduction, ordinary Bazaar trade, selectable itinerary comparison, a mandatory road beat, an authored encounter, arrival, a changed destination market, and a causal campaign debrief. The same systems retain the optional-contract path, adaptive Well Commons response, save/load and backup recovery, keyboard/controller navigation model, reduced motion, Large text, privacy-safe report export, and deterministic replay evidence.
 
-![Latest Market of Ash title](visual_evidence/v0.12.0-alpha-quality-latest-test-2026-08-30/market_01_title.png)
+The final local real-renderer run produced and validated 25 states at 1280×720 and the same 25 states at 1600×900. The curated 1600×900 sequence and constrained Large text checks are stored under [`docs/visual_evidence/v0.13.0-alpha-basin-vertical-slice/`](visual_evidence/v0.13.0-alpha-basin-vertical-slice/). The two native manifests preserve the complete state inventory, requested and captured viewport, platform, display scale, focus rectangle, required-control bounds, and UI state for every frame.
 
-![Latest Market of Ash introduction](visual_evidence/v0.12.0-alpha-quality-latest-test-2026-08-30/market_02_first_action.png)
+## Representative flow
 
-![Latest Market of Ash follow-up](visual_evidence/v0.12.0-alpha-quality-latest-test-2026-08-30/market_03_followup.png)
+![Main menu](visual_evidence/v0.13.0-alpha-basin-vertical-slice/01_main_menu_1600x900.png)
 
-## Findings
+![Bazaar](visual_evidence/v0.13.0-alpha-basin-vertical-slice/03_bazaar_1600x900.png)
 
-The deterministic economy and campaign verification are in good shape. The title screen is legible in its left content area and successfully exposes the trade-route premise. The major visible issue is responsive composition at 1280×720: the right-side menu and introduction panel extend beyond the visible viewport, clipping headings, body copy, and controls. This is a player-facing quality failure even though the automated suites pass.
+![Departure comparison](visual_evidence/v0.13.0-alpha-basin-vertical-slice/04_departure_1600x900.png)
 
-## Next roadmap steps
+![Road encounter](visual_evidence/v0.13.0-alpha-basin-vertical-slice/06_event_1600x900.png)
 
-### Market Quality 1 — Responsive shell repair
+![Campaign debrief](visual_evidence/v0.13.0-alpha-basin-vertical-slice/09_campaign_debrief_1600x900.png)
 
-Implement a responsive presentation contract for 1280×720, 1600×900, and the minimum supported window. At narrow widths, the right-side panel must either reflow below the illustration or use a deliberate single-column layout. No required heading, explanation, or primary action may be clipped. Add deterministic UI assertions for panel bounds and a capture at each supported viewport.
+## Verification performed
 
-### Market Quality 2 — Bazaar and introduction comprehension pass
+- `python3 tests/test_windows_export_validation.py` — PASS.
+- Godot `tests/test_map_ui.gd` — PASS with the new game-version assertion.
+- `scripts/capture_native_ui.sh` at 1280×720 and 1600×900 — PASS, 50 validated frames total.
+- The repository-wide `scripts/verify.sh` gate covers policy, content schemas and fixtures, economy, UI, tutorial, controller, save migration/recovery, campaign, deterministic replay, privacy-safe report, and release validators.
+- Pull-request CI additionally clean-extracts and launch-smokes the Windows ZIP, validates the visible Windows GUI and version resources, packages Web output, and traverses the browser build in Chrome, Firefox, and Edge.
 
-Retest the introduction-to-Bazaar handoff with a fresh player. The first Bazaar view must answer what is needed here, what is profitable now, what cargo can be carried, and what the next action is without relying on prior knowledge. Preserve ordinary buying and selling as a complete path; contracts remain optional.
+## Honest limitations
 
-### Market Quality 3 — Full journey evidence capture
+- The art and animation are original procedural alpha presentation, not final commercial art.
+- The package is portable and unsigned; there is no installer, auto-update path, Steam/Epic integration, or code-signing reputation yet.
+- Physical-controller feel, Windows high-DPI hardware, screen-reader use, antivirus reputation, and storefront behavior still require human device testing.
+- Automated traversal proves deterministic operation and visible bounds, not player comprehension or fun. Moderated first-time-player sessions remain the next evidence gate.
+- This is one basin: five settlements, three route families, seven goods, four authored route-event families, and five endings. It is a strong vertical slice, not the complete campaign.
 
-Capture a complete representative sequence at 1600×900: introduction, Bazaar, Departure, road observation, event, arrival/debrief, and return Bazaar. Store it under a new versioned directory and compare it against the current 1280×720 evidence before adding new content.
+## Release interpretation
 
-### Market Quality 4 — Human validation gate
-
-Run the existing moderated comprehension protocol. Do not advance to new factions, goods, or endings until players can independently identify a profitable ordinary trade, explain the route risk, and return to market after an event.
-
-## Evidence interpretation
-
-This report records an internal alpha test. It is suitable for development history and Kickstarter archive material, but it is not evidence of final art, final layout, or release readiness.
+This report supports publishing a prerelease test artifact. It does not make a commercial-readiness claim. The release manifest, packaged Windows metadata, source archive, and SHA-256 file bind the downloadable artifact to its exact tagged commit and CI run.
