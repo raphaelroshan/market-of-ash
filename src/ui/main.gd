@@ -77,6 +77,7 @@ const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel":
 const DEFAULT_CONTROLLER_BINDINGS := {"ui_accept": [JOY_BUTTON_A], "ui_cancel": [JOY_BUTTON_B], "ui_pause": [JOY_BUTTON_START]}
 const RESERVED_REMAP_KEYS := [KEY_TAB, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 const RESERVED_CONTROLLER_BUTTONS := [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]
+const COMPACT_OPENING_WINDOW_WIDTH := 1100
 const CONTROLLER_BUTTON_LABELS := {
 	JOY_BUTTON_A: "A / Cross",
 	JOY_BUTTON_B: "B / Circle",
@@ -93,6 +94,8 @@ var game_layer: Control
 var shop_layer: Control
 var menu_layer: Control
 var intro_layer: Control
+var menu_columns
+var intro_columns
 var intro_scene
 var intro_title_label: Label
 var intro_body_label: Label
@@ -233,6 +236,7 @@ var web_accessibility_key_callback: Variant
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_fit_initial_window_to_display()
 	run_started_msec = Time.get_ticks_msec()
 	world = AshWorldState.new(PLAYTEST_SEED)
 	_load_presentation_settings()
@@ -247,11 +251,46 @@ func _ready() -> void:
 	_build_main_menu()
 	_build_intro()
 	_build_pause_menu()
+	_refresh_responsive_layout()
 	_refresh_continue_availability()
 	if large_text_enabled:
 		_apply_text_scale(self, 1.25)
 	_setup_web_accessibility_bridge()
 	_show_main_menu()
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_SIZE_CHANGED and is_inside_tree():
+		call_deferred("_refresh_responsive_layout")
+
+func _fit_initial_window_to_display() -> void:
+	if OS.has_feature("web") or DisplayServer.get_name() == "headless" or DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED:
+		return
+	if OS.get_cmdline_user_args().has("--output-dir"):
+		return
+	for argument in OS.get_cmdline_args():
+		if String(argument).begins_with("--resolution"):
+			return
+	var screen := DisplayServer.window_get_current_screen()
+	var usable_rect := DisplayServer.screen_get_usable_rect(screen)
+	var current_size := DisplayServer.window_get_size()
+	var target_size := _clamped_window_size(current_size, usable_rect.size)
+	if target_size == current_size:
+		return
+	DisplayServer.window_set_size(target_size)
+	DisplayServer.window_set_position(usable_rect.position + (usable_rect.size - target_size) / 2)
+
+func _clamped_window_size(current_size: Vector2i, usable_size: Vector2i) -> Vector2i:
+	if current_size.x <= 0 or current_size.y <= 0 or usable_size.x <= 0 or usable_size.y <= 0:
+		return current_size
+	var fit_scale := minf(1.0, minf(float(usable_size.x) / float(current_size.x), float(usable_size.y) / float(current_size.y)))
+	return Vector2i(floori(float(current_size.x) * fit_scale), floori(float(current_size.y) * fit_scale))
+
+func _refresh_responsive_layout() -> void:
+	var compact := _report_viewport_size().x <= COMPACT_OPENING_WINDOW_WIDTH
+	if menu_columns != null:
+		menu_columns.set_compact(compact)
+	if intro_columns != null:
+		intro_columns.set_compact(compact)
 
 func _build_main_menu() -> void:
 	menu_layer = Control.new()
@@ -269,8 +308,12 @@ func _build_main_menu() -> void:
 	margin.add_theme_constant_override("margin_right", 36)
 	margin.add_theme_constant_override("margin_bottom", 32)
 	menu_layer.add_child(margin)
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 28)
+	menu_columns = ResponsiveColumns.new()
+	menu_columns.name = "MainMenuLayout"
+	menu_columns.separation = 28.0
+	menu_columns.first_ratio = 1.5
+	menu_columns.compact_visual_height = 220.0
+	var columns: Container = menu_columns
 	margin.add_child(columns)
 	var title_scene := TitleScene.new()
 	title_scene.custom_minimum_size = Vector2(420, 0)
@@ -278,6 +321,7 @@ func _build_main_menu() -> void:
 	title_scene.size_flags_stretch_ratio = 1.5
 	columns.add_child(title_scene)
 	var card := PanelContainer.new()
+	card.name = "MainMenuCard"
 	card.custom_minimum_size = Vector2(440, 0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.size_flags_stretch_ratio = 1.0
@@ -293,6 +337,7 @@ func _build_main_menu() -> void:
 	scroll.add_child(content)
 
 	var heading := Label.new()
+	heading.name = "MainMenuHeading"
 	heading.text = "CARAVAN LEDGER"
 	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	heading.add_theme_font_size_override("font_size", 24)
@@ -305,6 +350,7 @@ func _build_main_menu() -> void:
 	welcome.add_theme_color_override("font_color", Color("#c7b49a"))
 	content.add_child(welcome)
 	start_game_button = Button.new()
+	start_game_button.name = "MainMenuPrimaryAction"
 	start_game_button.text = "New Game"
 	start_game_button.custom_minimum_size = Vector2(0, 58)
 	start_game_button.tooltip_text = "Begin a new campaign, with an optional guided first caravan run."
@@ -487,8 +533,12 @@ func _build_intro() -> void:
 	margin.add_theme_constant_override("margin_right", 48)
 	margin.add_theme_constant_override("margin_bottom", 40)
 	intro_layer.add_child(margin)
-	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 30)
+	intro_columns = ResponsiveColumns.new()
+	intro_columns.name = "IntroductionLayout"
+	intro_columns.separation = 30.0
+	intro_columns.first_ratio = 1.55
+	intro_columns.compact_visual_height = 220.0
+	var columns: Container = intro_columns
 	margin.add_child(columns)
 	intro_scene = IntroScene.new()
 	intro_scene.custom_minimum_size = Vector2(620, 0)
@@ -496,6 +546,7 @@ func _build_intro() -> void:
 	intro_scene.size_flags_stretch_ratio = 1.55
 	columns.add_child(intro_scene)
 	var card := PanelContainer.new()
+	card.name = "IntroductionCard"
 	card.custom_minimum_size = Vector2(420, 0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(card)
@@ -503,19 +554,29 @@ func _build_intro() -> void:
 	content.add_theme_constant_override("separation", 18)
 	card.add_child(content)
 	intro_progress_label = Label.new()
+	intro_progress_label.name = "IntroductionProgress"
 	intro_progress_label.add_theme_color_override("font_color", Color("#d08b62"))
 	content.add_child(intro_progress_label)
 	intro_title_label = Label.new()
+	intro_title_label.name = "IntroductionTitle"
 	intro_title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_title_label.add_theme_font_size_override("font_size", 28)
 	intro_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
 	content.add_child(intro_title_label)
+	var body_scroll := ScrollContainer.new()
+	body_scroll.name = "IntroductionBodyScroll"
+	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	body_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body_scroll.custom_minimum_size = Vector2(0, 72)
+	content.add_child(body_scroll)
 	intro_body_label = Label.new()
+	intro_body_label.name = "IntroductionBody"
 	intro_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro_body_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	intro_body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro_body_label.add_theme_font_size_override("font_size", 18)
 	intro_body_label.add_theme_color_override("font_color", Color("#d9c6a2"))
-	content.add_child(intro_body_label)
+	body_scroll.add_child(intro_body_label)
 	var note := Label.new()
 	note.text = "The tutorial uses the real campaign, economy, events, and save. Guidance never grants cargo or changes an outcome."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -532,6 +593,7 @@ func _build_intro() -> void:
 	intro_back_button.pressed.connect(_on_intro_back_pressed)
 	buttons.add_child(intro_back_button)
 	intro_next_button = Button.new()
+	intro_next_button.name = "IntroductionPrimaryAction"
 	intro_next_button.text = "Next"
 	intro_next_button.custom_minimum_size = Vector2(0, 52)
 	intro_next_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -1061,6 +1123,7 @@ func _build_shop() -> void:
 	margin.add_child(columns)
 
 	var market_card := PanelContainer.new()
+	market_card.name = "BazaarMarketPanel"
 	market_card.custom_minimum_size = Vector2(690, 0)
 	market_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	market_card.size_flags_stretch_ratio = 1.8
@@ -1100,10 +1163,12 @@ func _build_shop() -> void:
 		bazaar_navigation.add_child(bazaar_button)
 		bazaar_navigation_buttons.append(bazaar_button)
 	shop_status_label = Label.new()
+	shop_status_label.name = "BazaarMarketStatus"
 	shop_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_status_label.add_theme_color_override("font_color", Color("#f0d2a0"))
 	market_shell.add_child(shop_status_label)
 	shop_cargo_label = Label.new()
+	shop_cargo_label.name = "BazaarCargoStatus"
 	shop_cargo_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_cargo_label.add_theme_color_override("font_color", Color("#f4e6c7"))
 	market_shell.add_child(shop_cargo_label)
@@ -1143,6 +1208,7 @@ func _build_shop() -> void:
 	shop_quantity.tooltip_text = "Controller: Left/Right changes quantity."
 	market.add_child(_labeled_control("Quantity", shop_quantity))
 	shop_market_preview_label = _forecast_label()
+	shop_market_preview_label.name = "BazaarPricePreview"
 	shop_market_preview_label.custom_minimum_size = Vector2(620, 152)
 	market.add_child(shop_market_preview_label)
 	shop_purchase_row = HBoxContainer.new()
@@ -1281,6 +1347,7 @@ func _build_shop() -> void:
 	next_step.add_theme_color_override("font_color", Color("#c7b49a"))
 	action_shell.add_child(next_step)
 	plan_departure_button = Button.new()
+	plan_departure_button.name = "BazaarPrimaryAction"
 	plan_departure_button.text = "Plan departure"
 	plan_departure_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	plan_departure_button.custom_minimum_size = Vector2(0, 56)
@@ -1359,6 +1426,7 @@ func _build_ui() -> void:
 	margin.add_child(columns)
 
 	var left := VBoxContainer.new()
+	left.name = "JourneyMapPanel"
 	left.custom_minimum_size = Vector2(700, 0)
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.size_flags_stretch_ratio = 1.7
@@ -1411,6 +1479,7 @@ func _build_ui() -> void:
 	left.add_child(log_label)
 
 	var right := PanelContainer.new()
+	right.name = "DeparturePanel"
 	right.custom_minimum_size = Vector2(360, 0)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.size_flags_stretch_ratio = 1.0
@@ -1498,6 +1567,7 @@ func _build_ui() -> void:
 	departure_planning_panel.add_child(route_preview_label)
 
 	event_card = PanelContainer.new()
+	event_card.name = "RoadEventPanel"
 	event_card.visible = false
 	controls.add_child(event_card)
 	var event_content := VBoxContainer.new()
@@ -1529,6 +1599,7 @@ func _build_ui() -> void:
 	event_choice_list.add_theme_constant_override("separation", 10)
 	event_content.add_child(event_choice_list)
 	conflict_outcome_panel = PanelContainer.new()
+	conflict_outcome_panel.name = "ArrivalDebriefPanel"
 	conflict_outcome_panel.visible = false
 	controls.add_child(conflict_outcome_panel)
 	conflict_outcome_label = Label.new()
@@ -1554,6 +1625,7 @@ func _build_ui() -> void:
 	departure_travel_actions.add_child(return_to_shop_button)
 
 	commit_departure_button = Button.new()
+	commit_departure_button.name = "DeparturePrimaryAction"
 	commit_departure_button.text = "Commit departure"
 	commit_departure_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	commit_departure_button.custom_minimum_size = Vector2(0, 56)
@@ -1563,6 +1635,7 @@ func _build_ui() -> void:
 	departure_travel_actions.add_child(commit_departure_button)
 
 	continue_journey_button = Button.new()
+	continue_journey_button.name = "RoadPrimaryAction"
 	continue_journey_button.text = "Continue along the road"
 	continue_journey_button.custom_minimum_size = Vector2(0, 52)
 	continue_journey_button.tooltip_text = "Leave the road view and continue to the next encounter or arrival."
@@ -1573,6 +1646,7 @@ func _build_ui() -> void:
 
 	arrival_pending = false
 	enter_settlement_button = Button.new()
+	enter_settlement_button.name = "ArrivalPrimaryAction"
 	enter_settlement_button.text = "Enter settlement"
 	enter_settlement_button.custom_minimum_size = Vector2(0, 48)
 	enter_settlement_button.tooltip_text = "Return to the central shop after reviewing the route outcome."
@@ -3774,6 +3848,7 @@ func _refresh_event_card() -> void:
 			continue
 		var choice: Dictionary = raw_choice
 		var button := _wrapped_action_button(92.0)
+		button.name = "RoadEventChoice%d" % event_choice_buttons.size()
 		var money_cost := int(choice.get("money_cost", 0))
 		var money_reward := int(choice.get("money_reward", 0))
 		var trade_mode := String(choice.get("trade_mode", "none"))
@@ -4235,6 +4310,47 @@ func _refresh_caravan_status() -> void:
 		caravan_context_label.text = "ARRIVAL\nNEXT — Review the journey result, then enter the settlement."
 	else:
 		caravan_context_label.text = "CARAVAN AT REST\nNEXT — Choose a destination and compare its roads."
+
+class ResponsiveColumns extends Container:
+	var compact := false
+	var separation := 24.0
+	var first_ratio := 1.5
+	var compact_visual_height := 220.0
+
+	func set_compact(enabled: bool) -> void:
+		if compact == enabled:
+			return
+		compact = enabled
+		update_minimum_size()
+		queue_sort()
+
+	func _get_minimum_size() -> Vector2:
+		return Vector2.ZERO
+
+	func _notification(what: int) -> void:
+		if what != NOTIFICATION_SORT_CHILDREN:
+			return
+		var controls: Array[Control] = []
+		for child in get_children():
+			if child is Control and child.visible:
+				controls.append(child)
+		if controls.is_empty():
+			return
+		if controls.size() == 1:
+			fit_child_in_rect(controls[0], Rect2(Vector2.ZERO, size))
+			return
+		var first := controls[0]
+		var second := controls[1]
+		if compact:
+			var first_height := minf(compact_visual_height, maxf(140.0, size.y * 0.42))
+			var second_height := maxf(0.0, size.y - first_height - separation)
+			fit_child_in_rect(first, Rect2(Vector2.ZERO, Vector2(size.x, first_height)))
+			fit_child_in_rect(second, Rect2(Vector2(0, first_height + separation), Vector2(size.x, second_height)))
+			return
+		var available_width := maxf(0.0, size.x - separation)
+		var first_width := available_width * first_ratio / (first_ratio + 1.0)
+		fit_child_in_rect(first, Rect2(Vector2.ZERO, Vector2(first_width, size.y)))
+		fit_child_in_rect(second, Rect2(Vector2(first_width + separation, 0), Vector2(available_width - first_width, size.y)))
 
 class TitleScene extends Control:
 	func _ready() -> void:

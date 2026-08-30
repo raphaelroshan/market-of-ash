@@ -5,6 +5,7 @@ const CAPTURE_SCREENS := [
 	"introduction_basin",
 	"introduction_caravan",
 	"introduction_road",
+	"introduction_road_large_text",
 	"settlement_shop",
 	"bazaar_jobs",
 	"pause",
@@ -70,9 +71,22 @@ func _run() -> void:
 	ui._on_new_game_pressed()
 	await _capture(ui, "introduction_basin", "introduction-basin")
 	ui._on_intro_next_pressed()
+	if ui.intro_page != 1:
+		push_error("Native capture could not advance to Introduction 2.")
+		quit(1)
+		return
 	await _capture(ui, "introduction_caravan", "introduction-caravan")
 	ui._on_intro_next_pressed()
+	if ui.intro_page != 2:
+		push_error("Native capture could not advance to Introduction 3.")
+		quit(1)
+		return
 	await _capture(ui, "introduction_road", "introduction-road")
+	ui.large_text_checkbox.set_pressed_no_signal(true)
+	ui._on_large_text_toggled(true)
+	await _capture(ui, "introduction_road_large_text", "introduction-road-large-text")
+	ui.large_text_checkbox.set_pressed_no_signal(false)
+	ui._on_large_text_toggled(false)
 	ui._on_intro_next_pressed()
 	await _capture(ui, "settlement_shop", "settlement-shop")
 	ui._on_bazaar_navigation_pressed("assignments")
@@ -267,6 +281,8 @@ func _parse_arguments() -> bool:
 func _capture(ui: Control, screen: String, file_stem: String) -> void:
 	await process_frame
 	await process_frame
+	RenderingServer.force_draw(false)
+	await process_frame
 	var image := root.get_texture().get_image()
 	if image == null or image.is_empty():
 		push_error("Native capture requires a real renderer; do not run this tool with --headless.")
@@ -302,6 +318,41 @@ func _layout_evidence(ui: Control) -> Dictionary:
 	var game_rect: Rect2 = ui.game_layer.get_global_rect()
 	var focused: Control = ui.get_viewport().gui_get_focus_owner()
 	var departure_scroll: ScrollContainer = ui.find_child("DepartureControlsScroll", true, false)
+	var active_layer: Control = ui.menu_layer if ui.menu_layer.visible else ui.intro_layer if ui.intro_layer.visible else ui.shop_layer if ui.shop_layer.visible else ui.game_layer
+	var required_controls := {}
+	for node_name in [
+		"MainMenuCard",
+		"MainMenuHeading",
+		"MainMenuPrimaryAction",
+		"IntroductionCard",
+		"IntroductionProgress",
+		"IntroductionTitle",
+		"IntroductionBodyScroll",
+		"IntroductionPrimaryAction",
+		"BazaarMarketPanel",
+		"ShopActionCard",
+		"BazaarMarketStatus",
+		"BazaarCargoStatus",
+		"BazaarPricePreview",
+		"BuyCargoButton",
+		"SellCargoButton",
+		"BazaarPrimaryAction",
+		"JourneyMapPanel",
+		"DeparturePanel",
+		"DepartureControlsScroll",
+		"DeparturePrimaryAction",
+		"RoadPrimaryAction",
+		"RoadEventPanel",
+		"ArrivalDebriefPanel",
+		"ArrivalPrimaryAction",
+		"JourneyResultScroll",
+	]:
+		var control: Control = ui.find_child(node_name, true, false)
+		if control != null:
+			required_controls[node_name] = {
+				"visible": control.is_visible_in_tree(),
+				"rect": _rect_data(control.get_global_rect()),
+			}
 	return {
 		"map_hint": {"x": hint_rect.position.x, "y": hint_rect.position.y, "width": hint_rect.size.x, "height": hint_rect.size.y},
 		"map_board": {"x": board_rect.position.x, "y": board_rect.position.y, "width": board_rect.size.x, "height": board_rect.size.y},
@@ -309,6 +360,9 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"game_layer": _rect_data(game_rect),
 		"focused": _rect_data(focused.get_global_rect()) if focused != null else {},
 		"departure_scroll": _rect_data(departure_scroll.get_global_rect()) if departure_scroll != null else {},
+		"active_layer": _rect_data(active_layer.get_global_rect()),
+		"required_controls": required_controls,
+		"opening_compact": (ui.menu_columns != null and ui.menu_columns.compact) or (ui.intro_columns != null and ui.intro_columns.compact),
 	}
 
 func _rect_data(rect: Rect2) -> Dictionary:

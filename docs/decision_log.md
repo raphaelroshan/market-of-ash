@@ -473,3 +473,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The adaptive-basin promise is incomplete if the replacement actor changes prices but disappears from the final verdict. Requiring a real post-activation market delivery and direct support makes the ending emerge from the same Bazaar → road → arrival loop as the rest of the game.
 
 **Trade-off:** This adds a fifth ending and gives it priority over the generic Free Caravan outcome when both qualify. The delivery threshold is deliberately narrow and should be revisited only with playtest evidence, not converted into a hidden score.
+
+## ADR-060: The desktop shell fits the display and reflows its opening panels
+
+**Decision:** Keep the authored 1600×900 desktop preference on displays that can contain it, but clamp the initial window to the current screen's usable area before constructing the interface. Retain the 1280×720 logical canvas for deterministic rendering and reflow the Main Menu and Introduction into stacked illustration-and-card compositions at the 960×540 minimum window. Bazaar, Departure, road, event, and arrival retain their established two-column decision surfaces, with deterministic capture assertions proving their required panels and primary actions stay inside the active layer.
+
+**Reason:** A preferred window larger than the available desktop can make an otherwise valid layout appear clipped before the player can resize it. The opening screens also need an intentional minimum-window composition rather than relying only on uniform canvas reduction, while the denser trade and route screens remain more readable in their proven side-by-side form.
+
+**Trade-off:** The minimum-window opening uses less illustration height and scrollable supporting copy so its primary action remains available. The simulation, command order, economy, and saved campaign state are unchanged.
