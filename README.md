@@ -56,6 +56,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/visual_evidence_gallery.md` | Versioned screenshots from the `v0.13.0-alpha-basin-vertical-slice` full-flow visual audit with provenance and limitations. |
 | `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/latest_test_report_2026-08-30.md` | Latest main-branch automated and visual smoke-test results, screenshots, findings, and next roadmap steps. |
+| `docs/latest_visual_review_2026-08-30.md` | Fresh latest-main visual review, exact build metadata, screenshots, findings, and execution priorities. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
 | `src/ui/main.gd` | Prototype UI and actionable procedural route map. Keep presentation logic here, not in the simulation. |
