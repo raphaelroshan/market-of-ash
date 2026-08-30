@@ -175,6 +175,101 @@ static func safest_affordable_recovery_route(world, available_money: int) -> Dic
 	return _safest_affordable_recovery_route(world, available_money)
 
 
+static func campaign_debrief(world) -> Dictionary:
+	if world == null or String(world.ending_id).is_empty():
+		return {}
+	var ending: Dictionary = MarketContent.ending(world.ending_id)
+	var route_lines: Array[String] = []
+	var trade_lines: Array[String] = []
+	var money_delta := 0
+	var provision_delta := 0
+	for command_value in world.command_history:
+		if typeof(command_value) != TYPE_DICTIONARY:
+			continue
+		var command: Dictionary = command_value
+		if not bool(command.get("ok", false)):
+			continue
+		var command_id := String(command.get("id", ""))
+		var inputs_value: Variant = command.get("inputs", {})
+		var delta_value: Variant = command.get("state_delta", {})
+		var inputs: Dictionary = inputs_value if typeof(inputs_value) == TYPE_DICTIONARY else {}
+		var delta: Dictionary = delta_value if typeof(delta_value) == TYPE_DICTIONARY else {}
+		money_delta += int(delta.get("money", 0))
+		provision_delta += int(delta.get("provisions", 0))
+		if command_id == "depart_route":
+			var route_id := String(inputs.get("route_id", ""))
+			var destination_id := String(inputs.get("destination_id", ""))
+			route_lines.append("Day %d · %s → %s · %d ashmarks · %d provision%s" % [int(command.get("day", world.day)), String(MarketContent.route(route_id).get("name", route_id)), String(world.settlement(destination_id).get("name", destination_id)), abs(int(delta.get("money", 0))), abs(int(delta.get("provisions", 0))), "" if abs(int(delta.get("provisions", 0))) == 1 else "s"])
+		elif command_id in ["buy_goods", "sell_goods"]:
+			var quantity := int(inputs.get("quantity", 0))
+			var good_id := String(inputs.get("good_id", "cargo"))
+			trade_lines.append("%s %d %s · %+d ashmarks" % ["Bought" if command_id == "buy_goods" else "Sold", quantity, good_id.capitalize(), int(delta.get("money", 0))])
+	var event_lines: Array[String] = []
+	for event_value in world.event_history:
+		if typeof(event_value) != TYPE_DICTIONARY:
+			continue
+		var event_record: Dictionary = event_value
+		var choice := _event_choice_from_record(event_record, String(event_record.get("choice_id", "")))
+		event_lines.append("%s — %s" % [String(event_record.get("title", "Road event")), String(choice.get("label", event_record.get("choice_id", "resolved")))])
+	var cargo_parts: Array[String] = []
+	for good_id_value in world.cargo.keys():
+		var good_id := String(good_id_value)
+		if good_id == "weight" or int(world.cargo.get(good_id_value, 0)) <= 0:
+			continue
+		cargo_parts.append("%s x%d" % [good_id.capitalize(), int(world.cargo.get(good_id_value, 0))])
+	var consequence_parts: Array[String] = [
+		"Wardens %+d" % int(world.reputation.get("wardens", 0)),
+		"Caravans %+d" % int(world.reputation.get("caravans", 0)),
+		"Reedwatch resilience %d/10" % world.resilience_for("reedwatch"),
+		"arms pressure %d/6" % world.arms_escalation,
+	]
+	var commons: Dictionary = world.emergent_faction("well_commons")
+	if not commons.is_empty():
+		consequence_parts.append("Well Commons support %+d" % int(commons.get("support", 0)))
+	var replay_experiment := _replay_experiment(world.ending_id)
+	var initial_money: int = world.money - money_delta
+	var initial_provisions: int = world.provisions - provision_delta
+	var timeline_text := "No roads taken." if route_lines.is_empty() else "\n".join(route_lines.slice(maxi(0, route_lines.size() - 6)))
+	var trade_text := "No market trades recorded." if trade_lines.is_empty() else "\n".join(trade_lines.slice(maxi(0, trade_lines.size() - 6)))
+	var event_text := "No roadside event changed this campaign." if event_lines.is_empty() else "\n".join(event_lines)
+	var held_text := "empty" if cargo_parts.is_empty() else ", ".join(cargo_parts)
+	var text := "CAMPAIGN DEBRIEF\n%s\n%s\n\nROUTE TIMELINE\n%s\n\nCARGO & CASH\n%s\nStarted with %d ashmarks; finished with %d (%+d). Hold: %s.\n\nTIME & PROVISIONS\nDay %d · %d → %d provisions (%+d).\n\nEVENT DECISIONS\n%s\n\nREGIONAL CONSEQUENCES\n%s\n\nCAUSAL LESSON\n%s\n\nREPLAY EXPERIMENT\n%s\nSeed %d fixes world rolls; a different command sequence creates the comparison." % [
+		String(ending.get("title", world.ending_id)),
+		String(world.ending_summary),
+		timeline_text,
+		trade_text,
+		initial_money,
+		world.money,
+		money_delta,
+		held_text,
+		world.day,
+		initial_provisions,
+		world.provisions,
+		provision_delta,
+		event_text,
+		" · ".join(consequence_parts),
+		String(world.ending_summary),
+		replay_experiment,
+		world.seed,
+	]
+	return {"text": text, "replay_experiment": replay_experiment, "route_count": route_lines.size(), "event_count": event_lines.size()}
+
+
+static func _replay_experiment(ending_id: String) -> String:
+	match ending_id:
+		"open_routes_relief":
+			return "Leave the first relief unanswered, meet the Well Commons response, and test whether ordinary charcoal deliveries can build a different basin."
+		"ending_commons_exchange":
+			return "Accept and complete Water Relief before Day 4, then compare public resilience with the Commons-led exchange."
+		"ending_warden_reserve":
+			return "Avoid Warden services, gather open-road information, and support a public water response instead."
+		"ending_free_caravan_routes":
+			return "Use the regulated Toll Road and Warden services, then compare predictable access with independent routes."
+		"ending_ash_merchant":
+			return "Trade for relief and settlement resilience instead of maximum cash, then compare the final public reserve."
+	return "Repeat the opening with a different cargo, road, and response to the first event."
+
+
 static func _event_choice_from_record(event_record: Dictionary, choice_id: String) -> Dictionary:
 	for raw_choice in event_record.get("choices", []):
 		if typeof(raw_choice) == TYPE_DICTIONARY and String(raw_choice.get("id", "")) == choice_id:
