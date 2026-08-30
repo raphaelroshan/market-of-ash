@@ -1087,7 +1087,7 @@ def main() -> int:
             if use_accessibility_actions:
                 select_accessibility_option(driver, "destination", "brine_cross")
             else:
-                select_game_option_value(driver, "destination", "destination", "brine_cross")
+                click_game_target(driver, "route_plan_brine_cross_toll_road")
             wait_for_ui_state(
                 driver,
                 "departure_desk",

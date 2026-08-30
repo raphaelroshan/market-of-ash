@@ -55,10 +55,9 @@ func _run() -> void:
 	_expect(reached_plan, "D-pad Down should reach Plan departure without becoming trapped on a dynamic Shop action")
 	var shop_state := JSON.stringify(ui.world.serialize())
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "controller Accept should open Departure and focus Destination")
-	for _step in range(3):
-		await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.cargo_quantity.get_line_edit(), "D-pad Down should reach the Departure forecast quantity")
+	_expect(ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.route_comparison_buttons[0], "controller Accept should open Departure and focus the selected itinerary")
+	await _press_joypad(JOY_BUTTON_DPAD_UP)
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.cargo_quantity.get_line_edit(), "D-pad Up should move from the selected itinerary to forecast quantity")
 	var starting_forecast_quantity: float = ui.cargo_quantity.value
 	await _press_joypad(JOY_BUTTON_DPAD_RIGHT)
 	_expect(ui.cargo_quantity.value == starting_forecast_quantity + 1.0 and ui.get_viewport().gui_get_focus_owner() == ui.cargo_quantity.get_line_edit(), "D-pad Right should increase forecast quantity without moving focus")
@@ -96,21 +95,25 @@ func _run() -> void:
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(int(ui.world.cargo.get("medicine", 0)) == 2 and ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "controller Accept should buy Medicine and follow the success handoff to Plan departure")
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.destination_option, "controller Accept should reopen Departure after buying cargo")
-	await _press_joypad(JOY_BUTTON_A)
-	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	_expect(ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.route_comparison_buttons[0], "controller Accept should reopen Departure on the selected itinerary")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "controller option navigation should select Brine Cross and its legal Toll Road")
-	for _step in range(4):
+	var reached_commit := false
+	for _step in range(12):
+		if ui.get_viewport().gui_get_focus_owner() == ui.commit_departure_button:
+			reached_commit = true
+			break
 		await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.commit_departure_button, "controller focus should reach Commit departure")
+	_expect(reached_commit, "controller focus should traverse route comparisons and reach Commit departure")
+	if not reached_commit:
+		ui.commit_departure_button.grab_focus()
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui.world.pending_event.get("id", "") == "gatekeepers_chalk" and ui._current_ui_state_id() == "route_travel", "controller Commit should enter the road before revealing Gatekeeper's Chalk")
 	ui.map_panel._process(2.0)
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.continue_journey_button, "controller road arrival should focus Continue journey")
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "controller Continue should reveal Gatekeeper's Chalk and focus its first available response")
+	_expect(not ui.event_choice_buttons.is_empty() and ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "controller Continue should reveal Gatekeeper's Chalk and focus its first available response")
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui.world.pending_event.is_empty() and ui.arrival_pending and ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "controller Accept should resolve the route event and focus Enter settlement")
 	await _press_joypad(JOY_BUTTON_A)

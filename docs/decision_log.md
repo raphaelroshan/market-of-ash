@@ -497,3 +497,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The vertical slice now has enough decision surfaces that keeping presentation derivation inside one scene controller makes the full loop difficult to test and risky to extend. Pure presenter outputs can be regression-tested without constructing the entire scene and make later route-comparison and authored-event improvements local changes.
 
 **Trade-off:** Presenters are still aware of the current world-state query API and authored content IDs. This is an extraction seam rather than a new domain layer; no forecast is cached, no command is issued, and no simulation rule is duplicated outside the core.
+
+## ADR-063: Departure compares every legal itinerary before commitment
+
+**Decision:** Add a selectable two-column itinerary board to the Departure Desk. Every legal destination-and-route pair from the current settlement remains visible, including unfavorable forecasts, and each card uses the existing economy preview to show fee, days, provisions, cargo opportunity, risk, field-confidence language, and expected net consequence. Selecting a card updates the existing destination and route controls; only the existing Commit action spends resources.
+
+**Reason:** A route dropdown reveals one option at a time and makes the player reconstruct tradeoffs from memory. The Frontier-inspired travel loop depends on choosing a road with clear costs and consequences before leaving, so alternatives need to be comparable in one stable decision surface.
+
+**Trade-off:** The slice compares direct legal itineraries rather than pathfinding across multiple legs. At compact sizes the board wraps to additional rows inside the existing planning scroll, while the selected detailed forecast and pinned commit action remain unchanged.
