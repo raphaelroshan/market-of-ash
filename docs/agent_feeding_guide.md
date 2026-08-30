@@ -12,6 +12,22 @@ Use a strong coding model for architecture, gameplay systems, debugging, and mul
 
 Do not use a model as the sole judge of visual quality. Have the coding agent launch the game and capture its own verification evidence, then conduct a separate human or visual review of screenshots and gameplay. A model can confirm that a node exists; it cannot reliably decide whether the market screen is pleasant, legible, or emotionally persuasive without seeing the result.
 
+## Active game-quality feed order
+
+Human testing is an optional confidence and calibration layer, not a prerequisite for implementation. Agents should proceed through the deterministic and visual quality sequence below using scripted launches, screenshot inspection, bounds assertions, and replay checks.
+
+1. **Responsive shell repair:** fix Introduction, Bazaar, Departure, event, and arrival/debrief layout at 1280×720, 1600×900, minimum width, large text, and controller focus.
+2. **Bazaar decision hierarchy:** make local need, selected cargo, destination value, route risk, cash, capacity, and next action explicit while preserving ordinary buying and selling as a complete path.
+3. **Panel extraction:** separate presentation panels from `src/ui/main.gd` without moving simulation ownership or changing commands.
+4. **Route comparison:** present fee, days, provisions, value, risk, and uncertainty side by side without auto-selecting a route.
+5. **Complete journey beat:** prove Introduction → Bazaar → Departure → road → event/contact → arrival receipt → return Bazaar with save-safe, skippable, reduced-motion-compatible transitions.
+6. **Settlement identity:** deepen existing locations through data-driven visual and operational differences before adding new settlements.
+7. **Adaptive opportunity:** make ignored or failed scenarios produce replacement traders, factions, shortages, or routes rather than dead ends.
+8. **One complete event slice:** take one existing event from data through command, save/load, consequence, debrief, and evidence.
+9. **Private-alpha hardening:** run the full suite, capture a complete 1600×900 journey, verify clean install and persistence, and record known limitations.
+
+For every feed, require changed files, acceptance checks, test output, screenshot paths, and a short player-facing explanation. Do not add new goods, factions, currencies, or endings while a required action is clipped or the ordinary trade loop is incomplete.
+
 ## The persistent context prompt
 
 Give the main coding agent this context at the start of a project or fresh session:
