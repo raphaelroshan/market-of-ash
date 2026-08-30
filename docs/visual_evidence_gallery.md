@@ -91,3 +91,13 @@ The follow-up audit found that a hypothetical route forecast could look like car
 ![Departure plan at Large text](visual_evidence/v0.13.1-alpha-basin-vertical-slice/departure-empty-plan-large-text-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.1-alpha-basin-vertical-slice/README.md).
+
+## 0.13.2 Large-text route selection patch
+
+The constrained-window follow-up found that Large text could clip the selected card's literal `SELECTED` label. The patch restores the textual state without removing route consequences or displacing the pinned actions.
+
+![Selected route remains explicit at 1600×900](visual_evidence/v0.13.2-alpha-basin-vertical-slice/departure-selected-large-text-1600x900.png)
+
+![Selected route remains explicit at 1280×720](visual_evidence/v0.13.2-alpha-basin-vertical-slice/departure-selected-large-text-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.2-alpha-basin-vertical-slice/README.md).

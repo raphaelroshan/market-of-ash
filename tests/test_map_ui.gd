@@ -546,7 +546,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.1-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.2-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
@@ -603,7 +603,7 @@ func _initialize() -> void:
 	_expect(ui.route_comparison_grid != null and ui.route_comparison_grid.columns == 2 and ui.route_comparison_buttons.size() == 3, "departure desk should compare every legal Ashgate itinerary in a two-column board")
 	_expect(not ui._web_ui_state().get("targets", {}).get("route_plan_brine_cross_toll_road", {}).is_empty(), "Web pointer testing should expose the visible Brine Cross itinerary card as a stable target")
 	for route_card in ui.route_comparison_buttons:
-		_expect(route_card.text.contains("FEE") and route_card.text.contains("TIME") and route_card.text.contains("SUPPLY") and route_card.text.contains("PLAN Water x2") and route_card.text.contains("HELD 2") and route_card.text.contains("VALUE") and route_card.text.contains("RISK") and route_card.text.contains("CONF") and route_card.text.contains("NET") and route_card.text.contains("READY"), "route card should distinguish its loaded plan while showing fee, time, provisions, cargo value, risk, confidence, and consequence")
+		_expect(route_card.text.contains("FEE") and route_card.text.contains("DAY") and route_card.text.contains("PROV") and route_card.text.contains("PLAN Water x2") and route_card.text.contains("HELD 2") and route_card.text.contains("VALUE") and route_card.text.contains("RISK") and route_card.text.contains("CONF") and route_card.text.contains("NET") and route_card.text.contains("READY"), "route card should distinguish its loaded plan while showing fee, time, provisions, cargo value, risk, confidence, and consequence")
 	ui.route_comparison_buttons[1].emit_signal("pressed")
 	_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "selecting a comparison card should update the existing route plan without committing travel")
 	ui._on_route_comparison_pressed("reedwatch", "old_road")
@@ -1088,6 +1088,7 @@ func _initialize() -> void:
 	ui._on_guided_test_action()
 	ui._on_plan_departure_pressed()
 	await process_frame
+	_expect(ui.route_comparison_buttons[0].custom_minimum_size.y >= 260.0 and ui.route_comparison_buttons[0].text.begins_with("SELECTED\n") and ui.route_comparison_buttons[0].text.contains("FEE 4 · DAY 1 · PROV 1"), "Large text should reserve a compact itinerary card that preserves the selected-state label and route costs")
 	var scaled_map_hint: Label = ui.find_child("MapHint", true, false)
 	var scaled_board_rect: Rect2 = ui.map_panel._board_rect().grow(8.0)
 	_expect(scaled_map_hint != null and scaled_board_rect.position.y >= scaled_map_hint.get_global_rect().end.y + 8.0, "large text should reserve vertical space between the departure summary and map: hint %s, board %s" % [scaled_map_hint.get_global_rect() if scaled_map_hint else Rect2(), scaled_board_rect])

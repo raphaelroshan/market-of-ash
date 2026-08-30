@@ -1,36 +1,36 @@
-# Market of Ash — Departure Clarity Patch Test Report
+# Market of Ash — Large-Text Route Selection Patch Test Report
 
 ## Candidate
 
 | Field | Result |
 |---|---|
-| Release | `v0.13.1-alpha-basin-vertical-slice` |
+| Release | `v0.13.2-alpha-basin-vertical-slice` |
 | Engine | Godot 4.4.1 |
-| Scope | First-time Departure forecast comprehension |
+| Scope | Departure selection visibility with Large text |
 | Simulation impact | None; presentation only |
 
 ## Finding
 
-The released 0.13.0 Departure screen could show `CARGO 60 → 128` and `NET +48` beside `Cargo: empty`. Although the detailed forecast later explained the selected quantity versus the actual hold, the comparison card itself could be read as value already aboard. The commit action also did not repeat that the selected forecast load was absent.
+The 0.13.1 clarity patch correctly separated planned cargo from the actual hold, but its taller itinerary copy exposed a constrained-window issue: at 1280×720 with Large text, the selected card could clip the literal `SELECTED` line. The border still changed, but selection could no longer be understood from text alone.
 
 ## Resolution
 
-The comparison card now says `PLAN Water x4 · HELD 0`, labels the result `IF BOUGHT`, and retains the profit/loss consequence. The committing action says `Set out without planned load` while leaving empty travel legal. Once the planned quantity is held, the same cards say `READY` and the conventional confirmation label returns.
+Large-text itinerary cards now receive additional vertical capacity, including cards already present when the setting is toggled. Compact `DAY` and `PROV` labels reduce wrapping while retaining every disclosed cost. The selected card again begins with `SELECTED`, and the return and commitment actions remain pinned below the scrollable comparison.
 
 ## Evidence
 
-The affected state passed the real-renderer capture validator at 1280×720 and 1600×900, including Large text. Curated images and capture provenance are under [`docs/visual_evidence/v0.13.1-alpha-basin-vertical-slice/`](visual_evidence/v0.13.1-alpha-basin-vertical-slice/).
+The affected state passed the real-renderer capture validator at 1280×720 and 1600×900 with Large text. Curated images and capture provenance are under [`docs/visual_evidence/v0.13.2-alpha-basin-vertical-slice/`](visual_evidence/v0.13.2-alpha-basin-vertical-slice/).
 
-![Unloaded Departure plan at 1600×900](visual_evidence/v0.13.1-alpha-basin-vertical-slice/departure-empty-plan-1600x900.png)
+![Selected Departure route with Large text at 1600×900](visual_evidence/v0.13.2-alpha-basin-vertical-slice/departure-selected-large-text-1600x900.png)
 
-![Unloaded Departure plan with Large text at 1280×720](visual_evidence/v0.13.1-alpha-basin-vertical-slice/departure-empty-plan-large-text-1280x720.png)
+![Selected Departure route with Large text at 1280×720](visual_evidence/v0.13.2-alpha-basin-vertical-slice/departure-selected-large-text-1280x720.png)
 
 ## Verification
 
-- Presenter regressions cover unloaded `IF BOUGHT` and loaded `READY` states.
-- The UI smoke enters Departure from an empty Bazaar, checks the cards and commit copy, returns without mutation, then later confirms the loaded path.
+- Presenter regressions cover unloaded `IF BOUGHT`, loaded `READY`, and the compact route labels.
+- The UI smoke enters Departure from an empty Bazaar, enables Large text, and verifies card height, the explicit selection label, route costs, and pinned actions.
 - The complete repository verification suite passes locally; packaged Linux, Windows, native-render, and browser CI remain the merge gate.
 
 ## Interpretation
 
-This is an evidence-backed interface correction from an agent-led clean-flow audit, not a substitute for a moderated human session. It removes one observable ambiguity before that session.
+This is an evidence-backed accessibility correction from an agent-led clean-flow audit, not a substitute for a moderated human session. It preserves redundant selection communication before that session.

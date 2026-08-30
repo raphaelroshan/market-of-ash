@@ -53,7 +53,7 @@ static func route_comparison_views(world, good_id: String, quantity: int, select
 				"destination_id": destination_id,
 				"route_id": route_id,
 				"selected": selected,
-				"text": "%s%s\n%s\nFEE %d · TIME %dD · SUPPLY %dP\nPLAN %s x%d · HELD %d\nVALUE %d → %d · GROSS %+d\nRISK %d%% · CONF %s\nNET %+d · %s / %s" % [
+				"text": "%s%s\n%s\nFEE %d · DAY %d · PROV %d\nPLAN %s x%d · HELD %d\nVALUE %d→%d · GROSS %+d\nRISK %d%% · CONF %s\nNET %+d · %s / %s" % [
 					"SELECTED\n" if selected else "",
 					String(destination.get("name", destination_id)).to_upper(),
 					String(route.get("name", route_id)),
