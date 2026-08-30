@@ -81,3 +81,13 @@ The manifests validate that required controls remain inside the active layer. Sc
 ## Use and limits
 
 This set is suitable for test instructions, development history, and an alpha production journal. It is not final key art. The source remains procedural and replaceable, and the release notes retain the remaining human hardware, accessibility, comprehension, and storefront gates.
+
+## 0.13.1 Departure clarity patch
+
+The follow-up audit found that a hypothetical route forecast could look like cargo already aboard. The patch evidence records the empty-hold state at normal and Large text sizes.
+
+![Departure plan distinguishes held cargo](visual_evidence/v0.13.1-alpha-basin-vertical-slice/departure-empty-plan-1600x900.png)
+
+![Departure plan at Large text](visual_evidence/v0.13.1-alpha-basin-vertical-slice/departure-empty-plan-large-text-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.1-alpha-basin-vertical-slice/README.md).

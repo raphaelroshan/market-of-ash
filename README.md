@@ -8,7 +8,7 @@ The repository contains a complete, replayable alpha vertical slice presented as
 
 The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, create and validate a single-file portable Windows ZIP, clean-extract and launch-smoke that executable, and upload GUI evidence, checksums, provenance, and a source snapshot.
 
-The current public test build is [`v0.13.0-alpha-basin-vertical-slice`](docs/releases/v0.13.0-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
+The current public test build is [`v0.13.1-alpha-basin-vertical-slice`](docs/releases/v0.13.1-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
 
 ## Run the prototype
 
@@ -53,10 +53,11 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/economy/path_reward_balance.md` | Feed D contract for comparing ordinary, contract, civic, and faction value without hiding non-cash tradeoffs. |
 | `docs/scenarios/well_commons_response.md` | Feed B state-machine and replacement-market contract for ignored or failed Reedwatch relief. |
 | `docs/implementation_status.md` | Current implementation, verification evidence, and remaining manual gates. |
-| `docs/visual_evidence_gallery.md` | Versioned screenshots from the `v0.13.0-alpha-basin-vertical-slice` full-flow visual audit with provenance and limitations. |
+| `docs/visual_evidence_gallery.md` | Versioned full-flow and clarity-patch screenshots with provenance and limitations. |
 | `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/latest_test_report_2026-08-30.md` | Latest main-branch automated and visual smoke-test results, screenshots, findings, and next roadmap steps. |
-| `docs/latest_visual_review_2026-08-30.md` | Fresh latest-main visual review, exact build metadata, screenshots, findings, and execution priorities. |
+| `docs/latest_visual_review_2026-08-30.md` | Historical post-release capture that recorded the pre-M1 opening-shell clipping seen by its Xvfb launch path. |
+| `docs/latest_test_report_2026-08-31.md` | Latest automated and visual test results, finding, correction, screenshots, and remaining human gate. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
 | `src/ui/main.gd` | Prototype UI and actionable procedural route map. Keep presentation logic here, not in the simulation. |

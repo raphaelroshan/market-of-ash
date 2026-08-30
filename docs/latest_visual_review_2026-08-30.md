@@ -1,5 +1,7 @@
 # Market of Ash — Latest Visual Review
 
+> **Superseded capture note (2026-08-31):** This review preserved an Xvfb screenshot path that cropped the authored desktop window rather than the validated 1280×720 client viewport. Its clipping finding and proposed M1–M6 sequence are historical, not the current backlog: M1–M10 subsequently passed native and packaged-browser bounds checks. See [`latest_test_report_2026-08-31.md`](latest_test_report_2026-08-31.md) for the current finding and patch evidence.
+
 **Build:** `v0.13.0-alpha-basin-vertical-slice`
 
 **Branch:** `origin/main`

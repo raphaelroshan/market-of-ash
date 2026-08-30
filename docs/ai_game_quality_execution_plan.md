@@ -1,6 +1,6 @@
 # Market of Ash — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.13.0-alpha-basin-vertical-slice` and later
+**Applies to:** `v0.13.1-alpha-basin-vertical-slice` and later
 
 **Purpose:** Move the game from a technically sound deterministic prototype toward a presentable vertical slice. Automated tests, scripted launches, screenshot inspection, and deterministic replay evidence are the active development gates. Human playtesting is valuable later, but it is not a prerequisite for the following work.
 
@@ -25,7 +25,7 @@ The game must preserve two equally legitimate ways to play: ordinary buying and 
 | **M9** | Compose outcomes and replay | Debrief route, cargo, event, profit/loss, political pressure, and consequence. Offer a replay experiment without requiring one canonical ending. |
 | **M10** | Package the private alpha | Run all verification suites, capture a complete 1600×900 journey, check 1280×720 and large text, verify clean install and save migration, and publish an internal artifact with known limitations. Human sessions remain optional follow-up evidence. |
 
-**Progress:** M1–M10 are implemented for the automated vertical-slice scope. The responsive shell, Bazaar decision card, extracted presenters, selectable all-itinerary Departure comparison, mandatory road beat, data-driven settlement identity, adaptive Well Commons response, complete Last Clean Barrel event, and causal campaign debrief are all integrated. The `v0.13.0-alpha-basin-vertical-slice` candidate is versioned for a clean portable Windows package, complete 1600×900 journey evidence, 1280×720 and Large text coverage, save migration/recovery checks, browser verification, and an honest limitations record. Physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated human-playtest evidence remain external follow-up gates rather than unverified claims.
+**Progress:** M1–M10 are implemented for the automated vertical-slice scope. The responsive shell, Bazaar decision card, extracted presenters, selectable all-itinerary Departure comparison, mandatory road beat, data-driven settlement identity, adaptive Well Commons response, complete Last Clean Barrel event, and causal campaign debrief are all integrated. The `v0.13.1-alpha-basin-vertical-slice` patch additionally distinguishes hypothetical itinerary value from cargo actually held and labels unloaded departure explicitly. The candidate retains clean portable Windows packaging, complete 1600×900 journey evidence, 1280×720 and Large text coverage, save migration/recovery checks, browser verification, and an honest limitations record. Physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated human-playtest evidence remain external follow-up gates rather than unverified claims.
 
 ## Acceptance tests for every AI task
 
@@ -43,12 +43,12 @@ Market of Ash is ready for a private alpha when the complete journey can be play
 
 ## Historical evidence
 
-The latest automated and visual findings are recorded in [`latest_visual_review_2026-08-30.md`](latest_visual_review_2026-08-30.md) and [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), with screenshots in the versioned `docs/visual_evidence/` directories. The primary quality contract remains [`game_quality_vertical_slice_roadmap.md`](game_quality_vertical_slice_roadmap.md).
+The latest finding and correction are recorded in [`latest_test_report_2026-08-31.md`](latest_test_report_2026-08-31.md). [`latest_visual_review_2026-08-30.md`](latest_visual_review_2026-08-30.md) preserves the earlier Xvfb opening-shell finding that M1 subsequently repaired, and [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md) records the completed 0.13.0 journey audit. Screenshots remain in the versioned `docs/visual_evidence/` directories. The primary quality contract is [`game_quality_vertical_slice_roadmap.md`](game_quality_vertical_slice_roadmap.md).
 
 ## References
 
 [1]: game_quality_vertical_slice_roadmap.md "Market of Ash Game-Quality Vertical-Slice Roadmap"
 [2]: design/nonlinear_trade_and_adaptive_basin_addendum.md "Market of Ash Open Trade and Adaptive Basin Addendum"
-[3]: latest_test_report_2026-08-30.md "Market of Ash Latest Main Test Report"
+[3]: latest_test_report_2026-08-31.md "Market of Ash Departure Clarity Patch Test Report"
 
 The source documents are internal repository contracts and are intentionally versioned with the game.
