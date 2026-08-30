@@ -529,3 +529,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A testable vertical slice needs a reproducible artifact and evidence trail, not only a passing development branch. Binding package, visuals, source, and checksums to one tag lets testers report against the exact game they ran and prevents automated coverage from being mistaken for human or storefront certification.
 
 **Trade-off:** The portable package has no installer, signing certificate, auto-update channel, or storefront integration. Public prerelease availability does not remove the roadmap's physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated-comprehension gates.
+
+## ADR-067: Itinerary cards distinguish a forecast plan from carried cargo
+
+**Decision:** Every Departure itinerary card names the selected cargo plan and the quantity actually held. When the hold contains less than the forecast quantity, the card labels its net as `IF BOUGHT` and the tooltip states the exact shortfall; when covered, it labels the plan `READY`. Empty travel remains legal and the authoritative route command is unchanged.
+
+**Reason:** A positive cargo and net forecast beside an empty hold can read as value already aboard, especially to a first-time player scanning the comparison board before the detailed load check. The route forecast is useful as a hypothetical shopping plan, but its status must be visible on the card where the value appears.
+
+**Trade-off:** The cards gain one compact line and therefore use slightly more vertical space inside the existing scrollable planning rail. They still compare every legal itinerary and do not turn the forecast into an automatic purchase or a departure gate.

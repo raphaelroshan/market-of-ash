@@ -267,6 +267,13 @@ func _initialize() -> void:
 	_expect(ui.shop_decision_summary_label.text.contains("WHY — Licensed cistern releases") and ui.shop_decision_summary_label.text.contains("→ Frontier wells run low"), "the first Bazaar should connect the selected local source to the destination need")
 	_expect(ui.shop_decision_summary_label.text.contains("VALUE — buy 30 · sell 64 · road 4 · expected +14 ashmarks") and ui.shop_decision_summary_label.text.contains("ROAD / CAPACITY — Old Road · 1 provision · 35% exposed-unit risk"), "the first Bazaar should expose destination value and route burden in one summary")
 	_expect(ui.shop_decision_summary_label.text.contains("120 ashmarks available · hold 0/12 → 2/12") and ui.shop_decision_summary_label.text.contains("NEXT — Buy 2 Water, then Plan departure"), "the first Bazaar should expose current buying power, capacity, and next action")
+	var unloaded_shop_state := JSON.stringify(ui.world.serialize())
+	ui._on_plan_departure_pressed()
+	_expect(ui.commit_departure_button.text.contains("Set out without planned load") and ui.commit_departure_button.text.contains("4 ashmarks") and ui.commit_departure_button.tooltip_text.contains("Water x2 forecast is hypothetical") and ui.commit_departure_button.tooltip_text.contains("0 is held"), "an unloaded departure should remain legal while the commit action states that the selected forecast is not aboard")
+	for unloaded_route_card in ui.route_comparison_buttons:
+		_expect(unloaded_route_card.text.contains("PLAN Water x2") and unloaded_route_card.text.contains("HELD 0") and unloaded_route_card.text.contains("IF BOUGHT"), "an unloaded Departure card should not present hypothetical trade value as carried cargo")
+	ui._on_return_to_shop_pressed()
+	_expect(JSON.stringify(ui.world.serialize()) == unloaded_shop_state and ui.shop_layer.visible, "reviewing an unloaded itinerary and returning should preserve the Bazaar and authoritative state")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_market_preview_label.text.contains("ORDINARY TRADE — NO CONTRACT REQUIRED") and ui.shop_market_preview_label.text.contains("Ashgate → Reedwatch via Old Road"), "shop did not frame the selected journey as optional ordinary trade")
 	_expect(ui.shop_market_preview_label.text.contains("SOURCE — Licensed cistern releases") and ui.shop_market_preview_label.text.contains("NEED — Frontier wells run low"), "shop did not connect authored production and consumption to the selected trade")
@@ -539,7 +546,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.0-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.1-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
@@ -596,7 +603,7 @@ func _initialize() -> void:
 	_expect(ui.route_comparison_grid != null and ui.route_comparison_grid.columns == 2 and ui.route_comparison_buttons.size() == 3, "departure desk should compare every legal Ashgate itinerary in a two-column board")
 	_expect(not ui._web_ui_state().get("targets", {}).get("route_plan_brine_cross_toll_road", {}).is_empty(), "Web pointer testing should expose the visible Brine Cross itinerary card as a stable target")
 	for route_card in ui.route_comparison_buttons:
-		_expect(route_card.text.contains("FEE") and route_card.text.contains("TIME") and route_card.text.contains("SUPPLY") and route_card.text.contains("CARGO") and route_card.text.contains("RISK") and route_card.text.contains("CONF") and route_card.text.contains("NET"), "route card should show fee, time, provisions, cargo opportunity, risk, confidence, and consequence")
+		_expect(route_card.text.contains("FEE") and route_card.text.contains("TIME") and route_card.text.contains("SUPPLY") and route_card.text.contains("PLAN Water x2") and route_card.text.contains("HELD 2") and route_card.text.contains("VALUE") and route_card.text.contains("RISK") and route_card.text.contains("CONF") and route_card.text.contains("NET") and route_card.text.contains("READY"), "route card should distinguish its loaded plan while showing fee, time, provisions, cargo value, risk, confidence, and consequence")
 	ui.route_comparison_buttons[1].emit_signal("pressed")
 	_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "selecting a comparison card should update the existing route plan without committing travel")
 	ui._on_route_comparison_pressed("reedwatch", "old_road")

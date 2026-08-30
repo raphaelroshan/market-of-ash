@@ -42,26 +42,37 @@ static func route_comparison_views(world, good_id: String, quantity: int, select
 				confidence_label = "NONE"
 			var risk_percent := int(round(float(preview.get("risk", 0.0)) * 100.0))
 			var selected := destination_id == selected_destination_id and route_id == selected_route_id
+			var held_quantity := int(world.cargo.get(good_id, 0))
+			var shortfall := maxi(0, quantity - held_quantity)
+			var readiness_label := "READY"
+			var readiness_detail := "The hold carries at least the planned %d %s." % [quantity, good_id.capitalize()]
+			if shortfall > 0:
+				readiness_label = "IF BOUGHT"
+				readiness_detail = "Hypothetical %s x%d forecast: the hold has %d. Buy %d before leaving to carry this plan; empty travel remains legal." % [good_id.capitalize(), quantity, held_quantity, shortfall]
 			views.append({
 				"destination_id": destination_id,
 				"route_id": route_id,
 				"selected": selected,
-				"text": "%s%s\n%s\nFEE %d · TIME %dD · SUPPLY %dP\nCARGO %d → %d · GROSS %+d\nRISK %d%% · CONF %s\nNET %+d · %s" % [
+				"text": "%s%s\n%s\nFEE %d · TIME %dD · SUPPLY %dP\nPLAN %s x%d · HELD %d\nVALUE %d → %d · GROSS %+d\nRISK %d%% · CONF %s\nNET %+d · %s / %s" % [
 					"SELECTED\n" if selected else "",
 					String(destination.get("name", destination_id)).to_upper(),
 					String(route.get("name", route_id)),
 					int(preview.get("route_cost", 0)),
 					int(route.get("days", 0)),
 					int(preview.get("provisions", 0)),
+					good_id.capitalize(),
+					quantity,
+					held_quantity,
 					int(preview.get("purchase_total", 0)),
 					int(preview.get("sale_total", 0)),
 					int(preview.get("gross_trade_margin", 0)),
 					risk_percent,
 					confidence_label,
 					net,
+					readiness_label,
 					consequence_label,
 				],
-				"tooltip": "%s via %s. %s" % [String(destination.get("name", destination_id)), String(route.get("name", route_id)), consequence],
+				"tooltip": "%s via %s. %s %s" % [String(destination.get("name", destination_id)), String(route.get("name", route_id)), readiness_detail, consequence],
 			})
 	return views
 

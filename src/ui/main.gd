@@ -1626,7 +1626,7 @@ func _build_ui() -> void:
 	departure_planning_panel.add_child(_labeled_control("Forecast quantity", cargo_quantity))
 
 	var comparison_title := Label.new()
-	comparison_title.text = "COMPARE EVERY OPEN ITINERARY · FEE / TIME / SUPPLY / RISK / CONFIDENCE / NET"
+	comparison_title.text = "COMPARE EVERY OPEN ITINERARY · PLAN / HELD / FEE / TIME / SUPPLY / RISK / CONFIDENCE / NET"
 	comparison_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	comparison_title.add_theme_font_size_override("font_size", 13)
 	comparison_title.add_theme_color_override("font_color", Color("#d08b62"))
@@ -2037,7 +2037,7 @@ func _refresh_route_comparison(world_context: Dictionary) -> void:
 		button.tooltip_text = String(view.get("tooltip", ""))
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.custom_minimum_size = Vector2(158, 184)
+		button.custom_minimum_size = Vector2(158, 200)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.add_theme_font_size_override("font_size", 16 if large_text_enabled else 14)
 		button.toggle_mode = true
@@ -3311,7 +3311,14 @@ func _refresh_forecasts() -> void:
 	if commit_departure_button:
 		var provision_count := int(selected_route.get("provisions", 0))
 		var provision_label := "provision" if provision_count == 1 else "provisions"
-		commit_departure_button.text = "Confirm and set out — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
+		var held_selected_quantity := int(world.cargo.get(good_id, 0))
+		if held_selected_quantity < quantity:
+			var load_state := "without planned load" if held_selected_quantity == 0 else "with partial plan %d/%d" % [held_selected_quantity, quantity]
+			commit_departure_button.text = "Set out %s — %d ashmarks · %d %s" % [load_state, int(selected_route.get("cost", 0)), provision_count, provision_label]
+			commit_departure_button.tooltip_text = "Departure carries the actual hold. The %s x%d forecast is hypothetical; %d is held. Return to the shop to load the full plan." % [good_id.capitalize(), quantity, held_selected_quantity]
+		else:
+			commit_departure_button.text = "Confirm and set out — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
+			commit_departure_button.tooltip_text = "Commit this route with the current hold and spend the disclosed fee and provisions."
 	route_preview_label.text = TradePresenter.route_preview_text(world, good_id, quantity, origin, destination, selected_route, world_context)
 
 func _on_buy_pressed() -> void:
