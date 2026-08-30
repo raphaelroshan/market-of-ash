@@ -43,7 +43,7 @@ Market of Ash is ready for a private alpha when the complete journey can be play
 
 ## Historical evidence
 
-The latest automated and visual findings are recorded in [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), with screenshots in the versioned `docs/visual_evidence/` directories. The primary quality contract remains [`game_quality_vertical_slice_roadmap.md`](game_quality_vertical_slice_roadmap.md).
+The latest automated and visual findings are recorded in [`latest_visual_review_2026-08-30.md`](latest_visual_review_2026-08-30.md) and [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), with screenshots in the versioned `docs/visual_evidence/` directories. The primary quality contract remains [`game_quality_vertical_slice_roadmap.md`](game_quality_vertical_slice_roadmap.md).
 
 ## References
 
