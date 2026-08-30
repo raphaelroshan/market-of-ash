@@ -288,6 +288,19 @@ func _initialize() -> void:
 	_expect(ui.map_panel._assignment_state("reedwatch") == "available", "an unaccepted local assignment should appear as a potential destination on the map")
 	_expect(ui.bazaar_navigation_buttons.size() == 5 and ui.bazaar_navigation_buttons[0].text == "Market Stall" and ui.bazaar_navigation_buttons[1].text == "Job Board" and ui.bazaar_navigation_buttons[2].text.contains("Intel") and ui.bazaar_navigation_buttons[0].custom_minimum_size.y >= 58.0, "the bazaar should expose a prominent stable directory for its major action groups")
 	_expect(ui.active_bazaar_section == "trade" and ui.bazaar_scene.visible and ui.bazaar_scene.custom_minimum_size.y == 72.0 and ui.bazaar_scene.scene_id() == "warden_gate_market" and ui.shop_market_scroll.visible and ui.shop_purchase_row.visible, "the Bazaar should open on Trade beneath a compact Ashgate identity scene")
+	_expect(ui.bazaar_section_label.text.contains("Licensed water and grain leave under Warden seals"), "the Bazaar should state the current settlement's data-driven market identity")
+	var expected_identity_scenes := {
+		"ashgate": "warden_gate_market",
+		"brine_cross": "brine_pan_exchange",
+		"cinderford": "cinder_span_yard",
+		"hollow_market": "hollow_lantern_market",
+		"reedwatch": "reedwatch_water_market",
+	}
+	for settlement_id in expected_identity_scenes:
+		var identity_settlement: Dictionary = ui.world.settlement(settlement_id)
+		ui.bazaar_scene.set_context(settlement_id, String(identity_settlement.get("name", settlement_id)), String(identity_settlement.get("role", "market")), Dictionary(identity_settlement.get("identity", {})), "trade")
+		_expect(ui.bazaar_scene.scene_id() == expected_identity_scenes[settlement_id], "%s should render its authored data-driven Bazaar identity" % settlement_id)
+	ui._apply_bazaar_section()
 	ui._on_bazaar_navigation_pressed("assignments")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.contract_buttons[0], "the Jobs stall should lead directly to the first local assignment")
 	_expect(ui.contract_buttons[0].visible and not ui.opportunity_buttons[0].visible and not ui.crew_buttons[0].visible and ui.bazaar_scene.visible and not ui.shop_market_scroll.visible and not ui.shop_purchase_row.visible and ui.bazaar_scene.active_section == "assignments", "the Job Board should replace unrelated Trade controls with its inhabited stall view")
@@ -310,7 +323,7 @@ func _initialize() -> void:
 	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.21.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.22.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")

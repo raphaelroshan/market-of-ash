@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.21.0",
+  "content_version": "1.22.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -674,6 +674,15 @@
     "ashgate": {
       "name": "Ashgate",
       "role": "regulated hub",
+      "identity": {
+        "scene_id": "warden_gate_market",
+        "caption": "THE GATE BELLS MARK EVERY LOAD",
+        "market_read": "Licensed water and grain leave under Warden seals; repair scrap and durable cloth return through the gate.",
+        "landmark": "gate",
+        "tint": "#8f5742",
+        "sky": "#39251f",
+        "ground": "#4a3024"
+      },
       "trade_profile": {
         "produces": {
           "grain": "Reserve granaries keep ordinary grain available.",
@@ -694,6 +703,15 @@
     "brine_cross": {
       "name": "Brine Cross",
       "role": "water market",
+      "identity": {
+        "scene_id": "brine_pan_exchange",
+        "caption": "SALT PANS AND CISTERN QUEUES",
+        "market_read": "Brine wells export cheap water while well crews pay more for grain, medicine, and pump scrap.",
+        "landmark": "brine",
+        "tint": "#557b79",
+        "sky": "#1f3435",
+        "ground": "#344a45"
+      },
       "trade_profile": {
         "produces": {
           "water": "Working brine wells keep ordinary water plentiful before the crisis deepens."
@@ -712,6 +730,15 @@
     "cinderford": {
       "name": "Cinderford",
       "role": "foundry town",
+      "identity": {
+        "scene_id": "cinder_span_yard",
+        "caption": "FORGES WORK BESIDE THE SPAN",
+        "market_read": "Foundry yards sell scrap and charcoal; their shifts consume grain, water, and hard-wearing cloth.",
+        "landmark": "forge",
+        "tint": "#8d684b",
+        "sky": "#382b24",
+        "ground": "#4d3828"
+      },
       "trade_profile": {
         "produces": {
           "scrap": "Salvage yards sort usable scrap beside the furnaces.",
@@ -732,6 +759,15 @@
     "hollow_market": {
       "name": "Hollow Market",
       "role": "free-trade bazaar",
+      "identity": {
+        "scene_id": "hollow_lantern_market",
+        "caption": "LANTERNS TRADE RUMOUR FOR COIN",
+        "market_read": "Independent stalls export medicine, grain, and cloth; information matters because buyers and water prices move quickly.",
+        "landmark": "lanterns",
+        "tint": "#796985",
+        "sky": "#2d2735",
+        "ground": "#403447"
+      },
       "trade_profile": {
         "produces": {
           "grain": "Independent growers sell small grain lots without Warden tariffs.",
@@ -752,6 +788,15 @@
     "reedwatch": {
       "name": "Reedwatch",
       "role": "frontier settlement",
+      "identity": {
+        "scene_id": "reedwatch_water_market",
+        "caption": "EVERY BARREL HAS A WITNESS",
+        "market_read": "Low wells reward water, medicine, and repair cargo; reed grain and cloth can fund the return road.",
+        "landmark": "reeds",
+        "tint": "#71835c",
+        "sky": "#293328",
+        "ground": "#3d4933"
+      },
       "trade_profile": {
         "produces": {
           "grain": "Reed plots and dry fields make grain the settlement's reliable outbound cargo.",

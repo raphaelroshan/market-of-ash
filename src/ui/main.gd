@@ -1823,6 +1823,10 @@ func _apply_bazaar_section() -> void:
 		"outlook": "TOWN OUTLOOK — Review the wider campaign when you need it.",
 	}
 	bazaar_section_label.text = String(section_names.get(active_bazaar_section, "BAZAAR — Choose a stall."))
+	var settlement_identity: Dictionary = world.settlement(world.current_settlement).get("identity", {})
+	var market_read := String(settlement_identity.get("market_read", ""))
+	if not market_read.is_empty():
+		bazaar_section_label.text += "\nPLACE — %s" % market_read
 	if trade_active and not world.emergent_faction("well_commons").is_empty():
 		bazaar_section_label.text += "\nWELL COMMONS — Reedwatch water stabilized; charcoal wanted."
 	for button in bazaar_navigation_buttons:
@@ -1844,6 +1848,7 @@ func _apply_bazaar_section() -> void:
 			world.current_settlement,
 			String(settlement.get("name", world.current_settlement)),
 			String(settlement.get("role", "market")),
+			Dictionary(settlement.get("identity", {})),
 			active_bazaar_section,
 		)
 	campaign_outlook_label.visible = active_bazaar_section == "outlook"
@@ -4198,6 +4203,7 @@ class BazaarScene extends Control:
 	var settlement_id := "ashgate"
 	var settlement_name := "Ashgate"
 	var settlement_role := "regulated hub"
+	var identity: Dictionary = {}
 	var active_section := "trade"
 	var text_scale := 1.0
 
@@ -4205,10 +4211,11 @@ class BazaarScene extends Control:
 		mouse_filter = Control.MOUSE_FILTER_IGNORE
 		clip_contents = true
 
-	func set_context(next_id: String, next_name: String, next_role: String, next_section: String) -> void:
+	func set_context(next_id: String, next_name: String, next_role: String, next_identity: Dictionary, next_section: String) -> void:
 		settlement_id = next_id
 		settlement_name = next_name
 		settlement_role = next_role
+		identity = next_identity.duplicate(true)
 		active_section = next_section
 		queue_redraw()
 
@@ -4220,24 +4227,15 @@ class BazaarScene extends Control:
 		return int(round(float(base_size) * text_scale))
 
 	func _settlement_tint() -> Color:
-		var tints := {
-			"ashgate": Color("#8f5742"),
-			"brine_cross": Color("#557b79"),
-			"cinderford": Color("#8d684b"),
-			"hollow_market": Color("#796985"),
-			"reedwatch": Color("#71835c"),
-		}
-		return tints.get(settlement_id, Color("#80634d"))
+		return Color(String(identity.get("tint", "#80634d")))
 
 	func _settlement_profile() -> Dictionary:
-		var profiles := {
-			"ashgate": {"scene_id": "warden_gate_market", "caption": "THE GATE BELLS MARK EVERY LOAD", "landmark": "gate", "sky": Color("#39251f"), "ground": Color("#4a3024")},
-			"brine_cross": {"scene_id": "brine_pan_exchange", "caption": "SALT PANS AND CISTERN QUEUES", "landmark": "brine", "sky": Color("#1f3435"), "ground": Color("#344a45")},
-			"cinderford": {"scene_id": "cinder_span_yard", "caption": "FORGES WORK BESIDE THE SPAN", "landmark": "forge", "sky": Color("#382b24"), "ground": Color("#4d3828")},
-			"hollow_market": {"scene_id": "hollow_lantern_market", "caption": "LANTERNS TRADE RUMOUR FOR COIN", "landmark": "lanterns", "sky": Color("#2d2735"), "ground": Color("#403447")},
-			"reedwatch": {"scene_id": "reedwatch_water_market", "caption": "EVERY BARREL HAS A WITNESS", "landmark": "reeds", "sky": Color("#293328"), "ground": Color("#3d4933")},
-		}
-		return profiles.get(settlement_id, {"scene_id": "roadside_bazaar", "caption": "A LIVING MARKET BETWEEN ROADS", "landmark": "gate", "sky": Color("#30251f"), "ground": Color("#443327")})
+		var profile := identity.duplicate(true)
+		if profile.is_empty():
+			profile = {"scene_id": "roadside_bazaar", "caption": "A LIVING MARKET BETWEEN ROADS", "landmark": "gate", "tint": "#80634d", "sky": "#30251f", "ground": "#443327"}
+		profile["sky"] = Color(String(profile.get("sky", "#30251f")))
+		profile["ground"] = Color(String(profile.get("ground", "#443327")))
+		return profile
 
 	func scene_id() -> String:
 		return String(_settlement_profile().get("scene_id", "roadside_bazaar"))

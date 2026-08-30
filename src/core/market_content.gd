@@ -367,6 +367,20 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			var settlement: Dictionary = settlement_value
 			if String(settlement.get("name", "")).is_empty():
 				errors.append("settlement %s must have a name" % settlement_id)
+			var identity_value: Variant = settlement.get("identity", {})
+			if typeof(identity_value) != TYPE_DICTIONARY:
+				errors.append("settlement %s identity must be an object" % settlement_id)
+			else:
+				var identity: Dictionary = identity_value
+				for field in ["scene_id", "caption", "market_read", "landmark", "tint", "sky", "ground"]:
+					if String(identity.get(field, "")).is_empty():
+						errors.append("settlement %s identity must define %s" % [settlement_id, field])
+				if String(identity.get("landmark", "")) not in ["gate", "brine", "forge", "lanterns", "reeds"]:
+					errors.append("settlement %s identity landmark is unsupported" % settlement_id)
+				for color_field in ["tint", "sky", "ground"]:
+					var color_value := String(identity.get(color_field, ""))
+					if not color_value.is_valid_html_color() or color_value.length() != 7:
+						errors.append("settlement %s identity %s must be a six-digit hex color" % [settlement_id, color_field])
 			_validate_trade_profile(settlement_id, settlement.get("trade_profile", {}), seen_goods, source_coverage, consumer_coverage, errors)
 			_validate_modifier_table("settlement %s price_modifiers" % settlement_id, settlement.get("price_modifiers", {}), seen_goods, errors)
 			_validate_modifier_table("settlement %s demand" % settlement_id, settlement.get("demand", {}), seen_goods, errors)
