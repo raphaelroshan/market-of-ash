@@ -45,6 +45,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/agent_feeding_guide.md` | Recommended prompt sequence and review loop. |
 | `docs/gpt_agent_handoff_roadmap.md` | Dependency-ordered development roadmap and quality gates. |
 | `docs/game_quality_vertical_slice_roadmap.md` | Complete game-quality vertical-slice plan for the basin journey, economy UX, route/map, settlements, events, factions, visual identity, audio, testing, playtesting, and alpha gates. |
+| `docs/ai_game_quality_execution_plan.md` | Execution-first AI sequence based on latest automated and visual tests; human testing is optional, not blocking. |
 | `docs/design/nonlinear_trade_and_adaptive_basin_addendum.md` | Binding design addendum ensuring ordinary trade remains valuable, scenarios remain optional, and missed opportunities create causal replacement factions and alternate endings. |
 | `docs/economy/open_trade_foundation.md` | Executable Feed A contract for production, consumption, replenishment, Bazaar trade language, and ordinary-trade balance gates. |
 | `docs/economy/path_reward_balance.md` | Feed D contract for comparing ordinary, contract, civic, and faction value without hiding non-cash tradeoffs. |
@@ -64,7 +65,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 
 ## Agent-first operating model
 
-The current agent is given a persistent product brief, a small task, a definition of done, and a command for verification. The complete game-quality sequence is in [`docs/game_quality_vertical_slice_roadmap.md`](docs/game_quality_vertical_slice_roadmap.md); use it to prioritize player-facing quality before adding broad new content. It edits the repository, runs tests, launches the game when possible, reports what changed, and stops when the acceptance criteria are met. Do not ask the agent to “make the game better” without naming the player-facing behavior to change.
+The current agent is given a persistent product brief, a small task, a definition of done, and a command for verification. The complete game-quality sequence is in [`docs/game_quality_vertical_slice_roadmap.md`](docs/game_quality_vertical_slice_roadmap.md), with the execution-first task order in [`docs/ai_game_quality_execution_plan.md`](docs/ai_game_quality_execution_plan.md); use them to prioritize player-facing quality before adding broad new content. It edits the repository, runs tests, launches the game when possible, reports what changed, and stops when the acceptance criteria are met. Do not ask the agent to “make the game better” without naming the player-facing behavior to change.
 
 The preferred unit of work is one vertical slice. For example: “Add the toll dispute event. It must read the current route, cargo, provisions, and reputation; offer two understandable choices; modify state deterministically; show a result message; serialize correctly; and include tests.” This is better than “add events.” Ordinary trade is a first-class path: do not make authored contracts mandatory, and when a player ignores or fails a scenario, implement a causal world response rather than silently restoring the intended quest state. See [`docs/design/nonlinear_trade_and_adaptive_basin_addendum.md`](docs/design/nonlinear_trade_and_adaptive_basin_addendum.md).
 

@@ -1,0 +1,52 @@
+# Market of Ash — AI Game-Quality Execution Plan
+
+**Applies to:** `v0.12.0-alpha-quality` and later
+
+**Purpose:** Move the game from a technically sound deterministic prototype toward a presentable vertical slice. Automated tests, scripted launches, screenshot inspection, and deterministic replay evidence are the active development gates. Human playtesting is valuable later, but it is not a prerequisite for the following work.
+
+## Operating contract
+
+The core simulation remains authoritative, deterministic, and data-driven. UI work may expose, stage, or explain existing state, but it must not change prices, demand, route costs, event outcomes, settlement state, or replay keys. Every task must include a focused implementation, deterministic regression coverage, normal and large-text screenshots, and a concise report of what changed.
+
+The game must preserve two equally legitimate ways to play: ordinary buying and selling, and optional authored opportunities. Contracts, faction requests, and emergencies may create unusual risk or access, but they must not make anonymous trade a filler activity or the only profitable path.
+
+## Execution order
+
+| Step | Objective | Required outcome |
+|---|---|---|
+| **M1** | Repair the responsive shell | At 1280×720, 1600×900, and the minimum supported width, no required heading, explanation, price, cargo value, or primary action is clipped. Narrow layouts deliberately reflow rather than merely shrink. |
+| **M2** | Establish the Bazaar decision hierarchy | The first Bazaar view clearly answers local need, selected cargo, destination value, route risk, available cash/capacity, and next action. Ordinary trade can be completed without accepting a contract. |
+| **M3** | Extract UI presentation panels | Move Bazaar, Departure, event, and arrival/debrief presentation into focused components or presenter functions. Keep commands and simulation state in the existing authoritative boundary. |
+| **M4** | Make route comparison actionable | Show fee, days, provisions, cargo opportunity, risk, forecast confidence, and expected consequence side by side. Never auto-select a route or hide an unfavorable option. |
+| **M5** | Build the complete journey beat | Present Introduction → Bazaar → Departure → road → event/contact → arrival receipt → return Bazaar. Transitions are short, skippable, save-safe, and reduced-motion compatible. |
+| **M6** | Give locations distinct identity | Add data-driven visual and textual treatment for Ashgate, Reedwatch, and the next existing locations. Identity must change how a player reads the opportunity, not only recolor a panel. |
+| **M7** | Add adaptive opportunity substitution | When a scenario is ignored, delayed, or failed, preserve the underlying need and let another faction, settlement, or trader respond. This creates a new trade opportunity or risk rather than a dead end. |
+| **M8** | Add one complete authored event slice | Implement one event from data through command, deterministic outcome, save/load, destination acknowledgment, and debrief. The event must coexist with ordinary trading. |
+| **M9** | Compose outcomes and replay | Debrief route, cargo, event, profit/loss, political pressure, and consequence. Offer a replay experiment without requiring one canonical ending. |
+| **M10** | Package the private alpha | Run all verification suites, capture a complete 1600×900 journey, check 1280×720 and large text, verify clean install and save migration, and publish an internal artifact with known limitations. Human sessions remain optional follow-up evidence. |
+
+## Acceptance tests for every AI task
+
+The agent must prove that the same seed and command sequence produce the same simulation result regardless of viewport, text scale, reduced motion, controller path, or screenshot capture. At least one test must enter the affected screen through the normal player flow. Layout tests must assert visible bounds rather than only checking that nodes exist.
+
+A task is incomplete if it adds a new mechanic while a required action is clipped, if it makes a contract mandatory for economic progress, if it moves authoritative calculations into the UI, or if it uses a screenshot from an unrecorded build. Every curated image must include the exact version, display size, capture state, and whether it is a local recapture or packaged artifact.
+
+## Recommended first prompt
+
+> Read `docs/game_quality_vertical_slice_roadmap.md`, `docs/design/nonlinear_trade_and_adaptive_basin_addendum.md`, this document, and `docs/latest_test_report_2026-08-30.md`. Implement **M1 Responsive Shell Repair** only. Preserve the deterministic economy and all existing commands. Fix the 1280×720 composition using an explicit responsive layout contract, add bounds assertions for Introduction, Bazaar, Departure, event, and arrival panels, capture 1280×720 and 1600×900 evidence, run the full verification suite, and report any remaining clipping. Do not add goods, factions, contracts, or currencies in this task.
+
+## Definition of game-quality readiness
+
+Market of Ash is ready for a private alpha when the complete journey can be played without debug actions, ordinary trade is rewarding and understandable, each required screen is readable at supported sizes, events produce visible causal consequences, the player can recover from a poor route, and at least two different profitable plans can reach a successful debrief. Human testing can then improve confidence, but it must not be used to postpone the deterministic and presentation work above.
+
+## Historical evidence
+
+The latest automated and visual findings are recorded in [`latest_test_report_2026-08-30.md`](latest_test_report_2026-08-30.md), with screenshots in the versioned `docs/visual_evidence/` directories. The primary quality contract remains [`game_quality_vertical_slice_roadmap.md`](game_quality_vertical_slice_roadmap.md).
+
+## References
+
+[1]: game_quality_vertical_slice_roadmap.md "Market of Ash Game-Quality Vertical-Slice Roadmap"
+[2]: design/nonlinear_trade_and_adaptive_basin_addendum.md "Market of Ash Open Trade and Adaptive Basin Addendum"
+[3]: latest_test_report_2026-08-30.md "Market of Ash Latest Main Test Report"
+
+The source documents are internal repository contracts and are intentionally versioned with the game.
