@@ -4,6 +4,63 @@ const MarketContent = preload("res://src/core/market_content.gd")
 const MarketEconomy = preload("res://src/core/economy.gd")
 
 
+static func route_comparison_views(world, good_id: String, quantity: int, selected_destination_id: String, selected_route_id: String, world_context: Dictionary) -> Array[Dictionary]:
+	var origin: Dictionary = world.settlement(world.current_settlement)
+	var views: Array[Dictionary] = []
+	for destination_id in MarketContent.destinations_from(world.current_settlement):
+		var destination: Dictionary = world.settlement(destination_id)
+		for route_id in MarketContent.routes_from(world.current_settlement):
+			if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
+				continue
+			var route: Dictionary = world.route(route_id, world.current_settlement, destination_id)
+			route["provisions"] = world.route_provision_cost(route_id, destination_id)
+			var context := world_context.duplicate(true)
+			context["route_intelligence"] = world.route_intelligence(route_id)
+			var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, context)
+			if not bool(preview.get("ok", false)):
+				continue
+			var net := int(preview.get("expected_net_profit", 0))
+			var consequence := "Forecast loss; choose only for another strategic reason."
+			var consequence_label := "LOSS"
+			if net > 20:
+				consequence = "Strong margin if the disclosed forecast holds."
+				consequence_label = "STRONG GAIN"
+			elif net > 0:
+				consequence = "Positive but narrow margin after road burden."
+				consequence_label = "NARROW GAIN"
+			elif net == 0:
+				consequence = "Break-even forecast before unpriced political value."
+				consequence_label = "BREAK EVEN"
+			var intelligence: Dictionary = context.get("route_intelligence", {})
+			var confidence_label := String(intelligence.get("status", "unavailable")).replace("_informed", "").to_upper()
+			if confidence_label == "UNAVAILABLE":
+				confidence_label = "NONE"
+			var risk_percent := int(round(float(preview.get("risk", 0.0)) * 100.0))
+			var selected := destination_id == selected_destination_id and route_id == selected_route_id
+			views.append({
+				"destination_id": destination_id,
+				"route_id": route_id,
+				"selected": selected,
+				"text": "%s%s\n%s\nFEE %d · TIME %dD · SUPPLY %dP\nCARGO %d → %d · GROSS %+d\nRISK %d%% · CONF %s\nNET %+d · %s" % [
+					"SELECTED\n" if selected else "",
+					String(destination.get("name", destination_id)).to_upper(),
+					String(route.get("name", route_id)),
+					int(preview.get("route_cost", 0)),
+					int(route.get("days", 0)),
+					int(preview.get("provisions", 0)),
+					int(preview.get("purchase_total", 0)),
+					int(preview.get("sale_total", 0)),
+					int(preview.get("gross_trade_margin", 0)),
+					risk_percent,
+					confidence_label,
+					net,
+					consequence_label,
+				],
+				"tooltip": "%s via %s. %s" % [String(destination.get("name", destination_id)), String(route.get("name", route_id)), consequence],
+			})
+	return views
+
+
 static func market_preview_text(world, good_id: String, quantity: int, settlement: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
 	var details := MarketEconomy.price_details(good_id, settlement, world_context)
 	if not details.ok:

@@ -36,8 +36,16 @@ func _test_trade_presenter() -> void:
 	context["route_intelligence"] = world.route_intelligence("old_road")
 	var decision := TradePresenter.shop_decision_summary_text(world, "water", 2, origin, destination, route, context)
 	var forecast := TradePresenter.route_preview_text(world, "water", 2, origin, destination, route, context)
+	var comparisons := TradePresenter.route_comparison_views(world, "water", 2, "reedwatch", "old_road", context)
 	_expect(decision.contains("ORDINARY / NO CONTRACT") and decision.contains("expected +") and decision.contains("NEXT — Buy 2 Water"), "trade presenter should summarize the selected ordinary-trade decision and next action")
 	_expect(forecast.contains("ROUTE FORECAST — Ashgate to Reedwatch via Old Road") and forecast.contains("Route fee") and forecast.contains("Scout confidence"), "trade presenter should expose the complete selected-route forecast")
+	_expect(comparisons.size() == 3, "route comparison should keep every legal Ashgate itinerary visible")
+	var selected_count := 0
+	for comparison in comparisons:
+		selected_count += 1 if bool(comparison.get("selected", false)) else 0
+		var text := String(comparison.get("text", ""))
+		_expect(text.contains("FEE") and text.contains("TIME") and text.contains("SUPPLY") and text.contains("CARGO") and text.contains("RISK") and text.contains("CONF") and text.contains("NET"), "every route comparison should expose fee, time, provisions, cargo opportunity, risk, confidence, and consequence")
+	_expect(selected_count == 1, "route comparison should mark only the existing explicit plan as selected")
 
 
 func _test_event_presenter() -> void:

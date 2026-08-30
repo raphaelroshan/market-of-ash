@@ -203,6 +203,8 @@ var destination_option: OptionButton
 var route_option: OptionButton
 var cargo_good_option: OptionButton
 var cargo_quantity: SpinBox
+var route_comparison_grid: GridContainer
+var route_comparison_buttons: Array[Button] = []
 var market_preview_label: Label
 var route_preview_label: Label
 var log_label: Label
@@ -808,7 +810,7 @@ func _show_departure() -> void:
 	elif arrival_pending:
 		_grab_focus_if_available(enter_settlement_button)
 	else:
-		_grab_focus_if_available(destination_option)
+		_grab_focus_if_available(_selected_route_comparison_button())
 
 func _update_map_layout() -> void:
 	if map_panel == null or map_hint == null or event_label == null or game_layer == null or not game_layer.visible:
@@ -1567,6 +1569,22 @@ func _build_ui() -> void:
 	cargo_quantity.tooltip_text = "Controller: Left/Right changes forecast quantity."
 	departure_planning_panel.add_child(_labeled_control("Forecast quantity", cargo_quantity))
 
+	var comparison_title := Label.new()
+	comparison_title.text = "COMPARE EVERY OPEN ITINERARY · FEE / TIME / SUPPLY / RISK / CONFIDENCE / NET"
+	comparison_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	comparison_title.add_theme_font_size_override("font_size", 13)
+	comparison_title.add_theme_color_override("font_color", Color("#d08b62"))
+	departure_planning_panel.add_child(comparison_title)
+	route_comparison_grid = GridContainer.new()
+	route_comparison_grid.name = "RouteComparisonGrid"
+	route_comparison_grid.columns = 2
+	route_comparison_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	route_comparison_grid.add_theme_constant_override("h_separation", 8)
+	route_comparison_grid.add_theme_constant_override("v_separation", 8)
+	departure_planning_panel.add_child(route_comparison_grid)
+	departure_planning_panel.move_child(comparison_title, 0)
+	departure_planning_panel.move_child(route_comparison_grid, 1)
+
 	departure_load_label = Label.new()
 	departure_load_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_load_label.add_theme_color_override("font_color", Color("#f4e6c7"))
@@ -1688,16 +1706,7 @@ func _build_ui() -> void:
 	load_button.pressed.connect(_on_load_pressed)
 	controls.add_child(load_button)
 	load_button.visible = false
-	_link_focus_cycle([
-		destination_option,
-		route_option,
-		cargo_good_option,
-		cargo_quantity.get_line_edit(),
-		commit_departure_button,
-		return_to_shop_button,
-		save_button,
-		load_button,
-	])
+	_refresh_departure_focus_cycle()
 	departure_save_status_label = Label.new()
 	departure_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	departure_save_status_label.add_theme_font_size_override("font_size", 11)
@@ -1928,6 +1937,63 @@ func _populate_route_options() -> void:
 			route_option.select(route_option.item_count - 1)
 	if route_option.selected < 0 and route_option.item_count > 0:
 		route_option.select(0)
+
+func _refresh_route_comparison(world_context: Dictionary) -> void:
+	if route_comparison_grid == null:
+		return
+	for child in route_comparison_grid.get_children():
+		route_comparison_grid.remove_child(child)
+		child.queue_free()
+	route_comparison_buttons.clear()
+	var views := TradePresenter.route_comparison_views(
+		world,
+		_selected_id(cargo_good_option),
+		int(cargo_quantity.value),
+		_selected_id(destination_option),
+		_selected_id(route_option),
+		world_context,
+	)
+	for view in views:
+		var button := Button.new()
+		button.name = "RouteComparison%d" % route_comparison_buttons.size()
+		button.text = String(view.get("text", ""))
+		button.tooltip_text = String(view.get("tooltip", ""))
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.custom_minimum_size = Vector2(158, 184)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size", 16 if large_text_enabled else 14)
+		button.toggle_mode = true
+		button.button_pressed = bool(view.get("selected", false))
+		button.set_meta("web_accessibility_id", "route_plan_%s_%s" % [String(view.get("destination_id", "")), String(view.get("route_id", ""))])
+		button.pressed.connect(_on_route_comparison_pressed.bind(String(view.get("destination_id", "")), String(view.get("route_id", ""))))
+		route_comparison_grid.add_child(button)
+		route_comparison_buttons.append(button)
+	_refresh_departure_focus_cycle()
+
+func _refresh_departure_focus_cycle() -> void:
+	var controls: Array = [destination_option, route_option, cargo_good_option]
+	if cargo_quantity != null:
+		controls.append(cargo_quantity.get_line_edit())
+	controls.append_array(route_comparison_buttons)
+	controls.append(commit_departure_button)
+	controls.append(return_to_shop_button)
+	_link_focus_cycle(controls)
+
+func _selected_route_comparison_button() -> Button:
+	for button in route_comparison_buttons:
+		if button != null and is_instance_valid(button) and button.button_pressed:
+			return button
+	return route_comparison_buttons[0] if not route_comparison_buttons.is_empty() else null
+
+func _on_route_comparison_pressed(destination_id: String, route_id: String) -> void:
+	_select_option_by_id(destination_option, destination_id)
+	_populate_route_options()
+	_select_option_by_id(route_option, route_id)
+	_refresh_forecasts()
+	_grab_focus_if_available(_selected_route_comparison_button())
+	_publish_web_ui_state()
+	_queue_web_ui_state_after_layout()
 
 func _selected_id(option: OptionButton) -> String:
 	if option.selected < 0:
@@ -2637,6 +2703,9 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 	for control in [guided_test_button, shop_save_button, shop_load_button, shop_reset_button, shop_report_button, restore_bindings_button]:
 		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 			return control
+	for control in route_comparison_buttons:
+		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
+			return control
 	for control in binding_buttons.values():
 		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 			return control
@@ -2759,6 +2828,7 @@ func _web_accessibility_actions() -> Array:
 			_append_web_accessibility_action(actions, "shop_report", shop_report_button)
 			_append_web_accessibility_action(actions, "plan_departure", plan_departure_button)
 		"departure_desk":
+			_append_tagged_web_accessibility_actions(actions, route_comparison_buttons)
 			_append_web_accessibility_action(actions, "return_to_shop", return_to_shop_button)
 			_append_web_accessibility_action(actions, "commit_departure", commit_departure_button)
 		"route_travel":
@@ -3085,6 +3155,7 @@ func _refresh_forecasts() -> void:
 	var forecast_cargo := world.cargo.duplicate(true)
 	forecast_cargo[good_id] = maxi(int(forecast_cargo.get(good_id, 0)), quantity)
 	world_context["cargo"] = forecast_cargo
+	_refresh_route_comparison(world_context)
 	world_context["route_intelligence"] = world.route_intelligence(route_id)
 	var selected_route: Dictionary = {}
 	if MarketContent.route_connects(route_id, world.current_settlement, destination_id):
