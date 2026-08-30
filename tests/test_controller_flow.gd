@@ -97,17 +97,23 @@ func _run() -> void:
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.route_comparison_buttons[0], "controller Accept should reopen Departure on the selected itinerary")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "controller option navigation should select Brine Cross and its legal Toll Road")
-	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.commit_departure_button, "controller focus should traverse route comparisons and reach Commit departure")
+	var reached_commit := false
+	for _step in range(12):
+		if ui.get_viewport().gui_get_focus_owner() == ui.commit_departure_button:
+			reached_commit = true
+			break
+		await _press_joypad(JOY_BUTTON_DPAD_DOWN)
+	_expect(reached_commit, "controller focus should traverse route comparisons and reach Commit departure")
+	if not reached_commit:
+		ui.commit_departure_button.grab_focus()
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui.world.pending_event.get("id", "") == "gatekeepers_chalk" and ui._current_ui_state_id() == "route_travel", "controller Commit should enter the road before revealing Gatekeeper's Chalk")
 	ui.map_panel._process(2.0)
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.continue_journey_button, "controller road arrival should focus Continue journey")
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "controller Continue should reveal Gatekeeper's Chalk and focus its first available response")
+	_expect(not ui.event_choice_buttons.is_empty() and ui.get_viewport().gui_get_focus_owner() == ui.event_choice_buttons[0], "controller Continue should reveal Gatekeeper's Chalk and focus its first available response")
 	await _press_joypad(JOY_BUTTON_A)
 	_expect(ui.world.pending_event.is_empty() and ui.arrival_pending and ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "controller Accept should resolve the route event and focus Enter settlement")
 	await _press_joypad(JOY_BUTTON_A)

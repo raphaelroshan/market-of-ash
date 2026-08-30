@@ -581,9 +581,10 @@ func _initialize() -> void:
 	_expect(ui.route_comparison_buttons[0].focus_mode != Control.FOCUS_NONE, "the selected itinerary card should remain controller-focusable after Web plan edits")
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "departure desk did not preserve the selected first-route plan")
 	_expect(ui.route_comparison_grid != null and ui.route_comparison_grid.columns == 2 and ui.route_comparison_buttons.size() == 3, "departure desk should compare every legal Ashgate itinerary in a two-column board")
+	_expect(not ui._web_ui_state().get("targets", {}).get("route_plan_brine_cross_toll_road", {}).is_empty(), "Web pointer testing should expose the visible Brine Cross itinerary card as a stable target")
 	for route_card in ui.route_comparison_buttons:
 		_expect(route_card.text.contains("FEE") and route_card.text.contains("TIME") and route_card.text.contains("SUPPLY") and route_card.text.contains("CARGO") and route_card.text.contains("RISK") and route_card.text.contains("CONF") and route_card.text.contains("NET"), "route card should show fee, time, provisions, cargo opportunity, risk, confidence, and consequence")
-	ui.route_comparison_buttons[2].emit_signal("pressed")
+	ui.route_comparison_buttons[1].emit_signal("pressed")
 	_expect(ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "selecting a comparison card should update the existing route plan without committing travel")
 	ui._on_route_comparison_pressed("reedwatch", "old_road")
 	_expect(ui.departure_load_label != null and ui.departure_load_label.text.contains("JOURNEY ESTIMATE") and ui.departure_load_label.text.contains("Water x2") and ui.departure_load_label.text.contains("actually held 2"), "departure desk did not distinguish its journey estimate from actual cargo")

@@ -7,7 +7,12 @@ const MarketEconomy = preload("res://src/core/economy.gd")
 static func route_comparison_views(world, good_id: String, quantity: int, selected_destination_id: String, selected_route_id: String, world_context: Dictionary) -> Array[Dictionary]:
 	var origin: Dictionary = world.settlement(world.current_settlement)
 	var views: Array[Dictionary] = []
-	for destination_id in MarketContent.destinations_from(world.current_settlement):
+	var destination_ids := MarketContent.destinations_from(world.current_settlement)
+	destination_ids.sort()
+	if destination_ids.has(selected_destination_id):
+		destination_ids.erase(selected_destination_id)
+		destination_ids.push_front(selected_destination_id)
+	for destination_id in destination_ids:
 		var destination: Dictionary = world.settlement(destination_id)
 		for route_id in MarketContent.routes_from(world.current_settlement):
 			if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
