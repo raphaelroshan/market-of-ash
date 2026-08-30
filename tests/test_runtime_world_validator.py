@@ -23,6 +23,33 @@ def main() -> int:
             print(f"- {error}")
         return 1
 
+    invalid_identity = copy.deepcopy(runtime)
+    invalid_identity["settlements"]["ashgate"]["identity"] = {
+        "scene_id": "",
+        "caption": "",
+        "market_read": "",
+        "landmark": "unknown",
+        "tint": "red",
+        "sky": "#123456",
+        "ground": "#654321",
+    }
+    identity_errors = validate(invalid_identity)
+    expected_identity_fragments = (
+        "identity.scene_id must be a non-empty string",
+        "identity.caption must be a non-empty string",
+        "identity.market_read must be a non-empty string",
+        "identity.landmark is unsupported",
+        "identity.tint must be a six-digit hex color",
+    )
+    missing_identity_errors = [
+        fragment for fragment in expected_identity_fragments if not any(fragment in error for error in identity_errors)
+    ]
+    if missing_identity_errors:
+        print("FAIL: invalid settlement identity did not produce expected errors")
+        for fragment in missing_identity_errors:
+            print(f"- missing: {fragment}")
+        return 1
+
     invalid_reward_assumptions = copy.deepcopy(runtime)
     invalid_reward_assumptions["planning_assumptions"]["reward_fixture_minutes"] = 0
     invalid_reward_assumptions["planning_assumptions"]["contract_expected_net_min_ratio"] = 1.3

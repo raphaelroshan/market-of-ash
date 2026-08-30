@@ -771,6 +771,16 @@ def validate(data: Any) -> list[str]:
             fail(errors, f"settlement {settlement_id} must have a non-empty name")
         if not isinstance(settlement.get("role"), str) or not settlement["role"]:
             fail(errors, f"settlement {settlement_id} must have a non-empty role")
+        identity = as_object(settlement.get("identity"), f"settlement {settlement_id}.identity", errors)
+        for field in ("scene_id", "caption", "market_read", "landmark"):
+            if not isinstance(identity.get(field), str) or not identity[field]:
+                fail(errors, f"settlement {settlement_id}.identity.{field} must be a non-empty string")
+        if identity.get("landmark") not in {"gate", "brine", "forge", "lanterns", "reeds"}:
+            fail(errors, f"settlement {settlement_id}.identity.landmark is unsupported")
+        for field in ("tint", "sky", "ground"):
+            color = identity.get(field)
+            if not isinstance(color, str) or re.fullmatch(r"#[0-9a-fA-F]{6}", color) is None:
+                fail(errors, f"settlement {settlement_id}.identity.{field} must be a six-digit hex color")
         validate_trade_profile(
             settlement_id,
             settlement.get("trade_profile"),

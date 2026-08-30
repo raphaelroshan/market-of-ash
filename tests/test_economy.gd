@@ -55,7 +55,10 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.21.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.22.0", "runtime content should expose content version")
+	for settlement_id in MarketContent.settlement_ids():
+		var identity: Dictionary = MarketContent.settlements().get(settlement_id, {}).get("identity", {})
+		_expect(not identity.is_empty() and not String(identity.get("scene_id", "")).is_empty() and not String(identity.get("market_read", "")).is_empty(), "settlement %s should expose its data-driven visual and market identity" % settlement_id)
 	var planning := MarketContent.planning_assumptions()
 	_expect(int(planning.get("reward_fixture_minutes", 0)) == 10 and float(planning.get("contract_expected_net_min_ratio", 0.0)) == 1.0, "runtime content should expose the ten-minute cross-path reward benchmark")
 	_expect(MarketContent.ending_records().size() == 5 and MarketContent.ending("ending_commons_exchange").get("title", "") == "The Wells Belong to Those Who Carry" and MarketContent.ending("ending_warden_reserve").get("title", "") == "Order at the Cistern" and MarketContent.ending("ending_free_caravan_routes").get("title", "") == "No Road Owns the Sky" and MarketContent.ending("ending_ash_merchant").get("title", "") == "The Best Margin", "runtime content should expose all stable ending records")
@@ -1537,7 +1540,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.21.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.22.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})

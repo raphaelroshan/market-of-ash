@@ -505,3 +505,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A route dropdown reveals one option at a time and makes the player reconstruct tradeoffs from memory. The Frontier-inspired travel loop depends on choosing a road with clear costs and consequences before leaving, so alternatives need to be comparable in one stable decision surface.
 
 **Trade-off:** The slice compares direct legal itineraries rather than pathfinding across multiple legs. At compact sizes the board wraps to additional rows inside the existing planning scroll, while the selected detailed forecast and pinned commit action remain unchanged.
+
+## ADR-064: Settlement identity belongs to runtime content
+
+**Decision:** Store each settlement's Bazaar scene ID, caption, market-reading sentence, landmark type, and palette in its runtime settlement record. Validate those fields with both runtime validators and pass the record into the Bazaar renderer instead of branching on settlement IDs inside the UI.
+
+**Reason:** Location identity must explain how a place trades as well as how it looks. Keeping the market read and visual vocabulary beside production, consumption, and price data lets a settlement arrive as one authored place and gives future locations a stable content path without editing the scene controller.
+
+**Trade-off:** Landmark drawing remains a small supported vocabulary rather than arbitrary scene composition. New landmark families require renderer work, but new settlements using an existing family can be authored and validated entirely in data.
