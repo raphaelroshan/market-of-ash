@@ -481,3 +481,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A preferred window larger than the available desktop can make an otherwise valid layout appear clipped before the player can resize it. The opening screens also need an intentional minimum-window composition rather than relying only on uniform canvas reduction, while the denser trade and route screens remain more readable in their proven side-by-side form.
 
 **Trade-off:** The minimum-window opening uses less illustration height and scrollable supporting copy so its primary action remains available. The simulation, command order, economy, and saved campaign state are unchanged.
+
+## ADR-061: The Bazaar opens on one ordinary-trade decision
+
+**Decision:** Put a compact, derived trade-plan card at the top of the Market Stall work surface. It names the selected load, source and destination need, buy and sale values, route fee, expected net, provision and risk burden, available cash, projected hold use, and the immediate next action. Focus opens on the enabled Buy action while the detailed price explanation and editable cargo controls remain in the same scrollable ledger. Publish the same summary through the Web accessibility state.
+
+**Reason:** The full market ledger already contained every calculation, but a first-time player had to read across status text, controls, and a long forecast to reconstruct the decision. The compact card makes ordinary trade legible before optional contracts without introducing a separate recommendation or changing any authoritative calculation.
+
+**Trade-off:** The card summarizes one currently selected cargo-route plan and can be scrolled away when editing deeper market details. It deliberately does not rank routes, auto-buy, or claim certainty beyond the existing deterministic forecast.

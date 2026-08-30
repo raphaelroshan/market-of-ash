@@ -193,6 +193,7 @@ func _initialize() -> void:
 		var dynamic_action_id := String(dynamic_control.get_meta("web_accessibility_id", ""))
 		_expect(not dynamic_action_id.is_empty() and dynamic_action_id not in shop_accessibility_action_ids and ui._web_accessibility_action_control(dynamic_action_id) == dynamic_control, "Inactive Bazaar stalls should keep stable action IDs without exposing hidden controls")
 	var shop_accessibility_controls: Array = initial_web_state.get("accessibility_controls", [])
+	_expect(String(initial_web_state.get("trade_decision_summary", "")).contains("ORDINARY / NO CONTRACT") and String(initial_web_state.get("announcement", "")).contains("Current trade plan"), "Web accessibility state should expose the same ordinary-trade decision summary as the visible Bazaar")
 	_expect(Array(initial_web_state.get("accessibility_order", [])).slice(0, 8) == ["action:bazaar_trade", "action:bazaar_assignments", "action:bazaar_information", "action:bazaar_crew", "action:bazaar_outlook", "control:shop_good", "control:shop_quantity", "action:shop_buy"], "The semantic Bazaar directory should precede the active stall's controls and actions")
 	_expect(shop_accessibility_controls.size() == 2 and shop_accessibility_controls[0].get("id") == "shop_good" and shop_accessibility_controls[0].get("kind") == "select" and shop_accessibility_controls[0].get("value") == "water" and Array(shop_accessibility_controls[0].get("options", [])).size() == ui.shop_good_option.item_count, "Web accessibility controls should expose the complete Shop cargo selector")
 	_expect(shop_accessibility_controls[1].get("id") == "shop_quantity" and shop_accessibility_controls[1].get("kind") == "number" and shop_accessibility_controls[1].get("value") == 2 and shop_accessibility_controls[1].get("minimum") == 1 and shop_accessibility_controls[1].get("maximum") == 12 and shop_accessibility_controls[1].get("step") == 1, "Web accessibility controls should expose the Shop quantity bounds, integer step, and value")
@@ -206,7 +207,7 @@ func _initialize() -> void:
 	ui._change_web_accessibility_control("shop_quantity", "99")
 	_expect(int(ui.shop_quantity.value) == 12 and int(ui.cargo_quantity.value) == 12, "Web quantity input should clamp to the existing Godot control bounds")
 	ui._change_web_accessibility_control("shop_quantity", "2")
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "opening the shop should focus its first planning control")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "opening the shop should focus the ordinary-trade action named by the decision summary")
 	for shop_control in [ui.shop_good_option, ui.shop_quantity, ui.shop_save_button, ui.shop_load_button, ui.shop_reset_button, ui.shop_report_button]:
 		_expect(shop_control.custom_minimum_size.y >= 44.0, "Shop control %s should expose a comfortable pointer target" % shop_control.get_class())
 	ui._open_pause()
@@ -220,7 +221,7 @@ func _initialize() -> void:
 	for pause_action in [ui.pause_resume_button, ui.pause_save_button, ui.pause_load_button, ui.pause_report_button, ui.pause_main_menu_button]:
 		_expect(pause_action.custom_minimum_size.y >= 44.0, "Pause action %s should expose a comfortable pointer target" % pause_action.text)
 	ui._close_pause()
-	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "resuming should restore the previous gameplay focus")
+	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "resuming should restore the previous gameplay focus")
 	_expect(ui._current_ui_state_id() == "settlement_shop", "Web diagnostics should restore the underlying Shop state after Resume")
 	var valid_test_save_path: String = ui.save_path
 	ui.save_path = "user://market_of_ash_missing_parent_test/campaign.save"
@@ -262,12 +263,16 @@ func _initialize() -> void:
 	_expect(ui.shop_quantity.get_line_edit().find_next_valid_focus() == ui.plan_departure_button, "Shop focus should skip disabled trade actions and the removed one-click test helper")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	_expect(ui.shop_decision_summary_label != null and ui.shop_decision_summary_label.text.contains("ORDINARY / NO CONTRACT — Water x2 · Ashgate → Reedwatch"), "the first Bazaar should frame ordinary trade as a complete path without a contract")
+	_expect(ui.shop_decision_summary_label.text.contains("WHY — Licensed cistern releases") and ui.shop_decision_summary_label.text.contains("→ Frontier wells run low"), "the first Bazaar should connect the selected local source to the destination need")
+	_expect(ui.shop_decision_summary_label.text.contains("VALUE — buy 30 · sell 64 · road 4 · expected +14 ashmarks") and ui.shop_decision_summary_label.text.contains("ROAD / CAPACITY — Old Road · 1 provision · 35% exposed-unit risk"), "the first Bazaar should expose destination value and route burden in one summary")
+	_expect(ui.shop_decision_summary_label.text.contains("120 ashmarks available · hold 0/12 → 2/12") and ui.shop_decision_summary_label.text.contains("NEXT — Buy 2 Water, then Plan departure"), "the first Bazaar should expose current buying power, capacity, and next action")
 	_expect(ui.shop_market_preview_label != null and ui.shop_market_preview_label.text.contains("Why this price:"), "shop did not render an explainable market preview")
 	_expect(ui.shop_market_preview_label.text.contains("ORDINARY TRADE — NO CONTRACT REQUIRED") and ui.shop_market_preview_label.text.contains("Ashgate → Reedwatch via Old Road"), "shop did not frame the selected journey as optional ordinary trade")
 	_expect(ui.shop_market_preview_label.text.contains("SOURCE — Licensed cistern releases") and ui.shop_market_preview_label.text.contains("NEED — Frontier wells run low"), "shop did not connect authored production and consumption to the selected trade")
 	_expect(ui.shop_market_preview_label.text.contains("SPREAD — buy 15 · sell 32 · +17 each · load total +34") and ui.shop_market_preview_label.text.contains("ROAD — 4 ashmarks · 1 provision · 35% exposed-unit risk"), "shop did not expose the selected ordinary-trade spread and route burden")
 	_expect(_has_scroll_ancestor(ui.shop_good_option), "the primary Shop trade workflow should remain reachable through a scroll container")
-	_expect(ui.shop_title_label != null and ui.shop_title_label.text == "ASHGATE BAZAAR" and ui.shop_status_label.text.contains("TODAY'S TRADE — Water: 15 here → 32 at Reedwatch · +14 expected · NO CONTRACT"), "shop did not put the selected ordinary-trade thesis above the fold")
+	_expect(ui.shop_title_label != null and ui.shop_title_label.text == "ASHGATE BAZAAR" and ui.shop_status_label.text.contains("MARKET — Regulated Hub · Day 1") and ui.shop_status_label.text.contains("REGION — Compare markets and prepare a first route"), "shop did not keep market and regional context above the trade plan")
 	_expect(ui.opportunity_status_label != null and ui.opportunity_status_label.text.contains("2 of 2 visit slots remain"), "shop did not expose the visit-action budget")
 	_expect(ui.campaign_outlook_label.text.contains("Open Routes") and ui.campaign_outlook_label.text.contains("Wardens 0/3") and ui.campaign_outlook_label.text.contains("120/220 ashmarks"), "shop should expose exact progress toward each campaign conclusion")
 	_expect(ui.opportunity_buttons.size() == 3 and not ui.opportunity_buttons[0].disabled and ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[2].disabled, "Ashgate should expose provisions, cargo-gated arms, and condition-gated recovery")
@@ -591,7 +596,7 @@ func _initialize() -> void:
 	cancel_event.pressed = true
 	ui._unhandled_input(cancel_event)
 	_expect(ui.shop_layer.visible and not ui.game_layer.visible, "Return to shop should close the departure map")
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "returning to the shop should restore a predictable keyboard focus target")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "returning to the shop should restore the visible ordinary-trade action")
 	if JSON.stringify(ui.world.serialize()) != shop_state:
 		failures.append("returning from departure planning mutated authoritative world state")
 
@@ -1102,7 +1107,7 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.shop_good_option, "charcoal")
 	ui.shop_quantity.value = 4
 	ui._on_shop_plan_changed(ui.shop_good_option.selected)
-	_expect(ui.shop_status_label.text.contains("+7 expected · COMMONS / NO CONTRACT") and ui.bazaar_section_label.text.contains("Reedwatch water stabilized; charcoal wanted"), "the replacement charcoal trade should be visible above the fold as ordinary trade")
+	_expect(ui.shop_decision_summary_label.text.contains("COMMONS / NO CONTRACT") and ui.shop_decision_summary_label.text.contains("expected +7 ashmarks") and ui.bazaar_section_label.text.contains("Reedwatch water stabilized; charcoal wanted"), "the replacement charcoal trade should be visible above the fold as ordinary trade")
 	ui.world.current_settlement = "reedwatch"
 	ui._refresh_ui()
 	ui._populate_destination_options()
