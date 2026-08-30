@@ -21,6 +21,7 @@ python3 tests/test_capture_validation.py
 if command -v godot >/dev/null 2>&1; then
   godot --headless --path . --script res://tests/test_economy.gd
   godot --headless --path . --script res://tests/test_map_ui.gd
+  godot --headless --path . --script res://tests/test_presenters.gd
   godot --headless --path . --script res://tests/test_tutorial_flow.gd
   godot --headless --path . --script res://tests/test_controller_flow.gd
   godot --headless --path . --script res://tests/test_campaign.gd
@@ -28,6 +29,7 @@ if command -v godot >/dev/null 2>&1; then
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --path . --script res://tests/test_economy.gd
   godot4 --headless --path . --script res://tests/test_map_ui.gd
+  godot4 --headless --path . --script res://tests/test_presenters.gd
   godot4 --headless --path . --script res://tests/test_tutorial_flow.gd
   godot4 --headless --path . --script res://tests/test_controller_flow.gd
   godot4 --headless --path . --script res://tests/test_campaign.gd
@@ -35,6 +37,7 @@ else
   echo "Godot 4.x is not installed or not on PATH."
   echo "Run: godot --headless --path . --script res://tests/test_economy.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_map_ui.gd"
+  echo "Then run: godot --headless --path . --script res://tests/test_presenters.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_tutorial_flow.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_controller_flow.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_campaign.gd"

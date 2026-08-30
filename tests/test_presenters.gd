@@ -1,0 +1,76 @@
+extends SceneTree
+
+const AshWorldState = preload("res://src/core/world_state.gd")
+const TradePresenter = preload("res://src/ui/trade_presenter.gd")
+const JourneyPresenter = preload("res://src/ui/journey_presenter.gd")
+
+var failures: Array[String] = []
+
+
+func _init() -> void:
+	_test_trade_presenter()
+	_test_event_presenter()
+	_test_arrival_presenter()
+	if failures.is_empty():
+		print("PASS: Market of Ash presenter tests")
+		quit(0)
+	else:
+		for failure in failures:
+			push_error(failure)
+		quit(1)
+
+
+func _expect(condition: bool, message: String) -> void:
+	if not condition:
+		failures.append(message)
+
+
+func _test_trade_presenter() -> void:
+	var world := AshWorldState.new(1107)
+	var origin: Dictionary = world.settlement("ashgate")
+	var destination: Dictionary = world.settlement("reedwatch")
+	var route: Dictionary = world.route("old_road", "ashgate", "reedwatch")
+	route["provisions"] = world.route_provision_cost("old_road", "reedwatch")
+	var context: Dictionary = world.pricing_context()
+	context["cargo"] = {"water": 2, "weight": 2}
+	context["route_intelligence"] = world.route_intelligence("old_road")
+	var decision := TradePresenter.shop_decision_summary_text(world, "water", 2, origin, destination, route, context)
+	var forecast := TradePresenter.route_preview_text(world, "water", 2, origin, destination, route, context)
+	_expect(decision.contains("ORDINARY / NO CONTRACT") and decision.contains("expected +") and decision.contains("NEXT — Buy 2 Water"), "trade presenter should summarize the selected ordinary-trade decision and next action")
+	_expect(forecast.contains("ROUTE FORECAST — Ashgate to Reedwatch via Old Road") and forecast.contains("Route fee") and forecast.contains("Scout confidence"), "trade presenter should expose the complete selected-route forecast")
+
+
+func _test_event_presenter() -> void:
+	var world := AshWorldState.new(1107)
+	var pending := {
+		"id": "presenter_fixture",
+		"title": "A blocked road",
+		"setup": "A toll keeper waits.",
+		"origin_id": "ashgate",
+		"destination_id": "reedwatch",
+		"route_id": "old_road",
+		"stakes": "Pay or risk the cargo.",
+		"loss_basis": {"loss_quantity": 1, "loss_good_id": "water", "loss_unit_value": 30},
+		"choices": [
+			{"id": "pay", "label": "Pay", "money_cost": 999, "outcome": "The road opens."},
+			{"id": "cross", "label": "Cross", "cargo_risk": 0.4, "outcome": "The caravan presses on."},
+		],
+	}
+	var view := JourneyPresenter.event_view(world, pending)
+	var choices: Array = view.get("choices", [])
+	_expect(view.get("title", "") == "A blocked road" and String(view.get("stakes", "")).contains("Highest disclosed cargo-loss chance: 40%"), "event presenter should expose authored identity and maximum disclosed danger")
+	_expect(choices.size() == 2 and bool(choices[0].get("disabled", false)) and String(choices[0].get("blocked_reason", "")).contains("999 ashmarks"), "event presenter should keep unaffordable choices visible with the exact blocker")
+	_expect(not bool(choices[1].get("disabled", true)) and String(choices[1].get("text", "")).contains("MANEUVER / RISK ROLL 40%"), "event presenter should label available risky tactics consistently")
+
+
+func _test_arrival_presenter() -> void:
+	var world := AshWorldState.new(1107)
+	var record := {
+		"origin_id": "ashgate",
+		"destination_id": "reedwatch",
+		"choice_id": "wait",
+		"choices": [{"id": "wait", "label": "Wait for daylight", "days": 1, "outcome": "The caravan reaches the wells."}],
+		"outcome": {"money": 0, "provisions": 0, "cargo": {}, "day": 1, "current_settlement": "reedwatch", "cargo_risk": 0.0},
+	}
+	var comparison := JourneyPresenter.conflict_outcome_comparison(world, record)
+	_expect(comparison.contains("JOURNEY RESULT") and comparison.contains("CHOICE — WAIT / CERTAIN") and comparison.contains("+1 days") and comparison.contains("arrived at Reedwatch"), "arrival presenter should compare the disclosed plan with the authoritative result")
