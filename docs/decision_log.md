@@ -489,3 +489,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The full market ledger already contained every calculation, but a first-time player had to read across status text, controls, and a long forecast to reconstruct the decision. The compact card makes ordinary trade legible before optional contracts without introducing a separate recommendation or changing any authoritative calculation.
 
 **Trade-off:** The card summarizes one currently selected cargo-route plan and can be scrolled away when editing deeper market details. It deliberately does not rank routes, auto-buy, or claim certainty beyond the existing deterministic forecast.
+
+## ADR-062: Presentation copy is derived outside the scene controller
+
+**Decision:** Move Bazaar forecasts, Departure forecasts, road-event choice cards, and arrival/debrief comparisons into deterministic presenter modules. Presenters may read authoritative world state and content definitions, but they return text and availability view models only. `main.gd` continues to own Godot nodes, focus, signals, and input, while the command processor and world state remain the only mutation boundary.
+
+**Reason:** The vertical slice now has enough decision surfaces that keeping presentation derivation inside one scene controller makes the full loop difficult to test and risky to extend. Pure presenter outputs can be regression-tested without constructing the entire scene and make later route-comparison and authored-event improvements local changes.
+
+**Trade-off:** Presenters are still aware of the current world-state query API and authored content IDs. This is an extraction seam rather than a new domain layer; no forecast is cached, no command is issued, and no simulation rule is duplicated outside the core.

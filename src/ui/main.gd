@@ -5,6 +5,8 @@ const MarketEconomy = preload("res://src/core/economy.gd")
 const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 const TutorialDirector = preload("res://src/ui/tutorial_director.gd")
+const TradePresenter = preload("res://src/ui/trade_presenter.gd")
+const JourneyPresenter = preload("res://src/ui/journey_presenter.gd")
 
 const PLAYTEST_SEED := 1107
 const PLAYTEST_GOOD := "water"
@@ -3088,12 +3090,12 @@ func _refresh_forecasts() -> void:
 	if MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		selected_route = world.route(route_id, world.current_settlement, destination_id)
 		selected_route["provisions"] = world.route_provision_cost(route_id, destination_id)
-	var market_text := _market_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
+	var market_text := TradePresenter.market_preview_text(world, good_id, quantity, origin, destination, selected_route, world_context)
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
 	if shop_decision_summary_label:
-		shop_decision_summary_label.text = _shop_decision_summary_text(good_id, quantity, origin, destination, selected_route, world_context)
+		shop_decision_summary_label.text = TradePresenter.shop_decision_summary_text(world, good_id, quantity, origin, destination, selected_route, world_context)
 	var transaction_notes: Array[String] = []
 	if shop_buy_button:
 		var unit_price := MarketEconomy.price_for(good_id, origin, world_context)
@@ -3130,91 +3132,7 @@ func _refresh_forecasts() -> void:
 		var provision_count := int(selected_route.get("provisions", 0))
 		var provision_label := "provision" if provision_count == 1 else "provisions"
 		commit_departure_button.text = "Confirm and set out — %d ashmarks · %d %s" % [int(selected_route.get("cost", 0)), provision_count, provision_label]
-	route_preview_label.text = _route_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
-
-func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
-	var details := MarketEconomy.price_details(good_id, settlement, world_context)
-	if not details.ok:
-		return "MARKET\nNo valid good selected."
-	var reason_text := "; ".join(details.reasons)
-	var unit_price := int(details.unit_price)
-	var memory_text := ""
-	if float(details.market_pressure) > 0.0:
-		var delivery := world.latest_market_delivery(String(settlement.get("id", "")), good_id)
-		var decay_percent := int(round(MarketEconomy.market_pressure_decay_rate(settlement, good_id) * 100.0))
-		if delivery.is_empty():
-			memory_text = "\nMarket memory: recent deliveries softened this price by %d%%; the effect recovers by %d%% per day." % [int(round(float(details.market_pressure) * 100.0)), decay_percent]
-		else:
-			memory_text = "\nMarket memory: your last %d %s delivered here softened this price by %d%%; the effect recovers by %d%% per day." % [int(delivery.quantity), good_id, int(round(float(details.market_pressure) * 100.0)), decay_percent]
-	var comparison: Array[String] = []
-	for settlement_id in MarketContent.settlement_ids():
-		var candidate := world.settlement(settlement_id)
-		if candidate == settlement:
-			continue
-		comparison.append("%s %d" % [String(candidate.get("name", settlement_id)), MarketEconomy.price_for(good_id, candidate, world_context)])
-	if route.is_empty() or destination.is_empty():
-		return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s%s\nOther markets: %s" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, memory_text, "; ".join(comparison)]
-	var story := MarketEconomy.ordinary_trade_story(good_id, quantity, settlement, destination, route, world_context)
-	if not story.ok:
-		return "MARKET — %s\n%s: %d ashmarks each · load total %d\nWhy this price: %s%s\nOther markets: %s" % [settlement.get("name", "Unknown market"), good_id.capitalize(), unit_price, unit_price * quantity, reason_text, memory_text, "; ".join(comparison)]
-	var spread_text := "%+d" % int(story.unit_spread)
-	var gross_text := "%+d" % int(story.gross_margin)
-	var net_text := "%+d" % int(story.expected_net_profit)
-	var provision_word := "provision" if int(story.provisions) == 1 else "provisions"
-	return "ORDINARY TRADE — NO CONTRACT REQUIRED\n%s x%d · %s → %s via %s\nSOURCE — %s\nNEED — %s\nSPREAD — buy %d · sell %d · %s each · load total %s\nROAD — %d ashmarks · %d %s · %d%% exposed-unit risk\nEXPECTED NET %s ashmarks after travel, time, and expected loss\nWhy this price: %s%s\nMarket factors: local %.2f · demand %.2f · crisis %.2f · faction %.2f · response %.2f · memory %.2f\nOther markets: %s" % [good_id.capitalize(), quantity, story.origin_name, story.destination_name, story.route_name, story.source_reason, story.need_reason, int(story.origin_price), int(story.destination_price), spread_text, gross_text, int(story.route_cost), int(story.provisions), provision_word, int(round(float(story.risk) * 100.0)), net_text, reason_text, memory_text, float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.adaptive_modifier), float(details.market_memory_modifier), "; ".join(comparison)]
-
-func _shop_decision_summary_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
-	if route.is_empty() or destination.is_empty():
-		return "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a connected destination to compare value, road burden, risk, and hold space."
-	var story := MarketEconomy.ordinary_trade_story(good_id, quantity, origin, destination, route, world_context)
-	if not bool(story.get("ok", false)):
-		return "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a valid cargo load to compare this journey."
-	var good := MarketContent.good(good_id)
-	var held_quantity := int(world.cargo.get(good_id, 0))
-	var current_hold := int(world.cargo.get("weight", 0))
-	var load_weight := maxi(0, quantity - held_quantity) * int(good.get("weight", 0))
-	var projected_hold := current_hold + load_weight
-	var buy_total := int(story.origin_price) * quantity
-	var sale_total := int(story.destination_price) * quantity
-	var next_action := "Buy %d %s, then Plan departure." % [quantity, good_id.capitalize()]
-	if held_quantity >= quantity:
-		next_action = "Plan departure; this forecast load is already in the hold."
-	else:
-		var buy_validation := MarketEconomy.validate_trade(world.cargo, good_id, quantity, world.cargo_capacity)
-		if world.money < buy_total:
-			next_action = "Adjust the load: it costs %d ashmarks and %d are available." % [buy_total, world.money]
-		elif not bool(buy_validation.get("ok", false)):
-			next_action = "Adjust the load: %s." % String(buy_validation.get("reason", "it does not fit"))
-	var trade_path_label := "COMMONS / NO CONTRACT" if good_id == "charcoal" and String(destination.get("id", "")) == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else "ORDINARY / NO CONTRACT"
-	return "%s — %s x%d · %s → %s\nWHY — %s → %s\nVALUE — buy %d · sell %d · road %d · expected %+d ashmarks\nROAD / CAPACITY — %s · %d provision%s · %d%% exposed-unit risk · %d ashmarks available · hold %d/%d → %d/%d\nNEXT — %s" % [trade_path_label, good_id.capitalize(), quantity, String(story.origin_name), String(story.destination_name), String(story.source_reason), String(story.need_reason), buy_total, sale_total, int(story.route_cost), int(story.expected_net_profit), String(story.route_name), int(story.provisions), "" if int(story.provisions) == 1 else "s", int(round(float(story.risk) * 100.0)), world.money, current_hold, world.cargo_capacity, projected_hold, world.cargo_capacity, next_action]
-
-func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
-	var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, world_context)
-	if not preview.ok:
-		return "ROUTE FORECAST\nChoose a valid cargo, destination, and route."
-	var net_profit := int(preview.expected_net_profit)
-	var net_text := ("+%d" % net_profit) if net_profit > 0 else str(net_profit)
-	var cargo_risk_text: String
-	if int(preview.loss_quantity) <= 0:
-		cargo_risk_text = "Cargo risk: no carried cargo is currently at risk; expected loss 0 at %d%% risk." % int(round(float(preview.risk) * 100.0))
-	else:
-		cargo_risk_text = "Cargo risk: 1 %s unit at risk, valued at %d at %s; expected loss %d at %d%% risk." % [String(preview.loss_good_id).capitalize(), int(preview.loss_unit_value), destination.get("name", "the destination"), int(preview.expected_loss), int(round(float(preview.risk) * 100.0))]
-	var intelligence: Dictionary = world_context.get("route_intelligence", {})
-	var intelligence_text := "%s — %s" % [String(intelligence.get("label", "Scout unavailable")), String(intelligence.get("detail", "No current field report."))]
-	var held_quantity := int(world.cargo.get(good_id, 0))
-	var load_check: String
-	if held_quantity < quantity:
-		load_check = "LOAD CHECK — Held %d/%d selected %s. Buy %d before departure to carry this full scenario; travel uses the actual hold." % [held_quantity, quantity, good_id.capitalize(), quantity - held_quantity]
-	else:
-		load_check = "LOAD CHECK — Held %d/%d selected %s. This scenario is covered; departure still carries the full actual hold." % [held_quantity, quantity, good_id.capitalize()]
-	var faction_text := ""
-	if route.has("faction_effect"):
-		faction_text = "\n%s standing: %s Trade-off: %s" % [String(route.get("faction_name", "Faction")), String(route.get("faction_effect", "")), String(route.get("faction_tradeoff", ""))]
-	if route.has("arms_effect"):
-		faction_text += "\nEscalation warning: %s" % String(route.get("arms_effect", ""))
-	if route.has("crisis_effect"):
-		faction_text += "\nCrisis route change: %s" % String(route.get("crisis_effect", ""))
-	return "ROUTE FORECAST — %s to %s via %s\nScenario buy %d · expected sale %d · gross margin %+d\nRoute fee %d · provisions %d (%d value) · time cost %d\n%s\n%s\nEXPECTED NET PROFIT %s ashmarks\nRisk source: %s\nScout confidence: %s%s" % [origin.get("name", "Origin"), destination.get("name", "Destination"), route.get("name", "Route"), int(preview.purchase_total), int(preview.sale_total), int(preview.gross_trade_margin), int(preview.route_cost), int(preview.provisions), int(preview.provision_cost), int(preview.time_cost), load_check, cargo_risk_text, net_text, String(preview.risk_source), intelligence_text, faction_text]
+	route_preview_label.text = TradePresenter.route_preview_text(world, good_id, quantity, origin, destination, selected_route, world_context)
 
 func _on_buy_pressed() -> void:
 	_sync_shop_plan_to_departure()
@@ -3856,96 +3774,24 @@ func _refresh_event_card() -> void:
 		return
 	if not event_revealed:
 		return
-	event_title_label.text = String(pending.get("title", "Route decision"))
-	event_setup_label.text = String(pending.get("setup", ""))
-	var destination_name := String(world.settlement(String(pending.get("destination_id", ""))).get("name", "destination"))
-	var loss_basis: Dictionary = pending.get("loss_basis", {})
-	var cargo_context := "no carried cargo"
-	if int(loss_basis.get("loss_quantity", 0)) > 0:
-		cargo_context = "1 %s unit valued at %d" % [String(loss_basis.get("loss_good_id", "")).capitalize(), int(loss_basis.get("loss_unit_value", 0))]
-	var material_basis: Dictionary = pending.get("material_basis", {})
-	var material_parts: Array[String] = []
-	var material_goods: Dictionary = material_basis.get("goods", {})
-	for good_id in material_goods.keys():
-		material_parts.append("%d %s" % [int(material_goods.get(good_id, 0)), String(good_id).capitalize()])
-	var material_context := " Repair stock recognized: %s." % " + ".join(material_parts) if not material_parts.is_empty() else ""
-	var trade_basis: Dictionary = pending.get("trade_basis", {})
-	var trade_context := ""
-	if not trade_basis.is_empty():
-		trade_context = " Shortage basis: %d %s at %d each, plus %d premium each." % [int(trade_basis.get("quantity", 0)), String(trade_basis.get("good_id", "cargo")).capitalize(), int(trade_basis.get("unit_price", 0)), int(trade_basis.get("premium_per_unit", 0))]
-	var maximum_cargo_risk := 0.0
-	for raw_choice in pending.get("choices", []):
-		if typeof(raw_choice) == TYPE_DICTIONARY:
-			maximum_cargo_risk = maxf(maximum_cargo_risk, float(raw_choice.get("cargo_risk", 0.0)))
-	var maximum_risk_percent := int(round(maximum_cargo_risk * 100.0))
-	var threat_summary := "No choice uses a cargo-loss roll." if maximum_risk_percent == 0 else "Highest disclosed cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
-	event_stakes_label.text = "DANGER — %s\nROAD — %s to %s via %s.%s%s\nAT STAKE — %s\nWHAT COUNTS — Only the written money, provisions, cargo, time, or standing can change. There is no hidden health damage." % [threat_summary, String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), material_context, trade_context, String(pending.get("stakes", ""))]
-	for raw_choice in pending.get("choices", []):
-		if typeof(raw_choice) != TYPE_DICTIONARY:
-			continue
-		var choice: Dictionary = raw_choice
+	var view := JourneyPresenter.event_view(world, pending)
+	event_title_label.text = String(view.get("title", "Route decision"))
+	event_setup_label.text = String(view.get("setup", ""))
+	event_stakes_label.text = String(view.get("stakes", ""))
+	for choice_view in view.get("choices", []):
 		var button := _wrapped_action_button(92.0)
 		button.name = "RoadEventChoice%d" % event_choice_buttons.size()
-		var money_cost := int(choice.get("money_cost", 0))
-		var money_reward := int(choice.get("money_reward", 0))
-		var trade_mode := String(choice.get("trade_mode", "none"))
-		var trade_quantity := int(trade_basis.get("quantity", 0)) if trade_mode != "none" else 0
-		if trade_mode == "premium_sale":
-			money_reward += int(trade_basis.get("premium_total", 0))
-		var provision_cost := int(choice.get("provision_cost", 0))
-		var material_quantity := int(choice.get("material_quantity", 0))
-		var cargo_cost: Dictionary = choice.get("cargo_cost", {})
-		var cargo_cost_quantity := int(cargo_cost.get("quantity", 0))
-		var cargo_cost_good_id := String(cargo_cost.get("good_id", ""))
-		var days := int(choice.get("days", 0))
-		var cargo_risk := int(round(float(choice.get("cargo_risk", 0.0)) * 100.0))
-		var money_text := "no ashmark change"
-		if money_reward > 0:
-			money_text = "+%d ashmarks" % money_reward
-		elif money_cost > 0:
-			money_text = "-%d ashmarks" % money_cost
-		var arrival_text := "return to origin" if String(choice.get("arrival_target", "destination")) == "origin" else "continue to destination"
-		var cargo_cost_text := "%d %s" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else "%d materials" % material_quantity if material_quantity > 0 else "no cargo spent"
-		if cargo_cost_quantity > 0:
-			cargo_cost_text = "%d %s" % [cargo_cost_quantity, cargo_cost_good_id]
-		var tactic_label := _event_tactic_label(choice, trade_quantity, cargo_cost_quantity)
-		var certainty_label := "CERTAIN" if cargo_risk == 0 else "RISK ROLL %d%% cargo risk" % cargo_risk
-		button.text = "%s / %s — %s\nCOST — %s · %d provisions · %s · %d days\nRESULT — %s · %s\nEXPECTED — %s" % [tactic_label, certainty_label, String(choice.get("label", "Choose")), money_text, provision_cost, cargo_cost_text, days, arrival_text, "no cargo-loss roll" if cargo_risk == 0 else "up to %s exposed" % cargo_context, String(choice.get("outcome", "Resolve the confrontation."))]
-		var blocked_reason := ""
-		if world.money < money_cost:
-			button.disabled = true
-			blocked_reason = "Needs %d ashmarks; you have %d." % [money_cost, world.money]
-		elif world.provisions < provision_cost:
-			button.disabled = true
-			blocked_reason = "Needs %d provision; you have %d." % [provision_cost, world.provisions]
-		elif material_quantity > 0:
-			var available_materials := 0
-			for good_id in material_goods.keys():
-				available_materials += mini(int(material_goods.get(good_id, 0)), int(world.cargo.get(good_id, 0)))
-			if available_materials < material_quantity:
-				button.disabled = true
-				blocked_reason = "Needs %d of the disclosed repair materials; %d remain." % [material_quantity, available_materials]
-		elif trade_quantity > int(world.cargo.get(String(trade_basis.get("good_id", "")), 0)):
-			button.disabled = true
-			blocked_reason = "Needs %d %s; you have %d." % [trade_quantity, String(trade_basis.get("good_id", "cargo")), int(world.cargo.get(String(trade_basis.get("good_id", "")), 0))]
-		elif cargo_cost_quantity > int(world.cargo.get(cargo_cost_good_id, 0)):
-			button.disabled = true
-			blocked_reason = "Needs %d %s; you have %d." % [cargo_cost_quantity, cargo_cost_good_id, int(world.cargo.get(cargo_cost_good_id, 0))]
-		elif bool(choice.get("requires_active_contract", false)) and not _has_relevant_event_contract(String(pending.get("destination_id", "")), String(trade_basis.get("good_id", "water"))):
-			button.disabled = true
-			blocked_reason = "Needs an active water relief commitment for this destination."
-		elif not String(choice.get("requires_assigned_crew_id", "")).is_empty() and world.assigned_crew != String(choice.get("requires_assigned_crew_id", "")):
-			button.disabled = true
-			blocked_reason = "Requires %s to be assigned." % String(MarketContent.crew_member(String(choice.get("requires_assigned_crew_id", ""))).get("name", "the required crew member"))
-		button.tooltip_text = blocked_reason if button.disabled else String(choice.get("outcome", ""))
-		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice.get("id", ""))))
+		button.text = String(choice_view.get("text", ""))
+		button.disabled = bool(choice_view.get("disabled", false))
+		button.tooltip_text = String(choice_view.get("tooltip", ""))
+		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice_view.get("id", ""))))
 		event_choice_list.add_child(button)
 		event_choice_buttons.append(button)
 		if not button.disabled:
 			enabled_choice_buttons.append(button)
 		if button.disabled:
 			var reason_label := Label.new()
-			reason_label.text = "Unavailable: %s" % blocked_reason
+			reason_label.text = "Unavailable: %s" % String(choice_view.get("blocked_reason", ""))
 			reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			reason_label.add_theme_font_size_override("font_size", 11)
 			reason_label.add_theme_color_override("font_color", Color("#b5a18b"))
@@ -3958,248 +3804,26 @@ func _refresh_event_card() -> void:
 	if pause_layer == null or not pause_layer.visible:
 		if _grab_first_enabled(event_choice_buttons) and not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 			get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
-
-func _event_tactic_label(choice: Dictionary, trade_quantity: int, cargo_cost_quantity: int) -> String:
-	if String(choice.get("arrival_target", "destination")) == "origin":
-		return "RETREAT"
-	if not String(choice.get("requires_assigned_crew_id", "")).is_empty():
-		return "CREW LEVERAGE"
-	if float(choice.get("cargo_risk", 0.0)) > 0.0:
-		return "MANEUVER"
-	if int(choice.get("money_cost", 0)) > 0:
-		return "PAY"
-	if trade_quantity > 0 or int(choice.get("material_quantity", 0)) > 0 or cargo_cost_quantity > 0:
-		return "TRADE"
-	if int(choice.get("days", 0)) > 0:
-		return "WAIT"
-	if not Dictionary(choice.get("reputation_delta", {})).is_empty() or not String(choice.get("information_id", "")).is_empty():
-		return "NEGOTIATE"
-	return "COMMIT"
-
 func _conflict_outcome_comparison(result: Dictionary) -> String:
 	var state_delta: Dictionary = result.get("state_delta", {})
 	var event_record: Dictionary = Dictionary(state_delta.get("event", {})).duplicate(true)
 	event_record["outcome"] = Dictionary(state_delta.get("outcome", {})).duplicate(true)
 	event_record["choice_id"] = String(state_delta.get("choice_id", ""))
-	return _conflict_outcome_comparison_from_event(event_record)
+	return JourneyPresenter.conflict_outcome_comparison(world, event_record)
 
 func _latest_conflict_outcome_text() -> String:
 	if world == null or world.event_history.is_empty():
 		return ""
-	return _conflict_outcome_comparison_from_event(Dictionary(world.event_history.back()))
+	return JourneyPresenter.conflict_outcome_comparison(world, Dictionary(world.event_history.back()))
 
 func _conflict_outcome_comparison_from_event(event_record: Dictionary) -> String:
-	var outcome: Dictionary = event_record.get("outcome", {})
-	var choice_id := String(event_record.get("choice_id", ""))
-	if event_record.is_empty() or outcome.is_empty() or choice_id.is_empty():
-		return ""
-	var choice := _event_choice_from_record(event_record, choice_id)
-	if choice.is_empty():
-		return ""
-	var trade_basis: Dictionary = event_record.get("trade_basis", {})
-	var trade_mode := String(choice.get("trade_mode", "none"))
-	var trade_quantity := int(trade_basis.get("quantity", 0)) if trade_mode != "none" else 0
-	var cargo_cost: Dictionary = choice.get("cargo_cost", {})
-	var cargo_cost_quantity := int(cargo_cost.get("quantity", 0))
-	var tactic_label := _event_tactic_label(choice, trade_quantity, cargo_cost_quantity)
-	var risk := float(choice.get("cargo_risk", 0.0))
-	var risk_percent := int(round(risk * 100.0))
-	var certainty_label := "CERTAIN" if risk_percent == 0 else "%d%% RISK" % risk_percent
-	var planned_money := int(choice.get("money_reward", 0)) - int(choice.get("money_cost", 0))
-	if trade_mode == "premium_sale":
-		planned_money += int(trade_basis.get("premium_total", 0))
-	var arrival_target := String(choice.get("arrival_target", "destination"))
-	var planned_settlement_id := String(event_record.get("origin_id", "")) if arrival_target == "origin" else String(event_record.get("destination_id", ""))
-	var planned_settlement_name := String(world.settlement(planned_settlement_id).get("name", planned_settlement_id))
-	var actual_settlement_id := String(outcome.get("current_settlement", planned_settlement_id))
-	var actual_settlement_name := String(world.settlement(actual_settlement_id).get("name", actual_settlement_id))
-	var planned_cargo := _planned_conflict_cargo_text(choice, event_record, trade_quantity, cargo_cost_quantity)
-	var actual_cargo := _actual_conflict_cargo_text(Dictionary(outcome.get("cargo", {})))
-	var risk_variance := _conflict_risk_variance_text(event_record, outcome)
-	var persistent_effects := _conflict_persistent_effects_text(outcome)
-	var comparison := "JOURNEY RESULT\nCHOICE — %s / %s — %s\nEXPECTED — %s · %s · %s · %s · %s · %s.\nARRIVAL — %s · %s · %s · %s · arrived at %s.\nWHAT CHANGED — %s\nWHY — %s" % [
-		tactic_label,
-		certainty_label,
-		String(choice.get("label", "Choice")),
-		_resource_delta_text(planned_money, "ashmarks"),
-		_resource_delta_text(-int(choice.get("provision_cost", 0)), "provisions"),
-		planned_cargo,
-		_resource_delta_text(int(choice.get("days", 0)), "days"),
-		"no cargo-loss roll" if risk_percent == 0 else "%d%% cargo-loss roll" % risk_percent,
-		"return to %s" % planned_settlement_name if arrival_target == "origin" else "continue to %s" % planned_settlement_name,
-		_resource_delta_text(int(outcome.get("money", 0)), "ashmarks"),
-		_resource_delta_text(int(outcome.get("provisions", 0)), "provisions"),
-		actual_cargo,
-		_resource_delta_text(int(outcome.get("day", 0)), "days"),
-		actual_settlement_name,
-		risk_variance,
-		String(choice.get("outcome", "The conflict resolves.")),
-	]
-	if not persistent_effects.is_empty():
-		comparison += "\nPERSISTENT — %s" % persistent_effects
-	var recovery_text := _conflict_recovery_text(event_record, outcome)
-	if not recovery_text.is_empty():
-		comparison += "\n%s" % recovery_text
-	return comparison
-
-func _event_choice_from_record(event_record: Dictionary, choice_id: String) -> Dictionary:
-	for raw_choice in event_record.get("choices", []):
-		if typeof(raw_choice) == TYPE_DICTIONARY and String(raw_choice.get("id", "")) == choice_id:
-			return Dictionary(raw_choice)
-	return {}
-
-func _resource_delta_text(value: int, unit: String) -> String:
-	return "%+d %s" % [value, unit] if value != 0 else "0 %s" % unit
-
-func _planned_conflict_cargo_text(choice: Dictionary, event_record: Dictionary, trade_quantity: int, cargo_cost_quantity: int) -> String:
-	if trade_quantity > 0:
-		var trade_basis: Dictionary = event_record.get("trade_basis", {})
-		return "-%d %s planned" % [trade_quantity, String(trade_basis.get("good_id", "cargo")).capitalize()]
-	var material_quantity := int(choice.get("material_quantity", 0))
-	if material_quantity > 0:
-		return "-%d repair materials planned" % material_quantity
-	if cargo_cost_quantity > 0:
-		return "-%d %s planned" % [cargo_cost_quantity, String(choice.get("cargo_cost", {}).get("good_id", "cargo")).capitalize()]
-	return "no planned cargo spend"
-
-func _actual_conflict_cargo_text(cargo_delta: Dictionary) -> String:
-	var parts: Array[String] = []
-	var good_ids: Array = cargo_delta.keys()
-	good_ids.sort()
-	for good_id_value in good_ids:
-		var good_id := String(good_id_value)
-		if good_id == "weight" or int(cargo_delta.get(good_id_value, 0)) == 0:
-			continue
-		parts.append("%s %+d" % [good_id.capitalize(), int(cargo_delta.get(good_id_value, 0))])
-	return "cargo unchanged" if parts.is_empty() else ", ".join(parts)
-
-func _conflict_risk_variance_text(event_record: Dictionary, outcome: Dictionary) -> String:
-	var risk := float(outcome.get("cargo_risk", 0.0))
-	if risk <= 0.0:
-		return "Matched the disclosed plan; no cargo-loss roll occurred."
-	var roll := float(outcome.get("resolution_roll", 1.0))
-	var roll_percent := int(round(roll * 100.0))
-	var risk_percent := int(round(risk * 100.0))
-	var loss_basis: Dictionary = event_record.get("loss_basis", {})
-	var loss_good_id := String(loss_basis.get("loss_good_id", ""))
-	if roll < risk:
-		return "Risk realized: the %d%% roll was below %d%%; 1 %s was exposed." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo unit"]
-	return "Risk avoided: the %d%% roll cleared the %d%% threshold; the exposed %s remained intact." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo"]
-
-func _conflict_persistent_effects_text(outcome: Dictionary) -> String:
-	var parts: Array[String] = []
-	var route_condition: Dictionary = outcome.get("route_condition", {})
-	if not route_condition.is_empty():
-		parts.append(String(route_condition.get("label", "Route condition changed")))
-	var resilience: Dictionary = outcome.get("settlement_resilience", {})
-	if not resilience.is_empty():
-		parts.append("settlement resilience %d/10" % int(resilience.get("after", 0)))
-	var information_id := String(outcome.get("information_id", ""))
-	if not information_id.is_empty():
-		parts.append("information: %s" % information_id.replace("_", " "))
-	var reputation: Dictionary = outcome.get("reputation", {})
-	var faction_ids: Array = reputation.keys()
-	faction_ids.sort()
-	for faction_id_value in faction_ids:
-		var faction_id := String(faction_id_value)
-		var reputation_result: Dictionary = reputation.get(faction_id_value, {})
-		parts.append("%s standing %+d to %d" % [faction_id.capitalize(), int(reputation_result.get("delta", 0)), int(reputation_result.get("after", 0))])
-	var contracts: Array = outcome.get("contract_resolutions", [])
-	if not contracts.is_empty():
-		parts.append("%d contract result%s" % [contracts.size(), "" if contracts.size() == 1 else "s"])
-	return "; ".join(parts)
-
-func _conflict_recovery_text(event_record: Dictionary, outcome: Dictionary) -> String:
-	var risk := float(outcome.get("cargo_risk", 0.0))
-	var roll := float(outcome.get("resolution_roll", 1.0))
-	if risk <= 0.0 or roll >= risk:
-		return ""
-	var sale := _best_recovery_sale()
-	var recovery_steps: Array[String] = []
-	var available_money := world.money
-	if not sale.is_empty():
-		available_money += int(sale.get("total", 0))
-		recovery_steps.append("%s x%d remains and would sell here for %d ashmarks" % [String(sale.get("name", "Cargo")), int(sale.get("quantity", 0)), int(sale.get("total", 0))])
-	var route_option := _safest_affordable_recovery_route(available_money)
-	if not route_option.is_empty():
-		var funding_basis := "With current funds"
-		if not sale.is_empty():
-			funding_basis = "After that sale"
-		recovery_steps.append("%s, %s to %s is the lowest-risk affordable onward route at %d ashmarks, %d provision%s, and %d%% route risk" % [funding_basis, String(route_option.get("route_name", "Route")), String(route_option.get("destination_name", "destination")), int(route_option.get("money_cost", 0)), int(route_option.get("provision_cost", 0)), "" if int(route_option.get("provision_cost", 0)) == 1 else "s", int(route_option.get("risk_percent", 0))])
-	if recovery_steps.is_empty():
-		var loss_basis: Dictionary = event_record.get("loss_basis", {})
-		var loss_good_id := String(loss_basis.get("loss_good_id", "cargo"))
-		recovery_steps.append("the lost %s leaves no immediately affordable sale or route, so check the visible Local Opportunities and their exact blockers" % loss_good_id.capitalize())
-	return "RECOVERY — %s. No restart is required." % ". ".join(recovery_steps)
+	return JourneyPresenter.conflict_outcome_comparison(world, event_record)
 
 func _best_recovery_sale() -> Dictionary:
-	var settlement := world.settlement(world.current_settlement)
-	var context := world.pricing_context()
-	var best: Dictionary = {}
-	for good_id in MarketContent.good_ids():
-		var quantity := _uncommitted_cargo_quantity(good_id)
-		if quantity <= 0:
-			continue
-		var unit_price := MarketEconomy.price_for(good_id, settlement, context)
-		var total := unit_price * quantity
-		if best.is_empty() or total > int(best.get("total", 0)):
-			best = {
-				"good_id": good_id,
-				"name": String(MarketContent.good(good_id).get("name", good_id.capitalize())),
-				"quantity": quantity,
-				"unit_price": unit_price,
-				"total": total,
-			}
-	return best
-
-func _uncommitted_cargo_quantity(good_id: String) -> int:
-	var reserved_quantity := 0
-	for contract_id in world.active_contracts.keys():
-		var contract := world.active_contract(String(contract_id))
-		if String(contract.get("good_id", "")) == good_id:
-			reserved_quantity += int(contract.get("quantity", 0))
-	return maxi(0, int(world.cargo.get(good_id, 0)) - reserved_quantity)
+	return JourneyPresenter.best_recovery_sale(world)
 
 func _safest_affordable_recovery_route(available_money: int) -> Dictionary:
-	var best: Dictionary = {}
-	var destination_ids := MarketContent.destinations_from(world.current_settlement)
-	destination_ids.sort()
-	var route_ids := MarketContent.routes_from(world.current_settlement)
-	route_ids.sort()
-	for destination_id_value in destination_ids:
-		var destination_id := String(destination_id_value)
-		for route_id_value in route_ids:
-			var route_id := String(route_id_value)
-			if not MarketContent.route_connects(route_id, world.current_settlement, destination_id):
-				continue
-			var route := world.route(route_id, world.current_settlement, destination_id)
-			var money_cost := int(route.get("cost", 0))
-			var provision_cost := world.route_provision_cost(route_id, destination_id)
-			if available_money < money_cost or world.provisions < provision_cost:
-				continue
-			var risk_percent := int(round(float(route.get("risk", 0.0)) * 100.0))
-			if not best.is_empty():
-				var best_risk := int(best.get("risk_percent", 0))
-				var best_cost := int(best.get("money_cost", 0))
-				if risk_percent > best_risk or (risk_percent == best_risk and money_cost >= best_cost):
-					continue
-			best = {
-				"route_id": route_id,
-				"route_name": String(route.get("name", route_id)),
-				"destination_id": destination_id,
-				"destination_name": String(world.settlement(destination_id).get("name", destination_id)),
-				"money_cost": money_cost,
-				"provision_cost": provision_cost,
-				"risk_percent": risk_percent,
-			}
-	return best
-
-func _has_relevant_event_contract(destination_id: String, good_id: String) -> bool:
-	for contract_id in world.active_contracts.keys():
-		var contract := world.active_contract(String(contract_id))
-		if String(contract.get("destination_id", "")) == destination_id and String(contract.get("good_id", "")) == good_id:
-			return true
-	return false
+	return JourneyPresenter.safest_affordable_recovery_route(world, available_money)
 
 func _has_completed_contract(contract_id: String) -> bool:
 	for contract in world.contract_history:
