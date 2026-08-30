@@ -68,7 +68,7 @@ REQUIRED_LAYOUT_CONTROLS = {
     "well_commons_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
     "well_commons_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "well_commons_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
-    "commons_ending": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "commons_ending": ("BazaarMarketPanel", "ShopActionCard", "CampaignDebriefPanel", "EndingContinueAction", "EndingReplayAction", "EndingTitleAction", "EndingFeedbackAction", "BazaarPrimaryAction"),
     "destination_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
@@ -195,6 +195,8 @@ def main() -> int:
             ui_state.get("ending_id") != "ending_commons_exchange"
             or ui_state.get("adaptive_scenario_state") != "expired"
             or "well_commons" not in ui_state.get("emergent_factions", [])
+            or "ROUTE TIMELINE" not in ui_state.get("campaign_debrief", "")
+            or "REPLAY EXPERIMENT" not in ui_state.get("campaign_debrief", "")
         ):
             raise AssertionError(f"{file_name}: Commons ending capture is missing its causal campaign state")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):

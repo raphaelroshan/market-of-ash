@@ -11,6 +11,7 @@ func _init() -> void:
 	_test_trade_presenter()
 	_test_event_presenter()
 	_test_arrival_presenter()
+	_test_campaign_debrief_presenter()
 	if failures.is_empty():
 		print("PASS: Market of Ash presenter tests")
 		quit(0)
@@ -82,3 +83,25 @@ func _test_arrival_presenter() -> void:
 	}
 	var comparison := JourneyPresenter.conflict_outcome_comparison(world, record)
 	_expect(comparison.contains("JOURNEY RESULT") and comparison.contains("CHOICE — WAIT / CERTAIN") and comparison.contains("+1 days") and comparison.contains("arrived at Reedwatch"), "arrival presenter should compare the disclosed plan with the authoritative result")
+
+
+func _test_campaign_debrief_presenter() -> void:
+	var world := AshWorldState.new(1107)
+	world.money = 146
+	world.provisions = 10
+	world.day = 10
+	world.ending_id = "open_routes_relief"
+	world.ending_summary = "Shared deliveries kept the wells open."
+	world.reputation["caravans"] = 2
+	world.settlement_resilience["reedwatch"] = 2
+	world.command_history = [
+		{"id": "buy_goods", "ok": true, "day": 1, "inputs": {"good_id": "water", "quantity": 2}, "state_delta": {"money": -30, "cargo": {"water": 2}}},
+		{"id": "depart_route", "ok": true, "day": 2, "inputs": {"route_id": "old_road", "destination_id": "reedwatch"}, "state_delta": {"money": -4, "provisions": -1, "day": 1}},
+		{"id": "sell_goods", "ok": true, "day": 2, "inputs": {"good_id": "water", "quantity": 2}, "state_delta": {"money": 60, "cargo": {"water": -2}}},
+	]
+	world.event_history = [{"title": "The Last Clean Barrel", "choice_id": "share", "choices": [{"id": "share", "label": "Share the barrels"}]}]
+	var debrief := JourneyPresenter.campaign_debrief(world)
+	var text := String(debrief.get("text", ""))
+	_expect(text.contains("CAMPAIGN DEBRIEF") and text.contains("ROUTE TIMELINE") and text.contains("Old Road → Reedwatch"), "campaign debrief should reconstruct the route timeline")
+	_expect(text.contains("CARGO & CASH") and text.contains("TIME & PROVISIONS") and text.contains("EVENT DECISIONS"), "campaign debrief should compose resource and event evidence")
+	_expect(text.contains("REGIONAL CONSEQUENCES") and text.contains("CAUSAL LESSON") and text.contains("REPLAY EXPERIMENT") and text.contains("Seed 1107 fixes world rolls"), "campaign debrief should explain consequences and propose a reproducible alternative experiment")

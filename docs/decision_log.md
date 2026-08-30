@@ -513,3 +513,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Location identity must explain how a place trades as well as how it looks. Keeping the market read and visual vocabulary beside production, consumption, and price data lets a settlement arrive as one authored place and gives future locations a stable content path without editing the scene controller.
 
 **Trade-off:** Landmark drawing remains a small supported vocabulary rather than arbitrary scene composition. New landmark families require renderer work, but new settlements using an existing family can be authored and validated entirely in data.
+
+## ADR-065: Campaign conclusions open a causal debrief, not a score screen
+
+**Decision:** Expand a reached ending into a deterministic campaign debrief assembled from command history, event history, final resources, relationships, resilience, and the ending summary. The debrief shows the recent route and trade timeline, names the causal lesson, proposes one ending-specific replay experiment, and offers Continue, Replay, Title, and report-export actions. Replay restarts the same authored opening and seed but explicitly treats the player's new command sequence as the experiment.
+
+**Reason:** An ending title alone does not teach the player how market, road, event, and political decisions combined. A causal receipt closes the vertical slice and turns replay into a purposeful comparison instead of presenting a canonical winning path or implying that the seed reproduces player choices.
+
+**Trade-off:** The compact debrief summarizes the most recent six routes and trades while the exported report retains the full bounded history. Continuing dismisses the debrief for the current session but leaves the immutable ending visible in Bazaar status and the saved campaign.

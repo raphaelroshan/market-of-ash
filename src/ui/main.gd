@@ -167,6 +167,12 @@ var recent_conflict_panel: PanelContainer
 var recent_conflict_label: Label
 var ending_panel: PanelContainer
 var ending_label: Label
+var ending_continue_button: Button
+var ending_replay_button: Button
+var ending_title_button: Button
+var ending_feedback_button: Button
+var ending_debrief_dismissed := false
+var last_presented_ending_id := ""
 var plan_departure_button: Button
 var departure_travel_actions: HBoxContainer
 var return_to_shop_button: Button
@@ -790,7 +796,9 @@ func _show_shop() -> void:
 	if return_to_shop_button:
 		return_to_shop_button.disabled = false
 	_refresh_ui()
-	if not _grab_focus_if_available(shop_buy_button):
+	if ending_panel != null and ending_panel.visible:
+		_grab_focus_if_available(ending_continue_button)
+	elif not _grab_focus_if_available(shop_buy_button):
 		_grab_focus_if_available(shop_good_option)
 	if shop_market_scroll:
 		shop_market_scroll.scroll_vertical = 0
@@ -1336,13 +1344,61 @@ func _build_shop() -> void:
 	recent_conflict_label.add_theme_color_override("font_color", Color("#f0d2a0"))
 	recent_conflict_panel.add_child(recent_conflict_label)
 	ending_panel = PanelContainer.new()
+	ending_panel.name = "CampaignDebriefPanel"
 	ending_panel.visible = false
 	actions.add_child(ending_panel)
+	var ending_shell := VBoxContainer.new()
+	ending_shell.add_theme_constant_override("separation", 10)
+	ending_panel.add_child(ending_shell)
+	var ending_text_scroll := ScrollContainer.new()
+	ending_text_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	ending_text_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	ending_text_scroll.custom_minimum_size = Vector2(0, 190)
+	ending_shell.add_child(ending_text_scroll)
 	ending_label = Label.new()
 	ending_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	ending_label.add_theme_font_size_override("font_size", 16)
+	ending_label.add_theme_font_size_override("font_size", 14)
 	ending_label.add_theme_color_override("font_color", Color("#e6c58d"))
-	ending_panel.add_child(ending_label)
+	ending_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ending_text_scroll.add_child(ending_label)
+	var ending_actions := GridContainer.new()
+	ending_actions.columns = 2
+	ending_actions.add_theme_constant_override("h_separation", 8)
+	ending_actions.add_theme_constant_override("v_separation", 8)
+	ending_shell.add_child(ending_actions)
+	ending_continue_button = Button.new()
+	ending_continue_button.name = "EndingContinueAction"
+	ending_continue_button.text = "Continue this region"
+	ending_continue_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ending_continue_button.custom_minimum_size = Vector2(130, 52)
+	ending_continue_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ending_continue_button.pressed.connect(_on_ending_continue_pressed)
+	ending_actions.add_child(ending_continue_button)
+	ending_replay_button = Button.new()
+	ending_replay_button.name = "EndingReplayAction"
+	ending_replay_button.text = "Replay the experiment"
+	ending_replay_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ending_replay_button.custom_minimum_size = Vector2(130, 52)
+	ending_replay_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ending_replay_button.pressed.connect(_on_ending_replay_pressed)
+	ending_actions.add_child(ending_replay_button)
+	ending_title_button = Button.new()
+	ending_title_button.name = "EndingTitleAction"
+	ending_title_button.text = "Return to title"
+	ending_title_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ending_title_button.custom_minimum_size = Vector2(130, 52)
+	ending_title_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ending_title_button.pressed.connect(_on_ending_title_pressed)
+	ending_actions.add_child(ending_title_button)
+	ending_feedback_button = Button.new()
+	ending_feedback_button.name = "EndingFeedbackAction"
+	ending_feedback_button.text = "Export journey report"
+	ending_feedback_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	ending_feedback_button.custom_minimum_size = Vector2(130, 52)
+	ending_feedback_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	ending_feedback_button.pressed.connect(_on_export_report_pressed)
+	ending_actions.add_child(ending_feedback_button)
+	actions.move_child(ending_panel, 2)
 	var opportunity_title := Label.new()
 	opportunity_title.text = "LOCAL STALLS & OPPORTUNITIES"
 	opportunity_title.add_theme_font_size_override("font_size", 18)
@@ -1811,6 +1867,22 @@ func _on_tutorial_skip_pressed() -> void:
 	_set_event("Tutorial guidance hidden. The campaign and every current decision remain unchanged. Replay is available from the New Game introduction.")
 	_refresh_ui()
 
+func _on_ending_continue_pressed() -> void:
+	ending_debrief_dismissed = true
+	ending_panel.visible = false
+	_set_event("Campaign conclusion reviewed. Trading remains open, so you can inspect the region your choices created.")
+	_grab_focus_if_available(shop_good_option)
+	_publish_web_ui_state()
+
+func _on_ending_replay_pressed() -> void:
+	pending_tutorial_enabled = false
+	ending_debrief_dismissed = false
+	_on_start_game_requested(PLAYTEST_PATH_GUIDED)
+
+func _on_ending_title_pressed() -> void:
+	ending_debrief_dismissed = false
+	_show_main_menu()
+
 func _apply_bazaar_section() -> void:
 	if opportunity_list == null:
 		return
@@ -2041,6 +2113,8 @@ func _on_start_game_pressed(path_id: String = PLAYTEST_PATH_GUIDED) -> void:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = AshWorldState.new(PLAYTEST_SEED)
+	ending_debrief_dismissed = false
+	last_presented_ending_id = ""
 	run_started_msec = Time.get_ticks_msec()
 	first_trade_elapsed_msec = -1
 	if map_panel:
@@ -2688,6 +2762,10 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 		"shop_buy": return shop_buy_button
 		"shop_sell": return shop_sell_button
 		"plan_departure": return plan_departure_button
+		"ending_continue": return ending_continue_button
+		"ending_replay": return ending_replay_button
+		"ending_title": return ending_title_button
+		"ending_feedback": return ending_feedback_button
 		"pause_resume": return pause_resume_button
 		"pause_save": return pause_save_button
 		"pause_load": return pause_load_button
@@ -2819,6 +2897,11 @@ func _web_accessibility_actions() -> Array:
 			_append_web_accessibility_action(actions, "intro_next", intro_next_button)
 			_append_web_accessibility_action(actions, "intro_skip", intro_skip_button)
 		"settlement_shop":
+			if ending_panel != null and ending_panel.visible:
+				_append_web_accessibility_action(actions, "ending_continue", ending_continue_button)
+				_append_web_accessibility_action(actions, "ending_replay", ending_replay_button)
+				_append_web_accessibility_action(actions, "ending_title", ending_title_button)
+				_append_web_accessibility_action(actions, "ending_feedback", ending_feedback_button)
 			_append_tagged_web_accessibility_actions(actions, bazaar_navigation_buttons)
 			_append_web_accessibility_action(actions, "tutorial_skip", tutorial_skip_button)
 			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
@@ -2873,6 +2956,16 @@ func _web_accessibility_order(actions: Array, controls: Array) -> Array:
 				order.append("action:%s" % action_id)
 		return order
 	if _current_ui_state_id() == "settlement_shop":
+		if ending_panel != null and ending_panel.visible:
+			for ending_action_id in ["ending_continue", "ending_replay", "ending_title", "ending_feedback"]:
+				order.append("action:%s" % ending_action_id)
+			for control in controls:
+				order.append("control:%s" % String(control.get("id", "")))
+			for action in actions:
+				var remaining_action_id := String(action.get("id", ""))
+				if remaining_action_id not in ["ending_continue", "ending_replay", "ending_title", "ending_feedback"]:
+					order.append("action:%s" % remaining_action_id)
+			return order
 		for action in actions:
 			var action_id := String(action.get("id", ""))
 			if action_id.begins_with("bazaar_"):
@@ -2910,7 +3003,8 @@ func _web_accessibility_announcement() -> String:
 			return "Market of Ash introduction, page %d of %d. %s %s Next, Back, and Start without guidance are available." % [intro_page + 1, INTRO_PAGES.size(), intro_title_label.text, intro_body_label.text]
 		"settlement_shop":
 			if not world.ending_id.is_empty():
-				return "Campaign conclusion: %s. %s You may continue trading to inspect the resulting region." % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
+				var debrief := JourneyPresenter.campaign_debrief(world)
+				return "Campaign conclusion. %s Continue this region, replay the experiment, return to title, and export journey report are available." % String(debrief.get("text", ""))
 			var recent_conflict_text := _latest_conflict_outcome_text()
 			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
 			var trade_plan_note := " Current trade plan: %s" % shop_decision_summary_label.text.replace("\n", " ") if active_bazaar_section == "trade" and shop_decision_summary_label != null else ""
@@ -2953,6 +3047,10 @@ func _web_ui_state() -> Dictionary:
 		"bazaar_outlook": _web_control_rect(bazaar_navigation_buttons[4]),
 		"large_text": _web_control_rect(large_text_checkbox),
 		"plan_departure": _web_control_rect(plan_departure_button),
+		"ending_continue": _web_control_rect(ending_continue_button),
+		"ending_replay": _web_control_rect(ending_replay_button),
+		"ending_title": _web_control_rect(ending_title_button),
+		"ending_feedback": _web_control_rect(ending_feedback_button),
 		"return_to_shop": _web_control_rect(return_to_shop_button),
 		"commit_departure": _web_control_rect(commit_departure_button),
 		"continue_journey": _web_control_rect(continue_journey_button),
@@ -2995,6 +3093,7 @@ func _web_ui_state() -> Dictionary:
 		"adaptive_response": world.adaptive_response_summary() if world != null else "",
 		"ending_id": world.ending_id if world != null else "",
 		"ending_summary": world.ending_summary if world != null else "",
+		"campaign_debrief": ending_label.text if ending_panel != null and ending_panel.visible else "",
 		"travel_phase": map_panel.travel_phase if map_panel != null else "rest",
 		"road_scene_id": String(map_panel._road_profile(map_panel.travel_route_id).get("scene_id", "")) if map_panel != null and map_panel._is_road_view() else "",
 		"road_waypoint": map_panel._road_waypoint_label() if map_panel != null and map_panel._is_road_view() else "",
@@ -3424,6 +3523,8 @@ func _on_load_pressed() -> bool:
 		binding_status_label.text = ""
 	_refresh_binding_labels()
 	world = candidate
+	ending_debrief_dismissed = false
+	last_presented_ending_id = ""
 	tutorial.load_serialized(load_attempt.get("tutorial", {}))
 	last_tutorial_presented_step = ""
 	if loaded_from_main_menu:
@@ -3979,10 +4080,16 @@ func _refresh_ui() -> void:
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if ending_panel and ending_label:
-		ending_panel.visible = not world.ending_id.is_empty()
+		if world.ending_id != last_presented_ending_id:
+			ending_debrief_dismissed = false
+			last_presented_ending_id = world.ending_id
+		ending_panel.visible = not world.ending_id.is_empty() and not ending_debrief_dismissed
 		if ending_panel.visible:
-			var ending := MarketContent.ending(world.ending_id)
-			ending_label.text = "CAMPAIGN CONCLUSION\n%s\n%s\n\nThis outcome is recorded in the save. You may continue trading to inspect the resulting region." % [String(ending.get("title", world.ending_id)), world.ending_summary]
+			var debrief := JourneyPresenter.campaign_debrief(world)
+			ending_label.text = String(debrief.get("text", ""))
+			_link_focus_cycle([ending_continue_button, ending_replay_button, ending_title_button, ending_feedback_button])
+			if shop_layer.visible and get_viewport().gui_get_focus_owner() == null:
+				call_deferred("_grab_focus_if_available", ending_continue_button)
 	if campaign_outlook_label:
 		campaign_outlook_label.text = _campaign_outlook_text()
 	if recent_conflict_panel and recent_conflict_label:
