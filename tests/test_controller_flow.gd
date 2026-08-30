@@ -34,7 +34,10 @@ func _run() -> void:
 	await _press_joypad(JOY_BUTTON_A)
 	await _press_joypad(JOY_BUTTON_A)
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(ui.shop_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should complete the introduction and focus the Shop cargo selector")
+	_expect(ui.shop_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "controller Accept should complete the introduction and focus the ordinary-trade Buy action")
+	await _press_joypad(JOY_BUTTON_DPAD_UP)
+	await _press_joypad(JOY_BUTTON_DPAD_UP)
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "D-pad Up should move from the primary trade action back to the cargo selector")
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.shop_quantity.get_line_edit(), "D-pad Down should move from cargo selection to quantity")
 	var starting_quantity: float = ui.shop_quantity.value
@@ -69,17 +72,19 @@ func _run() -> void:
 	await _press_joypad(JOY_BUTTON_B)
 	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.cargo_quantity.get_line_edit(), "controller Back should close Pause and restore Departure focus")
 	await _press_joypad(JOY_BUTTON_B)
-	_expect(ui.shop_layer.visible and not ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Back should return from uncommitted Departure to the Shop")
+	_expect(ui.shop_layer.visible and not ui.game_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "controller Back should return from uncommitted Departure to the visible Buy action")
 	_expect(JSON.stringify(ui.world.serialize()) == shop_state, "controller-only reversible navigation should not mutate campaign state")
 
 	await _press_joypad(JOY_BUTTON_START)
 	_expect(ui.pause_layer.visible and ui.get_viewport().gui_get_focus_owner() == ui.pause_resume_button, "controller Menu should also pause from the Shop")
 	await _press_joypad(JOY_BUTTON_A)
-	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "controller Accept should activate Resume and restore Shop focus")
+	_expect(not ui.pause_layer.visible and not ui.get_tree().paused and ui.get_viewport().gui_get_focus_owner() == ui.shop_buy_button, "controller Accept should activate Resume and restore Shop focus")
 
 	ui.pending_tutorial_enabled = false
 	ui._on_start_game_pressed()
 	await process_frame
+	await _press_joypad(JOY_BUTTON_DPAD_UP)
+	await _press_joypad(JOY_BUTTON_DPAD_UP)
 	await _press_joypad(JOY_BUTTON_A)
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)
 	await _press_joypad(JOY_BUTTON_DPAD_DOWN)

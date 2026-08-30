@@ -25,7 +25,7 @@ The game must preserve two equally legitimate ways to play: ordinary buying and 
 | **M9** | Compose outcomes and replay | Debrief route, cargo, event, profit/loss, political pressure, and consequence. Offer a replay experiment without requiring one canonical ending. |
 | **M10** | Package the private alpha | Run all verification suites, capture a complete 1600×900 journey, check 1280×720 and large text, verify clean install and save migration, and publish an internal artifact with known limitations. Human sessions remain optional follow-up evidence. |
 
-**Progress:** M1 is implemented on the responsive-shell slice. Desktop launch now clamps the preferred 1600×900 window to the usable display, the 960×540 Main Menu and Introduction use an explicit stacked composition, and native captures assert visible bounds across Introduction, Bazaar, Departure, event, and arrival at 960×540, 1280×720, and 1600×900, including large text. M2 is next.
+**Progress:** M1 and M2 are implemented. Desktop launch now clamps the preferred 1600×900 window to the usable display, the 960×540 Main Menu and Introduction use an explicit stacked composition, and native captures assert visible bounds across Introduction, Bazaar, Departure, event, and arrival. The first Bazaar now presents one ordinary-trade decision card with source, need, value, route burden, risk, resources, capacity, and next action before optional contracts. M3 is next.
 
 ## Acceptance tests for every AI task
 

@@ -333,6 +333,7 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"ShopActionCard",
 		"BazaarMarketStatus",
 		"BazaarCargoStatus",
+		"BazaarDecisionSummary",
 		"BazaarPricePreview",
 		"BuyCargoButton",
 		"SellCargoButton",

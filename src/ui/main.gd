@@ -141,6 +141,8 @@ var shop_sell_button: Button
 var shop_transaction_status_label: Label
 var shop_status_label: Label
 var shop_cargo_label: Label
+var shop_decision_summary_panel: PanelContainer
+var shop_decision_summary_label: Label
 var shop_title_label: Label
 var bazaar_navigation_buttons: Array[Button] = []
 var bazaar_section_label: Label
@@ -784,7 +786,10 @@ func _show_shop() -> void:
 	if return_to_shop_button:
 		return_to_shop_button.disabled = false
 	_refresh_ui()
-	_grab_focus_if_available(shop_good_option)
+	if not _grab_focus_if_available(shop_buy_button):
+		_grab_focus_if_available(shop_good_option)
+	if shop_market_scroll:
+		shop_market_scroll.scroll_vertical = 0
 
 func _show_departure() -> void:
 	shop_layer.visible = false
@@ -1276,6 +1281,15 @@ func _build_shop() -> void:
 	bazaar_section_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bazaar_section_label.add_theme_color_override("font_color", Color("#d08b62"))
 	actions.add_child(bazaar_section_label)
+	shop_decision_summary_panel = PanelContainer.new()
+	shop_decision_summary_panel.name = "BazaarDecisionSummary"
+	actions.add_child(shop_decision_summary_panel)
+	shop_decision_summary_label = Label.new()
+	shop_decision_summary_label.name = "BazaarDecisionSummaryText"
+	shop_decision_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_decision_summary_label.add_theme_font_size_override("font_size", 12)
+	shop_decision_summary_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	shop_decision_summary_panel.add_child(shop_decision_summary_label)
 	tutorial_panel = PanelContainer.new()
 	tutorial_panel.name = "CaravanLedgerTutorial"
 	tutorial_panel.visible = false
@@ -1804,6 +1818,8 @@ func _apply_bazaar_section() -> void:
 		button.set_pressed_no_signal(String(button.get_meta("web_accessibility_id", "")).trim_prefix("bazaar_") == active_bazaar_section)
 	if shop_market_scroll:
 		shop_market_scroll.visible = trade_active
+	if shop_decision_summary_panel:
+		shop_decision_summary_panel.visible = trade_active
 	if shop_purchase_row:
 		shop_purchase_row.visible = trade_active
 	if guided_test_button:
@@ -2820,7 +2836,8 @@ func _web_accessibility_announcement() -> String:
 				return "Campaign conclusion: %s. %s You may continue trading to inspect the resulting region." % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 			var recent_conflict_text := _latest_conflict_outcome_text()
 			var recent_conflict_note := " Latest conflict report: %s" % recent_conflict_text.replace("\n", " ") if not recent_conflict_text.is_empty() else ""
-			return "Settlement Bazaar at %s. Trade, Jobs, Services and Intel, Crew, Outlook, and Departure form the repeatable hub.%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), recent_conflict_note]
+			var trade_plan_note := " Current trade plan: %s" % shop_decision_summary_label.text.replace("\n", " ") if active_bazaar_section == "trade" and shop_decision_summary_label != null else ""
+			return "Settlement Bazaar at %s. Trade, Jobs, Services and Intel, Crew, Outlook, and Departure form the repeatable hub.%s%s" % [String(world.settlement(world.current_settlement).get("name", world.current_settlement)), trade_plan_note, recent_conflict_note]
 		"departure_desk":
 			return "Departure Desk. Choose destination, route, cargo forecast, and quantity before Commit departure. Return to shop spends nothing."
 		"route_travel":
@@ -2901,6 +2918,7 @@ func _web_ui_state() -> Dictionary:
 		"road_waypoint": map_panel._road_waypoint_label() if map_panel != null and map_panel._is_road_view() else "",
 		"bazaar_section": active_bazaar_section,
 		"bazaar_scene_id": bazaar_scene.scene_id() if bazaar_scene != null and world != null else "",
+		"trade_decision_summary": shop_decision_summary_label.text if shop_decision_summary_label != null else "",
 		"selected_good_id": selected_good_id,
 		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
 		"selected_route_id": _selected_id(route_option) if route_option != null else "",
@@ -3070,18 +3088,12 @@ func _refresh_forecasts() -> void:
 	if MarketContent.route_connects(route_id, world.current_settlement, destination_id):
 		selected_route = world.route(route_id, world.current_settlement, destination_id)
 		selected_route["provisions"] = world.route_provision_cost(route_id, destination_id)
-	if shop_status_label and not selected_route.is_empty():
-		var trade_story := MarketEconomy.ordinary_trade_story(good_id, quantity, origin, destination, selected_route, world_context)
-		if bool(trade_story.get("ok", false)):
-			var status_lines := shop_status_label.text.split("\n")
-			if status_lines.size() >= 2:
-				var trade_path_label := "COMMONS / NO CONTRACT" if good_id == "charcoal" and destination_id == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else "NO CONTRACT"
-				status_lines[1] = "TODAY'S TRADE — %s: %d here → %d at %s · %+d expected · %s" % [good_id.capitalize(), int(trade_story.origin_price), int(trade_story.destination_price), String(trade_story.destination_name), int(trade_story.expected_net_profit), trade_path_label]
-				shop_status_label.text = "\n".join(status_lines)
 	var market_text := _market_preview_text(good_id, quantity, origin, destination, selected_route, world_context)
 	market_preview_label.text = market_text
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
+	if shop_decision_summary_label:
+		shop_decision_summary_label.text = _shop_decision_summary_text(good_id, quantity, origin, destination, selected_route, world_context)
 	var transaction_notes: Array[String] = []
 	if shop_buy_button:
 		var unit_price := MarketEconomy.price_for(good_id, origin, world_context)
@@ -3150,6 +3162,31 @@ func _market_preview_text(good_id: String, quantity: int, settlement: Dictionary
 	var net_text := "%+d" % int(story.expected_net_profit)
 	var provision_word := "provision" if int(story.provisions) == 1 else "provisions"
 	return "ORDINARY TRADE — NO CONTRACT REQUIRED\n%s x%d · %s → %s via %s\nSOURCE — %s\nNEED — %s\nSPREAD — buy %d · sell %d · %s each · load total %s\nROAD — %d ashmarks · %d %s · %d%% exposed-unit risk\nEXPECTED NET %s ashmarks after travel, time, and expected loss\nWhy this price: %s%s\nMarket factors: local %.2f · demand %.2f · crisis %.2f · faction %.2f · response %.2f · memory %.2f\nOther markets: %s" % [good_id.capitalize(), quantity, story.origin_name, story.destination_name, story.route_name, story.source_reason, story.need_reason, int(story.origin_price), int(story.destination_price), spread_text, gross_text, int(story.route_cost), int(story.provisions), provision_word, int(round(float(story.risk) * 100.0)), net_text, reason_text, memory_text, float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.adaptive_modifier), float(details.market_memory_modifier), "; ".join(comparison)]
+
+func _shop_decision_summary_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
+	if route.is_empty() or destination.is_empty():
+		return "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a connected destination to compare value, road burden, risk, and hold space."
+	var story := MarketEconomy.ordinary_trade_story(good_id, quantity, origin, destination, route, world_context)
+	if not bool(story.get("ok", false)):
+		return "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a valid cargo load to compare this journey."
+	var good := MarketContent.good(good_id)
+	var held_quantity := int(world.cargo.get(good_id, 0))
+	var current_hold := int(world.cargo.get("weight", 0))
+	var load_weight := maxi(0, quantity - held_quantity) * int(good.get("weight", 0))
+	var projected_hold := current_hold + load_weight
+	var buy_total := int(story.origin_price) * quantity
+	var sale_total := int(story.destination_price) * quantity
+	var next_action := "Buy %d %s, then Plan departure." % [quantity, good_id.capitalize()]
+	if held_quantity >= quantity:
+		next_action = "Plan departure; this forecast load is already in the hold."
+	else:
+		var buy_validation := MarketEconomy.validate_trade(world.cargo, good_id, quantity, world.cargo_capacity)
+		if world.money < buy_total:
+			next_action = "Adjust the load: it costs %d ashmarks and %d are available." % [buy_total, world.money]
+		elif not bool(buy_validation.get("ok", false)):
+			next_action = "Adjust the load: %s." % String(buy_validation.get("reason", "it does not fit"))
+	var trade_path_label := "COMMONS / NO CONTRACT" if good_id == "charcoal" and String(destination.get("id", "")) == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else "ORDINARY / NO CONTRACT"
+	return "%s — %s x%d · %s → %s\nWHY — %s → %s\nVALUE — buy %d · sell %d · road %d · expected %+d ashmarks\nROAD / CAPACITY — %s · %d provision%s · %d%% exposed-unit risk · %d ashmarks available · hold %d/%d → %d/%d\nNEXT — %s" % [trade_path_label, good_id.capitalize(), quantity, String(story.origin_name), String(story.destination_name), String(story.source_reason), String(story.need_reason), buy_total, sale_total, int(story.route_cost), int(story.expected_net_profit), String(story.route_name), int(story.provisions), "" if int(story.provisions) == 1 else "s", int(round(float(story.risk) * 100.0)), world.money, current_hold, world.cargo_capacity, projected_hold, world.cargo_capacity, next_action]
 
 func _route_preview_text(good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
 	var preview := MarketEconomy.route_profit_preview(good_id, quantity, origin, destination, route, world_context)
@@ -4233,7 +4270,7 @@ func _refresh_ui() -> void:
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
 		var leads_text := " · Leads %d" % world.known_information.size() if not world.known_information.is_empty() else ""
-		shop_status_label.text = "%s · Day %d · Crisis %d: %s\nTODAY'S NEED / TRADE THESIS — %s\nResilience %d/10 · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), String(crisis.get("objective", "Keep trading.")), world.resilience_for(world.current_settlement), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
+		shop_status_label.text = "MARKET — %s · Day %d · Crisis %d: %s · Resilience %d/10\nREGION — %s · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), world.resilience_for(world.current_settlement), String(crisis.get("objective", "Keep trading.")), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if ending_panel and ending_label:
