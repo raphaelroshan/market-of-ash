@@ -15,6 +15,7 @@ REQUIRED_NATIVE_SCREENS = {
     "introduction_basin",
     "introduction_caravan",
     "introduction_road",
+    "introduction_road_large_text",
     "settlement_shop",
     "bazaar_jobs",
     "pause",
@@ -41,6 +42,7 @@ EXPECTED_UI_STATE = {
     "introduction_basin": "introduction",
     "introduction_caravan": "introduction",
     "introduction_road": "introduction",
+    "introduction_road_large_text": "introduction",
     "bazaar_jobs": "settlement_shop",
     "returned_shop": "settlement_shop",
     "well_commons_jobs": "settlement_shop",
@@ -51,6 +53,30 @@ EXPECTED_UI_STATE = {
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
     "route_event_loss_result": "arrival_handoff",
+}
+REQUIRED_LAYOUT_CONTROLS = {
+    "main_menu": ("MainMenuCard", "MainMenuHeading", "MainMenuPrimaryAction"),
+    "main_menu_large_text": ("MainMenuCard", "MainMenuHeading", "MainMenuPrimaryAction"),
+    "introduction_basin": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
+    "introduction_caravan": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
+    "introduction_road": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
+    "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
+    "settlement_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
+    "settlement_shop_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
+    "bazaar_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "returned_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "well_commons_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "well_commons_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
+    "well_commons_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "commons_ending": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "destination_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "route_travel": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "route_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "route_event_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "route_event_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
+    "route_event_loss_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
 }
 
 
@@ -66,16 +92,40 @@ def parse_viewport(value: str) -> tuple[int, int]:
 
 
 def rect_encloses(outer: dict[str, object], inner: dict[str, object]) -> bool:
+    epsilon = 0.5
     outer_left = float(outer.get("x", 0.0))
     outer_top = float(outer.get("y", 0.0))
     inner_left = float(inner.get("x", 0.0))
     inner_top = float(inner.get("y", 0.0))
     return (
-        inner_left >= outer_left
-        and inner_top >= outer_top
-        and inner_left + float(inner.get("width", 0.0)) <= outer_left + float(outer.get("width", 0.0))
-        and inner_top + float(inner.get("height", 0.0)) <= outer_top + float(outer.get("height", 0.0))
+        inner_left >= outer_left - epsilon
+        and inner_top >= outer_top - epsilon
+        and inner_left + float(inner.get("width", 0.0)) <= outer_left + float(outer.get("width", 0.0)) + epsilon
+        and inner_top + float(inner.get("height", 0.0)) <= outer_top + float(outer.get("height", 0.0)) + epsilon
     )
+
+
+def require_layout_bounds(capture: dict[str, object]) -> None:
+    screen = str(capture.get("screen", ""))
+    expected_controls = REQUIRED_LAYOUT_CONTROLS.get(screen, ())
+    if not expected_controls:
+        return
+    layout = capture.get("layout")
+    if not isinstance(layout, dict):
+        raise AssertionError(f"{screen}: missing layout evidence")
+    active_layer = layout.get("active_layer")
+    controls = layout.get("required_controls")
+    if not isinstance(active_layer, dict) or not isinstance(controls, dict):
+        raise AssertionError(f"{screen}: missing responsive-shell bounds")
+    for control_name in expected_controls:
+        evidence = controls.get(control_name)
+        if not isinstance(evidence, dict) or not evidence.get("visible"):
+            raise AssertionError(f"{screen}: required control {control_name} is not visible")
+        rect = evidence.get("rect")
+        if not isinstance(rect, dict) or float(rect.get("width", 0.0)) <= 0.0 or float(rect.get("height", 0.0)) <= 0.0:
+            raise AssertionError(f"{screen}: required control {control_name} has no rendered bounds")
+        if not rect_encloses(active_layer, rect):
+            raise AssertionError(f"{screen}: required control {control_name} leaves the active layer")
 
 
 def main() -> int:
@@ -149,12 +199,18 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Commons ending capture is missing its causal campaign state")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
+        require_layout_bounds(capture)
+        if screen in {"main_menu", "introduction_basin", "introduction_caravan", "introduction_road", "introduction_road_large_text"}:
+            expected_compact = viewport == (960, 540)
+            if bool(capture.get("layout", {}).get("opening_compact")) != expected_compact:
+                raise AssertionError(f"{file_name}: opening layout did not use the expected {'stacked' if expected_compact else 'split'} composition")
         by_viewport.setdefault(viewport, {})[screen] = file_path
 
     for viewport, screens in by_viewport.items():
         require_distinct_screen(screens["main_menu"], screens["introduction_basin"], f"{viewport} Open introduction")
         require_distinct_screen(screens["introduction_basin"], screens["introduction_caravan"], f"{viewport} Introduction caravan page")
         require_distinct_screen(screens["introduction_caravan"], screens["introduction_road"], f"{viewport} Introduction road page")
+        require_distinct_screen(screens["introduction_road"], screens["introduction_road_large_text"], f"{viewport} Introduction large text", minimum_ratio=0.01)
         require_distinct_screen(screens["introduction_road"], screens["settlement_shop"], f"{viewport} Begin guided campaign")
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")

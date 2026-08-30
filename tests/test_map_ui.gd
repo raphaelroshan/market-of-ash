@@ -37,6 +37,10 @@ func _initialize() -> void:
 	ui._refresh_continue_availability()
 	_expect(int(ProjectSettings.get_setting("display/window/size/viewport_width", 0)) == 1280 and int(ProjectSettings.get_setting("display/window/size/viewport_height", 0)) == 720, "the logical design viewport should remain 1280x720 so smaller windows reflow at the established scale")
 	_expect(int(ProjectSettings.get_setting("display/window/size/window_width_override", 0)) == 1600 and int(ProjectSettings.get_setting("display/window/size/window_height_override", 0)) == 900, "desktop builds should open in a larger 1600x900 window")
+	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "the preferred desktop window should clamp to a 1280x720 display instead of opening off-screen")
+	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1366, 728)) == Vector2i(1294, 728), "the launch clamp should preserve the preferred window aspect ratio when only one display axis is constrained")
+	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1920, 1080)) == Vector2i(1600, 900), "the preferred 1600x900 desktop window should remain unchanged when the display can contain it")
+	_expect(ui.menu_columns != null and ui.intro_columns != null, "the Main Menu and Introduction should use the explicit responsive opening layout")
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
 	_expect(ui._current_ui_state_id() == "main_menu", "Web diagnostics should identify the Main Menu state")
