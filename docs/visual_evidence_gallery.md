@@ -111,3 +111,13 @@ The current visual audit found that the Market Stall's complete decision was cor
 ![Losing route remains explicit at 1280×720](visual_evidence/v0.13.3-alpha-basin-vertical-slice/bazaar-trade-ticket-loss-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.3-alpha-basin-vertical-slice/README.md).
+
+## 0.13.4 Roadside decision dossier patch
+
+The encounter rail now turns the threat model into a compact dossier and removes repeated title/setup copy, bringing response cards closer to the visible road situation.
+
+![Roadside dossier at 1600×900](visual_evidence/v0.13.4-alpha-basin-vertical-slice/roadside-dossier-1600x900.png)
+
+![Roadside dossier with Large text](visual_evidence/v0.13.4-alpha-basin-vertical-slice/roadside-dossier-large-text-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.4-alpha-basin-vertical-slice/README.md).

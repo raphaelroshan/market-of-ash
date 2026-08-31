@@ -16,17 +16,23 @@ static func event_view(world, pending: Dictionary) -> Dictionary:
 	for good_id in material_goods.keys():
 		material_parts.append("%d %s" % [int(material_goods.get(good_id, 0)), String(good_id).capitalize()])
 	var material_context := " Repair stock recognized: %s." % " + ".join(material_parts) if not material_parts.is_empty() else ""
+	var visible_basis_parts: Array[String] = []
+	if not material_parts.is_empty():
+		visible_basis_parts.append("REPAIR STOCK · %s" % " + ".join(material_parts))
 	var trade_basis: Dictionary = pending.get("trade_basis", {})
 	var trade_context := ""
 	if not trade_basis.is_empty():
 		trade_context = " Shortage basis: %d %s at %d each, plus %d premium each." % [int(trade_basis.get("quantity", 0)), String(trade_basis.get("good_id", "cargo")).capitalize(), int(trade_basis.get("unit_price", 0)), int(trade_basis.get("premium_per_unit", 0))]
+		visible_basis_parts.append("SHORTAGE · %d %s @ %d + %d PREMIUM EACH" % [int(trade_basis.get("quantity", 0)), String(trade_basis.get("good_id", "cargo")).to_upper(), int(trade_basis.get("unit_price", 0)), int(trade_basis.get("premium_per_unit", 0))])
 	var maximum_cargo_risk := 0.0
 	for raw_choice in pending.get("choices", []):
 		if typeof(raw_choice) == TYPE_DICTIONARY:
 			maximum_cargo_risk = maxf(maximum_cargo_risk, float(raw_choice.get("cargo_risk", 0.0)))
 	var maximum_risk_percent := int(round(maximum_cargo_risk * 100.0))
 	var threat_summary := "No choice uses a cargo-loss roll." if maximum_risk_percent == 0 else "Highest disclosed cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
-	var stakes := "DANGER — %s\nROAD — %s to %s via %s.%s%s\nAT STAKE — %s\nWHAT COUNTS — Only the written money, provisions, cargo, time, or standing can change. There is no hidden health damage." % [threat_summary, String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin")), destination_name, String(world.route(String(pending.get("route_id", ""))).get("name", "route")), material_context, trade_context, String(pending.get("stakes", ""))]
+	var origin_name := String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin"))
+	var route_name := String(world.route(String(pending.get("route_id", ""))).get("name", "route"))
+	var stakes := "DANGER — %s\nROAD — %s to %s via %s.%s%s\nAT STAKE — %s\nWHAT COUNTS — Only the written money, provisions, cargo, time, or standing can change. There is no hidden health damage." % [threat_summary, origin_name, destination_name, route_name, material_context, trade_context, String(pending.get("stakes", ""))]
 	var choices: Array[Dictionary] = []
 	for raw_choice in pending.get("choices", []):
 		if typeof(raw_choice) != TYPE_DICTIONARY:
@@ -36,6 +42,12 @@ static func event_view(world, pending: Dictionary) -> Dictionary:
 		"title": String(pending.get("title", "Route decision")),
 		"setup": String(pending.get("setup", "")),
 		"stakes": stakes,
+		"threat_label": "THREAT · NO CARGO-LOSS ROLL" if maximum_risk_percent == 0 else "THREAT · %d%% MAX CARGO-LOSS ROLL" % maximum_risk_percent,
+		"exposed_label": "EXPOSED · NO CARRIED CARGO" if int(loss_basis.get("loss_quantity", 0)) <= 0 else "EXPOSED · 1 %s · VALUE %d" % [String(loss_basis.get("loss_good_id", "")).to_upper(), int(loss_basis.get("loss_unit_value", 0))],
+		"road_label": "ROAD · %s → %s · %s" % [origin_name.to_upper(), destination_name.to_upper(), route_name.to_upper()],
+		"basis_label": "\n".join(visible_basis_parts),
+		"decision_label": "AT STAKE · %s" % String(pending.get("stakes", "")),
+		"rules_label": "RULES · Only listed costs and effects change. No hidden health.",
 		"choices": choices,
 	}
 
