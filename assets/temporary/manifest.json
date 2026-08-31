@@ -1,0 +1,42 @@
+{
+  "status": "temporary-testing-kit",
+  "game": "market-of-ash",
+  "sources": [
+    {
+      "id": "kenney-tiny-town",
+      "source_url": "https://kenney.nl/assets/tiny-town",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-tiny-town.txt",
+      "local_path": "assets/temporary/kenney/tiny-town",
+      "uses": ["settlement filler", "route background", "travel layout reference"],
+      "deficiency": "Cute 16x16 pixel language; not final frontier-trade identity."
+    },
+    {
+      "id": "kenney-interface-sounds",
+      "source_url": "https://kenney.nl/assets/interface-sounds",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-interface-sounds.txt",
+      "local_path": "assets/temporary/kenney/interface-sounds",
+      "uses": ["selection", "purchase confirmation", "invalid action", "receipt feedback"],
+      "deficiency": "Generic UI vocabulary; not final market or caravan identity."
+    },
+    {
+      "id": "kenney-rpg-audio",
+      "source_url": "https://kenney.nl/assets/rpg-audio",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-rpg-audio.txt",
+      "local_path": "assets/temporary/kenney/rpg-audio",
+      "uses": ["temporary footsteps", "doors", "cloth", "weapon and material foley"],
+      "deficiency": "Lacks dusty-road, wagon, market, coin, and faction-specific character."
+    },
+    {
+      "id": "kenney-particle-pack",
+      "source_url": "https://kenney.nl/assets/particle-pack",
+      "license": "CC0",
+      "license_file": "assets/temporary/kenney/LICENSE-particle-pack.txt",
+      "local_path": "assets/temporary/kenney/particle-pack",
+      "uses": ["departure dust", "event smoke", "impact and consequence accents"],
+      "deficiency": "Generic effects; tint and scale toward ash, dust, metal, and fire."
+    }
+  ]
+}
