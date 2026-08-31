@@ -35,10 +35,13 @@ func _test_trade_presenter() -> void:
 	var context: Dictionary = world.pricing_context()
 	context["cargo"] = {"water": 2, "weight": 2}
 	context["route_intelligence"] = world.route_intelligence("old_road")
+	var decision_view := TradePresenter.shop_decision_view(world, "water", 2, origin, destination, route, context)
 	var decision := TradePresenter.shop_decision_summary_text(world, "water", 2, origin, destination, route, context)
 	var forecast := TradePresenter.route_preview_text(world, "water", 2, origin, destination, route, context)
 	var comparisons := TradePresenter.route_comparison_views(world, "water", 2, "reedwatch", "old_road", context)
-	_expect(decision.contains("ORDINARY / NO CONTRACT") and decision.contains("expected +") and decision.contains("NEXT — Buy 2 Water"), "trade presenter should summarize the selected ordinary-trade decision and next action")
+	_expect(decision.contains("ORDINARY TRADE · NO CONTRACT") and decision.contains("expected +") and decision.contains("NEXT — Buy 2 Water"), "trade presenter should summarize the selected ordinary-trade decision and next action")
+	_expect(decision_view.get("cargo_label", "") == "WATER ×2" and decision_view.get("journey_label", "") == "ASHGATE → REEDWATCH" and decision_view.get("metrics", {}).get("net", "") == "+14", "trade presenter should expose a scannable cargo, journey, and net-value ticket")
+	_expect(String(decision_view.get("road_label", "")).contains("OLD ROAD") and String(decision_view.get("resources_label", "")).contains("HOLD 0/12 → 2/12") and String(decision_view.get("next_label", "")).contains("Buy 2 Water"), "trade ticket should preserve road, capacity, and next-action context")
 	_expect(forecast.contains("ROUTE FORECAST — Ashgate to Reedwatch via Old Road") and forecast.contains("Route fee") and forecast.contains("Scout confidence"), "trade presenter should expose the complete selected-route forecast")
 	_expect(comparisons.size() == 3, "route comparison should keep every legal Ashgate itinerary visible")
 	var selected_count := 0

@@ -101,3 +101,13 @@ The constrained-window follow-up found that Large text could clip the selected c
 ![Selected route remains explicit at 1280×720](visual_evidence/v0.13.2-alpha-basin-vertical-slice/departure-selected-large-text-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.2-alpha-basin-vertical-slice/README.md).
+
+## 0.13.3 Bazaar trade ticket patch
+
+The current visual audit found that the Market Stall's complete decision was correct but too paragraph-like. The structured ticket gives cargo, journey, route economics, risk, capacity, reason, and next action a deliberate scan order.
+
+![Bazaar trade ticket at 1600×900](visual_evidence/v0.13.3-alpha-basin-vertical-slice/bazaar-trade-ticket-1600x900.png)
+
+![Losing route remains explicit at 1280×720](visual_evidence/v0.13.3-alpha-basin-vertical-slice/bazaar-trade-ticket-loss-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.3-alpha-basin-vertical-slice/README.md).
