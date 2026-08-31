@@ -109,12 +109,34 @@ static func market_preview_text(world, good_id: String, quantity: int, settlemen
 	return "ORDINARY TRADE — NO CONTRACT REQUIRED\n%s x%d · %s → %s via %s\nSOURCE — %s\nNEED — %s\nSPREAD — buy %d · sell %d · %s each · load total %s\nROAD — %d ashmarks · %d %s · %d%% exposed-unit risk\nEXPECTED NET %s ashmarks after travel, time, and expected loss\nWhy this price: %s%s\nMarket factors: local %.2f · demand %.2f · crisis %.2f · faction %.2f · response %.2f · memory %.2f\nOther markets: %s" % [good_id.capitalize(), quantity, story.origin_name, story.destination_name, story.route_name, story.source_reason, story.need_reason, int(story.origin_price), int(story.destination_price), spread_text, gross_text, int(story.route_cost), int(story.provisions), provision_word, int(round(float(story.risk) * 100.0)), net_text, reason_text, memory_text, float(details.settlement_modifier), float(details.demand_modifier), float(details.crisis_modifier), float(details.faction_modifier), float(details.adaptive_modifier), float(details.market_memory_modifier), "; ".join(comparison)]
 
 
-static func shop_decision_summary_text(world, good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
+static func shop_decision_view(world, good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> Dictionary:
 	if route.is_empty() or destination.is_empty():
-		return "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a connected destination to compare value, road burden, risk, and hold space."
+		return {
+			"path_label": "ORDINARY TRADE · NO CONTRACT",
+			"cargo_label": "CHOOSE A ROUTE",
+			"journey_label": "Select a connected destination",
+			"metrics": {"buy": "—", "sell": "—", "road": "—", "net": "—"},
+			"road_label": "Compare value, road burden, risk, and hold space.",
+			"resources_label": "",
+			"reason_label": "",
+			"next_label": "NEXT · Choose a connected destination.",
+			"net_positive": false,
+			"accessibility_text": "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a connected destination to compare value, road burden, risk, and hold space.",
+		}
 	var story := MarketEconomy.ordinary_trade_story(good_id, quantity, origin, destination, route, world_context)
 	if not bool(story.get("ok", false)):
-		return "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a valid cargo load to compare this journey."
+		return {
+			"path_label": "ORDINARY TRADE · NO CONTRACT",
+			"cargo_label": "CHOOSE A LOAD",
+			"journey_label": "The selected cargo plan is not valid",
+			"metrics": {"buy": "—", "sell": "—", "road": "—", "net": "—"},
+			"road_label": "Choose a valid cargo load to compare this journey.",
+			"resources_label": "",
+			"reason_label": "",
+			"next_label": "NEXT · Adjust the selected cargo load.",
+			"net_positive": false,
+			"accessibility_text": "ORDINARY TRADE PLAN — NO CONTRACT REQUIRED\nChoose a valid cargo load to compare this journey.",
+		}
 	var good := MarketContent.good(good_id)
 	var held_quantity := int(world.cargo.get(good_id, 0))
 	var current_hold := int(world.cargo.get("weight", 0))
@@ -131,8 +153,31 @@ static func shop_decision_summary_text(world, good_id: String, quantity: int, or
 			next_action = "Adjust the load: it costs %d ashmarks and %d are available." % [buy_total, world.money]
 		elif not bool(buy_validation.get("ok", false)):
 			next_action = "Adjust the load: %s." % String(buy_validation.get("reason", "it does not fit"))
-	var trade_path_label := "COMMONS / NO CONTRACT" if good_id == "charcoal" and String(destination.get("id", "")) == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else "ORDINARY / NO CONTRACT"
-	return "%s — %s x%d · %s → %s\nWHY — %s → %s\nVALUE — buy %d · sell %d · road %d · expected %+d ashmarks\nROAD / CAPACITY — %s · %d provision%s · %d%% exposed-unit risk · %d ashmarks available · hold %d/%d → %d/%d\nNEXT — %s" % [trade_path_label, good_id.capitalize(), quantity, String(story.origin_name), String(story.destination_name), String(story.source_reason), String(story.need_reason), buy_total, sale_total, int(story.route_cost), int(story.expected_net_profit), String(story.route_name), int(story.provisions), "" if int(story.provisions) == 1 else "s", int(round(float(story.risk) * 100.0)), world.money, current_hold, world.cargo_capacity, projected_hold, world.cargo_capacity, next_action]
+	var trade_path_label := "COMMONS TRADE · NO CONTRACT" if good_id == "charcoal" and String(destination.get("id", "")) == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else "ORDINARY TRADE · NO CONTRACT"
+	var provision_label := "%d PROVISION%s" % [int(story.provisions), "" if int(story.provisions) == 1 else "S"]
+	var risk_percent := int(round(float(story.risk) * 100.0))
+	var accessibility_text := "%s — %s x%d · %s → %s\nWHY — %s → %s\nVALUE — buy %d · sell %d · road %d · expected %+d ashmarks\nROAD / CAPACITY — %s · %d provision%s · %d%% exposed-unit risk · %d ashmarks available · hold %d/%d → %d/%d\nNEXT — %s" % [trade_path_label, good_id.capitalize(), quantity, String(story.origin_name), String(story.destination_name), String(story.source_reason), String(story.need_reason), buy_total, sale_total, int(story.route_cost), int(story.expected_net_profit), String(story.route_name), int(story.provisions), "" if int(story.provisions) == 1 else "s", risk_percent, world.money, current_hold, world.cargo_capacity, projected_hold, world.cargo_capacity, next_action]
+	return {
+		"path_label": trade_path_label,
+		"cargo_label": "%s ×%d" % [good_id.to_upper(), quantity],
+		"journey_label": "%s → %s" % [String(story.origin_name).to_upper(), String(story.destination_name).to_upper()],
+		"metrics": {
+			"buy": str(buy_total),
+			"sell": str(sale_total),
+			"road": str(int(story.route_cost)),
+			"net": "%+d" % int(story.expected_net_profit),
+		},
+		"road_label": "%s · %s · %d%% CARGO RISK" % [String(story.route_name).to_upper(), provision_label, risk_percent],
+		"resources_label": "%d ASHMARKS · HOLD %d/%d → %d/%d" % [world.money, current_hold, world.cargo_capacity, projected_hold, world.cargo_capacity],
+		"reason_label": "%s → %s" % [String(story.source_reason), String(story.need_reason)],
+		"next_label": "NEXT · %s" % next_action,
+		"net_positive": int(story.expected_net_profit) > 0,
+		"accessibility_text": accessibility_text,
+	}
+
+
+static func shop_decision_summary_text(world, good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:
+	return String(shop_decision_view(world, good_id, quantity, origin, destination, route, world_context).get("accessibility_text", ""))
 
 
 static func route_preview_text(world, good_id: String, quantity: int, origin: Dictionary, destination: Dictionary, route: Dictionary, world_context: Dictionary) -> String:

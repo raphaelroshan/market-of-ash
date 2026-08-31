@@ -193,7 +193,7 @@ func _initialize() -> void:
 		var dynamic_action_id := String(dynamic_control.get_meta("web_accessibility_id", ""))
 		_expect(not dynamic_action_id.is_empty() and dynamic_action_id not in shop_accessibility_action_ids and ui._web_accessibility_action_control(dynamic_action_id) == dynamic_control, "Inactive Bazaar stalls should keep stable action IDs without exposing hidden controls")
 	var shop_accessibility_controls: Array = initial_web_state.get("accessibility_controls", [])
-	_expect(String(initial_web_state.get("trade_decision_summary", "")).contains("ORDINARY / NO CONTRACT") and String(initial_web_state.get("announcement", "")).contains("Current trade plan"), "Web accessibility state should expose the same ordinary-trade decision summary as the visible Bazaar")
+	_expect(String(initial_web_state.get("trade_decision_summary", "")).contains("ORDINARY TRADE · NO CONTRACT") and String(initial_web_state.get("announcement", "")).contains("Current trade plan"), "Web accessibility state should expose the same ordinary-trade decision summary as the visible Bazaar")
 	_expect(Array(initial_web_state.get("accessibility_order", [])).slice(0, 8) == ["action:bazaar_trade", "action:bazaar_assignments", "action:bazaar_information", "action:bazaar_crew", "action:bazaar_outlook", "control:shop_good", "control:shop_quantity", "action:shop_buy"], "The semantic Bazaar directory should precede the active stall's controls and actions")
 	_expect(shop_accessibility_controls.size() == 2 and shop_accessibility_controls[0].get("id") == "shop_good" and shop_accessibility_controls[0].get("kind") == "select" and shop_accessibility_controls[0].get("value") == "water" and Array(shop_accessibility_controls[0].get("options", [])).size() == ui.shop_good_option.item_count, "Web accessibility controls should expose the complete Shop cargo selector")
 	_expect(shop_accessibility_controls[1].get("id") == "shop_quantity" and shop_accessibility_controls[1].get("kind") == "number" and shop_accessibility_controls[1].get("value") == 2 and shop_accessibility_controls[1].get("minimum") == 1 and shop_accessibility_controls[1].get("maximum") == 12 and shop_accessibility_controls[1].get("step") == 1, "Web accessibility controls should expose the Shop quantity bounds, integer step, and value")
@@ -263,10 +263,13 @@ func _initialize() -> void:
 	_expect(ui.shop_quantity.get_line_edit().find_next_valid_focus() == ui.plan_departure_button, "Shop focus should skip disabled trade actions and the removed one-click test helper")
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
-	_expect(ui.shop_decision_summary_label != null and ui.shop_decision_summary_label.text.contains("ORDINARY / NO CONTRACT — Water x2 · Ashgate → Reedwatch"), "the first Bazaar should frame ordinary trade as a complete path without a contract")
+	_expect(ui.shop_decision_summary_label != null and ui.shop_decision_summary_label.text.contains("ORDINARY TRADE · NO CONTRACT — Water x2 · Ashgate → Reedwatch"), "the first Bazaar should frame ordinary trade as a complete path without a contract")
 	_expect(ui.shop_decision_summary_label.text.contains("WHY — Licensed cistern releases") and ui.shop_decision_summary_label.text.contains("→ Frontier wells run low"), "the first Bazaar should connect the selected local source to the destination need")
 	_expect(ui.shop_decision_summary_label.text.contains("VALUE — buy 30 · sell 64 · road 4 · expected +14 ashmarks") and ui.shop_decision_summary_label.text.contains("ROAD / CAPACITY — Old Road · 1 provision · 35% exposed-unit risk"), "the first Bazaar should expose destination value and route burden in one summary")
 	_expect(ui.shop_decision_summary_label.text.contains("120 ashmarks available · hold 0/12 → 2/12") and ui.shop_decision_summary_label.text.contains("NEXT — Buy 2 Water, then Plan departure"), "the first Bazaar should expose current buying power, capacity, and next action")
+	_expect(ui.shop_decision_path_label.text == "ORDINARY TRADE · NO CONTRACT" and ui.shop_decision_cargo_label.text == "WATER ×2" and ui.shop_decision_journey_label.text == "ASHGATE → REEDWATCH", "the Bazaar should present the trade path, cargo, and journey as a visible ticket hierarchy")
+	_expect(ui.shop_decision_metric_values["buy"].text == "30" and ui.shop_decision_metric_values["sell"].text == "64" and ui.shop_decision_metric_values["road"].text == "4" and ui.shop_decision_metric_values["net"].text == "+14", "the Bazaar ticket should separate buy, sell, road, and net values for scanning")
+	_expect(ui.shop_decision_road_label.text.contains("OLD ROAD") and ui.shop_decision_resources_label.text.contains("HOLD 0/12 → 2/12") and ui.shop_decision_next_label.text.contains("Buy 2 Water"), "the Bazaar ticket should retain route, capacity, and next-action context")
 	var unloaded_shop_state := JSON.stringify(ui.world.serialize())
 	ui._on_plan_departure_pressed()
 	_expect(ui.commit_departure_button.text.contains("Set out without planned load") and ui.commit_departure_button.text.contains("4 ashmarks") and ui.commit_departure_button.tooltip_text.contains("Water x2 forecast is hypothetical") and ui.commit_departure_button.tooltip_text.contains("0 is held"), "an unloaded departure should remain legal while the commit action states that the selected forecast is not aboard")
@@ -546,7 +549,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.2-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.3-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
@@ -1141,7 +1144,7 @@ func _initialize() -> void:
 	ui._select_option_by_id(ui.shop_good_option, "charcoal")
 	ui.shop_quantity.value = 4
 	ui._on_shop_plan_changed(ui.shop_good_option.selected)
-	_expect(ui.shop_decision_summary_label.text.contains("COMMONS / NO CONTRACT") and ui.shop_decision_summary_label.text.contains("expected +7 ashmarks") and ui.bazaar_section_label.text.contains("Reedwatch water stabilized; charcoal wanted"), "the replacement charcoal trade should be visible above the fold as ordinary trade")
+	_expect(ui.shop_decision_summary_label.text.contains("COMMONS TRADE · NO CONTRACT") and ui.shop_decision_summary_label.text.contains("expected +7 ashmarks") and ui.bazaar_section_label.text.contains("Reedwatch water stabilized; charcoal wanted"), "the replacement charcoal trade should be visible above the fold as ordinary trade")
 	ui.world.current_settlement = "reedwatch"
 	ui._refresh_ui()
 	ui._populate_destination_options()

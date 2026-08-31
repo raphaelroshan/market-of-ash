@@ -1,5 +1,7 @@
 # Market of Ash — Roadmap Status Audit
 
+> **Evidence correction (2026-08-31):** The three files labeled as fresh 0.13.2 evidence are byte-identical to the earlier 0.13.0 Xvfb review frames. They therefore do not establish clipping in 0.13.2. Current Godot 4.4.1 native captures at true 1280×720 and 1600×900, plus packaged-browser and Windows minimum-window validation, pass the responsive bounds contract. The audit's broader conclusion remains valid: deterministic completion is not commercial/private-alpha completion.
+
 **Audit date:** 2026-08-30
 
 **Audited branch:** `origin/main`
@@ -20,9 +22,9 @@ The latest test report also records a complete authored path from title through 
 
 ## Verified incomplete
 
-A fresh launch of the current `0.13.2-alpha-basin-vertical-slice` build at 1280×720 still shows horizontal clipping in the right-side Main Menu controls. The Introduction screen also clips the heading, explanatory copy, and lower controls beyond the right edge. This is visible in the current audit captures and means the responsive presentation contract is not complete.
+The duplicated Xvfb frames cannot support the original 0.13.2 clipping claim. Subsequent exact-viewport evidence establishes that required Main Menu, Introduction, Bazaar, Departure, road, event, arrival, and debrief controls stay within their active layers at supported sizes. That closes the specific responsive-shell evidence gap.
 
-The current evidence does not yet establish a polished complete player journey at the presentation layer. A passing automated traversal proves deterministic operation and bounds checks; it does not prove that the full path reads as a commercial-quality experience without developer explanation.
+The current evidence still does not establish that the full path reads as a commercial-quality experience without developer explanation. Passing automated traversal, bounds checks, and agent-led visual review cannot substitute for art-direction completion or moderated comprehension evidence.
 
 The art remains procedural alpha presentation, the package is unsigned and portable, and Windows high-DPI hardware, physical-controller feel, screen-reader behavior, antivirus reputation, and storefront behavior remain release-hardening work.
 
@@ -30,19 +32,16 @@ The art remains procedural alpha presentation, the package is unsigned and porta
 
 Use this status:
 
-> **The Market of Ash deterministic Five-Well Basin vertical slice is complete and verified. The game-quality private-alpha roadmap remains in progress, beginning with responsive shell repair and full-flow presentation validation.**
+> **The Market of Ash deterministic Five-Well Basin vertical slice and its automated responsive/full-flow gates are complete and verified. The broader game-quality private-alpha roadmap remains in progress through art polish, physical-device coverage, assistive-technology checks, packaging reputation, and player evidence.**
 
 Do not use “the game-quality roadmap is complete,” “commercial alpha ready,” or “storefront ready.”
 
 ## Remaining execution order
 
-1. Repair the responsive shell at 1280×720, 1600×900, minimum supported width, large text, reduced motion, and controller focus.
-2. Re-capture Main Menu and Introduction after the fix and verify that every required control and sentence remains inside the viewport.
-3. Verify the complete Introduction → Bazaar → Departure → road → event/contact → arrival receipt → return Bazaar path from a clean save at both target viewports.
-4. Finish the Bazaar hierarchy and route comparison so ordinary trade remains valuable without forcing contracts or a single route.
-5. Extract presentation panels from `src/ui/main.gd` while preserving the authoritative command boundary.
-6. Add one controlled settlement-identity or adaptive-replacement slice only after presentation gates pass.
-7. Complete private-alpha hardening for signed/package artifacts, scaling, controller, accessibility, save recovery, and provenance.
+1. Continue focused game-facing hierarchy and art-direction passes using current real-renderer evidence rather than duplicated historical frames.
+2. Validate the first journey with uncoached players and fix or explicitly accept the highest-impact comprehension failures.
+3. Complete physical Windows high-DPI, controller, and assistive-technology checks.
+4. Complete signing, antivirus-reputation, installer/storefront, and distribution hardening before any commercial-readiness claim.
 
 Human testing is optional later calibration and is not a prerequisite for this sequence. Automated verification, deterministic replay, scripted launches, layout assertions, and screenshot evidence are the active gates.
 

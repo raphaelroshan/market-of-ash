@@ -81,8 +81,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.13.2.0",
-                    "product_version": "0.13.2.0",
+                    "file_version": "0.13.3.0",
+                    "product_version": "0.13.3.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                     "capture": {"x": 1, "y": 1, "width": 8, "height": 8},
@@ -105,8 +105,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.13.2.0",
-                    "product_version": "0.13.2.0",
+                    "file_version": "0.13.3.0",
+                    "product_version": "0.13.3.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                 }

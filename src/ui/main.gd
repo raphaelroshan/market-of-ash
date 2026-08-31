@@ -147,6 +147,14 @@ var shop_status_label: Label
 var shop_cargo_label: Label
 var shop_decision_summary_panel: PanelContainer
 var shop_decision_summary_label: Label
+var shop_decision_path_label: Label
+var shop_decision_cargo_label: Label
+var shop_decision_journey_label: Label
+var shop_decision_metric_values: Dictionary = {}
+var shop_decision_road_label: Label
+var shop_decision_resources_label: Label
+var shop_decision_reason_label: Label
+var shop_decision_next_label: Label
 var shop_title_label: Label
 var bazaar_navigation_buttons: Array[Button] = []
 var bazaar_section_label: Label
@@ -1299,13 +1307,68 @@ func _build_shop() -> void:
 	actions.add_child(bazaar_section_label)
 	shop_decision_summary_panel = PanelContainer.new()
 	shop_decision_summary_panel.name = "BazaarDecisionSummary"
+	shop_decision_summary_panel.custom_minimum_size = Vector2(0, 212)
 	actions.add_child(shop_decision_summary_panel)
+	var decision_shell := VBoxContainer.new()
+	decision_shell.add_theme_constant_override("separation", 5)
+	shop_decision_summary_panel.add_child(decision_shell)
 	shop_decision_summary_label = Label.new()
 	shop_decision_summary_label.name = "BazaarDecisionSummaryText"
-	shop_decision_summary_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	shop_decision_summary_label.add_theme_font_size_override("font_size", 12)
-	shop_decision_summary_label.add_theme_color_override("font_color", Color("#f0d2a0"))
-	shop_decision_summary_panel.add_child(shop_decision_summary_label)
+	shop_decision_summary_label.visible = false
+	decision_shell.add_child(shop_decision_summary_label)
+	shop_decision_path_label = Label.new()
+	shop_decision_path_label.add_theme_font_size_override("font_size", 11)
+	shop_decision_path_label.add_theme_color_override("font_color", Color("#d08b62"))
+	decision_shell.add_child(shop_decision_path_label)
+	shop_decision_cargo_label = Label.new()
+	shop_decision_cargo_label.add_theme_font_size_override("font_size", 20)
+	shop_decision_cargo_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	decision_shell.add_child(shop_decision_cargo_label)
+	shop_decision_journey_label = Label.new()
+	shop_decision_journey_label.add_theme_font_size_override("font_size", 13)
+	shop_decision_journey_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	decision_shell.add_child(shop_decision_journey_label)
+	var decision_metrics := GridContainer.new()
+	decision_metrics.columns = 4
+	decision_metrics.add_theme_constant_override("h_separation", 8)
+	decision_shell.add_child(decision_metrics)
+	for metric_id in ["buy", "sell", "road", "net"]:
+		var metric_shell := VBoxContainer.new()
+		metric_shell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		metric_shell.add_theme_constant_override("separation", 0)
+		decision_metrics.add_child(metric_shell)
+		var metric_title := Label.new()
+		metric_title.text = String(metric_id).to_upper()
+		metric_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		metric_title.add_theme_font_size_override("font_size", 10)
+		metric_title.add_theme_color_override("font_color", Color("#a69379"))
+		metric_shell.add_child(metric_title)
+		var metric_value := Label.new()
+		metric_value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		metric_value.add_theme_font_size_override("font_size", 17)
+		metric_value.add_theme_color_override("font_color", Color("#f4e6c7"))
+		metric_shell.add_child(metric_value)
+		shop_decision_metric_values[metric_id] = metric_value
+	shop_decision_road_label = Label.new()
+	shop_decision_road_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_decision_road_label.add_theme_font_size_override("font_size", 11)
+	shop_decision_road_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	decision_shell.add_child(shop_decision_road_label)
+	shop_decision_resources_label = Label.new()
+	shop_decision_resources_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_decision_resources_label.add_theme_font_size_override("font_size", 11)
+	shop_decision_resources_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	decision_shell.add_child(shop_decision_resources_label)
+	shop_decision_reason_label = Label.new()
+	shop_decision_reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_decision_reason_label.add_theme_font_size_override("font_size", 11)
+	shop_decision_reason_label.add_theme_color_override("font_color", Color("#b5a18b"))
+	decision_shell.add_child(shop_decision_reason_label)
+	shop_decision_next_label = Label.new()
+	shop_decision_next_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	shop_decision_next_label.add_theme_font_size_override("font_size", 13)
+	shop_decision_next_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	decision_shell.add_child(shop_decision_next_label)
 	tutorial_panel = PanelContainer.new()
 	tutorial_panel.name = "CaravanLedgerTutorial"
 	tutorial_panel.visible = false
@@ -3279,7 +3342,20 @@ func _refresh_forecasts() -> void:
 	if shop_market_preview_label:
 		shop_market_preview_label.text = market_text
 	if shop_decision_summary_label:
-		shop_decision_summary_label.text = TradePresenter.shop_decision_summary_text(world, good_id, quantity, origin, destination, selected_route, world_context)
+		var decision_view := TradePresenter.shop_decision_view(world, good_id, quantity, origin, destination, selected_route, world_context)
+		shop_decision_summary_label.text = String(decision_view.get("accessibility_text", ""))
+		shop_decision_path_label.text = String(decision_view.get("path_label", ""))
+		shop_decision_cargo_label.text = String(decision_view.get("cargo_label", ""))
+		shop_decision_journey_label.text = String(decision_view.get("journey_label", ""))
+		var decision_metrics: Dictionary = decision_view.get("metrics", {})
+		for metric_id in shop_decision_metric_values:
+			var metric_value: Label = shop_decision_metric_values[metric_id]
+			metric_value.text = String(decision_metrics.get(metric_id, "—"))
+		shop_decision_metric_values["net"].add_theme_color_override("font_color", Color("#8ab7a5") if bool(decision_view.get("net_positive", false)) else Color("#d08b62"))
+		shop_decision_road_label.text = String(decision_view.get("road_label", ""))
+		shop_decision_resources_label.text = String(decision_view.get("resources_label", ""))
+		shop_decision_reason_label.text = String(decision_view.get("reason_label", ""))
+		shop_decision_next_label.text = String(decision_view.get("next_label", ""))
 	var transaction_notes: Array[String] = []
 	if shop_buy_button:
 		var unit_price := MarketEconomy.price_for(good_id, origin, world_context)

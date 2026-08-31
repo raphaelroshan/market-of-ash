@@ -545,3 +545,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The 960×540 Windows evidence showed every route value but clipped the first `SELECTED` line from the active card. A focus border alone is not an adequate selection signal because route state must remain legible without relying on color or focus styling.
 
 **Trade-off:** Large text shows less of the next itinerary row before scrolling. The full active card becomes readable, and all alternatives remain present in the same scrollable comparison board.
+
+## ADR-069: The Bazaar presents a trade ticket before explanatory detail
+
+**Decision:** Replace the Market Stall's paragraph-style decision summary with a structured trade ticket. Cargo and journey identity lead; buy, sell, road, and expected-net values occupy a four-column scan line; route risk, cash, hold use, source-to-need reason, and next action remain immediately below. The presenter still publishes one complete plain-text equivalent for Web accessibility and reports.
+
+**Reason:** The 0.13.2 Bazaar exposed every required value but gave labels, tutorial copy, market prose, and route arithmetic nearly equal visual weight. A first-time player should be able to answer “what am I carrying, where, and is this worthwhile?” before reading the underlying explanation.
+
+**Trade-off:** The ticket uses more authored presentation nodes than one Label and therefore requires explicit UI regression coverage. It does not remove the detailed market ledger, change any calculation, or make positive routes mandatory.
