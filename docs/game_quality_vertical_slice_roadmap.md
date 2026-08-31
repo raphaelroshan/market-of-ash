@@ -1,7 +1,7 @@
 # Market of Ash — Game-Quality Vertical-Slice Roadmap
 
 **Project:** Market of Ash
-**Current baseline:** `0.13.6-alpha-basin-vertical-slice`
+**Current baseline:** `0.13.7-alpha-basin-vertical-slice`
 **Completed milestone:** `0.13.0-alpha-basin-vertical-slice` deterministic vertical-slice scope
 **Next target:** Game-quality private-alpha presentation and complete-flow gate
 **Platform:** Windows desktop first, Web as a verification surface

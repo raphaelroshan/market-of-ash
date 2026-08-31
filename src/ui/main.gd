@@ -4626,6 +4626,7 @@ class MapPanel extends Control:
 	signal settlement_selected(settlement_id: String)
 	signal travel_state_changed(state: String)
 
+	const DEPARTURE_DUST_PATH := "res://assets/temporary/selected-vfx/departure-dust.pngdata"
 	const GRID_SIZE := Vector2i(17, 11)
 	const NORMAL_BOARD_ORIGIN := Vector2(34, 230)
 	const NORMAL_CELL_WIDTH := 44.0
@@ -4661,9 +4662,20 @@ class MapPanel extends Control:
 	var board_origin: Vector2 = NORMAL_BOARD_ORIGIN
 	var cell_width: float = NORMAL_CELL_WIDTH
 	var cell_height: float = NORMAL_CELL_HEIGHT
+	var departure_dust_texture: ImageTexture
 
 	func _ready() -> void:
 		mouse_filter = Control.MOUSE_FILTER_STOP
+		departure_dust_texture = _load_departure_dust_texture()
+
+	func _load_departure_dust_texture() -> ImageTexture:
+		var bytes := FileAccess.get_file_as_bytes(DEPARTURE_DUST_PATH)
+		if bytes.is_empty():
+			return null
+		var image := Image.new()
+		if image.load_png_from_buffer(bytes) != OK:
+			return null
+		return ImageTexture.create_from_image(image)
 
 	func _process(delta: float) -> void:
 		if not traveling:
@@ -4888,6 +4900,32 @@ class MapPanel extends Control:
 		var after := _polyline_position(travel_points, minf(1.0, travel_progress + 0.015))
 		return before.angle_to_point(after)
 
+	func _departure_dust_strength() -> float:
+		if reduce_motion or travel_phase != "moving_out":
+			return 0.0
+		var dust_end_progress := ENCOUNTER_PROGRESS * 0.68
+		return clampf(1.0 - travel_progress / dust_end_progress, 0.0, 1.0)
+
+	func _draw_departure_dust(position: Vector2) -> void:
+		var strength := _departure_dust_strength()
+		if strength <= 0.0 or departure_dust_texture == null:
+			return
+		var heading := _caravan_heading()
+		draw_set_transform(position, heading, Vector2.ONE)
+		var tint := Color(0.92, 0.73, 0.49, strength * 0.82)
+		var puffs := [
+			{"offset": Vector2(-54, 11), "size": Vector2(104, 78), "alpha": 1.0},
+			{"offset": Vector2(-96, 15), "size": Vector2(76, 57), "alpha": 0.72},
+			{"offset": Vector2(-131, 18), "size": Vector2(52, 39), "alpha": 0.44},
+		]
+		for puff in puffs:
+			var puff_size: Vector2 = puff["size"] * lerpf(0.82, 1.18, 1.0 - strength)
+			var puff_center: Vector2 = puff["offset"]
+			var puff_tint := tint
+			puff_tint.a *= float(puff["alpha"])
+			draw_texture_rect(departure_dust_texture, Rect2(puff_center - puff_size * 0.5, puff_size), false, puff_tint)
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
 	func _draw_caravan(position: Vector2) -> void:
 		var state := _caravan_motion_label()
 		var accent := Color("#f0d27d")
@@ -5110,6 +5148,7 @@ class MapPanel extends Control:
 		if travel_phase == "encounter":
 			draw_line(caravan_position + Vector2(58, -26), caravan_position + Vector2(58, 22), Color("#d08b62"), 5.0)
 			draw_line(caravan_position + Vector2(42, -18), caravan_position + Vector2(74, -18), Color("#d08b62"), 4.0)
+		_draw_departure_dust(caravan_position)
 		_draw_caravan(caravan_position)
 
 	func _draw_hover_card(settlement_id: String) -> void:

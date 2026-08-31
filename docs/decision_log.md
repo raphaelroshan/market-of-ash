@@ -577,3 +577,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Generated sine tones proved the feedback hooks but sounded like diagnostics rather than a game. The licensed cues give trade and travel distinct tactile character while preserving offline operation, deterministic simulation, and explicit provenance.
 
 **Trade-off:** These generic cues are testing assets rather than final market, coin, wagon, or faction-specific sound design. They should be replaced once the command vocabulary and final audio direction are stable.
+
+## ADR-073: Departure dust is brief, deterministic presentation
+
+**Decision:** Draw three palette-tinted puffs from the licensed Kenney particle kit behind the caravan during only the opening portion of `moving_out`. Derive opacity and scale from presentation progress, suppress the effect when Reduce Travel Motion is enabled, and capture the committed departure as its own visual-evidence state. Copy the selected texture into a curated runtime folder and exclude unused raw source packs from release exports.
+
+**Reason:** The road view already communicates route, status, and progress, but the transition from a static Departure Desk to a moving caravan lacked a readable physical cue. A small dust wake makes commitment feel like departure without adding a new simulation system or obscuring the route information.
+
+**Trade-off:** The texture is temporary generic VFX and remains deliberately subtle. The repository retains the complete source kit and licenses, while packaged builds contain only selected runtime assets. The effect carries no economic or event meaning, does not consume random state, and disappears before the player receives the next action.
