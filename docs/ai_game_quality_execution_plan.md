@@ -2,7 +2,9 @@
 
 **Applies to:** `v0.13.2-alpha-basin-vertical-slice` and later
 
-**Purpose:** Move the game from a technically sound deterministic prototype toward a presentable vertical slice. Automated tests, scripted launches, screenshot inspection, and deterministic replay evidence are the active development gates. Human playtesting is valuable later, but it is not a prerequisite for the following work.
+**Purpose:** Move the game from a technically sound deterministic prototype toward a presentable private-alpha slice. The deterministic Five-Well Basin vertical-slice milestone is complete, but the game-quality presentation milestone remains open. Automated tests, scripted launches, screenshot inspection, and deterministic replay evidence are the active development gates. Human playtesting is valuable later, but it is not a prerequisite for the following work.
+
+> **Current audit:** `0.13.2-alpha-basin-vertical-slice` passes the automated vertical-slice scope, but the current 1280×720 Main Menu and Introduction captures still show horizontally clipped right-side content. Do not report the game-quality roadmap as complete until the responsive shell, full player journey, and private-alpha presentation gates are verified.
 
 ## Operating contract
 

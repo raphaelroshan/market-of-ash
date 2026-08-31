@@ -2,12 +2,15 @@
 
 **Project:** Market of Ash
 **Current baseline:** `0.13.2-alpha-basin-vertical-slice`
-**Target milestone:** `0.13.0-alpha-basin-vertical-slice`
+**Completed milestone:** `0.13.0-alpha-basin-vertical-slice` deterministic vertical-slice scope
+**Next target:** Game-quality private-alpha presentation and complete-flow gate
 **Platform:** Windows desktop first, Web as a verification surface
 **Engine:** Godot 4.4.1, GDScript
 **Development model:** Agent-first, deterministic, content-driven, private alpha
 
 > **Purpose:** Turn the current technically validated trade-and-consequence prototype into a convincing, replayable, human-playtestable game-quality slice of the Five-Well Basin without rewriting the economy or expanding the game into an uncontrolled campaign.
+>
+> **Status clarification (2026-08-30):** The deterministic Five-Well Basin vertical-slice milestone is complete and verified. The project is **not** complete as a game-quality or commercial alpha. The current main build still shows horizontal clipping in the Main Menu and Introduction at 1280×720, and the visual evidence does not yet establish a polished complete player journey. Continue with the open game-quality execution plan.
 
 This document is an implementation contract for GPT coding agents, visual agents, audio agents, test agents, and the product lead. It is intentionally narrower than the full Market of Ash design. The goal is not to implement every faction, good, settlement, or event. The goal is to make the **existing first basin journey feel like a game**.
 
