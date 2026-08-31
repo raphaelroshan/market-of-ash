@@ -54,10 +54,12 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/scenarios/well_commons_response.md` | Feed B state-machine and replacement-market contract for ignored or failed Reedwatch relief. |
 | `docs/implementation_status.md` | Current implementation, verification evidence, and remaining manual gates. |
 | `docs/visual_evidence_gallery.md` | Versioned full-flow and clarity-patch screenshots with provenance and limitations. |
+| `docs/visual_evidence/v0.13.2-alpha-basin-vertical-slice-roadmap-audit-2026-08-30/` | Fresh 0.13.2 Main Menu and Introduction audit captures at 1280×720. |
 | `docs/kickstarter_bonus_content.md` | Standalone backer-facing archive concept, suggested copy, provenance, and release guardrails. |
 | `docs/latest_test_report_2026-08-30.md` | Latest main-branch automated and visual smoke-test results, screenshots, findings, and next roadmap steps. |
 | `docs/latest_visual_review_2026-08-30.md` | Historical post-release capture that recorded the pre-M1 opening-shell clipping seen by its Xvfb launch path. |
 | `docs/latest_test_report_2026-08-31.md` | Latest automated and visual test results, finding, correction, screenshots, and remaining human gate. |
+| `docs/roadmap_status_audit_2026-08-30.md` | Audit distinguishing the completed deterministic vertical slice from unfinished game-quality and private-alpha work. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
 | `src/ui/main.gd` | Prototype UI and actionable procedural route map. Keep presentation logic here, not in the simulation. |
