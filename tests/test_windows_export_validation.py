@@ -29,6 +29,9 @@ def write_fixture(path: Path, machine: int = 0x8664) -> None:
 
 
 def main() -> int:
+    export_presets = (Path(__file__).resolve().parents[1] / "export_presets.cfg").read_text(encoding="utf-8")
+    assert export_presets.count('include_filter="assets/temporary/selected-audio/*.oggstr"') == 2
+
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
         valid = root / "valid.exe"
@@ -81,8 +84,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.13.5.0",
-                    "product_version": "0.13.5.0",
+                    "file_version": "0.13.6.0",
+                    "product_version": "0.13.6.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                     "capture": {"x": 1, "y": 1, "width": 8, "height": 8},
@@ -105,8 +108,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.13.5.0",
-                    "product_version": "0.13.5.0",
+                    "file_version": "0.13.6.0",
+                    "product_version": "0.13.6.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                 }

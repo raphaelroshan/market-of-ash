@@ -91,7 +91,10 @@ func _initialize() -> void:
 	_expect(ui.intro_back_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_next_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_skip_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, "Introduction actions should wrap rather than clip at constrained widths and Large text")
 	for menu_control in [ui.start_game_button, ui.continue_game_button, ui.settings_button, ui.credits_button, ui.reduce_motion_checkbox, ui.large_text_checkbox, ui.interface_sounds_checkbox, ui.restore_bindings_button, ui.quit_button]:
 		_expect(menu_control.custom_minimum_size.y >= 44.0, "Main Menu control %s should expose a comfortable pointer target" % menu_control.get_class())
-	_expect(ui.audio_player != null and ui.audio_cues.size() == 3, "the UI should prepare distinct success, blocked-action, and travel cues")
+	_expect(ui.audio_player != null and ui.audio_player.volume_db == -18.0 and ui.audio_cues.size() == 3, "the UI should prepare restrained success, blocked-action, and travel cues")
+	_expect(ui.audio_cues["success"] is AudioStreamOggVorbis and ui.audio_cues["success"].get_length() > 0.2, "successful actions should decode the licensed confirmation cue")
+	_expect(ui.audio_cues["blocked"] is AudioStreamOggVorbis and ui.audio_cues["blocked"].get_length() > 0.1, "blocked actions should decode the licensed error cue")
+	_expect(ui.audio_cues["travel"] is AudioStreamOggVorbis and ui.audio_cues["travel"].get_length() > 0.6, "departure should decode the licensed caravan-creak cue")
 	ui._play_ui_cue("success")
 	var enabled_audio_stream: AudioStream = ui.audio_player.stream
 	ui.interface_sounds_checkbox.button_pressed = false
@@ -553,7 +556,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.5-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.6-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")

@@ -79,6 +79,11 @@ const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel":
 const DEFAULT_CONTROLLER_BINDINGS := {"ui_accept": [JOY_BUTTON_A], "ui_cancel": [JOY_BUTTON_B], "ui_pause": [JOY_BUTTON_START]}
 const RESERVED_REMAP_KEYS := [KEY_TAB, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 const RESERVED_CONTROLLER_BUTTONS := [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]
+const AUDIO_CUE_PATHS := {
+	"success": "res://assets/temporary/selected-audio/command-success.oggstr",
+	"blocked": "res://assets/temporary/selected-audio/command-blocked.oggstr",
+	"travel": "res://assets/temporary/selected-audio/caravan-departure.oggstr",
+}
 const COMPACT_OPENING_WINDOW_WIDTH := 1280
 const ROUTE_CARD_HEIGHT := 200.0
 const ROUTE_CARD_LARGE_TEXT_HEIGHT := 260.0
@@ -933,30 +938,22 @@ func _on_interface_sounds_toggled(enabled: bool) -> void:
 
 func _build_audio_cues() -> void:
 	audio_player = AudioStreamPlayer.new()
-	audio_player.volume_db = -14.0
+	audio_player.volume_db = -18.0
 	add_child(audio_player)
-	audio_cues = {
-		"success": _tone_stream(660.0, 0.08),
-		"blocked": _tone_stream(220.0, 0.11),
-		"travel": _tone_stream(360.0, 0.14),
-	}
+	for cue_id in AUDIO_CUE_PATHS:
+		var stream := _load_ogg_cue(String(AUDIO_CUE_PATHS[cue_id]))
+		if stream == null:
+			push_error("Could not load interface audio cue: %s" % AUDIO_CUE_PATHS[cue_id])
+			continue
+		audio_cues[cue_id] = stream
 
-func _tone_stream(frequency: float, duration: float) -> AudioStreamWAV:
-	var sample_rate := 22050
-	var sample_count := int(round(duration * sample_rate))
-	var samples := PackedByteArray()
-	samples.resize(sample_count * 2)
-	for index in range(sample_count):
-		var progress := float(index) / float(maxi(1, sample_count - 1))
-		var envelope := sin(PI * progress)
-		var sample := int(round(sin(TAU * frequency * float(index) / float(sample_rate)) * envelope * 32767.0 * 0.12))
-		samples.encode_s16(index * 2, sample)
-	var stream := AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = sample_rate
-	stream.stereo = false
-	stream.data = samples
-	return stream
+func _load_ogg_cue(resource_path: String) -> AudioStreamOggVorbis:
+	if not FileAccess.file_exists(resource_path):
+		return null
+	var encoded_audio := FileAccess.get_file_as_bytes(resource_path)
+	if encoded_audio.is_empty():
+		return null
+	return AudioStreamOggVorbis.load_from_buffer(encoded_audio)
 
 func _play_ui_cue(cue_id: String) -> void:
 	if not interface_sounds_enabled or audio_player == null or not audio_cues.has(cue_id):

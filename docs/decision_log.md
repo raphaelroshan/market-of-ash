@@ -569,3 +569,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The prior 1100-pixel breakpoint left the 1280×720 Introduction action rail with almost no Large Text safety margin and allowed a bounds test to pass while checking only the outer panel and primary action. The opening should reflow before text becomes visually fragile rather than depending on clipping tolerance.
 
 **Trade-off:** At 1280×720 the illustration becomes a wide header rather than a side-by-side scene. The richer split composition remains available at the preferred 1600×900 desktop size, and no gameplay, focus order, tutorial state, or simulation rule changes.
+
+## ADR-072: Temporary licensed cues replace generated interface tones
+
+**Decision:** Load three short CC0 audio resources from the versioned temporary asset kit: Kenney confirmation for successful commands, Kenney error for blocked commands, and a restrained RPG Audio creak for committed travel. Keep the existing Interface Sounds toggle and all visible feedback unchanged.
+
+**Reason:** Generated sine tones proved the feedback hooks but sounded like diagnostics rather than a game. The licensed cues give trade and travel distinct tactile character while preserving offline operation, deterministic simulation, and explicit provenance.
+
+**Trade-off:** These generic cues are testing assets rather than final market, coin, wagon, or faction-specific sound design. They should be replaced once the command vocabulary and final audio direction are stable.
