@@ -40,6 +40,8 @@ func _initialize() -> void:
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "the preferred desktop window should clamp to a 1280x720 display instead of opening off-screen")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1366, 728)) == Vector2i(1294, 728), "the launch clamp should preserve the preferred window aspect ratio when only one display axis is constrained")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1920, 1080)) == Vector2i(1600, 900), "the preferred 1600x900 desktop window should remain unchanged when the display can contain it")
+	_expect(ui._opening_layout_should_compact(960) and ui._opening_layout_should_compact(1280), "the minimum and 1280-wide opening should use the stacked composition")
+	_expect(not ui._opening_layout_should_compact(1600), "the preferred 1600-wide opening should retain the split composition")
 	_expect(ui.menu_columns != null and ui.intro_columns != null, "the Main Menu and Introduction should use the explicit responsive opening layout")
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
@@ -75,6 +77,7 @@ func _initialize() -> void:
 	_expect(ui.shop_layer != null and not ui.shop_layer.visible, "shop should remain hidden until Start Game")
 	_expect(ui.game_layer != null and not ui.game_layer.visible, "departure map should remain hidden until planning begins")
 	_expect(ui.start_game_button != null and ui.start_game_button.text == "New Game", "main menu should expose one player-facing New Game action")
+	_expect(ui.start_game_button.get_parent().get_parent() is MarginContainer and ui.start_game_button.get_parent().get_parent().get_theme_constant("margin_left") >= 18, "the Main Menu actions should retain a horizontal safety gutter")
 	_expect(ui.start_conflict_button != null and ui.start_campaign_button != null and not ui.developer_panel.visible, "scenario starts should exist only behind the hidden developer panel")
 	_expect(ui.start_game_button.find_next_valid_focus() == ui.settings_button and ui.settings_button.find_next_valid_focus() == ui.credits_button, "Main Menu focus should traverse player-facing actions before expanded settings")
 	_expect(ui.reduce_motion_checkbox.find_next_valid_focus() == ui.large_text_checkbox, "Main Menu focus should move from Reduce motion to Large text: %s" % ui.reduce_motion_checkbox.find_next_valid_focus())
@@ -85,6 +88,7 @@ func _initialize() -> void:
 	_expect(ui.reduce_motion_checkbox != null and ui.reduce_motion_checkbox.text == "Reduce travel motion", "main menu should expose a reduced-motion option")
 	_expect(ui.large_text_checkbox != null and ui.large_text_checkbox.text == "Large text", "main menu should expose a large-text option")
 	_expect(ui.interface_sounds_checkbox != null and ui.interface_sounds_checkbox.text == "Interface sounds" and ui.interface_sounds_checkbox.button_pressed, "main menu should expose enabled-by-default nonessential interface sounds")
+	_expect(ui.intro_back_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_next_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_skip_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, "Introduction actions should wrap rather than clip at constrained widths and Large text")
 	for menu_control in [ui.start_game_button, ui.continue_game_button, ui.settings_button, ui.credits_button, ui.reduce_motion_checkbox, ui.large_text_checkbox, ui.interface_sounds_checkbox, ui.restore_bindings_button, ui.quit_button]:
 		_expect(menu_control.custom_minimum_size.y >= 44.0, "Main Menu control %s should expose a comfortable pointer target" % menu_control.get_class())
 	_expect(ui.audio_player != null and ui.audio_cues.size() == 3, "the UI should prepare distinct success, blocked-action, and travel cues")
@@ -549,7 +553,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.4-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.5-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")

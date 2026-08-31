@@ -79,7 +79,7 @@ const DEFAULT_KEY_BINDINGS := {"ui_accept": [KEY_ENTER, KEY_SPACE], "ui_cancel":
 const DEFAULT_CONTROLLER_BINDINGS := {"ui_accept": [JOY_BUTTON_A], "ui_cancel": [JOY_BUTTON_B], "ui_pause": [JOY_BUTTON_START]}
 const RESERVED_REMAP_KEYS := [KEY_TAB, KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT]
 const RESERVED_CONTROLLER_BUTTONS := [JOY_BUTTON_DPAD_UP, JOY_BUTTON_DPAD_DOWN, JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT]
-const COMPACT_OPENING_WINDOW_WIDTH := 1100
+const COMPACT_OPENING_WINDOW_WIDTH := 1280
 const ROUTE_CARD_HEIGHT := 200.0
 const ROUTE_CARD_LARGE_TEXT_HEIGHT := 260.0
 const CONTROLLER_BUTTON_LABELS := {
@@ -314,11 +314,14 @@ func _clamped_window_size(current_size: Vector2i, usable_size: Vector2i) -> Vect
 	return Vector2i(floori(float(current_size.x) * fit_scale), floori(float(current_size.y) * fit_scale))
 
 func _refresh_responsive_layout() -> void:
-	var compact := _report_viewport_size().x <= COMPACT_OPENING_WINDOW_WIDTH
+	var compact := _opening_layout_should_compact(_report_viewport_size().x)
 	if menu_columns != null:
 		menu_columns.set_compact(compact)
 	if intro_columns != null:
 		intro_columns.set_compact(compact)
+
+func _opening_layout_should_compact(viewport_width: int) -> bool:
+	return viewport_width <= COMPACT_OPENING_WINDOW_WIDTH
 
 func _build_main_menu() -> void:
 	menu_layer = Control.new()
@@ -338,9 +341,9 @@ func _build_main_menu() -> void:
 	menu_layer.add_child(margin)
 	menu_columns = ResponsiveColumns.new()
 	menu_columns.name = "MainMenuLayout"
-	menu_columns.separation = 28.0
+	menu_columns.separation = 20.0
 	menu_columns.first_ratio = 1.5
-	menu_columns.compact_visual_height = 220.0
+	menu_columns.compact_visual_height = 160.0
 	var columns: Container = menu_columns
 	margin.add_child(columns)
 	var title_scene := TitleScene.new()
@@ -355,14 +358,21 @@ func _build_main_menu() -> void:
 	card.size_flags_stretch_ratio = 1.0
 	columns.add_child(card)
 	var scroll := ScrollContainer.new()
+	scroll.name = "MainMenuScroll"
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card.add_child(scroll)
+	var content_margin := MarginContainer.new()
+	content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_margin.add_theme_constant_override("margin_left", 18)
+	content_margin.add_theme_constant_override("margin_top", 2)
+	content_margin.add_theme_constant_override("margin_right", 18)
+	scroll.add_child(content_margin)
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 16)
-	scroll.add_child(content)
+	content.add_theme_constant_override("separation", 12)
+	content_margin.add_child(content)
 
 	var heading := Label.new()
 	heading.name = "MainMenuHeading"
@@ -372,6 +382,7 @@ func _build_main_menu() -> void:
 	heading.add_theme_color_override("font_color", Color("#e6c58d"))
 	content.add_child(heading)
 	var welcome := Label.new()
+	welcome.name = "MainMenuWelcome"
 	welcome.text = "Trade between settlements. Choose what the road may cost. Help decide what the basin becomes."
 	welcome.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	welcome.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -385,6 +396,7 @@ func _build_main_menu() -> void:
 	start_game_button.pressed.connect(_on_new_game_pressed)
 	content.add_child(start_game_button)
 	continue_game_button = Button.new()
+	continue_game_button.name = "MainMenuContinueAction"
 	continue_game_button.text = "Continue"
 	continue_game_button.custom_minimum_size = Vector2(0, 52)
 	continue_game_button.disabled = not FileAccess.file_exists(save_path)
@@ -392,16 +404,19 @@ func _build_main_menu() -> void:
 	continue_game_button.pressed.connect(_on_load_pressed)
 	content.add_child(continue_game_button)
 	settings_button = Button.new()
+	settings_button.name = "MainMenuSettingsAction"
 	settings_button.text = "Settings"
 	settings_button.custom_minimum_size = Vector2(0, 48)
 	settings_button.pressed.connect(_on_settings_pressed)
 	content.add_child(settings_button)
 	credits_button = Button.new()
+	credits_button.name = "MainMenuCreditsAction"
 	credits_button.text = "Credits"
 	credits_button.custom_minimum_size = Vector2(0, 48)
 	credits_button.pressed.connect(_on_credits_pressed)
 	content.add_child(credits_button)
 	menu_save_status_label = Label.new()
+	menu_save_status_label.name = "MainMenuSaveStatus"
 	menu_save_status_label.text = save_status_text
 	menu_save_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	menu_save_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -514,6 +529,7 @@ func _build_main_menu() -> void:
 	developer_report_button.pressed.connect(_on_export_report_pressed)
 	developer_panel.add_child(developer_report_button)
 	quit_button = Button.new()
+	quit_button.name = "MainMenuQuitAction"
 	quit_button.text = "Quit"
 	quit_button.custom_minimum_size = Vector2(0, 44)
 	quit_button.tooltip_text = "Close the desktop build. Browser builds use the browser tab instead."
@@ -564,7 +580,7 @@ func _build_intro() -> void:
 	intro_columns = ResponsiveColumns.new()
 	intro_columns.name = "IntroductionLayout"
 	intro_columns.separation = 30.0
-	intro_columns.first_ratio = 1.55
+	intro_columns.first_ratio = 1.35
 	intro_columns.compact_visual_height = 220.0
 	var columns: Container = intro_columns
 	margin.add_child(columns)
@@ -578,9 +594,15 @@ func _build_intro() -> void:
 	card.custom_minimum_size = Vector2(420, 0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	columns.add_child(card)
+	var content_margin := MarginContainer.new()
+	content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content_margin.add_theme_constant_override("margin_left", 16)
+	content_margin.add_theme_constant_override("margin_top", 2)
+	content_margin.add_theme_constant_override("margin_right", 16)
+	card.add_child(content_margin)
 	var content := VBoxContainer.new()
-	content.add_theme_constant_override("separation", 18)
-	card.add_child(content)
+	content.add_theme_constant_override("separation", 14)
+	content_margin.add_child(content)
 	intro_progress_label = Label.new()
 	intro_progress_label.name = "IntroductionProgress"
 	intro_progress_label.add_theme_color_override("font_color", Color("#d08b62"))
@@ -606,6 +628,7 @@ func _build_intro() -> void:
 	intro_body_label.add_theme_color_override("font_color", Color("#d9c6a2"))
 	body_scroll.add_child(intro_body_label)
 	var note := Label.new()
+	note.name = "IntroductionNote"
 	note.text = "The tutorial uses the real campaign, economy, events, and save. Guidance never grants cargo or changes an outcome."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 12)
@@ -615,7 +638,9 @@ func _build_intro() -> void:
 	buttons.add_theme_constant_override("separation", 10)
 	content.add_child(buttons)
 	intro_back_button = Button.new()
+	intro_back_button.name = "IntroductionBackAction"
 	intro_back_button.text = "Back"
+	intro_back_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_back_button.custom_minimum_size = Vector2(0, 52)
 	intro_back_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro_back_button.pressed.connect(_on_intro_back_pressed)
@@ -623,12 +648,15 @@ func _build_intro() -> void:
 	intro_next_button = Button.new()
 	intro_next_button.name = "IntroductionPrimaryAction"
 	intro_next_button.text = "Next"
+	intro_next_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_next_button.custom_minimum_size = Vector2(0, 52)
 	intro_next_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro_next_button.pressed.connect(_on_intro_next_pressed)
 	buttons.add_child(intro_next_button)
 	intro_skip_button = Button.new()
+	intro_skip_button.name = "IntroductionSkipAction"
 	intro_skip_button.text = "Start without guidance"
+	intro_skip_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_skip_button.custom_minimum_size = Vector2(0, 48)
 	intro_skip_button.pressed.connect(_on_intro_skip_pressed)
 	content.add_child(intro_skip_button)

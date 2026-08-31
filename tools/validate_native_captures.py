@@ -55,12 +55,12 @@ EXPECTED_UI_STATE = {
     "route_event_loss_result": "arrival_handoff",
 }
 REQUIRED_LAYOUT_CONTROLS = {
-    "main_menu": ("MainMenuCard", "MainMenuHeading", "MainMenuPrimaryAction"),
-    "main_menu_large_text": ("MainMenuCard", "MainMenuHeading", "MainMenuPrimaryAction"),
-    "introduction_basin": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
-    "introduction_caravan": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
-    "introduction_road": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
-    "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionPrimaryAction"),
+    "main_menu": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
+    "main_menu_large_text": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
+    "introduction_basin": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_caravan": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_road": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
     "settlement_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "settlement_shop_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "bazaar_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
@@ -126,6 +126,14 @@ def require_layout_bounds(capture: dict[str, object]) -> None:
             raise AssertionError(f"{screen}: required control {control_name} has no rendered bounds")
         if not rect_encloses(active_layer, rect):
             raise AssertionError(f"{screen}: required control {control_name} leaves the active layer")
+    opening_panel_name = "MainMenuCard" if screen.startswith("main_menu") else "IntroductionCard" if screen.startswith("introduction_") else ""
+    if opening_panel_name:
+        opening_panel = controls.get(opening_panel_name, {}).get("rect", {})
+        for control_name in expected_controls:
+            if control_name == opening_panel_name:
+                continue
+            if not rect_encloses(opening_panel, controls[control_name]["rect"]):
+                raise AssertionError(f"{screen}: required control {control_name} leaves {opening_panel_name}")
 
 
 def main() -> int:
@@ -203,7 +211,7 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
         require_layout_bounds(capture)
         if screen in {"main_menu", "introduction_basin", "introduction_caravan", "introduction_road", "introduction_road_large_text"}:
-            expected_compact = viewport == (960, 540)
+            expected_compact = viewport[0] <= 1280
             if bool(capture.get("layout", {}).get("opening_compact")) != expected_compact:
                 raise AssertionError(f"{file_name}: opening layout did not use the expected {'stacked' if expected_compact else 'split'} composition")
         by_viewport.setdefault(viewport, {})[screen] = file_path

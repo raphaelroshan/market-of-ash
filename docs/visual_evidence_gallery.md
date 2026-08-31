@@ -121,3 +121,15 @@ The encounter rail now turns the threat model into a compact dossier and removes
 ![Roadside dossier with Large text](visual_evidence/v0.13.4-alpha-basin-vertical-slice/roadside-dossier-large-text-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.4-alpha-basin-vertical-slice/README.md).
+
+## 0.13.5 Responsive opening patch
+
+Main Menu and Introduction now deliberately stack at 1280 pixels and below, keeping their complete default copy and actions inside the card. The preferred 1600×900 window retains the split scene with a wider action rail.
+
+![Main Menu at 1280×720](visual_evidence/v0.13.5-alpha-basin-vertical-slice/main-menu-1280x720.png)
+
+![Introduction with Large Text at 1280×720](visual_evidence/v0.13.5-alpha-basin-vertical-slice/introduction-road-large-text-1280x720.png)
+
+![Introduction with Large Text at 1600×900](visual_evidence/v0.13.5-alpha-basin-vertical-slice/introduction-road-large-text-1600x900.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.5-alpha-basin-vertical-slice/README.md).
