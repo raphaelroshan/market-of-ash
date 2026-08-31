@@ -83,3 +83,8 @@ The implementation has completed roadmap slices A0–A1 and B0–B10’s automat
 ## Definition of done for an agent task
 
 A task is complete only when code, tests, player-facing feedback, and documentation agree. The agent must list changed files, the verification command and result, known limitations, and the next smallest task. If a test cannot be run, the agent must say so rather than claim success.
+
+
+## Temporary asset kit
+
+The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). These assets are for breadth, flow, and feel testing; they are not the final Market of Ash art direction.
