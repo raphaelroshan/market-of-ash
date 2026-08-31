@@ -39,7 +39,7 @@ def validate_capture(
     if metadata.get("product_name") != "Market of Ash":
         raise AssertionError(f"unexpected Windows product name: {metadata.get('product_name')!r}")
     for field in ("file_version", "product_version"):
-        if metadata.get(field) != "0.13.7.0":
+        if metadata.get(field) != "0.13.8.0":
             raise AssertionError(f"unexpected Windows {field}: {metadata.get(field)!r}")
     window = metadata.get("window")
     if not isinstance(window, dict) or int(window.get("width", 0)) < expected_width or int(window.get("height", 0)) < expected_height:

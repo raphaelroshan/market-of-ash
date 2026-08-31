@@ -7,6 +7,7 @@ const CAPTURE_SCREENS := [
 	"introduction_road",
 	"introduction_road_large_text",
 	"settlement_shop",
+	"trade_receipt",
 	"bazaar_jobs",
 	"pause",
 	"departure_desk",
@@ -17,6 +18,7 @@ const CAPTURE_SCREENS := [
 	"commons_ending",
 	"main_menu_large_text",
 	"settlement_shop_large_text",
+	"trade_receipt_large_text",
 	"pause_large_text",
 	"departure_desk_large_text",
 	"route_departure",
@@ -90,6 +92,8 @@ func _run() -> void:
 	ui._on_large_text_toggled(false)
 	ui._on_intro_next_pressed()
 	await _capture(ui, "settlement_shop", "settlement-shop")
+	ui._on_guided_test_action()
+	await _capture(ui, "trade_receipt", "trade-receipt")
 	ui._on_bazaar_navigation_pressed("assignments")
 	await _capture(ui, "bazaar_jobs", "bazaar-jobs")
 	ui._on_bazaar_navigation_pressed("trade")
@@ -147,6 +151,8 @@ func _run() -> void:
 	await _capture(ui, "departure_desk_large_text", "departure-desk-large-text")
 	ui._on_return_to_shop_pressed()
 	await _capture(ui, "settlement_shop_large_text", "settlement-shop-large-text")
+	ui._on_guided_test_action()
+	await _capture(ui, "trade_receipt_large_text", "trade-receipt-large-text")
 	ui._open_pause()
 	await _capture(ui, "pause_large_text", "pause-large-text")
 	ui._close_pause()
@@ -348,6 +354,7 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"BazaarPricePreview",
 		"BuyCargoButton",
 		"SellCargoButton",
+		"TradeReceiptPanel",
 		"BazaarPrimaryAction",
 		"CampaignDebriefPanel",
 		"EndingContinueAction",
