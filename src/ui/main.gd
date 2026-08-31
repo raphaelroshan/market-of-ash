@@ -83,6 +83,7 @@ const AUDIO_CUE_PATHS := {
 	"success": "res://assets/temporary/selected-audio/command-success.oggstr",
 	"blocked": "res://assets/temporary/selected-audio/command-blocked.oggstr",
 	"travel": "res://assets/temporary/selected-audio/caravan-departure.oggstr",
+	"information": "res://assets/temporary/selected-audio/guide-intel-open.oggstr",
 }
 const COMPACT_OPENING_WINDOW_WIDTH := 1280
 const ROUTE_CARD_HEIGHT := 200.0
@@ -2010,9 +2011,12 @@ func _style_bazaar_navigation_button(button: Button, index: int) -> void:
 	button.add_theme_font_size_override("font_size", 13)
 
 func _on_bazaar_navigation_pressed(section_id: String) -> void:
+	var section_changed := section_id != active_bazaar_section
 	if section_id != "trade":
 		_dismiss_trade_receipt()
 	active_bazaar_section = section_id
+	if section_changed and section_id == "information":
+		_play_ui_cue("information")
 	if section_id == "outlook" and tutorial.enabled:
 		tutorial.mark_outlook_seen()
 		tutorial.refresh(world, _current_ui_state_id(), arrival_pending)
