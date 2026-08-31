@@ -133,3 +133,13 @@ Main Menu and Introduction now deliberately stack at 1280 pixels and below, keep
 ![Introduction with Large Text at 1600×900](visual_evidence/v0.13.5-alpha-basin-vertical-slice/introduction-road-large-text-1600x900.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.5-alpha-basin-vertical-slice/README.md).
+
+## 0.13.6 Licensed interface audio patch
+
+Successful commands, blocked actions, and committed travel now use three short CC0 cues from the temporary asset kit. The visual flow is intentionally unchanged.
+
+![Trade surface remains unchanged](visual_evidence/v0.13.6-alpha-basin-vertical-slice/trade-confirmation-surface-1280x720.png)
+
+![Large Text event surface remains unchanged](visual_evidence/v0.13.6-alpha-basin-vertical-slice/route-event-large-text-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.6-alpha-basin-vertical-slice/README.md).
