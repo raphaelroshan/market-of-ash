@@ -54,3 +54,10 @@ The current Bazaar hierarchy finding and correction are recorded in [`latest_vis
 [3]: latest_test_report_2026-08-31.md "Market of Ash Departure Clarity Patch Test Report"
 
 The source documents are internal repository contracts and are intentionally versioned with the game.
+
+
+## Latest verification update — 2026-08-31
+
+The current `main` build `0.13.4-alpha-basin-vertical-slice` passes `scripts/verify.sh`, including deterministic economy, ordinary-trade viability, adaptive ending, recovery, campaign, controller, and game-quality metrics. A fresh 1280×720 launch still shows horizontal clipping in the right-side Main Menu panel and the Introduction panel. Therefore the deterministic vertical-slice milestone is complete, but the game-quality presentation roadmap is not complete.
+
+**Next mandatory task: M1 — Responsive shell repair.** Keep required copy and controls within the viewport at 1280×720, 1600×900, minimum supported width, Large Text, reduced motion, keyboard, and controller focus. Re-capture Main Menu, Introduction, Bazaar, Departure, event, arrival/debrief, and return-Bazaar states after the fix. Do not add new factions, goods, or settlement content until the shell passes these bounds and screenshot gates. Human testing remains optional and non-blocking.
