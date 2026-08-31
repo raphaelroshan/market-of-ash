@@ -553,3 +553,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The 0.13.2 Bazaar exposed every required value but gave labels, tutorial copy, market prose, and route arithmetic nearly equal visual weight. A first-time player should be able to answer “what am I carrying, where, and is this worthwhile?” before reading the underlying explanation.
 
 **Trade-off:** The ticket uses more authored presentation nodes than one Label and therefore requires explicit UI regression coverage. It does not remove the detailed market ledger, change any calculation, or make positive routes mandatory.
+
+## ADR-070: Roadside encounters lead with a compact threat dossier
+
+**Decision:** Present route, maximum disclosed cargo risk, exposed cargo value, authored dilemma, special frozen basis, and the no-hidden-health boundary as a compact dossier above the response list. Do not repeat the event title and setup inside the scroll rail when they are already visible in the persistent journey context and road narrative.
+
+**Reason:** The previous event rail repeated the encounter identity and setup before a long prose stakes block. At 1280×720 this delayed the second response until below the fold even though the left road scene and persistent status already carried that context.
+
+**Trade-off:** The detailed all-in-one stakes string remains as presentation data for regressions, while the visible rail uses several purpose-specific labels. Response cards remain scrollable and retain their complete disclosed costs, results, outcomes, and blocked prerequisites.

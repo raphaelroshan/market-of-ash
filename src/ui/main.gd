@@ -198,6 +198,12 @@ var event_mode_label: Label
 var event_title_label: Label
 var event_setup_label: Label
 var event_stakes_label: Label
+var event_threat_label: Label
+var event_exposed_label: Label
+var event_route_label: Label
+var event_basis_label: Label
+var event_decision_label: Label
+var event_rules_label: Label
 var event_readiness_label: Label
 var event_choice_list: VBoxContainer
 var event_choice_buttons: Array[Button] = []
@@ -1732,21 +1738,60 @@ func _build_ui() -> void:
 	event_card.add_child(event_content)
 	event_mode_label = Label.new()
 	event_mode_label.text = "ROADSIDE DECISION"
+	event_mode_label.visible = false
 	event_mode_label.add_theme_font_size_override("font_size", 12)
 	event_mode_label.add_theme_color_override("font_color", Color("#d08b62"))
 	event_content.add_child(event_mode_label)
 	event_title_label = Label.new()
+	event_title_label.visible = false
 	event_title_label.add_theme_font_size_override("font_size", 18)
 	event_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
 	event_content.add_child(event_title_label)
 	event_setup_label = Label.new()
+	event_setup_label.visible = false
 	event_setup_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_setup_label.add_theme_font_size_override("font_size", 13)
 	event_setup_label.add_theme_color_override("font_color", Color("#f4e6c7"))
 	event_content.add_child(event_setup_label)
 	event_stakes_label = Label.new()
-	event_stakes_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	event_stakes_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	event_stakes_label.visible = false
 	event_content.add_child(event_stakes_label)
+	var event_dossier := PanelContainer.new()
+	event_dossier.name = "RoadEventDossier"
+	event_content.add_child(event_dossier)
+	var dossier_shell := VBoxContainer.new()
+	dossier_shell.add_theme_constant_override("separation", 3)
+	event_dossier.add_child(dossier_shell)
+	event_threat_label = Label.new()
+	event_threat_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_threat_label.add_theme_font_size_override("font_size", 13)
+	event_threat_label.add_theme_color_override("font_color", Color("#d08b62"))
+	dossier_shell.add_child(event_threat_label)
+	event_exposed_label = Label.new()
+	event_exposed_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_exposed_label.add_theme_font_size_override("font_size", 12)
+	event_exposed_label.add_theme_color_override("font_color", Color("#f0d2a0"))
+	dossier_shell.add_child(event_exposed_label)
+	event_route_label = Label.new()
+	event_route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_route_label.add_theme_font_size_override("font_size", 12)
+	event_route_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	dossier_shell.add_child(event_route_label)
+	event_basis_label = Label.new()
+	event_basis_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_basis_label.add_theme_font_size_override("font_size", 11)
+	event_basis_label.add_theme_color_override("font_color", Color("#a69379"))
+	dossier_shell.add_child(event_basis_label)
+	event_decision_label = Label.new()
+	event_decision_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_decision_label.add_theme_font_size_override("font_size", 12)
+	event_decision_label.add_theme_color_override("font_color", Color("#f4e6c7"))
+	dossier_shell.add_child(event_decision_label)
+	event_rules_label = Label.new()
+	event_rules_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	event_rules_label.add_theme_font_size_override("font_size", 10)
+	event_rules_label.add_theme_color_override("font_color", Color("#8f8374"))
+	dossier_shell.add_child(event_rules_label)
 	event_readiness_label = Label.new()
 	event_readiness_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	event_readiness_label.add_theme_font_size_override("font_size", 12)
@@ -4047,6 +4092,13 @@ func _refresh_event_card() -> void:
 	event_title_label.text = String(view.get("title", "Route decision"))
 	event_setup_label.text = String(view.get("setup", ""))
 	event_stakes_label.text = String(view.get("stakes", ""))
+	event_threat_label.text = String(view.get("threat_label", ""))
+	event_exposed_label.text = String(view.get("exposed_label", ""))
+	event_route_label.text = String(view.get("road_label", ""))
+	event_basis_label.text = String(view.get("basis_label", ""))
+	event_basis_label.visible = not event_basis_label.text.is_empty()
+	event_decision_label.text = String(view.get("decision_label", ""))
+	event_rules_label.text = String(view.get("rules_label", ""))
 	for choice_view in view.get("choices", []):
 		var button := _wrapped_action_button(92.0)
 		button.name = "RoadEventChoice%d" % event_choice_buttons.size()
@@ -4069,7 +4121,7 @@ func _refresh_event_card() -> void:
 	if not enabled_choice_buttons.is_empty():
 		_link_focus_cycle(enabled_choice_buttons)
 	if event_readiness_label:
-		event_readiness_label.text = "READINESS — %d of %d choices available. Unavailable choices remain visible and name the missing money, cargo, provisions, contract, or crew leverage." % [enabled_choice_buttons.size(), event_choice_buttons.size()]
+		event_readiness_label.text = "READINESS · %d/%d RESPONSES AVAILABLE%s" % [enabled_choice_buttons.size(), event_choice_buttons.size(), " · Blocked responses name their requirement." if enabled_choice_buttons.size() < event_choice_buttons.size() else ""]
 	if pause_layer == null or not pause_layer.visible:
 		if _grab_first_enabled(event_choice_buttons) and not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 			get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)

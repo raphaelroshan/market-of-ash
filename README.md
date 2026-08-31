@@ -8,7 +8,7 @@ The repository contains a complete, replayable alpha vertical slice presented as
 
 The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, create and validate a single-file portable Windows ZIP, clean-extract and launch-smoke that executable, and upload GUI evidence, checksums, provenance, and a source snapshot.
 
-The current public test build is [`v0.13.3-alpha-basin-vertical-slice`](docs/releases/v0.13.3-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
+The current public test build is [`v0.13.4-alpha-basin-vertical-slice`](docs/releases/v0.13.4-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
 
 ## Run the prototype
 
@@ -60,7 +60,7 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/latest_visual_review_2026-08-30.md` | Historical post-release capture that recorded the pre-M1 opening-shell clipping seen by its Xvfb launch path. |
 | `docs/latest_test_report_2026-08-31.md` | Latest automated and visual test results, finding, correction, screenshots, and remaining human gate. |
 | `docs/roadmap_status_audit_2026-08-30.md` | Audit distinguishing the completed deterministic vertical slice from unfinished game-quality and private-alpha work, with its duplicated-capture correction. |
-| `docs/latest_visual_review_2026-08-31.md` | Current 0.13.3 Bazaar hierarchy review, trade-ticket evidence, and remaining visual limitations. |
+| `docs/latest_visual_review_2026-08-31.md` | Current 0.13.4 presentation review covering the Bazaar trade ticket, roadside dossier, and remaining visual limitations. |
 | `src/core/economy.gd` | Pure pricing and trade validation logic. |
 | `src/core/world_state.gd` | Serializable campaign state, routes, settlements, crisis, and endings. |
 | `src/ui/main.gd` | Prototype UI and actionable procedural route map. Keep presentation logic here, not in the simulation. |

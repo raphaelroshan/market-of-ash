@@ -77,6 +77,8 @@ func _test_event_presenter() -> void:
 	var view := JourneyPresenter.event_view(world, pending)
 	var choices: Array = view.get("choices", [])
 	_expect(view.get("title", "") == "A blocked road" and String(view.get("stakes", "")).contains("Highest disclosed cargo-loss chance: 40%"), "event presenter should expose authored identity and maximum disclosed danger")
+	_expect(view.get("threat_label", "") == "THREAT · 40% MAX CARGO-LOSS ROLL" and String(view.get("exposed_label", "")).contains("1 WATER") and String(view.get("road_label", "")).contains("OLD ROAD"), "event presenter should expose a scannable threat, cargo, and road dossier")
+	_expect(String(view.get("decision_label", "")).contains("Pay or risk the cargo") and String(view.get("rules_label", "")).contains("No hidden health"), "event dossier should preserve the authored dilemma and explicit rules boundary")
 	_expect(choices.size() == 2 and bool(choices[0].get("disabled", false)) and String(choices[0].get("blocked_reason", "")).contains("999 ashmarks"), "event presenter should keep unaffordable choices visible with the exact blocker")
 	_expect(not bool(choices[1].get("disabled", true)) and String(choices[1].get("text", "")).contains("MANEUVER / RISK ROLL 40%"), "event presenter should label available risky tactics consistently")
 
