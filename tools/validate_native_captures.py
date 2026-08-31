@@ -29,6 +29,7 @@ REQUIRED_NATIVE_SCREENS = {
     "settlement_shop_large_text",
     "pause_large_text",
     "departure_desk_large_text",
+    "route_departure",
     "route_travel",
     "route_event",
     "route_event_large_text",
@@ -50,6 +51,7 @@ EXPECTED_UI_STATE = {
     "well_commons_actions": "settlement_shop",
     "commons_ending": "settlement_shop",
     "destination_shop": "settlement_shop",
+    "route_departure": "route_travel",
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
     "route_event_loss_result": "arrival_handoff",
@@ -72,6 +74,7 @@ REQUIRED_LAYOUT_CONTROLS = {
     "destination_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "route_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
     "route_travel": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
     "route_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
     "route_event_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
@@ -184,6 +187,11 @@ def main() -> int:
         expected_state_screen = EXPECTED_UI_STATE.get(screen, screen.removesuffix("_large_text"))
         if ui_state.get("screen") != expected_state_screen:
             raise AssertionError(f"{file_name}: UI state does not match {expected_state_screen}")
+        if screen == "route_departure" and (
+            ui_state.get("road_scene_id") != "warden_causeway"
+            or ui_state.get("road_waypoint") != "LEAVING ASHGATE"
+        ):
+            raise AssertionError(f"{file_name}: departure capture is missing its moving corridor identity")
         if screen == "route_travel" and (
             ui_state.get("road_scene_id") != "warden_causeway"
             or ui_state.get("road_waypoint") != "ROAD STOP — THE NEXT INSPECTION POST"
@@ -230,7 +238,8 @@ def main() -> int:
         require_distinct_screen(screens["well_commons_actions"], screens["commons_ending"], f"{viewport} Reach Commons ending")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
-        require_distinct_screen(screens["departure_desk"], screens["route_travel"], f"{viewport} Begin road travel")
+        require_distinct_screen(screens["departure_desk"], screens["route_departure"], f"{viewport} Commit departure")
+        require_distinct_screen(screens["route_departure"], screens["route_travel"], f"{viewport} Reach road stop", minimum_ratio=0.005)
         require_distinct_screen(screens["route_travel"], screens["route_event"], f"{viewport} Reveal route event")
         require_distinct_screen(screens["route_event"], screens["route_event_result"], f"{viewport} Resolve event")
         require_distinct_screen(screens["route_event_result"], screens["route_event_loss_result"], f"{viewport} Realized loss recovery")

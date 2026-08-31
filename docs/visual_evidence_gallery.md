@@ -143,3 +143,13 @@ Successful commands, blocked actions, and committed travel now use three short C
 ![Large Text event surface remains unchanged](visual_evidence/v0.13.6-alpha-basin-vertical-slice/route-event-large-text-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.6-alpha-basin-vertical-slice/README.md).
+
+## 0.13.7 Caravan departure dust patch
+
+Committed travel now opens with a brief palette-tinted dust wake, then clears before the mandatory road stop and its next action.
+
+![Caravan leaving Ashgate](visual_evidence/v0.13.7-alpha-basin-vertical-slice/caravan-departure-dust-1280x720.png)
+
+![Dust cleared at the road stop](visual_evidence/v0.13.7-alpha-basin-vertical-slice/road-stop-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.7-alpha-basin-vertical-slice/README.md).

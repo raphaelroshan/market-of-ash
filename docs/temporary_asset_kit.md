@@ -37,6 +37,8 @@ Current integration uses `confirmation_001.ogg` for successful commands, `error_
 
 Use particle textures sparingly for dust on departure, a short spark on a route consequence, and a small smoke layer for an event or damaged wagon. Do not use magical-looking particles for economic state; color and timing should suggest dust, ash, paper, metal, or fire.
 
+Current integration uses `particle-pack/smoke_03.png` as three small, palette-tinted puffs behind the caravan during only the opening portion of an animated departure. An export-safe byte copy lives at `assets/temporary/selected-vfx/departure-dust.pngdata`; its README preserves the source path and hash. The effect is presentation-only, fades before the mandatory road stop, and is fully suppressed by Reduce Travel Motion. Release presets exclude the unused raw Kenney source directories and include only explicitly selected runtime assets.
+
 ## Animation recipes for the agent
 
 The temporary kit does not contain a bespoke Market of Ash animation set. Agents should create motion from existing textures and deterministic state:

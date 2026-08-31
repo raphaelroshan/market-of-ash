@@ -19,6 +19,7 @@ const CAPTURE_SCREENS := [
 	"settlement_shop_large_text",
 	"pause_large_text",
 	"departure_desk_large_text",
+	"route_departure",
 	"route_travel",
 	"route_event",
 	"route_event_large_text",
@@ -167,6 +168,7 @@ func _run() -> void:
 		push_error("Native capture expected the deterministic Gatekeeper's Chalk event.")
 		quit(1)
 		return
+	await _capture(ui, "route_departure", "route-departure")
 	ui.map_panel._process(2.0)
 	if ui.map_panel.travel_phase != "road" or not ui.continue_journey_button.visible:
 		push_error("Native capture expected the dedicated road view before the route encounter.")
