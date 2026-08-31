@@ -153,3 +153,13 @@ Committed travel now opens with a brief palette-tinted dust wake, then clears be
 ![Dust cleared at the road stop](visual_evidence/v0.13.7-alpha-basin-vertical-slice/road-stop-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.7-alpha-basin-vertical-slice/README.md).
+
+## 0.13.8 Bazaar trade receipt patch
+
+Successful purchases and sales now receive a brief stamped market receipt containing realized cargo, cash, and hold values.
+
+![Purchase receipt at 1280×720](visual_evidence/v0.13.8-alpha-basin-vertical-slice/trade-receipt-1280x720.png)
+
+![Purchase receipt with Large Text](visual_evidence/v0.13.8-alpha-basin-vertical-slice/trade-receipt-large-text-1280x720.png)
+
+Full provenance is in the patch [`capture record`](visual_evidence/v0.13.8-alpha-basin-vertical-slice/README.md).

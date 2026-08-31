@@ -17,6 +17,7 @@ REQUIRED_NATIVE_SCREENS = {
     "introduction_road",
     "introduction_road_large_text",
     "settlement_shop",
+    "trade_receipt",
     "bazaar_jobs",
     "pause",
     "departure_desk",
@@ -27,6 +28,7 @@ REQUIRED_NATIVE_SCREENS = {
     "commons_ending",
     "main_menu_large_text",
     "settlement_shop_large_text",
+    "trade_receipt_large_text",
     "pause_large_text",
     "departure_desk_large_text",
     "route_departure",
@@ -51,6 +53,8 @@ EXPECTED_UI_STATE = {
     "well_commons_actions": "settlement_shop",
     "commons_ending": "settlement_shop",
     "destination_shop": "settlement_shop",
+    "trade_receipt": "settlement_shop",
+    "trade_receipt_large_text": "settlement_shop",
     "route_departure": "route_travel",
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
@@ -64,7 +68,9 @@ REQUIRED_LAYOUT_CONTROLS = {
     "introduction_road": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
     "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
     "settlement_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
+    "trade_receipt": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
     "settlement_shop_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
+    "trade_receipt_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
     "bazaar_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
     "returned_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
     "well_commons_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
@@ -231,6 +237,8 @@ def main() -> int:
         require_distinct_screen(screens["introduction_road"], screens["introduction_road_large_text"], f"{viewport} Introduction large text", minimum_ratio=0.01)
         require_distinct_screen(screens["introduction_road"], screens["settlement_shop"], f"{viewport} Begin guided campaign")
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
+        require_distinct_screen(screens["settlement_shop"], screens["trade_receipt"], f"{viewport} Complete purchase", minimum_ratio=0.005)
+        require_distinct_screen(screens["settlement_shop_large_text"], screens["trade_receipt_large_text"], f"{viewport} Complete purchase with large text", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
         require_distinct_screen(screens["bazaar_jobs"], screens["well_commons_jobs"], f"{viewport} Expire relief offer")
         require_distinct_screen(screens["well_commons_jobs"], screens["well_commons_market"], f"{viewport} Open Commons market")

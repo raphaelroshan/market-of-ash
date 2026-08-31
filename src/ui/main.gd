@@ -148,6 +148,11 @@ var shop_market_preview_label: Label
 var shop_buy_button: Button
 var shop_sell_button: Button
 var shop_transaction_status_label: Label
+var trade_receipt_panel: PanelContainer
+var trade_receipt_title_label: Label
+var trade_receipt_detail_label: Label
+var trade_receipt_tween: Tween
+var trade_receipt_generation := 0
 var shop_status_label: Label
 var shop_cargo_label: Label
 var shop_decision_summary_panel: PanelContainer
@@ -446,7 +451,7 @@ func _build_main_menu() -> void:
 	reduce_motion_checkbox = CheckBox.new()
 	reduce_motion_checkbox.text = "Reduce travel motion"
 	reduce_motion_checkbox.custom_minimum_size = Vector2(0, 44)
-	reduce_motion_checkbox.tooltip_text = "Show the caravan at its destination immediately; route outcomes and timing are unchanged."
+	reduce_motion_checkbox.tooltip_text = "Skip caravan travel animation and brief interface flourishes; route outcomes and timing are unchanged."
 	reduce_motion_checkbox.button_pressed = reduce_motion_enabled
 	reduce_motion_checkbox.toggled.connect(_on_reduce_motion_toggled)
 	settings_panel.add_child(reduce_motion_checkbox)
@@ -775,6 +780,7 @@ func _build_pause_menu() -> void:
 
 func _show_main_menu() -> void:
 	get_tree().paused = false
+	_dismiss_trade_receipt()
 	if pause_layer:
 		pause_layer.visible = false
 	game_layer.visible = false
@@ -853,6 +859,7 @@ func _show_shop() -> void:
 		shop_market_scroll.scroll_vertical = 0
 
 func _show_departure() -> void:
+	_dismiss_trade_receipt()
 	shop_layer.visible = false
 	intro_layer.visible = false
 	game_layer.visible = true
@@ -1292,6 +1299,49 @@ func _build_shop() -> void:
 	shop_sell_button.tooltip_text = "Sell the selected cargo held by the caravan."
 	shop_sell_button.pressed.connect(_on_sell_pressed)
 	shop_purchase_row.add_child(shop_sell_button)
+	trade_receipt_panel = PanelContainer.new()
+	trade_receipt_panel.name = "TradeReceiptPanel"
+	trade_receipt_panel.visible = false
+	trade_receipt_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	trade_receipt_panel.custom_minimum_size = Vector2(0, 58)
+	var receipt_style := StyleBoxFlat.new()
+	receipt_style.bg_color = Color("#2a2118")
+	receipt_style.border_color = Color("#c99a52")
+	receipt_style.set_border_width_all(2)
+	receipt_style.corner_radius_top_left = 3
+	receipt_style.corner_radius_top_right = 3
+	receipt_style.corner_radius_bottom_left = 3
+	receipt_style.corner_radius_bottom_right = 3
+	receipt_style.content_margin_left = 12
+	receipt_style.content_margin_right = 12
+	receipt_style.content_margin_top = 7
+	receipt_style.content_margin_bottom = 7
+	trade_receipt_panel.add_theme_stylebox_override("panel", receipt_style)
+	market_shell.add_child(trade_receipt_panel)
+	var receipt_row := HBoxContainer.new()
+	receipt_row.add_theme_constant_override("separation", 12)
+	trade_receipt_panel.add_child(receipt_row)
+	var receipt_seal := Label.new()
+	receipt_seal.text = "◈"
+	receipt_seal.custom_minimum_size = Vector2(38, 0)
+	receipt_seal.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	receipt_seal.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	receipt_seal.add_theme_font_size_override("font_size", 28)
+	receipt_seal.add_theme_color_override("font_color", Color("#e6b85f"))
+	receipt_row.add_child(receipt_seal)
+	var receipt_copy := VBoxContainer.new()
+	receipt_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	receipt_copy.add_theme_constant_override("separation", 1)
+	receipt_row.add_child(receipt_copy)
+	trade_receipt_title_label = Label.new()
+	trade_receipt_title_label.add_theme_font_size_override("font_size", 13)
+	trade_receipt_title_label.add_theme_color_override("font_color", Color("#f0d27d"))
+	receipt_copy.add_child(trade_receipt_title_label)
+	trade_receipt_detail_label = Label.new()
+	trade_receipt_detail_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	trade_receipt_detail_label.add_theme_font_size_override("font_size", 11)
+	trade_receipt_detail_label.add_theme_color_override("font_color", Color("#d9c6a2"))
+	receipt_copy.add_child(trade_receipt_detail_label)
 	shop_transaction_status_label = Label.new()
 	shop_transaction_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	shop_transaction_status_label.add_theme_font_size_override("font_size", 12)
@@ -1960,6 +2010,8 @@ func _style_bazaar_navigation_button(button: Button, index: int) -> void:
 	button.add_theme_font_size_override("font_size", 13)
 
 func _on_bazaar_navigation_pressed(section_id: String) -> void:
+	if section_id != "trade":
+		_dismiss_trade_receipt()
 	active_bazaar_section = section_id
 	if section_id == "outlook" and tutorial.enabled:
 		tutorial.mark_outlook_seen()
@@ -2324,6 +2376,7 @@ func _on_guided_test_action() -> void:
 	_select_option_by_id(shop_good_option, PLAYTEST_GOOD)
 	cargo_quantity.value = PLAYTEST_QUANTITY
 	shop_quantity.value = PLAYTEST_QUANTITY
+	var money_before := world.money
 	var result := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.BUY_GOODS,
 		"inputs": {"good_id": PLAYTEST_GOOD, "quantity": PLAYTEST_QUANTITY},
@@ -2333,6 +2386,7 @@ func _on_guided_test_action() -> void:
 		guided_test_button.disabled = true
 	_show_command_result(result, "Test action")
 	if result.ok:
+		_show_trade_receipt("PURCHASE SEALED", "%s x%d loaded · %d ashmarks paid · hold %d/%d" % [PLAYTEST_GOOD.capitalize(), PLAYTEST_QUANTITY, money_before - world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity])
 		_grab_focus_if_available(plan_departure_button)
 
 func _on_plan_departure_pressed() -> void:
@@ -2414,6 +2468,7 @@ func _adjust_focused_quantity(button_index: int) -> bool:
 func _open_pause() -> void:
 	if pause_layer == null or menu_layer.visible:
 		return
+	_dismiss_trade_receipt()
 	focus_before_pause = get_viewport().gui_get_focus_owner()
 	_refresh_pause_summary()
 	pause_layer.visible = true
@@ -3473,22 +3528,27 @@ func _refresh_forecasts() -> void:
 
 func _on_buy_pressed() -> void:
 	_sync_shop_plan_to_departure()
+	var good_id := _selected_id(cargo_good_option)
+	var quantity := int(cargo_quantity.value)
+	var money_before := world.money
 	var result := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.BUY_GOODS,
 		"inputs": {
-			"good_id": _selected_id(cargo_good_option),
-			"quantity": int(cargo_quantity.value),
+			"good_id": good_id,
+			"quantity": quantity,
 		},
 	})
 	_record_first_trade(result)
 	_show_command_result(result, "Purchase")
 	if result.ok:
+		_show_trade_receipt("PURCHASE SEALED", "%s x%d loaded · %d ashmarks paid · hold %d/%d" % [good_id.capitalize(), quantity, money_before - world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity])
 		_grab_focus_if_available(plan_departure_button)
 
 func _on_sell_pressed() -> void:
 	_sync_shop_plan_to_departure()
 	var good_id := _selected_id(cargo_good_option)
 	var quantity := int(cargo_quantity.value)
+	var money_before := world.money
 	var result := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.SELL_GOODS,
 		"inputs": {
@@ -3498,8 +3558,54 @@ func _on_sell_pressed() -> void:
 	})
 	_record_first_trade(result)
 	_show_command_result(result, "Sale")
+	if result.ok:
+		_show_trade_receipt("SALE RECORDED", "%s x%d released · %d ashmarks received · hold %d/%d" % [good_id.capitalize(), quantity, world.money - money_before, int(world.cargo.get("weight", 0)), world.cargo_capacity])
 	if result.ok and shop_sell_button != null and shop_sell_button.disabled:
 		_grab_focus_if_available(plan_departure_button)
+
+func _show_trade_receipt(title: String, detail: String) -> void:
+	if trade_receipt_panel == null:
+		return
+	trade_receipt_generation += 1
+	var generation := trade_receipt_generation
+	if trade_receipt_tween != null and trade_receipt_tween.is_valid():
+		trade_receipt_tween.kill()
+	trade_receipt_title_label.text = title
+	trade_receipt_detail_label.text = detail
+	trade_receipt_panel.visible = true
+	trade_receipt_panel.pivot_offset = Vector2(trade_receipt_panel.size.x * 0.5, trade_receipt_panel.size.y * 0.5)
+	trade_receipt_panel.modulate = Color.WHITE
+	trade_receipt_panel.scale = Vector2.ONE
+	trade_receipt_tween = create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	if reduce_motion_enabled:
+		trade_receipt_tween.tween_interval(1.55)
+	else:
+		trade_receipt_panel.modulate.a = 0.0
+		trade_receipt_panel.scale = Vector2(0.97, 0.97)
+		trade_receipt_tween.set_parallel(true)
+		trade_receipt_tween.tween_property(trade_receipt_panel, "modulate:a", 1.0, 0.14)
+		trade_receipt_tween.tween_property(trade_receipt_panel, "scale", Vector2.ONE, 0.14)
+		trade_receipt_tween.set_parallel(false)
+		trade_receipt_tween.tween_interval(1.15)
+		trade_receipt_tween.tween_property(trade_receipt_panel, "modulate:a", 0.0, 0.24)
+	trade_receipt_tween.tween_callback(_finish_trade_receipt.bind(generation))
+
+func _finish_trade_receipt(generation: int) -> void:
+	if trade_receipt_panel == null or generation != trade_receipt_generation:
+		return
+	trade_receipt_panel.visible = false
+	trade_receipt_panel.modulate = Color.WHITE
+	trade_receipt_panel.scale = Vector2.ONE
+
+func _dismiss_trade_receipt() -> void:
+	if trade_receipt_panel == null:
+		return
+	trade_receipt_generation += 1
+	if trade_receipt_tween != null and trade_receipt_tween.is_valid():
+		trade_receipt_tween.kill()
+	trade_receipt_panel.visible = false
+	trade_receipt_panel.modulate = Color.WHITE
+	trade_receipt_panel.scale = Vector2.ONE
 
 func _record_first_trade(result: Dictionary) -> void:
 	if bool(result.get("ok", false)) and first_trade_elapsed_msec < 0:

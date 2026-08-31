@@ -585,3 +585,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The road view already communicates route, status, and progress, but the transition from a static Departure Desk to a moving caravan lacked a readable physical cue. A small dust wake makes commitment feel like departure without adding a new simulation system or obscuring the route information.
 
 **Trade-off:** The texture is temporary generic VFX and remains deliberately subtle. The repository retains the complete source kit and licenses, while packaged builds contain only selected runtime assets. The effect carries no economic or event meaning, does not consume random state, and disappears before the player receives the next action.
+
+## ADR-074: Successful trades receive a stamped visual receipt
+
+**Decision:** After an authoritative buy or sell succeeds, show a short Bazaar receipt naming the realized cargo quantity, ashmark movement, and resulting hold use. Use a code-native geometric seal and restrained border rather than the temporary particle pack's lightning-like sparks. Dismiss the receipt on navigation and skip its scale/fade flourish when reduced motion is enabled.
+
+**Reason:** The Bazaar already reports command results and updates its ledger, but the moment of exchange lacked a focused game-feel response. A compact receipt makes the transaction legible as a completed market action without making animation, color, or sound carry unique information.
+
+**Trade-off:** The receipt briefly consumes vertical space in the Trade stall and is intentionally transient. It does not persist in saves, alter command history, or appear for blocked trades.
