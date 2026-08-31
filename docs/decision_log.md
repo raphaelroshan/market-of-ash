@@ -561,3 +561,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The previous event rail repeated the encounter identity and setup before a long prose stakes block. At 1280×720 this delayed the second response until below the fold even though the left road scene and persistent status already carried that context.
 
 **Trade-off:** The detailed all-in-one stakes string remains as presentation data for regressions, while the visible rail uses several purpose-specific labels. Response cards remain scrollable and retain their complete disclosed costs, results, outcomes, and blocked prerequisites.
+
+## ADR-071: The constrained opening stacks through 1280 pixels
+
+**Decision:** Use the stacked illustration-and-card composition for Main Menu and Introduction at window widths up to and including 1280 pixels, while retaining the split composition at 1600×900 and larger. Add explicit horizontal card gutters, allow Introduction actions to wrap, shorten the compact Main Menu illustration, and validate every required opening copy/action against both its card and active viewport.
+
+**Reason:** The prior 1100-pixel breakpoint left the 1280×720 Introduction action rail with almost no Large Text safety margin and allowed a bounds test to pass while checking only the outer panel and primary action. The opening should reflow before text becomes visually fragile rather than depending on clipping tolerance.
+
+**Trade-off:** At 1280×720 the illustration becomes a wide header rather than a side-by-side scene. The richer split composition remains available at the preferred 1600×900 desktop size, and no gameplay, focus order, tutorial state, or simulation rule changes.

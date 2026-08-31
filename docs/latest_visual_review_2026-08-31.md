@@ -1,32 +1,32 @@
 # Market of Ash — Current Presentation Visual Review
 
-**Build:** `v0.13.4-alpha-basin-vertical-slice`
+**Build:** `v0.13.5-alpha-basin-vertical-slice`
 
 **Engine:** Godot 4.4.1
 
-**Capture:** Local macOS OpenGL real renderer at 1280×720 and 1600×900.
+**Capture:** Local macOS OpenGL real renderer at 960×540, 1280×720, 1600×900, and 1920×1080.
 
 ## Current finding
 
-The roadside encounter rail repeated its title and setup after those details were already visible in the persistent journey status and beside the road illustration. The repeated prose pushed response cards lower in the scrollable rail, weakening the relationship between the visible threat and the player's immediate tactics.
+The 1280×720 opening still used the split desktop composition. Large Text left the Introduction primary action with almost no horizontal safety margin, while the bounds harness proved only that the outer card and a small subset of controls remained on-screen.
 
 ## Current resolution
 
-Encounters now lead with a compact dossier: maximum cargo-loss roll, exposed cargo/value, route, authored dilemma, any frozen material or shortage basis, the explicit no-hidden-health boundary, and response readiness. Duplicate rail title/setup copy is removed. Every response retains its full disclosed cost, arrival behavior, cargo exposure, expected outcome, and blocked prerequisite.
+Main Menu and Introduction now switch to the stacked composition at 1280 pixels and below. The compact Main Menu shortens its illustrated header, both cards add horizontal safety gutters, and Introduction actions wrap instead of clipping. At 1600×900 and larger, the Introduction gives the action rail more width while retaining the split scene. Capture evidence now checks every required opening heading, explanation, status, and action against both its containing card and the active viewport.
 
 ## Current evidence
 
-![Roadside dossier at 1600×900](visual_evidence/v0.13.4-alpha-basin-vertical-slice/roadside-dossier-1600x900.png)
+![Main Menu at 1280×720](visual_evidence/v0.13.5-alpha-basin-vertical-slice/main-menu-1280x720.png)
 
-![Roadside dossier at 1280×720](visual_evidence/v0.13.4-alpha-basin-vertical-slice/roadside-dossier-1280x720.png)
+![Introduction with Large Text at 1280×720](visual_evidence/v0.13.5-alpha-basin-vertical-slice/introduction-road-large-text-1280x720.png)
 
-![Roadside dossier with Large text](visual_evidence/v0.13.4-alpha-basin-vertical-slice/roadside-dossier-large-text-1280x720.png)
+![Introduction with Large Text at 1600×900](visual_evidence/v0.13.5-alpha-basin-vertical-slice/introduction-road-large-text-1600x900.png)
 
-Both capture runs passed the native viewport, required-control, focus, and state-transition validator.
+The complete 25-state journey matrix passed viewport, required-control, card-containment, focus, and state-transition validation at all four requested sizes.
 
 ## Previous correction
 
-The 0.13.3 Bazaar trade ticket replaced its paragraph-like decision summary with a cargo/journey header and separate Buy, Sell, Road, and Net values. Profitable and losing routes retain the same information hierarchy and the complete plain-text accessibility summary.
+The 0.13.4 roadside dossier separated threat, exposed cargo, route, dilemma, event basis, and rules while preserving complete response costs and outcomes. The 0.13.3 Bazaar trade ticket remains unchanged.
 
 ## Remaining visual limitation
 
