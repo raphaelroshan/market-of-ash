@@ -25,7 +25,7 @@ from tools.capture_validation import (
     validate_capture_matrix,
     write_rgb_png,
 )
-from tools.validate_native_captures import parse_viewport
+from tools.validate_native_captures import parse_viewport, require_release_surface
 
 
 def png_chunk(chunk_type: bytes, payload: bytes) -> bytes:
@@ -64,6 +64,24 @@ def main() -> int:
             pass
         else:
             raise AssertionError(f"invalid viewport should be rejected: {invalid_viewport}")
+    release_capture = {
+        "screen": "settlement_shop",
+        "layout": {
+            "release_surface": {
+                "developer_panel_hidden": True,
+                "diagnostics_hidden": True,
+                "report_action_hidden": True,
+            }
+        },
+    }
+    require_release_surface(release_capture)
+    release_capture["layout"]["release_surface"]["diagnostics_hidden"] = False
+    try:
+        require_release_surface(release_capture)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("visible diagnostics should fail the release-surface gate")
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
         dark = root / "dark.png"

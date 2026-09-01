@@ -263,7 +263,7 @@ func _initialize() -> void:
 	var sell_cargo_button: Button = ui.find_child("SellCargoButton", true, false)
 	_expect(buy_cargo_button != null and sell_cargo_button != null and not _has_scroll_ancestor(buy_cargo_button) and not _has_scroll_ancestor(sell_cargo_button), "primary trade actions should remain pinned outside the longer market-detail rail")
 	_expect(ui.shop_good_option.find_next_valid_focus() == ui.shop_quantity.get_line_edit() and ui.shop_quantity.get_line_edit().find_next_valid_focus() == buy_cargo_button, "Shop focus should move from cargo through quantity to the enabled Buy action")
-	_expect(buy_cargo_button.custom_minimum_size.y >= 56 and sell_cargo_button.custom_minimum_size.y >= 56 and ui.guided_test_button.custom_minimum_size.y >= 48 and buy_cargo_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and sell_cargo_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, "first-trade actions should expose comfortable targets and wrap long cargo/cost labels")
+	_expect(buy_cargo_button.custom_minimum_size.y >= 56 and sell_cargo_button.custom_minimum_size.y >= 56 and buy_cargo_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and sell_cargo_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, "first-trade actions should expose comfortable targets and wrap long cargo/cost labels")
 	_expect(buy_cargo_button.text.contains("Buy 2 Water") and buy_cargo_button.text.contains("30 ashmarks") and not buy_cargo_button.disabled, "Buy should state the affordable selected quantity, cargo, and total cost")
 	_expect(sell_cargo_button.text.contains("Sell 2 Water") and sell_cargo_button.text.contains("30 ashmarks") and sell_cargo_button.disabled and sell_cargo_button.tooltip_text.contains("Hold contains 0"), "Sell should state its proceeds and remain visibly unavailable when the selected quantity is not held")
 	_expect(ui.shop_transaction_status_label.text.contains("Sell unavailable") and ui.shop_transaction_status_label.text.contains("0/2 Water"), "a blocked sale should expose its hold shortfall as persistent text")
@@ -338,15 +338,19 @@ func _initialize() -> void:
 	_expect(ui.audio_player.stream == ui.audio_cues["information"], "opening Guide / Intel should play its nonessential page-opening cue")
 	ui._on_bazaar_navigation_pressed("outlook")
 	_expect(ui.campaign_outlook_label.visible and not ui.crew_buttons[0].is_visible_in_tree(), "the regional outlook should stay collapsed until its Bazaar stall is requested")
+	ui.shop_action_scroll.scroll_vertical = 999
+	ui.shop_market_scroll.scroll_vertical = 999
 	ui._on_bazaar_navigation_pressed("trade")
+	await process_frame
 	_expect(not ui.campaign_outlook_label.visible and ui.bazaar_scene.visible and ui.bazaar_scene.custom_minimum_size.y == 72.0 and ui.shop_market_scroll.visible and ui.shop_purchase_row.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "closing Outlook and returning to Trade should restore the compact identity scene and focused market flow")
+	_expect(ui.shop_action_scroll.scroll_vertical == 0 and ui.shop_market_scroll.scroll_vertical == 0, "returning to Trade should reveal the top of both responsive Bazaar rails")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
 	_expect(ui.route_preview_label.text.contains("1 Water unit at risk") and ui.route_preview_label.text.contains("EXPECTED NET PROFIT +14"), "the opening forecast should price the proposed water load and present a profitable but exposed teaching trade")
 	_expect(ui.route_preview_label.text.contains("Held 0/2 selected Water") and ui.route_preview_label.text.contains("Buy 2 before departure") and ui.route_preview_label.text.contains("travel uses the actual hold"), "the pre-purchase forecast should distinguish its scenario from the empty caravan")
-	_expect(not ui.guided_test_button.visible, "the player-facing Bazaar should not expose the old one-click test helper")
+	_expect(not ui._web_ui_state().get("accessibility_actions", []).any(func(action: Dictionary) -> bool: return action.get("id", "") == "guided_trade"), "the player-facing Bazaar should not expose a one-click test helper")
 	ui.world.money = 0
 	ui._refresh_ui()
-	_expect(not ui.guided_test_button.visible and buy_cargo_button.disabled, "normal trade controls should communicate unaffordability without a test helper")
+	_expect(buy_cargo_button.disabled, "normal trade controls should communicate unaffordability through the real Buy action")
 	ui.world.money = 120
 	ui._refresh_ui()
 	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.22.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
@@ -528,23 +532,22 @@ func _initialize() -> void:
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 
-	ui._on_guided_test_action()
+	ui._on_buy_pressed()
 	_expect(ui._web_ui_state().get("held_selected_quantity") == 2, "Web diagnostics should update after the selected cargo is purchased")
-	_expect(int(ui.world.cargo.get("water", 0)) == 2 and int(ui.world.cargo.get("weight", 0)) == 2, "guided test action did not execute the promised water purchase")
+	_expect(int(ui.world.cargo.get("water", 0)) == 2 and int(ui.world.cargo.get("weight", 0)) == 2, "the player-facing Buy action did not execute the promised water purchase")
 	_expect(ui.trade_receipt_panel.visible and ui.trade_receipt_title_label.text == "PURCHASE SEALED" and ui.trade_receipt_detail_label.text.contains("Water x2 loaded") and ui.trade_receipt_detail_label.text.contains("ashmarks paid") and ui.trade_receipt_detail_label.text.contains("hold 2/12"), "a successful purchase should show a concise market receipt without replacing command feedback")
 	_expect(not sell_cargo_button.disabled, "Sell should become available once the selected quantity is held")
 	_expect(ui.shop_transaction_status_label.text == "Buy or sell the selected load.", "available trade actions should clear stale block reasons")
-	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "guided test action did not use the explicit command boundary")
+	_expect(ui.world.command_history.size() == 2 and ui.world.command_history.back().id == "buy_goods", "the player-facing Buy action did not use the explicit command boundary")
 	_expect(ui.event_label.text.contains("NEXT —") and ui.event_label.text.contains("Plan departure"), "a successful shop command should end with a concrete next action")
-	_expect(not ui.guided_test_button.visible, "the legacy direct helper should remain absent from the player-facing Bazaar")
 	_expect(ui.save_status_label.text.contains("AUTOSAVED") and ui.save_status_label.text.contains("save v12"), "successful commands should expose a versioned autosave summary")
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "normal play should retain a game-facing regional objective after trade")
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "the guided purchase should move focus from its disabled button to the stated Plan departure action")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "the purchase should move focus to the stated Plan departure action")
 	_expect(ui.first_trade_elapsed_msec >= 0, "the first successful trade should record privacy-safe elapsed session timing")
 	ui._on_save_pressed()
 	ui._on_start_game_pressed()
 	ui._on_load_pressed()
-	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE") and not ui.guided_test_button.visible, "loading a campaign should preserve game-facing guidance without restoring test helpers")
+	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "loading a campaign should preserve game-facing guidance")
 	_expect(ui.route_preview_label.text.contains("Held 2/2 selected Water") and ui.route_preview_label.text.contains("scenario is covered"), "the route forecast should confirm when the selected scenario is present in the actual hold")
 	ui.world.current_settlement = "reedwatch"
 	ui.world.cargo["water"] = 1
@@ -719,7 +722,6 @@ func _initialize() -> void:
 		_expect(arrival_accessibility_actions.size() == 1 and arrival_accessibility_actions[0].get("id") == "enter_settlement", "Web accessibility actions should expose the destination-specific arrival handoff")
 		_expect(ui.get_viewport().gui_get_focus_owner() == ui.enter_settlement_button, "an uninterrupted arrival should focus the settlement-entry action")
 		_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "arrival should retain the regional campaign objective")
-		_expect(not ui.guided_test_button.visible, "the first-move purchase helper should not follow the caravan to later settlements")
 		_expect(is_equal_approx(ui.map_panel.travel_progress, 1.0), "presentation traversal did not complete after the road continuation")
 
 	ui._on_enter_settlement_pressed()
@@ -744,21 +746,19 @@ func _initialize() -> void:
 	ui._on_save_pressed()
 	ui._on_start_game_pressed()
 	ui._on_load_pressed()
-	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE") and not ui.guided_test_button.visible, "loading a completed delivery should preserve the campaign without test helpers")
+	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "loading a completed delivery should preserve the campaign")
 
 	ui._on_start_game_pressed()
 	ui.world.current_settlement = "brine_cross"
 	ui.world.advance_day(1)
 	ui._refresh_ui()
-	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE") and not ui.guided_test_button.visible, "ordinary campaign starts should use regional guidance without an Ashgate test helper")
+	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "ordinary campaign starts should use regional guidance")
 	ui._on_start_game_pressed("conflict_recovery")
 	_expect(ui.active_playtest_path_id == "conflict_recovery" and ui._web_ui_state().get("playtest_path_id", "") == "conflict_recovery" and ui._web_ui_state().get("selected_route_id", "") == "toll_road" and ui.world.day == 1 and ui.world.money == 120 and int(ui.world.cargo.get("weight", 0)) == 0 and ui._selected_id(ui.shop_good_option) == "medicine" and int(ui.shop_quantity.value) == 2 and ui._selected_id(ui.destination_option) == "brine_cross" and ui._selected_id(ui.route_option) == "toll_road", "Conflict & Recovery should start the canonical campaign with only its route ingredients selected")
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "hidden developer scenarios should still render the normal game-facing objective")
-	_expect(not ui.guided_test_button.visible, "non-guided paths should not expose the one-click Water helper")
 	ui._on_start_game_pressed("contract_crew")
 	_expect(ui.active_playtest_path_id == "contract_crew" and ui.world.day == 1 and ui.world.money == 120 and int(ui.world.cargo.get("weight", 0)) == 0 and ui._selected_id(ui.shop_good_option) == "water" and int(ui.shop_quantity.value) == 4 and ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "Contract & Crew should start the canonical campaign with only the relief load selected")
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "contract developer scenarios should retain player-facing campaign language")
-	_expect(not ui.guided_test_button.visible, "Contract & Crew should keep the separate one-click guided purchase hidden")
 	ui._on_start_game_pressed("conflict_recovery")
 	_expect(not ui.recent_conflict_panel.visible and ui.recent_conflict_label.text.is_empty(), "a fresh campaign should not invent a previous conflict report")
 	buy_cargo_button.grab_focus()
@@ -1100,7 +1100,6 @@ func _initialize() -> void:
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_text_scale, "large-text changes should not mutate campaign state")
 	_expect(ui.plan_departure_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the pinned departure action inside the game layout")
 	_expect(buy_cargo_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the primary Buy action inside the game layout")
-	_expect(ui.guided_test_button.get_global_rect().end.y <= ui.shop_layer.get_global_rect().end.y, "large text should keep the optional first-trade helper visible while it is relevant")
 	ui._show_main_menu()
 	await process_frame
 	_expect(ui.start_game_button.get_global_rect().end.y <= ui.menu_layer.get_global_rect().end.y, "large text should keep Start new game visible before optional settings")
@@ -1117,7 +1116,7 @@ func _initialize() -> void:
 	ui._load_presentation_settings()
 	_expect(ui.large_text_enabled and ui.reduce_motion_enabled and not ui.interface_sounds_enabled, "saved accessibility and audio preferences should load with safe defaults")
 	ui._on_start_game_pressed()
-	ui._on_guided_test_action()
+	ui._on_buy_pressed()
 	ui._on_plan_departure_pressed()
 	await process_frame
 	_expect(ui.route_comparison_buttons[0].custom_minimum_size.y >= 260.0 and ui.route_comparison_buttons[0].text.begins_with("SELECTED\n") and ui.route_comparison_buttons[0].text.contains("FEE 4 · DAY 1 · PROV 1"), "Large text should reserve a compact itinerary card that preserves the selected-state label and route costs")

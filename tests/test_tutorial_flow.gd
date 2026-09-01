@@ -22,8 +22,10 @@ func _run() -> void:
 	_expect(ui._current_ui_state_id() == "main_menu", "the game should begin at the player-facing main menu")
 	_expect(ui.start_game_button.text == "New Game" and ui.settings_button.text == "Settings" and ui.credits_button.text == "Credits", "the main menu should use game-facing actions")
 	_expect(not ui.developer_panel.visible and not ui.shop_report_button.visible and not ui.diagnostics_label.visible, "developer utilities should be absent from normal play")
+	_expect_release_surface(ui, "main menu")
 
 	ui._on_new_game_pressed()
+	_expect_release_surface(ui, "introduction")
 	_expect(ui._current_ui_state_id() == "introduction" and ui.intro_page == 0, "New Game should open the introduction before creating a campaign")
 	_expect(ui.intro_title_label.text.contains("roads are open"), "the first introduction card should establish the basin")
 	var intro_state: Dictionary = ui._web_ui_state()
@@ -36,6 +38,7 @@ func _run() -> void:
 	ui._on_intro_next_pressed()
 	await process_frame
 	_expect(ui._current_ui_state_id() == "settlement_shop" and ui.tutorial.enabled, "the final introduction card should begin the guided campaign")
+	_expect_release_surface(ui, "opening Bazaar")
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ACCEPT_CONTRACT and ui.tutorial_panel.visible, "the first tutorial objective should be the relief contract")
 	_expect(int(ui.shop_quantity.value) == 4 and ui._selected_id(ui.shop_good_option) == "water", "the canonical tutorial should prepare the four-Water relief plan")
 
@@ -49,13 +52,17 @@ func _run() -> void:
 	ui._on_plan_departure_pressed()
 	_expect(ui._selected_id(ui.destination_option) == "reedwatch" and ui._selected_id(ui.route_option) == "old_road", "the tutorial should prepare Reedwatch by the Old Road without committing it")
 	ui._on_depart_pressed()
+	_expect_release_surface(ui, "first departure")
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ROAD_DECISION and ui.world.pending_event.get("id", "") == "three_riders_no_banner", "the first committed journey should teach the seeded roadside decision")
 	ui.map_panel._process(2.0)
 	_expect(ui.map_panel.travel_phase == "road", "the tutorial may not bypass the road observation")
 	ui._on_continue_journey_pressed()
+	_expect_release_surface(ui, "first road stop")
 	ui._on_event_choice_pressed("three_riders_no_banner", "pay_for_escort")
+	_expect_release_surface(ui, "first encounter result")
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ENTER_REEDWATCH and ui.arrival_pending, "resolving the roadside decision should advance to arrival review")
 	ui._on_enter_settlement_pressed()
+	_expect_release_surface(ui, "Reedwatch Bazaar")
 	_expect(ui.world.current_settlement == "reedwatch" and ui.tutorial.current_step == TutorialDirector.STEP_BUY_GRAIN, "completed relief should lead into the return trade")
 	_expect(ui._selected_id(ui.shop_good_option) == "grain" and int(ui.shop_quantity.value) == 4, "the return lesson should prepare four Grain")
 
@@ -64,11 +71,13 @@ func _run() -> void:
 	ui._on_plan_departure_pressed()
 	_expect(ui._selected_id(ui.destination_option) == "ashgate" and ui._selected_id(ui.route_option) == "old_road", "the second journey should point back to Ashgate")
 	ui._on_depart_pressed()
+	_expect_release_surface(ui, "return departure")
 	ui.map_panel._process(2.0)
 	ui._on_continue_journey_pressed()
 	ui.map_panel._process(2.0)
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_ENTER_ASHGATE and ui.arrival_pending, "the return journey should end at an explicit arrival handoff")
 	ui._on_enter_settlement_pressed()
+	_expect_release_surface(ui, "return to Ashgate")
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_SELL_GRAIN, "entering Ashgate should teach closing the trade loop")
 	ui._on_sell_pressed()
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_RECRUIT_CREW, "selling the return load should advance to crew; step=%s cargo=%s history=%s" % [ui.tutorial.current_step, JSON.stringify(ui.world.cargo), JSON.stringify(ui.world.command_history.back())])
@@ -79,6 +88,7 @@ func _run() -> void:
 	ui._on_assign_crew_pressed("nara_vey")
 	_expect(ui.tutorial.current_step == TutorialDirector.STEP_REVIEW_OUTLOOK, "crew assignment should advance to the wider campaign")
 	ui._on_bazaar_navigation_pressed("outlook")
+	_expect_release_surface(ui, "completed tutorial Outlook")
 	_expect(ui.tutorial.completed and not ui.tutorial.enabled and ui.tutorial.current_step == TutorialDirector.STEP_COMPLETE, "opening Town Outlook should complete the two-journey tutorial")
 
 	_expect(ui._write_save("SAVED"), "the completed tutorial campaign should save")
@@ -113,6 +123,15 @@ func _run() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		failures.append(message)
+
+func _expect_release_surface(ui: Control, milestone: String) -> void:
+	_expect(not ui.developer_panel.visible, "%s should keep the developer panel hidden" % milestone)
+	_expect(not ui.diagnostics_label.visible, "%s should keep diagnostics hidden" % milestone)
+	_expect(not ui.shop_report_button.visible, "%s should keep report tooling hidden" % milestone)
+	var action_ids: Array[String] = []
+	for action in ui._web_ui_state().get("accessibility_actions", []):
+		action_ids.append(String(action.get("id", "")))
+	_expect("start_conflict" not in action_ids and "start_campaign" not in action_ids and "shop_report" not in action_ids and "guided_trade" not in action_ids, "%s should expose only player-facing semantic actions" % milestone)
 
 func _cleanup(prefix: String) -> void:
 	for suffix in [".save", ".save.tmp", ".save.bak", ".cfg", ".json"]:
