@@ -8,5 +8,6 @@ These files are byte-identical `.oggstr` export copies of selected CC0 Kenney as
 | `command-blocked.oggstr` | `../kenney/interface-sounds/Audio/error_001.ogg` | `46e67425d16339772e8d328fb36a49426c9467418686e11beeb71ff84b0f6433` |
 | `caravan-departure.oggstr` | `../kenney/rpg-audio/Audio/creak1.ogg` | `8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e` |
 | `guide-intel-open.oggstr` | `../kenney/rpg-audio/Audio/bookOpen.ogg` | `953390534377222bee89ac8cd9e60a58fdc037c71a4d7c18c43cd647c7f34ba8` |
+| `trade-complete.oggstr` | `../kenney/rpg-audio/Audio/handleCoins2.ogg` | `4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32` |
 
 Licenses remain in `../kenney/LICENSE-interface-sounds.txt` and `../kenney/LICENSE-rpg-audio.txt`. These files are temporary game-development inputs, not final Market of Ash sound design.
