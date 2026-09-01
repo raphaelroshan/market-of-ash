@@ -9,6 +9,7 @@ const CAPTURE_SCREENS := [
 	"settlement_shop",
 	"trade_receipt",
 	"bazaar_jobs",
+	"bazaar_crew",
 	"pause",
 	"departure_desk",
 	"returned_shop",
@@ -19,6 +20,7 @@ const CAPTURE_SCREENS := [
 	"main_menu_large_text",
 	"settlement_shop_large_text",
 	"trade_receipt_large_text",
+	"bazaar_crew_large_text",
 	"pause_large_text",
 	"departure_desk_large_text",
 	"route_departure",
@@ -97,6 +99,8 @@ func _run() -> void:
 	await _capture(ui, "trade_receipt", "trade-receipt")
 	ui._on_bazaar_navigation_pressed("assignments")
 	await _capture(ui, "bazaar_jobs", "bazaar-jobs")
+	ui._on_bazaar_navigation_pressed("crew")
+	await _capture(ui, "bazaar_crew", "bazaar-crew")
 	ui._on_bazaar_navigation_pressed("trade")
 	ui._open_pause()
 	await _capture(ui, "pause", "pause")
@@ -154,6 +158,9 @@ func _run() -> void:
 	await _capture(ui, "settlement_shop_large_text", "settlement-shop-large-text")
 	ui._on_guided_test_action()
 	await _capture(ui, "trade_receipt_large_text", "trade-receipt-large-text")
+	ui._on_bazaar_navigation_pressed("crew")
+	await _capture(ui, "bazaar_crew_large_text", "bazaar-crew-large-text")
+	ui._on_bazaar_navigation_pressed("trade")
 	ui._open_pause()
 	await _capture(ui, "pause_large_text", "pause-large-text")
 	ui._close_pause()
@@ -357,6 +364,11 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"BazaarMarketStatus",
 		"BazaarCargoStatus",
 		"BazaarDecisionSummary",
+		"BazaarSectionTitle",
+		"CrewRosterCard0",
+		"CrewPortrait0",
+		"CrewIdentity0",
+		"CrewAction0",
 		"BazaarPricePreview",
 		"BuyCargoButton",
 		"SellCargoButton",

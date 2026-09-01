@@ -324,17 +324,20 @@ func _initialize() -> void:
 	ui._apply_bazaar_section()
 	ui._on_bazaar_navigation_pressed("assignments")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.contract_buttons[0], "the Jobs stall should lead directly to the first local assignment")
-	_expect(ui.contract_buttons[0].visible and not ui.opportunity_buttons[0].visible and not ui.crew_buttons[0].visible and ui.bazaar_scene.visible and not ui.shop_market_scroll.visible and not ui.shop_purchase_row.visible and ui.bazaar_scene.active_section == "assignments", "the Job Board should replace unrelated Trade controls with its inhabited stall view")
+	_expect(ui.contract_buttons[0].visible and not ui.opportunity_buttons[0].visible and not ui.crew_buttons[0].is_visible_in_tree() and ui.bazaar_scene.visible and not ui.shop_market_scroll.visible and not ui.shop_purchase_row.visible and ui.bazaar_scene.active_section == "assignments", "the Job Board should replace unrelated Trade controls with its inhabited stall view")
 	var assignment_action_ids: Array[String] = []
 	for action in ui._web_ui_state().get("accessibility_actions", []):
 		assignment_action_ids.append(String(action.get("id", "")))
 	_expect("accept_contract_reedwatch_water_relief_01" in assignment_action_ids and "shop_buy" not in assignment_action_ids, "the semantic Bazaar should expose only the selected stall's dynamic work")
 	ui._on_bazaar_navigation_pressed("crew")
-	_expect(ui.get_viewport().gui_get_focus_owner() == ui.crew_buttons[0] and ui.crew_buttons[0].visible and not ui.contract_buttons[0].visible and ui.bazaar_scene.active_section == "crew", "the Crew Yard should show people without retaining unrelated jobs")
+	_expect(ui.get_viewport().gui_get_focus_owner() == ui.crew_buttons[0] and ui.crew_buttons[0].is_visible_in_tree() and not ui.contract_buttons[0].visible and ui.bazaar_scene.active_section == "crew", "the Crew Yard should show people without retaining unrelated jobs")
+	_expect(ui.opportunity_title_label.text == "AVAILABLE CARAVAN HANDS", "the Crew Yard should identify its roster instead of retaining the generic opportunity heading")
+	_expect(ui.crew_profile_cards.size() == 3 and ui.crew_profile_cards[0].is_visible_in_tree() and ui.find_child("CrewPortrait0", true, false) != null and ui.find_child("CrewIdentity0", true, false).text == "SCOUT · AVAILABLE", "the Crew Yard should present all three candidates as distinct visual roster cards")
+	_expect(ui.crew_profile_cards[0].get_global_rect().encloses(ui.crew_buttons[0].get_global_rect()), "the first crew action should remain inside its profile card")
 	ui._on_bazaar_navigation_pressed("information")
 	_expect(ui.audio_player.stream == ui.audio_cues["information"], "opening Guide / Intel should play its nonessential page-opening cue")
 	ui._on_bazaar_navigation_pressed("outlook")
-	_expect(ui.campaign_outlook_label.visible and not ui.crew_buttons[0].visible, "the regional outlook should stay collapsed until its Bazaar stall is requested")
+	_expect(ui.campaign_outlook_label.visible and not ui.crew_buttons[0].is_visible_in_tree(), "the regional outlook should stay collapsed until its Bazaar stall is requested")
 	ui._on_bazaar_navigation_pressed("trade")
 	_expect(not ui.campaign_outlook_label.visible and ui.bazaar_scene.visible and ui.bazaar_scene.custom_minimum_size.y == 72.0 and ui.shop_market_scroll.visible and ui.shop_purchase_row.visible and ui.get_viewport().gui_get_focus_owner() == ui.shop_good_option, "closing Outlook and returning to Trade should restore the compact identity scene and focused market flow")
 	_expect(ui.route_preview_label.text.contains("Scout unavailable"), "route forecast should explain that scout information is unavailable")
@@ -563,7 +566,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.11-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.12-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")

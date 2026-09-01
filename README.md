@@ -8,7 +8,7 @@ The repository contains a complete, replayable alpha vertical slice presented as
 
 The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, create and validate a single-file portable Windows ZIP, clean-extract and launch-smoke that executable, and upload GUI evidence, checksums, provenance, and a source snapshot.
 
-The current public test build is [`v0.13.11-alpha-basin-vertical-slice`](docs/releases/v0.13.11-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
+The current public test build is [`v0.13.12-alpha-basin-vertical-slice`](docs/releases/v0.13.12-alpha-basin-vertical-slice.md). It is a prerelease for limited alpha testing, with an unsigned portable Windows executable and explicit remaining human/device gates.
 
 ## Run the prototype
 
