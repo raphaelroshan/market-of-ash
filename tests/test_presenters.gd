@@ -94,6 +94,15 @@ func _test_arrival_presenter() -> void:
 	}
 	var comparison := JourneyPresenter.conflict_outcome_comparison(world, record)
 	_expect(comparison.contains("JOURNEY RESULT") and comparison.contains("CHOICE — WAIT / CERTAIN") and comparison.contains("+1 days") and comparison.contains("arrived at Reedwatch"), "arrival presenter should compare the disclosed plan with the authoritative result")
+	var certain_receipt := JourneyPresenter.conflict_outcome_receipt(record)
+	_expect(certain_receipt.get("state", "") == "certain" and certain_receipt.get("kicker", "") == "PLAN HELD" and String(certain_receipt.get("detail", "")).contains("no cargo-loss roll"), "certain outcomes should produce a concise plan-held receipt")
+	record["loss_basis"] = {"loss_good_id": "medicine", "loss_quantity": 1, "loss_unit_value": 52}
+	record["outcome"] = {"cargo_risk": 0.45, "resolution_roll": 0.24, "cargo": {"medicine": -1, "weight": -1}}
+	var loss_receipt := JourneyPresenter.conflict_outcome_receipt(record)
+	_expect(loss_receipt.get("state", "") == "loss" and loss_receipt.get("title", "") == "Medicine x1 lost" and String(loss_receipt.get("detail", "")).contains("24% roll") and String(loss_receipt.get("detail", "")).contains("45% threshold"), "realized cargo risk should produce a compact, factual loss receipt")
+	record["outcome"] = {"cargo_risk": 0.45, "resolution_roll": 0.76, "cargo": {}}
+	var safe_receipt := JourneyPresenter.conflict_outcome_receipt(record)
+	_expect(safe_receipt.get("state", "") == "safe" and safe_receipt.get("kicker", "") == "RISK AVOIDED" and String(safe_receipt.get("title", "")).contains("arrived intact"), "avoided cargo risk should produce a compact intact-cargo receipt")
 
 
 func _test_campaign_debrief_presenter() -> void:

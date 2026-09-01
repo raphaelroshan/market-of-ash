@@ -220,6 +220,11 @@ var event_choice_list: VBoxContainer
 var event_choice_buttons: Array[Button] = []
 var event_choice_reason_labels: Array[Label] = []
 var conflict_outcome_panel: PanelContainer
+var conflict_outcome_receipt: PanelContainer
+var conflict_outcome_receipt_glyph
+var conflict_outcome_receipt_kicker: Label
+var conflict_outcome_receipt_title: Label
+var conflict_outcome_receipt_detail: Label
 var conflict_outcome_label: Label
 var last_conflict_outcome_text := ""
 var committed_journey_message := ""
@@ -1880,11 +1885,42 @@ func _build_ui() -> void:
 	conflict_outcome_panel.name = "ArrivalDebriefPanel"
 	conflict_outcome_panel.visible = false
 	controls.add_child(conflict_outcome_panel)
+	var conflict_outcome_shell := VBoxContainer.new()
+	conflict_outcome_shell.add_theme_constant_override("separation", 8)
+	conflict_outcome_panel.add_child(conflict_outcome_shell)
+	conflict_outcome_receipt = PanelContainer.new()
+	conflict_outcome_receipt.name = "JourneyConsequenceReceipt"
+	conflict_outcome_shell.add_child(conflict_outcome_receipt)
+	var receipt_row := HBoxContainer.new()
+	receipt_row.add_theme_constant_override("separation", 10)
+	conflict_outcome_receipt.add_child(receipt_row)
+	conflict_outcome_receipt_glyph = JourneyConsequenceGlyph.new()
+	conflict_outcome_receipt_glyph.name = "JourneyConsequenceGlyph"
+	conflict_outcome_receipt_glyph.custom_minimum_size = Vector2(48, 48)
+	receipt_row.add_child(conflict_outcome_receipt_glyph)
+	var receipt_copy := VBoxContainer.new()
+	receipt_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	receipt_copy.add_theme_constant_override("separation", 0)
+	receipt_row.add_child(receipt_copy)
+	conflict_outcome_receipt_kicker = Label.new()
+	conflict_outcome_receipt_kicker.name = "JourneyConsequenceKicker"
+	conflict_outcome_receipt_kicker.add_theme_font_size_override("font_size", 11)
+	receipt_copy.add_child(conflict_outcome_receipt_kicker)
+	conflict_outcome_receipt_title = Label.new()
+	conflict_outcome_receipt_title.name = "JourneyConsequenceTitle"
+	conflict_outcome_receipt_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	conflict_outcome_receipt_title.add_theme_font_size_override("font_size", 15)
+	receipt_copy.add_child(conflict_outcome_receipt_title)
+	conflict_outcome_receipt_detail = Label.new()
+	conflict_outcome_receipt_detail.name = "JourneyConsequenceDetail"
+	conflict_outcome_receipt_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	conflict_outcome_receipt_detail.add_theme_font_size_override("font_size", 10)
+	receipt_copy.add_child(conflict_outcome_receipt_detail)
 	conflict_outcome_label = Label.new()
 	conflict_outcome_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	conflict_outcome_label.add_theme_font_size_override("font_size", 13)
 	conflict_outcome_label.add_theme_color_override("font_color", Color("#f0d2a0"))
-	conflict_outcome_panel.add_child(conflict_outcome_label)
+	conflict_outcome_shell.add_child(conflict_outcome_label)
 
 	destination_option.item_selected.connect(_on_destination_changed)
 	route_option.item_selected.connect(_on_forecast_input_changed)
@@ -4217,6 +4253,8 @@ func _refresh_event_card() -> void:
 	if conflict_outcome_panel and conflict_outcome_label:
 		conflict_outcome_panel.visible = pending.is_empty() and arrival_pending and not last_conflict_outcome_text.is_empty()
 		conflict_outcome_label.text = last_conflict_outcome_text
+		if conflict_outcome_panel.visible:
+			_refresh_conflict_outcome_receipt(_latest_conflict_event_record())
 	if pending.is_empty():
 		if arrival_pending and (pause_layer == null or not pause_layer.visible):
 			_grab_focus_if_available(enter_settlement_button)
@@ -4266,6 +4304,47 @@ func _conflict_outcome_comparison(result: Dictionary) -> String:
 	event_record["outcome"] = Dictionary(state_delta.get("outcome", {})).duplicate(true)
 	event_record["choice_id"] = String(state_delta.get("choice_id", ""))
 	return JourneyPresenter.conflict_outcome_comparison(world, event_record)
+
+func _latest_conflict_event_record() -> Dictionary:
+	if world == null or world.event_history.is_empty():
+		return {}
+	return Dictionary(world.event_history.back())
+
+func _refresh_conflict_outcome_receipt(event_record: Dictionary) -> void:
+	if conflict_outcome_receipt == null:
+		return
+	var receipt := JourneyPresenter.conflict_outcome_receipt(event_record)
+	conflict_outcome_receipt.visible = not receipt.is_empty()
+	if receipt.is_empty():
+		return
+	var state := String(receipt.get("state", "certain"))
+	var accent := Color("#8fb59f")
+	var surface := Color("#17231d")
+	if state == "loss":
+		accent = Color("#d97757")
+		surface = Color("#2a1815")
+	elif state == "certain":
+		accent = Color("#c9ab72")
+		surface = Color("#242019")
+	var style := StyleBoxFlat.new()
+	style.bg_color = surface
+	style.border_color = accent.darkened(0.15)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	style.content_margin_left = 8
+	style.content_margin_right = 8
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	conflict_outcome_receipt.add_theme_stylebox_override("panel", style)
+	conflict_outcome_receipt_kicker.text = String(receipt.get("kicker", "JOURNEY RESULT"))
+	conflict_outcome_receipt_kicker.add_theme_color_override("font_color", accent)
+	conflict_outcome_receipt_title.text = String(receipt.get("title", ""))
+	conflict_outcome_receipt_title.add_theme_color_override("font_color", Color("#f4e6c7"))
+	conflict_outcome_receipt_detail.text = String(receipt.get("detail", ""))
+	conflict_outcome_receipt_detail.add_theme_color_override("font_color", Color("#bda88f"))
+	conflict_outcome_receipt_glyph.receipt_state = state
+	conflict_outcome_receipt_glyph.accent = accent
+	conflict_outcome_receipt_glyph.queue_redraw()
 
 func _latest_conflict_outcome_text() -> String:
 	if world == null or world.event_history.is_empty():
@@ -4474,6 +4553,29 @@ class ResponsiveColumns extends Container:
 		var first_width := available_width * first_ratio / (first_ratio + 1.0)
 		fit_child_in_rect(first, Rect2(Vector2.ZERO, Vector2(first_width, size.y)))
 		fit_child_in_rect(second, Rect2(Vector2(first_width + separation, 0), Vector2(available_width - first_width, size.y)))
+
+class JourneyConsequenceGlyph extends Control:
+	var receipt_state := "certain"
+	var accent := Color("#c9ab72")
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var center := size * 0.5
+		var radius := minf(size.x, size.y) * 0.38
+		draw_circle(center, radius, accent.darkened(0.55), true)
+		draw_arc(center, radius, 0.0, TAU, 32, accent, 2.0, true)
+		var crate_rect := Rect2(center + Vector2(-11, -8), Vector2(22, 17))
+		draw_rect(crate_rect, accent, false, 2.0)
+		draw_line(crate_rect.position + Vector2(0, 5), crate_rect.end - Vector2(0, 12), accent, 1.5)
+		draw_line(crate_rect.position + Vector2(0, 11), crate_rect.end - Vector2(0, 6), accent, 1.5)
+		if receipt_state == "loss":
+			draw_line(center + Vector2(-15, 15), center + Vector2(15, -15), accent.lightened(0.2), 4.0, true)
+		else:
+			draw_line(center + Vector2(-9, 1), center + Vector2(-2, 8), accent.lightened(0.2), 3.0, true)
+			draw_line(center + Vector2(-2, 8), center + Vector2(12, -8), accent.lightened(0.2), 3.0, true)
+
 
 class TitleScene extends Control:
 	func _ready() -> void:

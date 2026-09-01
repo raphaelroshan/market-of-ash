@@ -37,6 +37,7 @@ REQUIRED_NATIVE_SCREENS = {
     "route_event_large_text",
     "route_event_result",
     "route_event_loss_result",
+    "route_event_loss_result_large_text",
     "destination_shop",
     "new_game_confirmation",
 }
@@ -59,6 +60,7 @@ EXPECTED_UI_STATE = {
     "route_event_large_text": "route_event",
     "route_event_result": "arrival_handoff",
     "route_event_loss_result": "arrival_handoff",
+    "route_event_loss_result_large_text": "arrival_handoff",
 }
 REQUIRED_LAYOUT_CONTROLS = {
     "main_menu": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
@@ -84,8 +86,9 @@ REQUIRED_LAYOUT_CONTROLS = {
     "route_travel": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
     "route_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
     "route_event_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
-    "route_event_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
-    "route_event_loss_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
+    "route_event_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt", "JourneyConsequenceKicker", "JourneyConsequenceTitle", "JourneyConsequenceDetail"),
+    "route_event_loss_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt", "JourneyConsequenceKicker", "JourneyConsequenceTitle", "JourneyConsequenceDetail"),
+    "route_event_loss_result_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt", "JourneyConsequenceKicker", "JourneyConsequenceTitle", "JourneyConsequenceDetail"),
 }
 
 
@@ -251,6 +254,7 @@ def main() -> int:
         require_distinct_screen(screens["route_travel"], screens["route_event"], f"{viewport} Reveal route event")
         require_distinct_screen(screens["route_event"], screens["route_event_result"], f"{viewport} Resolve event")
         require_distinct_screen(screens["route_event_result"], screens["route_event_loss_result"], f"{viewport} Realized loss recovery")
+        require_distinct_screen(screens["route_event_loss_result"], screens["route_event_loss_result_large_text"], f"{viewport} Realized loss recovery large text", minimum_ratio=0.01)
         require_distinct_screen(screens["route_event_result"], screens["destination_shop"], f"{viewport} Enter settlement")
         require_distinct_screen(screens["main_menu"], screens["new_game_confirmation"], f"{viewport} New game confirmation", minimum_ratio=0.01)
         for screen in ("main_menu", "settlement_shop", "pause", "departure_desk"):
