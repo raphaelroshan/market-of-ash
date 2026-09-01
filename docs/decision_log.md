@@ -593,3 +593,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The Bazaar already reports command results and updates its ledger, but the moment of exchange lacked a focused game-feel response. A compact receipt makes the transaction legible as a completed market action without making animation, color, or sound carry unique information.
 
 **Trade-off:** The receipt briefly consumes vertical space in the Trade stall and is intentionally transient. It does not persist in saves, alter command history, or appear for blocked trades.
+
+## ADR-075: Guide / Intel receives a restrained page cue
+
+**Decision:** Play the CC0 Kenney `bookOpen` cue once when the player enters Guide / Intel from another Bazaar stall. Route it through the existing Interface Sounds preference and load it from an export-safe byte copy.
+
+**Reason:** The information stall changes the player's mode from exchange to reading and investigation. A short material cue reinforces that transition without adding decorative noise to every navigation action.
+
+**Trade-off:** The generic page sound is temporary and intentionally brief. Re-selecting the already active stall remains silent, and all information remains visible without audio.
