@@ -609,3 +609,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The complete expected-versus-arrival comparison is accurate but dense, so the most important outcome can take several lines to locate at 1280×720. A concise receipt lets a player understand whether the disclosed risk landed before reading the detailed causal and recovery text.
 
 **Trade-off:** The receipt consumes a small amount of vertical space in the already scrollable arrival rail. It adds no saved or simulation state, uses no animation, and never replaces the full textual report or its Web accessibility announcement.
+
+## ADR-077: Completed trades use a material coin cue
+
+**Decision:** Route successful `Purchase` and `Sale` command feedback to the short CC0 Kenney `handleCoins2` cue. Keep general success, blocked-action, travel, and information cues unchanged, and continue honoring the single persisted Interface Sounds preference.
+
+**Reason:** A generic interface confirmation establishes success but does not make the Bazaar exchange feel materially distinct from saving, recruitment, or other commands. The brief coin-handling sound reinforces the existing stamped receipt without carrying unique economic information.
+
+**Trade-off:** The cue remains temporary generic foley rather than final ashmark sound design. It plays only after the authoritative command and protective autosave succeed; blocked trades and save failures continue to use the warning cue.

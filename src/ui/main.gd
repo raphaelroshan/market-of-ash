@@ -84,6 +84,7 @@ const AUDIO_CUE_PATHS := {
 	"blocked": "res://assets/temporary/selected-audio/command-blocked.oggstr",
 	"travel": "res://assets/temporary/selected-audio/caravan-departure.oggstr",
 	"information": "res://assets/temporary/selected-audio/guide-intel-open.oggstr",
+	"trade": "res://assets/temporary/selected-audio/trade-complete.oggstr",
 }
 const COMPACT_OPENING_WINDOW_WIDTH := 1280
 const ROUTE_CARD_HEIGHT := 200.0
@@ -3704,7 +3705,12 @@ func _show_command_result(result: Dictionary, label: String) -> void:
 			save_succeeded = _write_save("AUTOSAVED")
 		if not save_succeeded:
 			result_text += "\nSAVE WARNING — %s" % save_status_text.trim_prefix("SAVE ERROR — ")
-		_play_ui_cue(("travel" if label == "Departure" else "success") if save_succeeded else "blocked")
+		var cue_id := "success"
+		if label == "Departure":
+			cue_id = "travel"
+		elif label in ["Purchase", "Sale"]:
+			cue_id = "trade"
+		_play_ui_cue(cue_id if save_succeeded else "blocked")
 		_set_event("%s\nNEXT — %s" % [result_text, _next_step_text()])
 	else:
 		_play_ui_cue("blocked")

@@ -33,7 +33,7 @@ Use Tiny Town as a temporary background behind the route map, settlement arrival
 
 Use interface sounds to make ordinary buying and selling feel responsive before custom market audio exists. A successful purchase should have a clear but restrained confirmation, an unaffordable purchase should use the error cue, and a completed route/departure should receive a distinct confirmation or close sound.
 
-Current integration uses `confirmation_001.ogg` for successful commands, `error_001.ogg` for blocked commands, `creak1.ogg` for committed travel, and `bookOpen.ogg` when the player opens Guide / Intel. Export-safe `.oggstr` copies live under `assets/temporary/selected-audio/`; their README preserves the original source paths and hashes. They play at a restrained shared level, remain controlled by the existing Interface Sounds setting, and never replace visible result text.
+Current integration uses `confirmation_001.ogg` for general successful commands, `handleCoins2.ogg` for completed purchases and sales, `error_001.ogg` for blocked commands, `creak1.ogg` for committed travel, and `bookOpen.ogg` when the player opens Guide / Intel. Export-safe `.oggstr` copies live under `assets/temporary/selected-audio/`; their README preserves the original source paths and hashes. They play at a restrained shared level, remain controlled by the existing Interface Sounds setting, and never replace visible result text.
 
 Use particle textures sparingly for dust on departure, a short spark on a route consequence, and a small smoke layer for an event or damaged wagon. Do not use magical-looking particles for economic state; color and timing should suggest dust, ash, paper, metal, or fire.
 

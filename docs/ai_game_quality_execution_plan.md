@@ -1,10 +1,10 @@
 # Market of Ash — AI Game-Quality Execution Plan
 
-**Applies to:** `v0.13.10-alpha-basin-vertical-slice` and later
+**Applies to:** `v0.13.11-alpha-basin-vertical-slice` and later
 
 **Purpose:** Move the game from a technically sound deterministic prototype toward a presentable private-alpha slice. The deterministic Five-Well Basin vertical-slice milestone is complete, but the game-quality presentation milestone remains open. Automated tests, scripted launches, screenshot inspection, and deterministic replay evidence are the active development gates. Human playtesting is valuable later, but it is not a prerequisite for the following work.
 
-> **Current audit:** `0.13.10-alpha-basin-vertical-slice` passes the automated vertical-slice scope. The opening shell, trade receipts, licensed command/travel audio, departure dust, consequence receipts, and complete deterministic journey are integrated. Journey results now lead with a factual plan-held, risk-avoided, or risk-realized summary while retaining the full accessible comparison. Current native evidence verifies the complete scripted journey and all required opening controls at 960×540, 1280×720, 1600×900, and 1920×1080. The broader game-quality roadmap remains open for commercial art polish, physical-device and assistive-technology coverage, antivirus/storefront hardening, and moderated player evidence.
+> **Current audit:** `0.13.11-alpha-basin-vertical-slice` passes the automated vertical-slice scope. The opening shell, trade receipts, licensed command, trade, and travel audio, departure dust, consequence receipts, and complete deterministic journey are integrated. Successful market exchanges now use a distinct coin-handling cue while keeping all feedback visible and muteable. Current native evidence verifies the complete scripted journey and all required opening controls at 960×540, 1280×720, 1600×900, and 1920×1080. The broader game-quality roadmap remains open for commercial art polish, physical-device and assistive-technology coverage, antivirus/storefront hardening, and moderated player evidence.
 
 ## Operating contract
 
@@ -27,7 +27,7 @@ The game must preserve two equally legitimate ways to play: ordinary buying and 
 | **M9** | Compose outcomes and replay | Debrief route, cargo, event, profit/loss, political pressure, and consequence. Offer a replay experiment without requiring one canonical ending. |
 | **M10** | Package the private alpha | Run all verification suites, capture a complete 1600×900 journey, check 1280×720 and large text, verify clean install and save migration, and publish an internal artifact with known limitations. Human sessions remain optional follow-up evidence. |
 
-**Progress:** M1–M10 are implemented for the automated vertical-slice scope. The `v0.13.10-alpha-basin-vertical-slice` patch adds a compact, code-native journey consequence receipt while retaining the full textual report, stamped trade receipt, restrained sound vocabulary, departure dust, curated release payload, responsive opening, complete journey evidence, save migration/recovery checks, browser verification, and honest limitations record. Physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated human-playtest evidence remain external follow-up gates.
+**Progress:** M1–M10 are implemented for the automated vertical-slice scope. The `v0.13.11-alpha-basin-vertical-slice` patch gives completed purchases and sales a licensed material coin cue while retaining the full visible receipt, compact journey consequence summary, restrained broader sound vocabulary, departure dust, curated release payload, responsive opening, complete journey evidence, save migration/recovery checks, browser verification, and honest limitations record. Physical-controller, assistive-technology, high-DPI hardware, antivirus-reputation, and moderated human-playtest evidence remain external follow-up gates.
 
 ## Acceptance tests for every AI task
 

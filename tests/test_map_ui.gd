@@ -91,16 +91,19 @@ func _initialize() -> void:
 	_expect(ui.intro_back_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_next_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_skip_button.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART, "Introduction actions should wrap rather than clip at constrained widths and Large text")
 	for menu_control in [ui.start_game_button, ui.continue_game_button, ui.settings_button, ui.credits_button, ui.reduce_motion_checkbox, ui.large_text_checkbox, ui.interface_sounds_checkbox, ui.restore_bindings_button, ui.quit_button]:
 		_expect(menu_control.custom_minimum_size.y >= 44.0, "Main Menu control %s should expose a comfortable pointer target" % menu_control.get_class())
-	_expect(ui.audio_player != null and ui.audio_player.volume_db == -18.0 and ui.audio_cues.size() == 4, "the UI should prepare restrained success, blocked-action, travel, and information cues")
+	_expect(ui.audio_player != null and ui.audio_player.volume_db == -18.0 and ui.audio_cues.size() == 5, "the UI should prepare restrained success, blocked-action, travel, information, and trade cues")
 	_expect(ui.audio_cues["success"] is AudioStreamOggVorbis and ui.audio_cues["success"].get_length() > 0.2, "successful actions should decode the licensed confirmation cue")
 	_expect(ui.audio_cues["blocked"] is AudioStreamOggVorbis and ui.audio_cues["blocked"].get_length() > 0.1, "blocked actions should decode the licensed error cue")
 	_expect(ui.audio_cues["travel"] is AudioStreamOggVorbis and ui.audio_cues["travel"].get_length() > 0.6, "departure should decode the licensed caravan-creak cue")
 	_expect(ui.audio_cues["information"] is AudioStreamOggVorbis and ui.audio_cues["information"].get_length() > 0.1, "Guide / Intel should decode the licensed page-opening cue")
+	_expect(ui.audio_cues["trade"] is AudioStreamOggVorbis and ui.audio_cues["trade"].get_length() > 0.3, "completed purchases and sales should decode the licensed coin-handling cue")
 	ui._play_ui_cue("success")
 	var enabled_audio_stream: AudioStream = ui.audio_player.stream
 	ui.interface_sounds_checkbox.button_pressed = false
 	ui._play_ui_cue("blocked")
 	_expect(ui.audio_player.stream == enabled_audio_stream, "disabled interface sounds should not replace or play another cue")
+	ui._play_ui_cue("trade")
+	_expect(ui.audio_player.stream == enabled_audio_stream, "disabled interface sounds should suppress the trade cue too")
 	ui.interface_sounds_checkbox.button_pressed = true
 	_expect(_action_has_joypad_button("ui_accept", 0), "ui_accept should retain the primary controller button")
 	_expect(_action_has_joypad_button("ui_cancel", 1), "ui_cancel should retain the secondary controller button")
@@ -560,7 +563,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.10-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.11-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
@@ -729,6 +732,7 @@ func _initialize() -> void:
 	sell_cargo_button.grab_focus()
 	ui._on_sell_pressed()
 	_expect(ui.trade_receipt_panel.visible and ui.trade_receipt_title_label.text == "SALE RECORDED" and ui.trade_receipt_detail_label.text.contains("Water x2 released") and ui.trade_receipt_detail_label.text.contains("ashmarks received") and ui.trade_receipt_detail_label.text.contains("hold 0/12"), "a successful sale should show the realized receipt values")
+	_expect(ui.audio_player.stream == ui.audio_cues["trade"], "a successful sale should use the nonessential coin-handling cue")
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "selling delivered water should return to normal campaign guidance")
 	_expect(sell_cargo_button.disabled and ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "selling the last selected cargo should move focus away from the newly disabled Sell action")
 	_expect(ui.shop_market_preview_label.text.contains("Market memory: your last 2 water delivered here softened this price by 8%"), "completed sale did not expose the local delivery-memory explanation")
@@ -757,6 +761,7 @@ func _initialize() -> void:
 	buy_cargo_button.grab_focus()
 	ui._on_buy_pressed()
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "developer scenario purchases should not expose test-step language")
+	_expect(ui.audio_player.stream == ui.audio_cues["trade"], "a successful purchase should use the nonessential coin-handling cue")
 	_expect(ui.get_viewport().gui_get_focus_owner() == ui.plan_departure_button, "a successful ordinary purchase should move focus to its stated Plan departure next action")
 	ui._on_plan_departure_pressed()
 	ui._on_depart_pressed()
