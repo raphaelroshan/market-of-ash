@@ -19,6 +19,7 @@ REQUIRED_NATIVE_SCREENS = {
     "settlement_shop",
     "trade_receipt",
     "bazaar_jobs",
+    "bazaar_crew",
     "pause",
     "departure_desk",
     "returned_shop",
@@ -29,6 +30,7 @@ REQUIRED_NATIVE_SCREENS = {
     "main_menu_large_text",
     "settlement_shop_large_text",
     "trade_receipt_large_text",
+    "bazaar_crew_large_text",
     "pause_large_text",
     "departure_desk_large_text",
     "route_departure",
@@ -48,6 +50,8 @@ EXPECTED_UI_STATE = {
     "introduction_road": "introduction",
     "introduction_road_large_text": "introduction",
     "bazaar_jobs": "settlement_shop",
+    "bazaar_crew": "settlement_shop",
+    "bazaar_crew_large_text": "settlement_shop",
     "returned_shop": "settlement_shop",
     "well_commons_jobs": "settlement_shop",
     "well_commons_market": "settlement_shop",
@@ -74,6 +78,8 @@ REQUIRED_LAYOUT_CONTROLS = {
     "settlement_shop_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "trade_receipt_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
     "bazaar_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "bazaar_crew": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "CrewRosterCard0", "CrewPortrait0", "CrewIdentity0", "CrewAction0", "BazaarPrimaryAction"),
+    "bazaar_crew_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "CrewRosterCard0", "CrewPortrait0", "CrewIdentity0", "CrewAction0", "BazaarPrimaryAction"),
     "returned_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
     "well_commons_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
     "well_commons_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
@@ -243,6 +249,8 @@ def main() -> int:
         require_distinct_screen(screens["settlement_shop"], screens["trade_receipt"], f"{viewport} Complete purchase", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop_large_text"], screens["trade_receipt_large_text"], f"{viewport} Complete purchase with large text", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
+        require_distinct_screen(screens["bazaar_jobs"], screens["bazaar_crew"], f"{viewport} Open Caravan Yard")
+        require_distinct_screen(screens["bazaar_crew"], screens["bazaar_crew_large_text"], f"{viewport} Caravan Yard large text", minimum_ratio=0.01)
         require_distinct_screen(screens["bazaar_jobs"], screens["well_commons_jobs"], f"{viewport} Expire relief offer")
         require_distinct_screen(screens["well_commons_jobs"], screens["well_commons_market"], f"{viewport} Open Commons market")
         require_distinct_screen(screens["well_commons_market"], screens["well_commons_actions"], f"{viewport} Open Commons interactions")

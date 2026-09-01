@@ -179,10 +179,12 @@ var shop_load_button: Button
 var shop_reset_button: Button
 var shop_report_button: Button
 var opportunity_status_label: Label
+var opportunity_title_label: Label
 var opportunity_list: VBoxContainer
 var opportunity_buttons: Array[Button] = []
 var contract_buttons: Array[Button] = []
 var crew_buttons: Array[Button] = []
+var crew_profile_cards: Array[PanelContainer] = []
 var active_contract_label: Label
 var campaign_outlook_label: Label
 var recent_conflict_panel: PanelContainer
@@ -1554,11 +1556,12 @@ func _build_shop() -> void:
 	ending_feedback_button.pressed.connect(_on_export_report_pressed)
 	ending_actions.add_child(ending_feedback_button)
 	actions.move_child(ending_panel, 2)
-	var opportunity_title := Label.new()
-	opportunity_title.text = "LOCAL STALLS & OPPORTUNITIES"
-	opportunity_title.add_theme_font_size_override("font_size", 18)
-	opportunity_title.add_theme_color_override("font_color", Color("#e6c58d"))
-	actions.add_child(opportunity_title)
+	opportunity_title_label = Label.new()
+	opportunity_title_label.name = "BazaarSectionTitle"
+	opportunity_title_label.text = "LOCAL STALLS & OPPORTUNITIES"
+	opportunity_title_label.add_theme_font_size_override("font_size", 18)
+	opportunity_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	actions.add_child(opportunity_title_label)
 	opportunity_status_label = Label.new()
 	opportunity_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	opportunity_status_label.add_theme_color_override("font_color", Color("#c7b49a"))
@@ -2124,6 +2127,15 @@ func _apply_bazaar_section() -> void:
 		"crew": "CREW YARD — Hire or assign people for the next road.",
 		"outlook": "TOWN OUTLOOK — Review the wider campaign when you need it.",
 	}
+	var section_titles := {
+		"trade": "LOCAL STALLS & OPPORTUNITIES",
+		"assignments": "POSTED WORK & ACTIVE TERMS",
+		"information": "LOCAL SERVICES & INFORMATION",
+		"crew": "AVAILABLE CARAVAN HANDS",
+		"outlook": "REGIONAL OUTLOOK",
+	}
+	if opportunity_title_label:
+		opportunity_title_label.text = String(section_titles.get(active_bazaar_section, "LOCAL STALLS & OPPORTUNITIES"))
 	bazaar_section_label.text = String(section_names.get(active_bazaar_section, "BAZAAR — Choose a stall."))
 	var settlement_identity: Dictionary = world.settlement(world.current_settlement).get("identity", {})
 	var market_read := String(settlement_identity.get("market_read", ""))
@@ -2197,7 +2209,7 @@ func _link_shop_focus_cycle() -> void:
 				controls.append(control)
 	for group in [contract_buttons, opportunity_buttons, crew_buttons]:
 		for control in group:
-			if control.visible and not control.disabled:
+			if control.is_visible_in_tree() and not control.disabled:
 				controls.append(control)
 	for control in [shop_save_button, shop_load_button, shop_reset_button, shop_report_button, plan_departure_button]:
 		if control.visible and not control.disabled:
@@ -4011,6 +4023,7 @@ func _refresh_opportunities() -> void:
 	opportunity_buttons.clear()
 	contract_buttons.clear()
 	crew_buttons.clear()
+	crew_profile_cards.clear()
 	var slot_limit := int(MarketContent.settlement_action_rules().get("visit_slots_per_arrival", 2))
 	opportunity_status_label.text = "%d of %d visit slots remain. Trading never consumes a slot." % [world.visit_slots_remaining, slot_limit]
 	_refresh_contract_summary()
@@ -4147,7 +4160,48 @@ func _append_crew_opportunity() -> void:
 		var recruited := world.is_crew_recruited(crew_id)
 		if not recruited and world.current_settlement != String(crew.get("recruit_settlement_id", "")):
 			continue
+		var accent := Color("#8fae9e")
+		match crew_id:
+			"jorun_pale":
+				accent = Color("#c6a15b")
+			"tess_oryn":
+				accent = Color("#c9785a")
+		var card := PanelContainer.new()
+		card.name = "CrewRosterCard%d" % crew_profile_cards.size()
+		card.set_meta("bazaar_section", "crew")
+		var card_style := StyleBoxFlat.new()
+		card_style.bg_color = Color("#211a16")
+		card_style.border_color = accent.darkened(0.32)
+		card_style.set_border_width_all(1)
+		card_style.set_corner_radius_all(3)
+		card_style.content_margin_left = 8
+		card_style.content_margin_right = 8
+		card_style.content_margin_top = 8
+		card_style.content_margin_bottom = 8
+		card.add_theme_stylebox_override("panel", card_style)
+		opportunity_list.add_child(card)
+		crew_profile_cards.append(card)
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 10)
+		card.add_child(row)
+		var portrait := CrewPortrait.new()
+		portrait.name = "CrewPortrait%d" % (crew_profile_cards.size() - 1)
+		portrait.custom_minimum_size = Vector2(68, 84)
+		portrait.crew_id = crew_id
+		portrait.accent = accent
+		row.add_child(portrait)
+		var profile_copy := VBoxContainer.new()
+		profile_copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		profile_copy.add_theme_constant_override("separation", 4)
+		row.add_child(profile_copy)
+		var identity := Label.new()
+		identity.name = "CrewIdentity%d" % (crew_profile_cards.size() - 1)
+		identity.text = "%s · %s" % [String(crew.get("role", "Crew")).to_upper(), "ASSIGNED" if world.assigned_crew == crew_id else "ON ROSTER" if recruited else "AVAILABLE"]
+		identity.add_theme_font_size_override("font_size", 10)
+		identity.add_theme_color_override("font_color", accent)
+		profile_copy.add_child(identity)
 		var button := _wrapped_action_button()
+		button.name = "CrewAction%d" % crew_buttons.size()
 		var reason := ""
 		if not recruited:
 			button.text = "Recruit %s — %d ashmarks, %d slot" % [String(crew.get("name", "Crew")), int(crew.get("recruit_cost", 0)), int(crew.get("recruit_service_slots", 1))]
@@ -4170,15 +4224,15 @@ func _append_crew_opportunity() -> void:
 		button.tooltip_text = reason if button.disabled else String(crew.get("hook", ""))
 		button.set_meta("web_accessibility_id", "%s_crew_%s" % ["assign" if recruited else "recruit", crew_id])
 		button.set_meta("bazaar_section", "crew")
-		opportunity_list.add_child(button)
+		profile_copy.add_child(button)
 		crew_buttons.append(button)
 		var details := Label.new()
 		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		details.add_theme_font_size_override("font_size", 12)
+		details.add_theme_font_size_override("font_size", 11)
 		details.add_theme_color_override("font_color", Color("#aa9a87"))
-		details.text = reason if button.disabled else "%s — %s %s" % [String(crew.get("role", "Crew")), String(crew.get("personality", "")), String(crew.get("limitation", ""))]
+		details.text = "UNAVAILABLE — %s" % reason if button.disabled else "PERSON — %s\nLEVER — %s\nLIMIT — %s" % [String(crew.get("personality", "")), String(crew.get("hook", "")), String(crew.get("limitation", ""))]
 		details.set_meta("bazaar_section", "crew")
-		opportunity_list.add_child(details)
+		profile_copy.add_child(details)
 
 func _refresh_contract_summary() -> void:
 	if active_contract_label == null or departure_contract_label == null:
@@ -4559,6 +4613,45 @@ class ResponsiveColumns extends Container:
 		var first_width := available_width * first_ratio / (first_ratio + 1.0)
 		fit_child_in_rect(first, Rect2(Vector2.ZERO, Vector2(first_width, size.y)))
 		fit_child_in_rect(second, Rect2(Vector2(first_width + separation, 0), Vector2(available_width - first_width, size.y)))
+
+class CrewPortrait extends Control:
+	var crew_id := ""
+	var accent := Color("#8fae9e")
+
+	func _ready() -> void:
+		mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	func _draw() -> void:
+		var bounds := Rect2(Vector2(1, 1), size - Vector2(2, 2))
+		draw_rect(bounds, Color("#17130f"), true)
+		draw_rect(bounds, accent.darkened(0.25), false, 2.0)
+		var center := Vector2(size.x * 0.5, size.y * 0.40)
+		draw_circle(center, 14.0, Color("#d2a170"))
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(size.x * 0.18, size.y * 0.90),
+			Vector2(size.x * 0.28, size.y * 0.58),
+			Vector2(size.x * 0.72, size.y * 0.58),
+			Vector2(size.x * 0.82, size.y * 0.90),
+		]), accent.darkened(0.18))
+		match crew_id:
+			"nara_vey":
+				draw_colored_polygon(PackedVector2Array([
+					center + Vector2(-21, 4), center + Vector2(-15, -20),
+					center + Vector2(0, -28), center + Vector2(17, -19),
+					center + Vector2(22, 5),
+				]), accent.darkened(0.35))
+				draw_line(Vector2(size.x * 0.18, size.y * 0.70), Vector2(size.x * 0.83, size.y * 0.52), Color("#e7d1a6"), 3.0, true)
+				draw_circle(Vector2(size.x * 0.80, size.y * 0.53), 5.0, accent, false, 2.0)
+			"jorun_pale":
+				draw_rect(Rect2(center + Vector2(-18, -18), Vector2(36, 7)), accent.darkened(0.30), true)
+				draw_rect(Rect2(Vector2(size.x * 0.25, size.y * 0.66), Vector2(size.x * 0.50, size.y * 0.25)), Color("#3b3024"), true)
+				for line_index in range(3):
+					draw_line(Vector2(size.x * 0.31, size.y * (0.72 + line_index * 0.06)), Vector2(size.x * 0.69, size.y * (0.72 + line_index * 0.06)), accent, 1.5)
+			"tess_oryn":
+				draw_arc(center, 19.0, PI, TAU, 16, accent.darkened(0.28), 7.0, true)
+				draw_line(Vector2(size.x * 0.31, size.y * 0.66), Vector2(size.x * 0.69, size.y * 0.80), Color("#e2bd8d"), 4.0, true)
+				draw_circle(Vector2(size.x * 0.69, size.y * 0.80), 5.0, accent, false, 2.0)
+
 
 class JourneyConsequenceGlyph extends Control:
 	var receipt_state := "certain"

@@ -617,3 +617,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A generic interface confirmation establishes success but does not make the Bazaar exchange feel materially distinct from saving, recruitment, or other commands. The brief coin-handling sound reinforces the existing stamped receipt without carrying unique economic information.
 
 **Trade-off:** The cue remains temporary generic foley rather than final ashmark sound design. It plays only after the authoritative command and protective autosave succeed; blocked trades and save failures continue to use the warning cue.
+
+## ADR-078: The Caravan Yard presents people before actions
+
+**Decision:** Group each existing crew recruit/assignment action into a roster card with a distinct code-native portrait, role and availability line, personality, decision lever, and limitation. Keep all rules and command handling unchanged, and add normal/Large Text capture states for the stall.
+
+**Reason:** The prior Caravan Yard was a stack of buttons followed by prose, which made three mechanically distinct characters read like debug actions. Stable faces and repeated information hierarchy make the hiring decision recognizable without hiding cost or consequence.
+
+**Trade-off:** The portraits are restrained procedural illustrations rather than final commissioned character art, and the cards require scrolling to inspect the full roster at smaller windows. All three actions remain keyboard/controller reachable and Web-accessible in their authored order.
