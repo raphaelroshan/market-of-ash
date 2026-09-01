@@ -601,3 +601,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The information stall changes the player's mode from exchange to reading and investigation. A short material cue reinforces that transition without adding decorative noise to every navigation action.
 
 **Trade-off:** The generic page sound is temporary and intentionally brief. Re-selecting the already active stall remains silent, and all information remains visible without audio.
+
+## ADR-076: Journey consequences lead with a factual receipt
+
+**Decision:** Place a compact receipt above the full Journey Result after an authoritative route-event response resolves. Classify the archived result as `PLAN HELD`, `RISK AVOIDED`, or `RISK REALIZED`; repeat the exposed cargo and exact roll/threshold result; and draw a static code-native crate seal with a check or slash.
+
+**Reason:** The complete expected-versus-arrival comparison is accurate but dense, so the most important outcome can take several lines to locate at 1280×720. A concise receipt lets a player understand whether the disclosed risk landed before reading the detailed causal and recovery text.
+
+**Trade-off:** The receipt consumes a small amount of vertical space in the already scrollable arrival rail. It adds no saved or simulation state, uses no animation, and never replaces the full textual report or its Web accessibility announcement.

@@ -560,7 +560,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.9-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.13.10-alpha-basin-vertical-slice" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
@@ -824,6 +824,7 @@ func _initialize() -> void:
 	_expect(ui.playtest_banner.text.contains("REGIONAL OBJECTIVE"), "resolved events should return to campaign guidance")
 	_expect(not ui.event_card.visible and ui.enter_settlement_button.visible, "resolved event should hide its choices and expose settlement entry")
 	_expect(ui.conflict_outcome_panel.visible and ui.conflict_outcome_label.text.contains("JOURNEY RESULT") and ui.conflict_outcome_label.text.contains("CHOICE — PAY / CERTAIN") and ui.conflict_outcome_label.text.contains("EXPECTED — -6 ashmarks") and ui.conflict_outcome_label.text.contains("ARRIVAL — -6 ashmarks") and ui.conflict_outcome_label.text.contains("Matched the disclosed plan"), "resolved Gatekeeper choice should compare its disclosed expectation with the authoritative arrival")
+	_expect(ui.conflict_outcome_receipt.visible and ui.conflict_outcome_receipt_kicker.text == "PLAN HELD" and ui.conflict_outcome_receipt_title.text == "No surprise cargo loss", "certain event outcomes should lead with a concise consequence receipt")
 	_expect(not ui.conflict_outcome_label.text.contains("RECOVERY —"), "a conflict result without realized cargo loss should not manufacture recovery advice")
 	_expect(ui._web_accessibility_announcement().contains("JOURNEY RESULT") and ui._web_accessibility_announcement().contains("EXPECTED — -6 ashmarks") and ui._web_accessibility_announcement().contains("ARRIVAL — -6 ashmarks"), "arrival announcement should expose the full journey comparison to Web assistive users")
 	_expect(ui.event_label.text.contains("NEXT — Review the result") and ui.event_label.text.contains("Enter Brine Cross"), "a resolved journey should state the named destination action needed to continue")
@@ -931,6 +932,7 @@ func _initialize() -> void:
 	_expect(ui.world.current_settlement == "reedwatch" and int(ui.world.cargo.get("medicine", 0)) == 1, "risk-comparison fixture should realize the deterministic exposed-unit loss")
 	_expect(ui.conflict_outcome_label.text.contains("CHOICE — MANEUVER / 45% RISK") and ui.conflict_outcome_label.text.contains("Medicine -1") and ui.conflict_outcome_label.text.contains("Risk realized: the 24% roll was below 45%"), "risky confrontation comparison should explain the disclosed threshold, actual roll, and realized cargo loss")
 	_expect(ui.conflict_outcome_label.text.contains("RECOVERY — Medicine x1 remains and would sell here for 52 ashmarks") and ui.conflict_outcome_label.text.contains("lowest-risk affordable onward route") and ui.conflict_outcome_label.text.contains("No restart is required"), "a realized cargo loss should name a concrete surviving sale and affordable onward route")
+	_expect(ui.conflict_outcome_receipt.visible and ui.conflict_outcome_receipt_kicker.text == "RISK REALIZED" and ui.conflict_outcome_receipt_title.text == "Medicine x1 lost" and ui.conflict_outcome_receipt_detail.text.contains("24% roll") and ui.conflict_outcome_receipt_detail.text.contains("45% threshold"), "a realized cargo loss should lead with a compact, redundant loss receipt")
 	_expect(ui._web_accessibility_announcement().contains("RECOVERY — Medicine x1 remains") and ui._web_accessibility_announcement().contains("No restart is required"), "arrival accessibility announcement should include the concrete recovery path")
 	var recovery_sale: Dictionary = ui._best_recovery_sale()
 	_expect(recovery_sale.get("good_id", "") == "medicine" and int(recovery_sale.get("quantity", 0)) == 1 and int(recovery_sale.get("total", 0)) == 52, "recovery guidance should select the highest-value surviving local sale")

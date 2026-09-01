@@ -179,6 +179,37 @@ static func conflict_outcome_comparison(world, event_record: Dictionary) -> Stri
 	return comparison
 
 
+static func conflict_outcome_receipt(event_record: Dictionary) -> Dictionary:
+	var outcome: Dictionary = event_record.get("outcome", {})
+	if event_record.is_empty() or outcome.is_empty():
+		return {}
+	var risk := float(outcome.get("cargo_risk", 0.0))
+	var roll := float(outcome.get("resolution_roll", 1.0))
+	var loss_basis: Dictionary = event_record.get("loss_basis", {})
+	var good_id := String(loss_basis.get("loss_good_id", ""))
+	var good_name := good_id.capitalize() if not good_id.is_empty() else "Cargo"
+	if risk > 0.0 and roll < risk:
+		return {
+			"state": "loss",
+			"kicker": "RISK REALIZED",
+			"title": "%s x1 lost" % good_name,
+			"detail": "%d%% roll fell below the disclosed %d%% threshold" % [int(round(roll * 100.0)), int(round(risk * 100.0))],
+		}
+	if risk > 0.0:
+		return {
+			"state": "safe",
+			"kicker": "RISK AVOIDED",
+			"title": "%s arrived intact" % good_name,
+			"detail": "%d%% roll cleared the disclosed %d%% threshold" % [int(round(roll * 100.0)), int(round(risk * 100.0))],
+		}
+	return {
+		"state": "certain",
+		"kicker": "PLAN HELD",
+		"title": "No surprise cargo loss",
+		"detail": "This response used no cargo-loss roll",
+	}
+
+
 static func best_recovery_sale(world) -> Dictionary:
 	return _best_recovery_sale(world)
 

@@ -27,6 +27,7 @@ const CAPTURE_SCREENS := [
 	"route_event_large_text",
 	"route_event_result",
 	"route_event_loss_result",
+	"route_event_loss_result_large_text",
 	"destination_shop",
 	"new_game_confirmation",
 ]
@@ -222,6 +223,11 @@ func _run() -> void:
 		quit(1)
 		return
 	await _capture(ui, "route_event_loss_result", "route-event-loss-result")
+	ui.large_text_checkbox.set_pressed_no_signal(true)
+	ui._on_large_text_toggled(true)
+	await _capture(ui, "route_event_loss_result_large_text", "route-event-loss-result-large-text")
+	ui.large_text_checkbox.set_pressed_no_signal(false)
+	ui._on_large_text_toggled(false)
 	if not ui._write_save("SAVED"):
 		push_error("Native capture could not create its isolated confirmation save.")
 		quit(1)
@@ -368,6 +374,10 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"RoadPrimaryAction",
 		"RoadEventPanel",
 		"ArrivalDebriefPanel",
+		"JourneyConsequenceReceipt",
+		"JourneyConsequenceKicker",
+		"JourneyConsequenceTitle",
+		"JourneyConsequenceDetail",
 		"ArrivalPrimaryAction",
 		"JourneyResultScroll",
 	]:
