@@ -172,6 +172,7 @@ var bazaar_navigation_buttons: Array[Button] = []
 var bazaar_section_label: Label
 var bazaar_scene
 var shop_market_scroll: ScrollContainer
+var shop_action_scroll: ScrollContainer
 var shop_purchase_row: HBoxContainer
 var active_bazaar_section := "trade"
 var shop_save_button: Button
@@ -232,7 +233,6 @@ var conflict_outcome_label: Label
 var last_conflict_outcome_text := ""
 var committed_journey_message := ""
 var arrival_pending := false
-var guided_test_button: Button
 var playtest_banner: Label
 var playtest_status_label: Label
 var status_label: Label
@@ -866,6 +866,8 @@ func _show_shop() -> void:
 		_grab_focus_if_available(shop_good_option)
 	if shop_market_scroll:
 		shop_market_scroll.scroll_vertical = 0
+	if shop_action_scroll:
+		shop_action_scroll.scroll_vertical = 0
 
 func _show_departure() -> void:
 	_dismiss_trade_receipt()
@@ -1356,15 +1358,6 @@ func _build_shop() -> void:
 	shop_transaction_status_label.add_theme_font_size_override("font_size", 12)
 	shop_transaction_status_label.add_theme_color_override("font_color", Color("#c7b49a"))
 	market_shell.add_child(shop_transaction_status_label)
-	guided_test_button = Button.new()
-	guided_test_button.text = "Optional: Buy 2 water"
-	guided_test_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	guided_test_button.custom_minimum_size = Vector2(0, 48)
-	guided_test_button.tooltip_text = "Runs the normal buy command for the first-run learning example."
-	guided_test_button.set_meta("web_accessibility_id", "guided_trade")
-	guided_test_button.pressed.connect(_on_guided_test_action)
-	guided_test_button.visible = false
-	market_shell.add_child(guided_test_button)
 	shop_good_option.item_selected.connect(_on_shop_plan_changed)
 	shop_quantity.value_changed.connect(_on_shop_quantity_changed)
 
@@ -1377,15 +1370,15 @@ func _build_shop() -> void:
 	var action_shell := VBoxContainer.new()
 	action_shell.add_theme_constant_override("separation", 10)
 	action_card.add_child(action_shell)
-	var action_scroll := ScrollContainer.new()
-	action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	action_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
-	action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	action_shell.add_child(action_scroll)
+	shop_action_scroll = ScrollContainer.new()
+	shop_action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	shop_action_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	shop_action_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	action_shell.add_child(shop_action_scroll)
 	var actions := VBoxContainer.new()
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_theme_constant_override("separation", 14)
-	action_scroll.add_child(actions)
+	shop_action_scroll.add_child(actions)
 	var caravan_title := Label.new()
 	caravan_title.text = "BAZAAR STALLS"
 	caravan_title.add_theme_font_size_override("font_size", 20)
@@ -2092,7 +2085,16 @@ func _on_bazaar_navigation_pressed(section_id: String) -> void:
 		shop_transaction_status_label.text = "BAZAAR — %s is ready." % section_id.replace("_", " ").capitalize()
 	else:
 		shop_transaction_status_label.text = "BAZAAR — No %s option is available at this settlement today." % section_id.replace("_", " ")
+	call_deferred("_reset_bazaar_scroll_positions", section_id == "trade")
 	_publish_web_ui_state()
+
+func _reset_bazaar_scroll_positions(reset_market: bool) -> void:
+	if not reset_market:
+		return
+	if shop_action_scroll:
+		shop_action_scroll.scroll_vertical = 0
+	if shop_market_scroll:
+		shop_market_scroll.scroll_vertical = 0
 
 func _on_tutorial_skip_pressed() -> void:
 	tutorial.skip()
@@ -2151,8 +2153,6 @@ func _apply_bazaar_section() -> void:
 		shop_decision_summary_panel.visible = trade_active
 	if shop_purchase_row:
 		shop_purchase_row.visible = trade_active
-	if guided_test_button:
-		guided_test_button.visible = guided_test_button.visible and trade_active
 	if bazaar_scene:
 		bazaar_scene.visible = true
 		bazaar_scene.custom_minimum_size.y = 72.0 if trade_active else 236.0
@@ -2204,7 +2204,7 @@ func _link_shop_focus_cycle() -> void:
 	if active_bazaar_section == "trade":
 		controls.append(shop_good_option)
 		controls.append(shop_quantity.get_line_edit())
-		for control in [shop_buy_button, shop_sell_button, guided_test_button]:
+		for control in [shop_buy_button, shop_sell_button]:
 			if control.visible and not control.disabled:
 				controls.append(control)
 	for group in [contract_buttons, opportunity_buttons, crew_buttons]:
@@ -2372,8 +2372,6 @@ func _on_start_game_pressed(path_id: String = PLAYTEST_PATH_GUIDED) -> void:
 	else:
 		tutorial.skip()
 		_set_event("Ashgate market is open. Inspect local prices, opportunities, and roads before committing the caravan.")
-	guided_test_button.disabled = true
-	guided_test_button.visible = false
 	arrival_pending = false
 	enter_settlement_button.visible = false
 	commit_departure_button.disabled = false
@@ -2420,27 +2418,6 @@ func _select_option_by_id(option: OptionButton, target_id: String) -> void:
 		if String(option.get_item_metadata(index)) == target_id:
 			option.select(index)
 			return
-
-func _on_guided_test_action() -> void:
-	_select_option_by_id(destination_option, PLAYTEST_DESTINATION)
-	_populate_route_options()
-	_select_option_by_id(route_option, PLAYTEST_ROUTE)
-	_select_option_by_id(cargo_good_option, PLAYTEST_GOOD)
-	_select_option_by_id(shop_good_option, PLAYTEST_GOOD)
-	cargo_quantity.value = PLAYTEST_QUANTITY
-	shop_quantity.value = PLAYTEST_QUANTITY
-	var money_before := world.money
-	var result := MarketCommandProcessor.execute(world, {
-		"id": MarketCommandProcessor.BUY_GOODS,
-		"inputs": {"good_id": PLAYTEST_GOOD, "quantity": PLAYTEST_QUANTITY},
-	})
-	_record_first_trade(result)
-	if result.ok:
-		guided_test_button.disabled = true
-	_show_command_result(result, "Test action")
-	if result.ok:
-		_show_trade_receipt("PURCHASE SEALED", "%s x%d loaded · %d ashmarks paid · hold %d/%d" % [PLAYTEST_GOOD.capitalize(), PLAYTEST_QUANTITY, money_before - world.money, int(world.cargo.get("weight", 0)), world.cargo_capacity])
-		_grab_focus_if_available(plan_departure_button)
 
 func _on_plan_departure_pressed() -> void:
 	_sync_shop_plan_to_departure()
@@ -3028,7 +3005,7 @@ func _web_accessibility_action_control(action_id: String) -> Variant:
 		var choice_index := int(action_id.trim_prefix("event_choice_"))
 		if choice_index >= 0 and choice_index < event_choice_buttons.size():
 			return event_choice_buttons[choice_index]
-	for control in [guided_test_button, shop_save_button, shop_load_button, shop_reset_button, shop_report_button, restore_bindings_button]:
+	for control in [shop_save_button, shop_load_button, shop_reset_button, shop_report_button, restore_bindings_button]:
 		if control != null and is_instance_valid(control) and String(control.get_meta("web_accessibility_id", "")) == action_id:
 			return control
 	for control in route_comparison_buttons:
@@ -3151,7 +3128,6 @@ func _web_accessibility_actions() -> Array:
 			_append_web_accessibility_action(actions, "tutorial_skip", tutorial_skip_button)
 			_append_web_accessibility_action(actions, "shop_buy", shop_buy_button)
 			_append_web_accessibility_action(actions, "shop_sell", shop_sell_button)
-			_append_web_accessibility_action(actions, "guided_trade", guided_test_button)
 			_append_tagged_web_accessibility_actions(actions, contract_buttons)
 			_append_tagged_web_accessibility_actions(actions, opportunity_buttons)
 			_append_tagged_web_accessibility_actions(actions, crew_buttons)
@@ -3958,8 +3934,6 @@ func _refresh_playtest_status() -> void:
 	if tutorial.enabled or tutorial.completed:
 		_refresh_tutorial_guidance()
 		return
-	if guided_test_button:
-		guided_test_button.visible = false
 	var crisis := MarketContent.crisis_stage(world.crisis_stage)
 	playtest_banner.text = "REGIONAL OBJECTIVE — %s" % String(crisis.get("label", "Five-Well Basin"))
 	playtest_status_label.text = String(crisis.get("objective", "Inspect the market, prepare the caravan, and choose the next road."))

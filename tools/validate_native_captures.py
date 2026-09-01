@@ -154,6 +154,17 @@ def require_layout_bounds(capture: dict[str, object]) -> None:
                 raise AssertionError(f"{screen}: required control {control_name} leaves {opening_panel_name}")
 
 
+def require_release_surface(capture: dict[str, object]) -> None:
+    screen = str(capture.get("screen", "unknown"))
+    layout = capture.get("layout")
+    release_surface = layout.get("release_surface") if isinstance(layout, dict) else None
+    if not isinstance(release_surface, dict):
+        raise AssertionError(f"{screen}: missing release-surface evidence")
+    for invariant in ("developer_panel_hidden", "diagnostics_hidden", "report_action_hidden"):
+        if release_surface.get(invariant) is not True:
+            raise AssertionError(f"{screen}: release-surface invariant failed: {invariant}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -232,6 +243,7 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Commons ending capture is missing its causal campaign state")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
+        require_release_surface(capture)
         require_layout_bounds(capture)
         if screen in {"main_menu", "introduction_basin", "introduction_caravan", "introduction_road", "introduction_road_large_text"}:
             expected_compact = viewport[0] <= 1280

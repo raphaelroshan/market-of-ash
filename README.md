@@ -96,3 +96,4 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 
 | `docs/early_access_requirements.md` | Skeletal-but-playable Early Access breadth floor, quality gates, and agent-executable expansion order. |
 | `docs/early_access_decision.md` | Decision record explaining the breadth-versus-polish and authored-pressure trade-offs. |
+| `docs/ma_ea_1_completion.md` | Executable acceptance record for the responsive, release-facing Five-Well Basin journey. |

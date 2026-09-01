@@ -95,10 +95,12 @@ func _run() -> void:
 	ui._on_large_text_toggled(false)
 	ui._on_intro_next_pressed()
 	await _capture(ui, "settlement_shop", "settlement-shop")
-	ui._on_guided_test_action()
-	await _capture(ui, "trade_receipt", "trade-receipt")
 	ui._on_bazaar_navigation_pressed("assignments")
 	await _capture(ui, "bazaar_jobs", "bazaar-jobs")
+	if not _complete_player_opening_trade(ui):
+		quit(1)
+		return
+	await _capture(ui, "trade_receipt", "trade-receipt")
 	ui._on_bazaar_navigation_pressed("crew")
 	await _capture(ui, "bazaar_crew", "bazaar-crew")
 	ui._on_bazaar_navigation_pressed("trade")
@@ -149,14 +151,13 @@ func _run() -> void:
 
 	ui.pending_tutorial_enabled = true
 	ui._on_start_game_pressed()
-	ui._on_plan_departure_pressed()
-
 	ui.large_text_checkbox.set_pressed_no_signal(true)
 	ui._on_large_text_toggled(true)
-	await _capture(ui, "departure_desk_large_text", "departure-desk-large-text")
-	ui._on_return_to_shop_pressed()
 	await _capture(ui, "settlement_shop_large_text", "settlement-shop-large-text")
-	ui._on_guided_test_action()
+	ui._on_bazaar_navigation_pressed("assignments")
+	if not _complete_player_opening_trade(ui):
+		quit(1)
+		return
 	await _capture(ui, "trade_receipt_large_text", "trade-receipt-large-text")
 	ui._on_bazaar_navigation_pressed("crew")
 	await _capture(ui, "bazaar_crew_large_text", "bazaar-crew-large-text")
@@ -164,6 +165,8 @@ func _run() -> void:
 	ui._open_pause()
 	await _capture(ui, "pause_large_text", "pause-large-text")
 	ui._close_pause()
+	ui._on_plan_departure_pressed()
+	await _capture(ui, "departure_desk_large_text", "departure-desk-large-text")
 	ui._show_main_menu()
 	await _capture(ui, "main_menu_large_text", "main-menu-large-text")
 
@@ -299,6 +302,20 @@ func _parse_arguments() -> bool:
 		return false
 	return true
 
+func _complete_player_opening_trade(ui: Control) -> bool:
+	ui._on_accept_contract_pressed("reedwatch_water_relief_01")
+	ui._on_bazaar_navigation_pressed("trade")
+	var command_count_before: int = ui.world.command_history.size()
+	ui._on_buy_pressed()
+	var purchase_succeeded: bool = (
+		ui.world.command_history.size() == command_count_before + 1
+		and String(ui.world.command_history.back().get("id", "")) == MarketCommandProcessor.BUY_GOODS
+		and bool(ui.world.command_history.back().get("ok", false))
+	)
+	if not purchase_succeeded:
+		push_error("Native capture could not complete the opening trade through player-facing actions.")
+	return purchase_succeeded
+
 func _capture(ui: Control, screen: String, file_stem: String) -> void:
 	await process_frame
 	await process_frame
@@ -409,6 +426,11 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"active_layer": _rect_data(active_layer.get_global_rect()),
 		"required_controls": required_controls,
 		"opening_compact": (ui.menu_columns != null and ui.menu_columns.compact) or (ui.intro_columns != null and ui.intro_columns.compact),
+		"release_surface": {
+			"developer_panel_hidden": ui.developer_panel == null or not ui.developer_panel.visible,
+			"diagnostics_hidden": ui.diagnostics_label == null or not ui.diagnostics_label.visible,
+			"report_action_hidden": ui.shop_report_button == null or not ui.shop_report_button.visible,
+		},
 	}
 
 func _rect_data(rect: Rect2) -> Dictionary:

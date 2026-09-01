@@ -1,6 +1,6 @@
 # Market of Ash — Early Access Requirements
 
-**Status:** Planning contract for a skeletal but commercially credible Early Access build  
+**Status:** Active execution contract; MA-EA-1 complete, MA-EA-2 next
 **Current baseline:** Deterministic Five-Well Basin vertical slice with ordinary trade, authored events, adaptive faction response, alternate endings, and the game-quality roadmap in progress.
 
 ## Product decision
@@ -72,7 +72,7 @@ New content must be data-driven and use stable IDs. An agent may add one region,
 
 ## Recommended order
 
-**MA-EA-1:** repair the 1280×720 shell and complete the polished Basin journey.  
+**MA-EA-1 — complete:** repair the 1280×720 shell and complete the polished Basin journey. The acceptance gate now exercises the real player-facing trade path, rejects visible developer surfaces in every native frame, and covers the full responsive matrix plus deterministic journey, input, save, and campaign suites.
 **MA-EA-2:** add a compact second region with three settlements, three goods, two routes, and one failure-forward event chain.  
 **MA-EA-3:** add the third region and connect the map with explicit route identities and ordinary-trade patterns.  
 **MA-EA-4:** add the fourth faction and second replacement actor, then validate alternate endings.  
