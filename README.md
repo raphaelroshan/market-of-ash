@@ -88,3 +88,11 @@ A task is complete only when code, tests, player-facing feedback, and documentat
 ## Temporary asset kit
 
 The testing-only art, audio, VFX, and animation kit is documented in [`docs/temporary_asset_kit.md`](docs/temporary_asset_kit.md). Curated CC0 files are under [`assets/temporary/`](assets/temporary/), with machine-readable provenance in [`assets/temporary/manifest.json`](assets/temporary/manifest.json). These assets are for breadth, flow, and feel testing; they are not the final Market of Ash art direction.
+
+
+## Early Access breadth contract
+
+The skeletal-but-playable Early Access target is defined in [`docs/early_access_requirements.md`](docs/early_access_requirements.md). It preserves the polished Five-Well Basin as the quality anchor while requiring three playable regions, broader ordinary trade, optional contracts, adaptive replacement factions, additional event families, and complete save-safe journeys before Early Access claims are made.
+
+| `docs/early_access_requirements.md` | Skeletal-but-playable Early Access breadth floor, quality gates, and agent-executable expansion order. |
+| `docs/early_access_decision.md` | Decision record explaining the breadth-versus-polish and authored-pressure trade-offs. |

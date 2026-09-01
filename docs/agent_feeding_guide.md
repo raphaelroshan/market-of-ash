@@ -140,3 +140,12 @@ Report: intent, plan, files changed, commands run and results, risks, one next t
 ## When to use a separate critique agent
 
 Use a second agent after a vertical slice is playable, not after every trivial edit. Give it the build, screenshots, test logs, design prompt, and a narrow evaluation rubric. Ask it to classify issues as blocker, high, medium, or low. It should not rewrite code directly during critique. This preserves a clean distinction between implementation and evaluation.
+
+
+## Early Access breadth contract
+
+Before adding broader content, read [`early_access_requirements.md`](early_access_requirements.md). The deterministic Five-Well Basin is the quality anchor, not the complete Early Access game. After M1–M6 presentation and flow gates, issue one complete region slice at a time: three settlements, three goods, two routes, one ordinary-trade pattern, one optional contract, one event chain, one faction pressure, one failure-forward response, save coverage, and visual evidence. Continue until the Early Access floor of three playable regions, nine to ten settlements, ten to twelve goods, seven to nine routes, five to six crew members, eight to ten event families, four factions, two replacement actors, and six to eight composable endings is met.
+
+Do not make human testing a prerequisite. Use automated economy trials, deterministic replay, complete-flow launches, responsive layout checks, controller/scaling checks, save boundaries, screenshots, and known-limitations notes as the active gates. Ordinary buying and selling must remain a complete viable path, and no contract chain may be required for progress or an ending.
+
+The recommended feeds are **MA-EA-1** responsive Basin completion, **MA-EA-2** second-region trade slice, **MA-EA-3** third-region map connection, **MA-EA-4** faction/replacement breadth, **MA-EA-5** crew/events/replay depth, and **MA-EA-6** release hardening.
