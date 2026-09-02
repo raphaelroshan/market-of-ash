@@ -10,9 +10,38 @@ permissions:
   contents: read
 
 jobs:
+  capture-1600:
+    name: Capture complete 1600 journey
+    runs-on: ubuntu-latest
+    env:
+      MARKET_CAPTURE_GEOMETRIES: 1600x900
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+      - name: Capture and validate at release viewport
+        run: |
+          command -v xvfb-run
+          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
+            bash scripts/capture_native_ui.sh artifacts/private-alpha-1600
+      - name: Upload complete journey evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: private-alpha-1600-${{ github.run_id }}
+          path: artifacts/private-alpha-1600/
+          if-no-files-found: error
+          retention-days: 90
+
   release-candidate:
     name: Windows release candidate
     runs-on: windows-latest
+    needs: [capture-1600]
     defaults:
       run:
         shell: bash
@@ -83,7 +112,7 @@ jobs:
             --executable build/market-of-ash.exe `
             --archive artifacts/market-of-ash-windows.zip `
             --extract-directory $cleanDirectory `
-            --readme docs/releases/v0.16.0-early-access-rc1.md
+            --readme docs/releases/v0.16.0-early-access-rc2.md
           $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
           python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
           python tools/validate_windows_export.py $cleanExecutable
@@ -108,10 +137,11 @@ jobs:
           python tools/validate_windows_gui_capture.py \
             --image artifacts/windows-main-menu.png \
             --metadata artifacts/windows-version.json
-      - name: Capture complete 1600 journey
-        env:
-          MARKET_CAPTURE_GEOMETRIES: 1600x900
-        run: bash scripts/capture_native_ui.sh artifacts/private-alpha-1600
+      - name: Download complete 1600 journey
+        uses: actions/download-artifact@v7
+        with:
+          name: private-alpha-1600-${{ github.run_id }}
+          path: artifacts/private-alpha-1600
       - name: Archive 1600 journey evidence
         run: python tools/package_capture_evidence.py --source artifacts/private-alpha-1600 --output artifacts/market-of-ash-1600-capture.zip
       - name: Create release manifest

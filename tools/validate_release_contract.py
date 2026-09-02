@@ -78,6 +78,31 @@ def validate_release_contract(root: Path) -> dict[str, str]:
         raise AssertionError("release notes must name the runtime content version")
     if "Save format: `12`" not in notes:
         raise AssertionError("release notes must name the supported save format")
+
+    release_workflow = (root / ".github/workflows/release.yml").read_text(encoding="utf-8")
+    capture_marker = "\n  capture-1600:\n"
+    candidate_marker = "\n  release-candidate:\n"
+    publish_marker = "\n  publish-release:\n"
+    if capture_marker not in release_workflow or candidate_marker not in release_workflow:
+        raise AssertionError("release workflow must define separate 1600 capture and Windows candidate jobs")
+    capture_job = release_workflow.split(capture_marker, 1)[1].split(candidate_marker, 1)[0]
+    for token in (
+        "runs-on: ubuntu-latest",
+        "MARKET_CAPTURE_GEOMETRIES: 1600x900",
+        "xvfb-run",
+        "-screen 0 1920x1080x24",
+        "private-alpha-1600-${{ github.run_id }}",
+    ):
+        if token not in capture_job:
+            raise AssertionError(f"release 1600 capture job is missing: {token}")
+    candidate_job = release_workflow.split(candidate_marker, 1)[1].split(publish_marker, 1)[0]
+    for token in (
+        "needs: [capture-1600]",
+        "actions/download-artifact@v7",
+        "python tools/package_capture_evidence.py",
+    ):
+        if token not in candidate_job:
+            raise AssertionError(f"Windows release candidate job is missing: {token}")
     return {
         "game_version": game_version,
         "windows_version": windows_version,

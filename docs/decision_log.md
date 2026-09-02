@@ -737,3 +737,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The four GPT-5.6 packets must end in a tester-ready artifact rather than a collection of passing source tests. A self-describing offline package lets a private-alpha tester install, preserve a save, exercise the full creative vertical, report the exact build, and recover or roll back without repository access. Shared package helpers keep the local acceptance run and tagged GitHub workflow structurally identical.
 
 **Trade-off:** The Windows build remains unsigned and cannot establish SmartScreen reputation, physical-controller behavior, assistive-technology compatibility, or moderated comprehension by automation. Those are explicit external calibration gates, not hidden release claims.
+
+## ADR-093: Full-size release evidence runs on a fixed Linux display
+
+**Decision:** Generate the complete 1600×900 release journey in a dedicated Ubuntu/Xvfb job with a fixed 1920×1080 virtual display, upload it as a workflow artifact, and make the Windows packaging job consume and archive that validated capture. Keep the Windows runner responsible for the executable, clean-install smoke, and packaged native GUI evidence at its available desktop size. Advance the repaired candidate to `0.16.0-early-access-rc2` rather than moving the failed RC1 tag.
+
+**Reason:** GitHub's hosted Windows desktop exposed only a 1028×578 drawable area when asked for 1600×900, so the capture correctly rejected the scaled frame. Xvfb gives the evidence harness an explicit viewport while the Windows-specific checks continue to validate the platform artifact. Separate jobs preserve both guarantees without weakening the dimension assertion or rewriting a public tag.
+
+**Trade-off:** The complete journey archive is rendered with Linux OpenGL rather than Windows ANGLE. The release still includes a real packaged-Windows screenshot and metadata, and the same capture script and validator run on both platforms.
