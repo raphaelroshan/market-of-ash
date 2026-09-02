@@ -1,6 +1,6 @@
 # Market of Ash — Early Access Requirements
 
-**Status:** Active execution contract; MA-EA-1 through MA-EA-5 complete, MA-EA-6 next
+**Status:** Automated execution contract complete through MA-EA-6; external candidate validation remains
 **Current baseline:** Deterministic Five-Well Basin, Glasswind Reach, and Siltfire March form a connected three-region trade map with ordinary trade, authored events, adaptive faction responses, alternate endings, and the game-quality roadmap in progress.
 
 ## Product decision
@@ -78,7 +78,7 @@ New content must be data-driven and use stable IDs. An agent may add one region,
 **MA-EA-4 — complete:** Causeway Bellkeepers become the fourth standing faction and alter Salt Causeway fees through visible trust. The existing second replacement actor, the Night Market, now supports cooperation, opposition, reconciliation, and a sixth ending earned through post-activation ordinary saltglass trade. Both replacement endings use one generic authored requirement evaluator.
 **MA-EA-5 — complete:** Mara Voss and Orin Bell bring the roster to five crew, while the Reedline wheel sink and divided Mirror Run beacons bring the event catalog to eight families. Each recruit unlocks a resource-backed deterministic response with a persistent route consequence, and every event retains non-crew recovery choices.
 
-**MA-EA-6:** harden packaging, migration, accessibility, performance, and versioned documentation.
+**MA-EA-6 — complete:** the `0.14.0-early-access-rc1` contract aligns project, PE, content, manifest, tag, and release-note versions; packages rollback and known-limitations guidance beside the executable; verifies old-content saves, semantic actions, bounded runtime state, and a local performance budget; and publishes only from the validated tagged Windows workflow.
 
 ## Non-negotiable boundaries
 

@@ -8,6 +8,8 @@ python3 tools/policy_check.py --repo "$ROOT"
 python3 -m py_compile tools/*.py tests/*.py
 python3 tests/test_policy_check.py
 python3 tests/test_windows_export_validation.py
+python3 tools/validate_release_contract.py --repo "$ROOT"
+python3 tests/test_release_contract.py
 python3 tools/validate_content.py --manifest content/content_manifest.json
 python3 tools/validate_political_geography.py --data content/political_geography.json
 python3 tools/validate_tribal_conflict.py --data content/tribal_conflict.json
@@ -30,6 +32,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --path . --script res://tests/test_third_region.gd
   godot --headless --path . --script res://tests/test_ma_ea_4.gd
   godot --headless --path . --script res://tests/test_ma_ea_5.gd
+  godot --headless --path . --script res://tests/test_release_readiness.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --path . --script res://tests/test_economy.gd
   godot4 --headless --path . --script res://tests/test_map_ui.gd
@@ -42,6 +45,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --path . --script res://tests/test_third_region.gd
   godot4 --headless --path . --script res://tests/test_ma_ea_4.gd
   godot4 --headless --path . --script res://tests/test_ma_ea_5.gd
+  godot4 --headless --path . --script res://tests/test_release_readiness.gd
 else
   echo "Godot 4.x is not installed or not on PATH."
   echo "Run: godot --headless --path . --script res://tests/test_economy.gd"
@@ -55,5 +59,6 @@ else
   echo "Then run: godot --headless --path . --script res://tests/test_third_region.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_ma_ea_4.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_ma_ea_5.gd"
+  echo "Then run: godot --headless --path . --script res://tests/test_release_readiness.gd"
   exit 2
 fi

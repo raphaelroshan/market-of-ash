@@ -1787,6 +1787,18 @@ func _test_legacy_save_migration() -> void:
 	var migration_v11_result := migrated_v11.load_serialized(version_eleven_save)
 	_expect(migration_v11_result.ok and int(migration_v11_result.migrated_from) == 11, "version-eleven saves should migrate to the adaptive-scenario schema")
 	_expect(String(migrated_v11.scenario_state("reedwatch_water_relief").get("state", "")) == "expired" and not migrated_v11.emergent_faction("well_commons").is_empty(), "a Day 4 legacy save should causally initialize its replacement response")
+	var previous_content_save := legacy_world.serialize()
+	previous_content_save["content_version"] = "1.25.0"
+	previous_content_save["recruited_crew"] = ["nara_vey", "tess_oryn"]
+	previous_content_save["assigned_crew"] = "tess_oryn"
+	previous_content_save["crew_reports"] = {
+		"toll_road": {"crew_id": "tess_oryn", "observed_day": 1, "note": "Legacy route note."}
+	}
+	var upgraded_content := AshWorldState.new(0)
+	var upgraded_content_result := upgraded_content.load_serialized(previous_content_save)
+	_expect(upgraded_content_result.ok and int(upgraded_content_result.migrated_from) == AshWorldState.SAVE_VERSION, "a save from content 1.25.0 should load without a schema migration")
+	_expect(upgraded_content.is_crew_recruited("nara_vey") and upgraded_content.assigned_crew == "tess_oryn", "the content update should preserve the prior roster and assignment")
+	_expect(upgraded_content.serialize().content_version == "1.26.0" and not MarketContent.crew_member("mara_voss").is_empty() and not MarketContent.crew_member("orin_bell").is_empty(), "the upgraded save should adopt current content while exposing the new optional specialists")
 	var future_save := legacy_world.serialize()
 	future_save["save_version"] = AshWorldState.SAVE_VERSION + 1
 	var rejected := AshWorldState.new(0).load_serialized(future_save)
