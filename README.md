@@ -112,6 +112,6 @@ The full creative vertical and skeletal campaign requirements are defined in [`d
 
 ## GPT-5.6 investment execution packets
 
-For a full creative vertical and investment-evaluation build, issue the larger dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). The current first gate is MA-GPT56-1 after the latest automated and visual audit.
+For the investment-evaluation build, follow the dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). MA-GPT56-1 and MA-GPT56-2 have completion records; the current gate is MA-GPT56-3 regional breadth and non-railroaded play.
 | `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Frontier-style creative vertical and investment-evaluation campaign skeleton. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, remaining responsive issue, and next GPT-5.6 task. |

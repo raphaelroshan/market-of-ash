@@ -364,19 +364,27 @@ def main() -> int:
             or ui_state.get("road_waypoint") != "ROAD STOP — THE NEXT INSPECTION POST"
         ):
             raise AssertionError(f"{file_name}: Toll Road capture is missing its corridor identity")
-        if screen in {"investment_departure", "investment_road", "investment_event"} and ui_state.get("road_scene_id") != "ashen_milestones":
-            raise AssertionError(f"{file_name}: investment journey is missing its Old Road identity")
+        if screen in {"investment_departure", "investment_road", "investment_event"} and (
+            ui_state.get("road_scene_id") != "ashen_milestones"
+            or ui_state.get("route_texture") != "milestone_crosses"
+            or ui_state.get("risk_cue") != "guarded"
+        ):
+            raise AssertionError(f"{file_name}: investment journey is missing its Old Road visual grammar")
         if screen == "investment_event" and ui_state.get("pending_event_id") != "three_riders_no_banner":
             raise AssertionError(f"{file_name}: investment journey is missing Three Riders, No Banner")
         if screen == "investment_arrival" and (
             ui_state.get("settlement_id") != "reedwatch"
             or "JOURNEY RESULT" not in ui_state.get("announcement", "")
+            or ui_state.get("settlement_motif") != "reeds"
+            or ui_state.get("arrival_treatment") != "water_witness"
         ):
             raise AssertionError(f"{file_name}: investment arrival does not explain the Reedwatch result")
         if screen == "investment_changed_return" and (
             ui_state.get("settlement_id") != "ashgate"
             or ui_state.get("trade_receipt_title") != "SALE RECORDED"
             or "after supply" not in ui_state.get("trade_receipt_detail", "")
+            or ui_state.get("settlement_motif") != "gate"
+            or ui_state.get("arrival_treatment") != "warden_bells"
         ):
             raise AssertionError(f"{file_name}: investment return Bazaar is missing its changed-market receipt")
         if screen == "investment_black_market_offer" and not any(

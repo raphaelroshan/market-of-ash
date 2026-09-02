@@ -3,6 +3,7 @@ extends SceneTree
 const AshWorldState = preload("res://src/core/world_state.gd")
 const TradePresenter = preload("res://src/ui/trade_presenter.gd")
 const JourneyPresenter = preload("res://src/ui/journey_presenter.gd")
+const JourneyPanelView = preload("res://src/ui/journey_panel_view.gd")
 
 var failures: Array[String] = []
 
@@ -11,6 +12,7 @@ func _init() -> void:
 	_test_trade_presenter()
 	_test_event_presenter()
 	_test_arrival_presenter()
+	_test_journey_panel_view()
 	_test_campaign_debrief_presenter()
 	if failures.is_empty():
 		print("PASS: Market of Ash presenter tests")
@@ -103,6 +105,21 @@ func _test_arrival_presenter() -> void:
 	record["outcome"] = {"cargo_risk": 0.45, "resolution_roll": 0.76, "cargo": {}}
 	var safe_receipt := JourneyPresenter.conflict_outcome_receipt(record)
 	_expect(safe_receipt.get("state", "") == "safe" and safe_receipt.get("kicker", "") == "RISK AVOIDED" and String(safe_receipt.get("title", "")).contains("arrived intact"), "avoided cargo risk should produce a compact intact-cargo receipt")
+
+
+func _test_journey_panel_view() -> void:
+	var world := AshWorldState.new(1107)
+	var departure := JourneyPanelView.snapshot(world, "moving_out", "LEAVING ASHGATE", false, "", "")
+	_expect(departure.state == "departure" and String(departure.map_hint).contains("crossing the committed road"), "departure view should communicate committed travel without changing it")
+	var road := JourneyPanelView.snapshot(world, "road", "ROAD STOP — THE BROKEN MILEPOSTS", false, "", "")
+	_expect(road.state == "road" and String(road.event_text).contains("MID-ROUTE"), "road view should provide an explicit player-controlled pause")
+	world.pending_event = {"title": "Three Riders, No Banner"}
+	var event := JourneyPanelView.snapshot(world, "encounter", "ENCOUNTER", false, "", "")
+	_expect(event.state == "event" and String(event.caravan_context).contains("Three Riders, No Banner"), "event view should name the authored contact")
+	world.pending_event.clear()
+	world.current_settlement = "reedwatch"
+	var arrival := JourneyPanelView.snapshot(world, "arrived", "ARRIVED", true, "Pay 10 ashmarks; you arrive at Reedwatch.", "")
+	_expect(arrival.state == "arrival" and arrival.enter_action == "Enter Reedwatch" and String(arrival.departure_status).contains("ARRIVAL REPORT"), "arrival view should expose the handoff and destination action")
 
 
 func _test_campaign_debrief_presenter() -> void:
