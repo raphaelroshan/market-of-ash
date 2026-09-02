@@ -649,3 +649,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A replacement market is meaningful only if the player can materially support or oppose it and if its outcome remembers how legitimacy was earned. The shared evaluator prevents the Well Commons from remaining a one-off code path and ensures ordinary trade—not a contract or event transfer—can establish either alternate institution.
 
 **Trade-off:** The fourth faction currently changes one route fee and two event/service decisions rather than owning a full quest chain. The Night Market ending shares the Basin crisis clock, so its political resolution arrives at Day 10 even when most play occurred outside the Basin.
+
+## ADR-082: Regional specialists unlock material-backed road responses
+
+**Decision:** Add Mara Voss at Blackreed Post and Orin Bell at Mirror Wells as the fourth and fifth crew members. Each exposes one otherwise unavailable response in a new regional event: Mara consumes scrap to mark a safer Reedline load path, while Orin consumes lamp oil to establish a true Mirror Run beacon line. Both outcomes use the existing route-condition and information systems.
+
+**Reason:** The Early Access roster needed breadth without turning people into interchangeable percentage modifiers. A named person, carried material, route dilemma, and persistent callback form a complete decision loop the player can understand before committing.
+
+**Trade-off:** Both specialist responses are deliberately strong once their recruitment and cargo prerequisites are met. The events therefore retain paid, delayed, and disclosed-risk alternatives, and the Mirror Run event appears after the established Shardwind encounter on later eligible crossings rather than displacing it.

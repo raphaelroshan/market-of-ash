@@ -9,8 +9,10 @@ var failures: Array[String] = []
 func _init() -> void:
 	_test_mara_changes_the_reedline_decision()
 	_test_mara_response_requires_crew_and_scrap()
+	_test_reedline_alternate_responses()
 	_test_orin_changes_the_mirror_run_decision()
 	_test_orin_response_requires_crew_and_oil()
+	_test_mirror_run_alternate_responses_and_replay()
 	if failures.is_empty():
 		print("MA-EA-5 crew and event depth smoke: PASS")
 		quit(0)
@@ -69,6 +71,22 @@ func _reedline_event_world() -> AshWorldState:
 	_expect(world.pending_event.get("id", "") == "reedline_wheel_sink", "the Reedline event fixture should trigger deterministically")
 	return world
 
+func _test_reedline_alternate_responses() -> void:
+	var paid := _reedline_event_world()
+	var paid_money := paid.money
+	_expect_ok(_command(paid, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "reedline_wheel_sink", "choice_id": "pay_reed_mat_crew"}), "pay the Reedline mat crew")
+	_expect(paid.money == paid_money - 5 and paid.current_settlement == "mothlight_quay", "the paid response should charge exactly five ashmarks and arrive safely")
+
+	var waited := _reedline_event_world()
+	var waited_day := waited.day
+	var waited_provisions := waited.provisions
+	_expect_ok(_command(waited, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "reedline_wheel_sink", "choice_id": "winch_through_black_water"}), "winch through the Reedline sink")
+	_expect(waited.day == waited_day + 1 and waited.provisions == waited_provisions - 1 and waited.known_information.has("reedline_black_water_rut"), "the wait response should spend its disclosed day and provision and retain the route note")
+
+	var forced := _reedline_event_world()
+	_expect_ok(_command(forced, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "reedline_wheel_sink", "choice_id": "force_the_loaded_axle"}), "force the Reedline axle")
+	_expect(forced.current_settlement == "mothlight_quay" and forced.has_resolved_event("reedline_wheel_sink"), "the disclosed-risk response should deterministically finish the journey")
+
 func _test_orin_changes_the_mirror_run_decision() -> void:
 	var world := AshWorldState.new(3)
 	world.current_settlement = "mirror_wells"
@@ -118,6 +136,28 @@ func _mirror_event_world() -> AshWorldState:
 	_expect_ok(_command(world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "mirror_run", "destination_id": "sunfall_exchange"}), "prepare a Mirror Run event fixture")
 	_expect(world.pending_event.get("id", "") == "mirror_beacon_split", "the Mirror Run fixture should trigger deterministically")
 	return world
+
+func _test_mirror_run_alternate_responses_and_replay() -> void:
+	var paid := _mirror_event_world()
+	var paid_money := paid.money
+	_expect_ok(_command(paid, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "mirror_beacon_split", "choice_id": "buy_consortium_signal_guide"}), "buy a Consortium signal guide")
+	_expect(paid.money == paid_money - 6 and int(paid.reputation.get("glass_consortium", 0)) == 1, "the licensed response should charge six ashmarks and grant one visible Consortium standing")
+
+	var waited := _mirror_event_world()
+	var waited_day := waited.day
+	var waited_provisions := waited.provisions
+	_expect_ok(_command(waited, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "mirror_beacon_split", "choice_id": "wait_for_true_moon_line"}), "wait for the true moon line")
+	_expect(waited.day == waited_day + 1 and waited.provisions == waited_provisions - 1 and waited.known_information.has("mirror_run_true_moon_line"), "the moon-line response should spend its disclosed day and provision and retain its information")
+
+	var risky := _mirror_event_world()
+	var saved_pending := risky.serialize()
+	var risky_result := _command(risky, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "mirror_beacon_split", "choice_id": "follow_nearest_reflection"})
+	_expect_ok(risky_result, "follow the nearest reflection")
+	_expect(int(risky.reputation.get("glass_consortium", 0)) == -1 and String(risky_result.get("message", "")).contains("Glass Consortium standing is now -1"), "the risky response should expose its Consortium consequence in state and result copy")
+	var replayed := AshWorldState.new(0)
+	_expect_ok(replayed.load_serialized(saved_pending), "restore the pending divided-beacon event")
+	var replay_result := _command(replayed, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "mirror_beacon_split", "choice_id": "follow_nearest_reflection"})
+	_expect(JSON.stringify(risky_result) == JSON.stringify(replay_result) and risky.serialize() == replayed.serialize(), "the saved risky beacon response should replay deterministically")
 
 func _command(world: AshWorldState, command_id: String, inputs: Dictionary) -> Dictionary:
 	return MarketCommandProcessor.execute(world, {"id": command_id, "inputs": inputs})

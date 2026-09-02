@@ -426,7 +426,12 @@ static func _resolve_event(world: AshWorldState, inputs: Dictionary) -> Dictiona
 	var trade_message := " The ration line received %d %s; the local market now remembers that supply." % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else ""
 	var resilience_message := " %s resilience is now %d/10." % [String(world.settlement(destination_id).name), int(resilience_result.get("after", 0))] if not resilience_result.is_empty() else ""
 	var information_message := " New information recorded: %s." % information_id.replace("_", " ") if information_added else ""
-	var reputation_message := " Warden standing is now %d." % int(world.reputation.get("wardens", 0)) if reputation_results.has("wardens") else ""
+	var reputation_parts: Array[String] = []
+	for faction_id_value in reputation_results.keys():
+		var faction_id := String(faction_id_value)
+		var faction_name := "Warden" if faction_id == "wardens" else String(MarketContent.faction(faction_id).get("name", faction_id.replace("_", " ").capitalize()))
+		reputation_parts.append("%s standing is now %d" % [faction_name, int(world.reputation.get(faction_id, 0))])
+	var reputation_message := " %s." % "; ".join(reputation_parts) if not reputation_parts.is_empty() else ""
 	var movement_message := "You returned to %s." % String(world.settlement(resulting_settlement_id).name) if arrival_target == "origin" else "You arrived at %s." % String(world.settlement(resulting_settlement_id).name)
 	var message := "%s %s%s%s%s%s%s%s %s" % [String(choice.get("label", "Choice resolved.")), String(choice.get("outcome", "")), material_message, trade_message, resilience_message, information_message, reputation_message, cargo_loss_message, movement_message]
 	world.add_log(message)

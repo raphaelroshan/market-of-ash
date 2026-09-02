@@ -68,6 +68,12 @@ REQUIRED_NATIVE_SCREENS = {
     "siltfire_blackreed_arrival",
     "siltfire_blackreed_market",
     "siltfire_blackreed_actions",
+    "ma_ea_5_mara_roster",
+    "ma_ea_5_reedline_event",
+    "ma_ea_5_reedline_result",
+    "ma_ea_5_orin_roster",
+    "ma_ea_5_mirror_event",
+    "ma_ea_5_mirror_result",
     "new_game_confirmation",
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
@@ -112,6 +118,12 @@ EXPECTED_UI_STATE = {
     "siltfire_blackreed_arrival": "arrival_handoff",
     "siltfire_blackreed_market": "settlement_shop",
     "siltfire_blackreed_actions": "settlement_shop",
+    "ma_ea_5_mara_roster": "settlement_shop",
+    "ma_ea_5_reedline_event": "route_event",
+    "ma_ea_5_reedline_result": "arrival_handoff",
+    "ma_ea_5_orin_roster": "settlement_shop",
+    "ma_ea_5_mirror_event": "route_event",
+    "ma_ea_5_mirror_result": "arrival_handoff",
     "trade_receipt": "settlement_shop",
     "trade_receipt_large_text": "settlement_shop",
     "route_departure": "route_travel",
@@ -167,6 +179,12 @@ REQUIRED_LAYOUT_CONTROLS = {
     "siltfire_blackreed_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
     "siltfire_blackreed_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "siltfire_blackreed_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "ma_ea_5_mara_roster": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "CrewRosterCard0", "CrewPortrait0", "CrewIdentity0", "CrewAction0", "BazaarPrimaryAction"),
+    "ma_ea_5_reedline_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "ma_ea_5_reedline_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
+    "ma_ea_5_orin_roster": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "CrewRosterCard0", "CrewPortrait0", "CrewIdentity0", "CrewAction0", "BazaarPrimaryAction"),
+    "ma_ea_5_mirror_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "ma_ea_5_mirror_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "route_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
@@ -349,6 +367,36 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Reedline capture is missing its marsh-road identity")
         if screen == "siltfire_blackreed_market" and ui_state.get("bazaar_scene_id") != "blackreed_watch_market":
             raise AssertionError(f"{file_name}: Siltfire arrival is missing Blackreed Post's identity")
+        if screen == "ma_ea_5_mara_roster" and (
+            ui_state.get("settlement_id") != "blackreed_post"
+            or ui_state.get("bazaar_section") != "crew"
+        ):
+            raise AssertionError(f"{file_name}: Mara roster capture is missing the Blackreed Caravan Yard")
+        if screen == "ma_ea_5_reedline_event" and (
+            ui_state.get("pending_event_id") != "reedline_wheel_sink"
+            or ui_state.get("assigned_crew") != "mara_voss"
+        ):
+            raise AssertionError(f"{file_name}: Reedline event capture is missing Mara's assigned response")
+        if screen == "ma_ea_5_reedline_result" and (
+            "reedline_track" not in ui_state.get("route_conditions", {})
+            or "mara_voss" not in ui_state.get("recruited_crew", [])
+        ):
+            raise AssertionError(f"{file_name}: Reedline result is missing Mara's persistent route consequence")
+        if screen == "ma_ea_5_orin_roster" and (
+            ui_state.get("settlement_id") != "mirror_wells"
+            or ui_state.get("bazaar_section") != "crew"
+        ):
+            raise AssertionError(f"{file_name}: Orin roster capture is missing the Mirror Wells Caravan Yard")
+        if screen == "ma_ea_5_mirror_event" and (
+            ui_state.get("pending_event_id") != "mirror_beacon_split"
+            or ui_state.get("assigned_crew") != "orin_bell"
+        ):
+            raise AssertionError(f"{file_name}: Mirror Run event capture is missing Orin's assigned response")
+        if screen == "ma_ea_5_mirror_result" and (
+            "mirror_run" not in ui_state.get("route_conditions", {})
+            or "orin_bell" not in ui_state.get("recruited_crew", [])
+        ):
+            raise AssertionError(f"{file_name}: Mirror Run result is missing Orin's persistent route consequence")
         if screen in {"well_commons_jobs", "well_commons_market", "well_commons_actions"} and (
             ui_state.get("adaptive_scenario_state") != "expired"
             or "well_commons" not in ui_state.get("emergent_factions", [])
@@ -423,6 +471,12 @@ def main() -> int:
         require_distinct_screen(screens["siltfire_reedline_road"], screens["siltfire_blackreed_arrival"], f"{viewport} Complete Reedline travel")
         require_distinct_screen(screens["siltfire_blackreed_arrival"], screens["siltfire_blackreed_market"], f"{viewport} Enter Blackreed Post")
         require_distinct_screen(screens["siltfire_blackreed_market"], screens["siltfire_blackreed_actions"], f"{viewport} Open Blackreed services")
+        require_distinct_screen(screens["siltfire_blackreed_market"], screens["ma_ea_5_mara_roster"], f"{viewport} Open Mara's Caravan Yard")
+        require_distinct_screen(screens["ma_ea_5_mara_roster"], screens["ma_ea_5_reedline_event"], f"{viewport} Reach Reedline wheel sink")
+        require_distinct_screen(screens["ma_ea_5_reedline_event"], screens["ma_ea_5_reedline_result"], f"{viewport} Resolve Reedline wheel sink")
+        require_distinct_screen(screens["mirror_wells_market"], screens["ma_ea_5_orin_roster"], f"{viewport} Open Orin's Caravan Yard")
+        require_distinct_screen(screens["ma_ea_5_orin_roster"], screens["ma_ea_5_mirror_event"], f"{viewport} Reach divided beacons")
+        require_distinct_screen(screens["ma_ea_5_mirror_event"], screens["ma_ea_5_mirror_result"], f"{viewport} Resolve divided beacons")
         require_distinct_screen(screens["main_menu"], screens["new_game_confirmation"], f"{viewport} New game confirmation", minimum_ratio=0.01)
         for screen in ("main_menu", "settlement_shop", "pause", "departure_desk"):
             require_distinct_screen(
