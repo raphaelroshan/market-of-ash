@@ -1,0 +1,11 @@
+{
+  "game": "Market of Ash",
+  "build": "v0.15.0-early-access-rc2",
+  "review_date": "2026-09-03",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "capture_source": "current main audit after responsive breakpoint and introduction-copy changes",
+  "states": ["title", "introduction_page_1", "introduction_page_2"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "notes": ["The introduction body still reaches the right edge in the current capture; deeper container sizing work remains required.", "Screenshots are automated development evidence, not human playtest evidence."]
+}
