@@ -92,13 +92,29 @@ func _settlement_cell(settlement_id: String) -> Vector2i:
 	return Vector2i(int(coordinates[0]), int(coordinates[1]))
 
 func _settlement_ids() -> Array[String]:
-	return MarketContent.settlement_ids()
+	if world == null:
+		return MarketContent.settlement_ids()
+	var region: Dictionary = MarketContent.region_for_settlement(world.current_settlement)
+	var visible_ids: Dictionary = {}
+	for settlement_id_value in region.get("settlement_ids", []):
+		visible_ids[String(settlement_id_value)] = true
+	for route_id_value in region.get("route_ids", []):
+		var route_record: Dictionary = world.routes.get(String(route_id_value), {})
+		for settlement_id_value in route_record.get("map_path", route_record.get("stops", route_record.get("endpoints", []))):
+			visible_ids[String(settlement_id_value)] = true
+	var ordered_ids: Array[String] = []
+	for settlement_id in MarketContent.settlement_ids():
+		if visible_ids.has(settlement_id):
+			ordered_ids.append(settlement_id)
+	return ordered_ids
 
 func _route_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var route_records: Dictionary = world.routes if world != null else MarketContent.routes()
-	for route_id_value in route_records.keys():
-		ids.append(String(route_id_value))
+	var region_route_ids: Array = MarketContent.region_for_settlement(world.current_settlement).get("route_ids", []) if world != null else route_records.keys()
+	for route_id_value in region_route_ids:
+		if route_records.has(String(route_id_value)):
+			ids.append(String(route_id_value))
 	return ids
 
 func _route_legend_ids() -> Array[String]:
@@ -114,7 +130,12 @@ func _route_legend_ids() -> Array[String]:
 
 func _settlement_marker_rect(settlement_id: String) -> Rect2:
 	var cell := _settlement_cell(settlement_id)
-	return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 52.0, 40))
+	var marker_size := Vector2(cell_width * 2.0 + 52.0, 40)
+	var marker_position := _cell_rect(cell).position - Vector2(10, 8)
+	var board := _board_rect()
+	marker_position.x = clampf(marker_position.x, board.position.x + 2.0, board.end.x - marker_size.x - 2.0)
+	marker_position.y = clampf(marker_position.y, board.position.y + MAP_HEADER_HEIGHT + 2.0, board.end.y - marker_size.y - 2.0)
+	return Rect2(marker_position, marker_size)
 
 func _settlement_footprint(settlement_id: String) -> Rect2:
 	var vertical_margin := 0.0 if String(MarketContent.settlements().get(settlement_id, {}).get("region_id", "")) == "siltfire_march" else 10.0
@@ -561,6 +582,17 @@ func _draw_reedline_landmarks(board: Rect2, horizon_y: float, accent: Color) -> 
 		draw_rect(Rect2(watch + Vector2(-17, -38), Vector2(34, 11)), accent, true)
 		draw_circle(watch + Vector2(0, -45), 5.0, Color("#d99a55"))
 
+func _draw_peat_smoke_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+	for index in range(7):
+		var drift := fmod(float(index * 133) - travel_progress * 520.0, board.size.x + 110.0) - 55.0
+		var base := Vector2(board.position.x + drift, horizon_y + 31.0 + float(index % 3) * 25.0)
+		draw_rect(Rect2(base + Vector2(-13, -12), Vector2(26, 12)), accent.darkened(0.38), true)
+		draw_arc(base + Vector2(0, -21), 13.0 + float(index % 2) * 5.0, PI * 1.1, PI * 1.9, 14, Color(0.55, 0.73, 0.68, 0.34), 2.0)
+	if travel_phase in ["road", "encounter"]:
+		var smoke_marker := Vector2(board.position.x + board.size.x * 0.72, horizon_y + 24.0)
+		draw_rect(Rect2(smoke_marker + Vector2(-16, -18), Vector2(32, 18)), accent.darkened(0.3), true)
+		draw_circle(smoke_marker + Vector2(0, -29), 8.0, Color("#8db7a7"))
+
 func _draw_road_scene() -> void:
 	var board := _board_rect()
 	var profile := _road_profile(travel_route_id)
@@ -604,6 +636,8 @@ func _draw_road_scene() -> void:
 			_draw_salt_causeway_landmarks(board, horizon_y, accent)
 		"reed_marks":
 			_draw_reedline_landmarks(board, horizon_y, accent)
+		"peat_smoke":
+			_draw_peat_smoke_landmarks(board, horizon_y, accent)
 	var route_name := _route_label(travel_route_id).to_upper()
 	var origin_name := String(world.settlement(travel_origin_id).get("name", travel_origin_id)) if world != null else travel_origin_id
 	var destination_name := String(world.settlement(travel_destination_id).get("name", travel_destination_id)) if world != null else travel_destination_id

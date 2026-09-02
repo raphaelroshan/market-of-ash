@@ -721,3 +721,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Authored place and road identity had grown inside a monolithic UI script, with route colors, scene profiles, and state copy decided in separate methods. A registry makes the visual grammar inspectable and testable, while read-only views preserve the simulation/UI boundary and make later asset replacement local.
 
 **Trade-off:** Procedural drawing remains deliberately lightweight and some layout construction remains in the application shell. The extraction removes more than one thousand lines from `main.gd` without introducing a scene framework or changing authoritative outcomes.
+
+## ADR-091: Siltfire closes as a three-market failure-forward slice
+
+**Decision:** Add Emberfen Refuge and Emberfen Drift to Siltfire March. The new market turns Mothlight cloth into an ordinary outbound opportunity and charcoal/spice into return cargo; the optional Smoke Cloth contract adds Bellkeeper standing but is never required. Ignoring or failing it activates the Ash Sifters, whose charcoal premium and kiln action create a replacement economy, local resilience, and a persistent route improvement. Limit the map canvas to the current region plus the settlements named on its gateway roads.
+
+**Reason:** Two settlements and two roads demonstrated a loop but not a regional sandbox. A third market, a distinct high-exposure road event, faction pressure, and a material response after failure let the March support comparison, consequence, and recovery on its own. Region-scoped map drawing keeps eleven global settlements readable without hiding gateway destinations.
+
+**Trade-off:** Emberfen reuses the shared goods catalog and crisis clock rather than adding a currency or separate campaign. Its procedural peat-stack and smoke art is replaceable through the visual registry. The Ash Sifters currently have one cooperation action rather than the broader support/oppose/reconcile set available to the older replacement factions.

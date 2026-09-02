@@ -678,10 +678,13 @@ func _initialize() -> void:
 		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size.x >= 126.0 and ui.map_panel._settlement_marker_rect("brine_cross").size.y == 40.0 and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds while scaling horizontally")
 		var settlement_ids: Array = ui.map_panel._settlement_ids()
 		var hit_targets_overlap := false
+		var overlap_pair := ""
 		for first_index in range(settlement_ids.size()):
 			for second_index in range(first_index + 1, settlement_ids.size()):
-				hit_targets_overlap = hit_targets_overlap or ui.map_panel._settlement_footprint(String(settlement_ids[first_index])).intersects(ui.map_panel._settlement_footprint(String(settlement_ids[second_index])))
-		_expect(not hit_targets_overlap, "expanded map settlement targets should remain unambiguous")
+				if ui.map_panel._settlement_footprint(String(settlement_ids[first_index])).intersects(ui.map_panel._settlement_footprint(String(settlement_ids[second_index]))):
+					hit_targets_overlap = true
+					overlap_pair = "%s / %s" % [settlement_ids[first_index], settlement_ids[second_index]]
+		_expect(not hit_targets_overlap, "expanded map settlement targets should remain unambiguous (%s)" % overlap_pair)
 		var map_before: String = JSON.stringify(ui.world.serialize())
 		var map_click := InputEventMouseButton.new()
 		map_click.button_index = MOUSE_BUTTON_LEFT

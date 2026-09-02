@@ -81,6 +81,14 @@ REQUIRED_NATIVE_SCREENS = {
     "siltfire_blackreed_arrival",
     "siltfire_blackreed_market",
     "siltfire_blackreed_actions",
+    "siltfire_emberfen_departure_desk",
+    "siltfire_emberfen_departure",
+    "siltfire_emberfen_road",
+    "siltfire_emberfen_event",
+    "siltfire_emberfen_arrival",
+    "siltfire_emberfen_market",
+    "siltfire_ash_sifter_opportunity",
+    "siltfire_ash_sifter_result",
     "ma_ea_5_mara_roster",
     "ma_ea_5_reedline_event",
     "ma_ea_5_reedline_result",
@@ -144,6 +152,14 @@ EXPECTED_UI_STATE = {
     "siltfire_blackreed_arrival": "arrival_handoff",
     "siltfire_blackreed_market": "settlement_shop",
     "siltfire_blackreed_actions": "settlement_shop",
+    "siltfire_emberfen_departure_desk": "departure_desk",
+    "siltfire_emberfen_departure": "route_travel",
+    "siltfire_emberfen_road": "route_travel",
+    "siltfire_emberfen_event": "route_event",
+    "siltfire_emberfen_arrival": "arrival_handoff",
+    "siltfire_emberfen_market": "settlement_shop",
+    "siltfire_ash_sifter_opportunity": "settlement_shop",
+    "siltfire_ash_sifter_result": "settlement_shop",
     "ma_ea_5_mara_roster": "settlement_shop",
     "ma_ea_5_reedline_event": "route_event",
     "ma_ea_5_reedline_result": "arrival_handoff",
@@ -212,6 +228,14 @@ REQUIRED_LAYOUT_CONTROLS = {
     "siltfire_blackreed_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
     "siltfire_blackreed_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "siltfire_blackreed_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "siltfire_emberfen_departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "siltfire_emberfen_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
+    "siltfire_emberfen_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "siltfire_emberfen_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "siltfire_emberfen_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
+    "siltfire_emberfen_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "siltfire_ash_sifter_opportunity": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "siltfire_ash_sifter_result": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "ma_ea_5_mara_roster": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "CrewRosterCard0", "CrewPortrait0", "CrewIdentity0", "CrewAction0", "BazaarPrimaryAction"),
     "ma_ea_5_reedline_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
     "ma_ea_5_reedline_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
@@ -462,6 +486,28 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Reedline capture is missing its marsh-road identity")
         if screen == "siltfire_blackreed_market" and ui_state.get("bazaar_scene_id") != "blackreed_watch_market":
             raise AssertionError(f"{file_name}: Siltfire arrival is missing Blackreed Post's identity")
+        if screen in {"siltfire_emberfen_departure", "siltfire_emberfen_road", "siltfire_emberfen_event"} and (
+            ui_state.get("road_scene_id") != "emberfen_peat_road"
+            or ui_state.get("route_texture") != "peat_smoke"
+            or ui_state.get("risk_cue") != "guarded"
+        ):
+            raise AssertionError(f"{file_name}: Emberfen journey is missing its authored smoke-road grammar")
+        if screen == "siltfire_emberfen_event" and ui_state.get("pending_event_id") != "emberfen_smoke_crossing":
+            raise AssertionError(f"{file_name}: Emberfen journey is missing Smoke Without Bells")
+        if screen in {"siltfire_emberfen_arrival", "siltfire_emberfen_market", "siltfire_ash_sifter_opportunity", "siltfire_ash_sifter_result"} and (
+            ui_state.get("settlement_id") != "emberfen_refuge"
+            or ui_state.get("settlement_motif") != "peat_stacks"
+            or ui_state.get("arrival_treatment") != "sifter_smoke"
+        ):
+            raise AssertionError(f"{file_name}: Emberfen capture is missing its settlement identity")
+        if screen in {"siltfire_ash_sifter_opportunity", "siltfire_ash_sifter_result"} and (
+            ui_state.get("adaptive_scenario_states", {}).get("emberfen_smoke_ward", {}).get("state") != "expired"
+            or "ash_sifters" not in ui_state.get("emergent_factions", [])
+            or "charcoal" not in ui_state.get("adaptive_response", "").lower()
+        ):
+            raise AssertionError(f"{file_name}: Ash Sifter capture is missing its failure-forward market")
+        if screen == "siltfire_ash_sifter_result" and "support +1" not in ui_state.get("adaptive_response", ""):
+            raise AssertionError(f"{file_name}: Ash Sifter opportunity did not create durable support")
         if screen == "ma_ea_5_mara_roster" and (
             ui_state.get("settlement_id") != "blackreed_post"
             or ui_state.get("bazaar_section") != "crew"
@@ -606,6 +652,13 @@ def main() -> int:
         require_distinct_screen(screens["siltfire_reedline_road"], screens["siltfire_blackreed_arrival"], f"{viewport} Complete Reedline travel")
         require_distinct_screen(screens["siltfire_blackreed_arrival"], screens["siltfire_blackreed_market"], f"{viewport} Enter Blackreed Post")
         require_distinct_screen(screens["siltfire_blackreed_market"], screens["siltfire_blackreed_actions"], f"{viewport} Open Blackreed services")
+        require_distinct_screen(screens["siltfire_emberfen_departure_desk"], screens["siltfire_emberfen_departure"], f"{viewport} Commit Emberfen departure")
+        require_distinct_screen(screens["siltfire_emberfen_departure"], screens["siltfire_emberfen_road"], f"{viewport} Reach Emberfen road stop", minimum_ratio=0.005)
+        require_distinct_screen(screens["siltfire_emberfen_road"], screens["siltfire_emberfen_event"], f"{viewport} Reveal Emberfen smoke crossing")
+        require_distinct_screen(screens["siltfire_emberfen_event"], screens["siltfire_emberfen_arrival"], f"{viewport} Resolve Emberfen smoke crossing")
+        require_distinct_screen(screens["siltfire_emberfen_arrival"], screens["siltfire_emberfen_market"], f"{viewport} Enter Emberfen Refuge")
+        require_distinct_screen(screens["siltfire_emberfen_market"], screens["siltfire_ash_sifter_opportunity"], f"{viewport} Activate Ash Sifter replacement")
+        require_distinct_screen(screens["siltfire_ash_sifter_opportunity"], screens["siltfire_ash_sifter_result"], f"{viewport} Support Ash Sifters", minimum_ratio=0.005)
         require_distinct_screen(screens["siltfire_blackreed_market"], screens["ma_ea_5_mara_roster"], f"{viewport} Open Mara's Caravan Yard")
         require_distinct_screen(screens["ma_ea_5_mara_roster"], screens["ma_ea_5_reedline_event"], f"{viewport} Reach Reedline wheel sink")
         require_distinct_screen(screens["ma_ea_5_reedline_event"], screens["ma_ea_5_reedline_result"], f"{viewport} Resolve Reedline wheel sink")

@@ -84,6 +84,12 @@ func _draw_settlement_landmark(profile: Dictionary, area: Rect2, tint: Color) ->
 			for reed_index in range(13):
 				var reed_x := area.position.x + 12.0 + reed_index * (area.size.x - 24.0) / 12.0
 				draw_line(Vector2(reed_x, horizon_y + 15), Vector2(reed_x + 2, horizon_y - float((reed_index * 5) % 17)), ink.darkened(0.18), 2.0)
+		"peat_stacks":
+			for stack_index in range(5):
+				var stack_x := area.position.x + area.size.x * (0.18 + stack_index * 0.16)
+				var stack_size := Vector2(34 + stack_index % 2 * 12, 16 + stack_index % 3 * 5)
+				draw_rect(Rect2(Vector2(stack_x, horizon_y - stack_size.y), stack_size), ink.darkened(0.28), true)
+				draw_arc(Vector2(stack_x + stack_size.x * 0.5, horizon_y - stack_size.y - 8), 13.0, PI * 1.12, PI * 1.88, 16, Color(0.55, 0.73, 0.68, 0.35), 2.0)
 		"brine":
 			for pan_index in range(5):
 				var pan_x := area.position.x + 30.0 + pan_index * area.size.x / 5.0
@@ -188,4 +194,3 @@ func _draw() -> void:
 		draw_string(ThemeDB.fallback_font, Vector2(stall_rect.position.x, stall_rect.position.y + 24), SECTION_LABELS[index], HORIZONTAL_ALIGNMENT_CENTER, stall_width, _font_size(12), Color("#fff0bd") if selected else Color("#d3c0a0"))
 		if selected:
 			draw_circle(Vector2(stall_rect.get_center().x, stall_rect.end.y - 8), 3.5, Color("#fff0bd"))
-
