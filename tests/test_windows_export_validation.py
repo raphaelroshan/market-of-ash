@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.validate_windows_export import inspect_windows_export
 from tools.capture_validation import write_rgb_png
+from tools.package_windows_portable import package_windows_portable
 from tools.validate_windows_gui_capture import validate_capture
 from tools.validate_windows_distribution import inspect_windows_distribution
 
@@ -59,14 +60,35 @@ def main() -> int:
             raise AssertionError("Windows exports without the embedded PCK footer should be rejected")
 
         portable_archive = root / "market-of-ash-windows.zip"
-        with zipfile.ZipFile(portable_archive, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.write(valid, "Market of Ash/market-of-ash.exe")
+        package_readme = root / "README.md"
+        package_readme.write_text(
+            "# Market of Ash 0.14.0 — Early Access Candidate\n"
+            "## Install\n## Upgrade and save compatibility\n## Rollback\n## Known limitations\n",
+            encoding="utf-8",
+        )
+        extracted = package_windows_portable(valid, package_readme, portable_archive, root / "clean")
+        assert extracted.read_bytes() == valid.read_bytes()
         portable_details = inspect_windows_distribution(portable_archive, minimum_executable_size=1)
-        assert portable_details["executable_bytes"] == valid.stat().st_size
+        assert portable_details["executable_bytes"] == valid.stat().st_size and portable_details["readme_bytes"] > 0
+
+        missing_readme_archive = root / "market-of-ash-windows-missing-readme.zip"
+        with zipfile.ZipFile(missing_readme_archive, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.write(valid, "Market of Ash/market-of-ash.exe")
+        try:
+            inspect_windows_distribution(missing_readme_archive, minimum_executable_size=1)
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError("Windows portable archives without the release guide should be rejected")
 
         extra_file_archive = root / "market-of-ash-windows-extra.zip"
         with zipfile.ZipFile(extra_file_archive, "w", compression=zipfile.ZIP_DEFLATED) as archive:
             archive.write(valid, "Market of Ash/market-of-ash.exe")
+            archive.writestr(
+                "Market of Ash/README.txt",
+                "# Market of Ash 0.14.0 — Early Access Candidate\n"
+                "## Install\n## Upgrade and save compatibility\n## Rollback\n## Known limitations\n",
+            )
             archive.writestr("unexpected.txt", "not part of the portable contract")
         try:
             inspect_windows_distribution(extra_file_archive, minimum_executable_size=1)
@@ -85,8 +107,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.13.12.0",
-                    "product_version": "0.13.12.0",
+                    "file_version": "0.14.0.0",
+                    "product_version": "0.14.0.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                     "capture": {"x": 1, "y": 1, "width": 8, "height": 8},
@@ -109,8 +131,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.13.12.0",
-                    "product_version": "0.13.12.0",
+                    "file_version": "0.14.0.0",
+                    "product_version": "0.14.0.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                 }

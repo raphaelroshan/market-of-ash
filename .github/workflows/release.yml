@@ -45,6 +45,13 @@ jobs:
           $toolDirectory | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Run deterministic tests
         run: bash scripts/verify.sh
+      - name: Verify tag and release contract
+        run: |
+          python tools/validate_release_contract.py --repo .
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            version=$(python -c "import re; print(re.search(r'^config/version=\"([^\"]+)\"', open('project.godot', encoding='utf-8').read(), re.M).group(1))")
+            test "${GITHUB_REF_NAME}" = "v${version}"
+          fi
       - name: Require export presets for release builds
         run: test -f export_presets.cfg
       - name: Stamp build provenance
@@ -72,16 +79,21 @@ jobs:
         shell: pwsh
         run: |
           $cleanDirectory = Join-Path $env:RUNNER_TEMP "market-of-ash-clean-$env:GITHUB_RUN_ID"
-          ./tools/package_windows_portable.ps1 `
-            -Executable build/market-of-ash.exe `
-            -Archive artifacts/market-of-ash-windows.zip `
-            -ExtractDirectory $cleanDirectory
+          python tools/package_windows_portable.py `
+            --executable build/market-of-ash.exe `
+            --archive artifacts/market-of-ash-windows.zip `
+            --extract-directory $cleanDirectory `
+            --readme docs/releases/v0.14.0-early-access-rc1.md
           $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
           python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
           python tools/validate_windows_export.py $cleanExecutable
-          & $cleanExecutable --headless --quit-after 2
-          if ($LASTEXITCODE -ne 0) {
-            throw "Clean-extracted Windows package exited with code $LASTEXITCODE"
+          $smoke = Start-Process -FilePath $cleanExecutable -ArgumentList "--headless", "--quit-after", "2" -PassThru
+          if (-not $smoke.WaitForExit(30000)) {
+            Stop-Process -Id $smoke.Id -Force
+            throw "Clean-extracted Windows package did not exit within 30 seconds"
+          }
+          if ($smoke.ExitCode -ne 0) {
+            throw "Clean-extracted Windows package exited with code $($smoke.ExitCode)"
           }
           "MARKET_CLEAN_WINDOWS_EXE=$cleanExecutable" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Capture packaged Windows GUI and metadata
@@ -125,3 +137,38 @@ jobs:
             artifacts/
           if-no-files-found: error
           retention-days: 90
+
+  publish-release:
+    name: Publish validated GitHub prerelease
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [release-candidate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release notes
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Download validated candidate
+        uses: actions/download-artifact@v7
+        with:
+          name: windows-release-candidate-${{ github.ref_name }}
+          path: candidate
+      - name: Publish tagged prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['release_notes'])")
+          gh release create "${GITHUB_REF_NAME}" \
+            --verify-tag \
+            --prerelease \
+            --title "Market of Ash ${GITHUB_REF_NAME#v}" \
+            --notes-file "$notes" \
+            candidate/build/market-of-ash.exe \
+            candidate/artifacts/market-of-ash-windows.zip \
+            candidate/artifacts/SHA256SUMS.txt \
+            candidate/artifacts/release_manifest.json \
+            candidate/artifacts/windows-main-menu.png \
+            candidate/artifacts/windows-version.json \
+            "candidate/artifacts/market-of-ash-source-${GITHUB_SHA}.tar.gz"

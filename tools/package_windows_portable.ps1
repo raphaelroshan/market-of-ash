@@ -4,11 +4,14 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$Archive,
     [Parameter(Mandatory = $true)]
-    [string]$ExtractDirectory
+    [string]$ExtractDirectory,
+    [Parameter(Mandatory = $true)]
+    [string]$Readme
 )
 
 $ErrorActionPreference = "Stop"
 $executablePath = (Resolve-Path $Executable).Path
+$readmePath = (Resolve-Path $Readme).Path
 $archivePath = [System.IO.Path]::GetFullPath($Archive)
 $extractPath = [System.IO.Path]::GetFullPath($ExtractDirectory)
 $archiveParent = [System.IO.Path]::GetDirectoryName($archivePath)
@@ -24,6 +27,7 @@ $packagedExecutable = Join-Path $productDirectory "market-of-ash.exe"
 try {
     New-Item -ItemType Directory -Path $productDirectory | Out-Null
     Copy-Item -Path $executablePath -Destination $packagedExecutable
+    Copy-Item -Path $readmePath -Destination (Join-Path $productDirectory "README.txt")
     Compress-Archive -Path $productDirectory -DestinationPath $archivePath -CompressionLevel Optimal -Force
     Expand-Archive -Path $archivePath -DestinationPath $extractPath
     $extractedExecutable = Join-Path $extractPath "Market of Ash\market-of-ash.exe"

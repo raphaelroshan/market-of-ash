@@ -657,3 +657,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The Early Access roster needed breadth without turning people into interchangeable percentage modifiers. A named person, carried material, route dilemma, and persistent callback form a complete decision loop the player can understand before committing.
 
 **Trade-off:** Both specialist responses are deliberately strong once their recruitment and cargo prerequisites are met. The events therefore retain paid, delayed, and disclosed-risk alternatives, and the Mirror Run event appears after the established Shardwind encounter on later eligible crossings rather than displacing it.
+
+## ADR-083: The candidate ships as a self-describing portable release
+
+**Decision:** Bind the project, Windows resource, content, manifest, tag, and release-note versions through one validator. Include the versioned release guide inside the recommended Windows ZIP, require explicit install/upgrade/rollback/limitations sections, impose a clean-launch timeout, and publish tagged GitHub prereleases only from the validated Windows workflow.
+
+**Reason:** A working executable is not enough for an Early Access handoff. Testers need to know what they downloaded, how to preserve and roll back saves, which limitations remain, and which artifacts and checksums came from the same commit.
+
+**Trade-off:** Release identifiers and the guide path are intentionally strict for this candidate, so the next candidate must update them together. The binary remains unsigned, and automated packaging evidence does not replace storefront, antivirus-vendor, physical-device, assistive-technology, or moderated player certification.

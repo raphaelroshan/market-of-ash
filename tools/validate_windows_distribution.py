@@ -16,6 +16,14 @@ except ModuleNotFoundError:
 
 
 EXPECTED_EXECUTABLE = PurePosixPath("Market of Ash/market-of-ash.exe")
+EXPECTED_README = PurePosixPath("Market of Ash/README.txt")
+REQUIRED_README_SECTIONS = (
+    "Market of Ash 0.14.0 — Early Access Candidate",
+    "## Install",
+    "## Upgrade and save compatibility",
+    "## Rollback",
+    "## Known limitations",
+)
 
 
 def inspect_windows_distribution(path: Path, minimum_executable_size: int = 50_000_000) -> dict[str, int]:
@@ -29,10 +37,18 @@ def inspect_windows_distribution(path: Path, minimum_executable_size: int = 50_0
                 raise AssertionError(f"{path.name}: unsafe archive member {entry.filename!r}")
             if not entry.is_dir():
                 files.append((entry, normalized))
-        if [normalized for _, normalized in files] != [EXPECTED_EXECUTABLE]:
+        file_by_path = {normalized: entry for entry, normalized in files}
+        if set(file_by_path) != {EXPECTED_EXECUTABLE, EXPECTED_README}:
             names = ", ".join(str(normalized) for _, normalized in files)
-            raise AssertionError(f"{path.name}: expected only {EXPECTED_EXECUTABLE}; found {names or 'no files'}")
-        executable_entry = files[0][0]
+            raise AssertionError(
+                f"{path.name}: expected {EXPECTED_EXECUTABLE} and {EXPECTED_README}; "
+                f"found {names or 'no files'}"
+            )
+        readme = archive.read(file_by_path[EXPECTED_README]).decode("utf-8-sig")
+        for section in REQUIRED_README_SECTIONS:
+            if section not in readme:
+                raise AssertionError(f"{path.name}: packaged README is missing {section!r}")
+        executable_entry = file_by_path[EXPECTED_EXECUTABLE]
         with tempfile.TemporaryDirectory() as temporary_directory:
             executable_path = Path(temporary_directory) / EXPECTED_EXECUTABLE.name
             with archive.open(executable_entry) as source, executable_path.open("wb") as destination:
@@ -42,6 +58,7 @@ def inspect_windows_distribution(path: Path, minimum_executable_size: int = 50_0
         "archive_bytes": path.stat().st_size,
         "executable_bytes": details["bytes"],
         "pck_bytes": details["pck_bytes"],
+        "readme_bytes": file_by_path[EXPECTED_README].file_size,
     }
 
 
@@ -53,7 +70,7 @@ def main() -> int:
     print(
         "Windows portable distribution validation: PASS "
         f"({details['archive_bytes']} archive bytes, {details['executable_bytes']} executable bytes, "
-        f"embedded PCK {details['pck_bytes']} bytes)"
+        f"embedded PCK {details['pck_bytes']} bytes, README {details['readme_bytes']} bytes)"
     )
     return 0
 

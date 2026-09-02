@@ -377,6 +377,13 @@ def main() -> int:
             or ui_state.get("assigned_crew") != "mara_voss"
         ):
             raise AssertionError(f"{file_name}: Reedline event capture is missing Mara's assigned response")
+        if screen == "ma_ea_5_reedline_event" and not any(
+            action.get("id") == "event_choice_3"
+            and "Let Mara brace the axle" in action.get("label", "")
+            and not action.get("disabled", False)
+            for action in ui_state.get("accessibility_actions", [])
+        ):
+            raise AssertionError(f"{file_name}: Mara's enabled response is missing from the semantic action order")
         if screen == "ma_ea_5_reedline_result" and (
             "reedline_track" not in ui_state.get("route_conditions", {})
             or "mara_voss" not in ui_state.get("recruited_crew", [])
@@ -392,6 +399,13 @@ def main() -> int:
             or ui_state.get("assigned_crew") != "orin_bell"
         ):
             raise AssertionError(f"{file_name}: Mirror Run event capture is missing Orin's assigned response")
+        if screen == "ma_ea_5_mirror_event" and not any(
+            action.get("id") == "event_choice_3"
+            and "Let Orin expose the false line" in action.get("label", "")
+            and not action.get("disabled", False)
+            for action in ui_state.get("accessibility_actions", [])
+        ):
+            raise AssertionError(f"{file_name}: Orin's enabled response is missing from the semantic action order")
         if screen == "ma_ea_5_mirror_result" and (
             "mirror_run" not in ui_state.get("route_conditions", {})
             or "orin_bell" not in ui_state.get("recruited_crew", [])
