@@ -3,11 +3,17 @@ extends SceneTree
 const AshWorldState = preload("res://src/core/world_state.gd")
 const MarketCommandProcessor = preload("res://src/core/market_command_processor.gd")
 const JourneyPresenter = preload("res://src/ui/journey_presenter.gd")
+const EVALUATION_PATH_ID := "gpt56_clean_investment_vertical"
+const EVALUATION_SEED := 1107
 
 var failures: Array[String] = []
 
 func _init() -> void:
-	var world := AshWorldState.new(1107)
+	var ordinary_world := _ordinary_trade_only_path()
+	_expect(ordinary_world.money > 120 and ordinary_world.arms_escalation == 0, "the ordinary-trade-only control path should finish profitably without black-market pressure")
+	_expect(ordinary_world.active_contracts.is_empty() and ordinary_world.contract_history.is_empty(), "the ordinary-trade-only control path must remain contract-free")
+
+	var world := AshWorldState.new(EVALUATION_SEED)
 
 	_expect_ok(_command(world, MarketCommandProcessor.RECRUIT_CREW, {"crew_id": "nara_vey"}), "recruit the opening route scout")
 	_expect_ok(_command(world, MarketCommandProcessor.ASSIGN_CREW, {"crew_id": "nara_vey"}), "assign the opening route scout")
@@ -67,12 +73,31 @@ func _init() -> void:
 	_expect(int(debrief.get("route_count", 0)) >= 6 and int(debrief.get("event_count", 0)) >= 1 and int(debrief.get("service_count", 0)) >= 5, "the receipt should summarize the complete journey rather than a single transaction")
 
 	if failures.is_empty():
-		print("Investment creative vertical: PASS")
+		print("Investment creative vertical: PASS (%s, seed %d)" % [EVALUATION_PATH_ID, EVALUATION_SEED])
 	else:
 		for failure in failures:
 			push_error(failure)
 		printerr("Investment creative vertical: FAIL (%d)" % failures.size())
 	quit(0 if failures.is_empty() else 1)
+
+func _ordinary_trade_only_path() -> AshWorldState:
+	var world := AshWorldState.new(EVALUATION_SEED)
+	_expect_ok(_command(world, MarketCommandProcessor.BUY_GOODS, {"good_id": "water", "quantity": 4}), "ordinary control: buy Water")
+	world = _checkpoint(world, "ordinary control purchase")
+	_expect_ok(_command(world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "reedwatch"}), "ordinary control: depart for Reedwatch")
+	_expect(String(world.pending_event.get("id", "")) == "three_riders_no_banner", "ordinary control should reach the disclosed road contact")
+	_expect_ok(_command(world, MarketCommandProcessor.RESOLVE_EVENT, {"event_id": "three_riders_no_banner", "choice_id": "pay_for_escort"}), "ordinary control: buy certain passage")
+	world = _checkpoint(world, "ordinary control arrival")
+	_expect_ok(_command(world, MarketCommandProcessor.SELL_GOODS, {"good_id": "water", "quantity": 4}), "ordinary control: sell Water")
+	_expect(world.market_pressure_for("reedwatch", "water") > 0.0, "ordinary control sale should change the destination market")
+	_expect_ok(_command(world, MarketCommandProcessor.BUY_GOODS, {"good_id": "grain", "quantity": 4}), "ordinary control: buy return Grain")
+	_expect_ok(_command(world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": "old_road", "destination_id": "ashgate"}), "ordinary control: return to Ashgate")
+	world = _resolve_pending(world)
+	var grain_quantity := int(world.cargo.get("grain", 0))
+	_expect(grain_quantity > 0, "ordinary control should arrive with a sellable Grain load")
+	if grain_quantity > 0:
+		_expect_ok(_command(world, MarketCommandProcessor.SELL_GOODS, {"good_id": "grain", "quantity": grain_quantity}), "ordinary control: sell return Grain")
+	return _checkpoint(world, "ordinary-trade-only success")
 
 func _checkpoint(world: AshWorldState, phase: String) -> AshWorldState:
 	var serialized := world.serialize()

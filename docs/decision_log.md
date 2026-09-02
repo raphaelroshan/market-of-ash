@@ -705,3 +705,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Eight global routes made the old in-board footer collide with Kiln Rest, Mirror Wells, and Reedwatch, while repeated objective and selection text extended the regional heading beneath Mothlight Quay. The selected-destination fallback also pinned a duplicate tooltip across the network. A local key, separated layers, and contextual hover preserve the Frontier-style network at a glance without covering settlements or weakening the detailed pre-commitment comparison.
 
 **Trade-off:** The legend uses a smaller ten-point base label and a narrow amount of space above the journey text. Large Text still scales it, and responsive bounds tests require the strip to remain between the board and the result rail.
+
+## ADR-089: The investment vertical is one replayable command path
+
+**Decision:** Define `gpt56_clean_investment_vertical` at seed `1107` as the canonical investment-evaluation journey. It begins with ordinary Water and Grain trade, crosses the Old Road through the disclosed Three Riders contact, records both destination and return-market changes, then offers—but never requires—the sealed-arms side economy before reaching a causal regional receipt. Exercise every transition through the same command handlers used by players, serialize and restore the authoritative world at each phase, and capture the journey at both 1280×720 and 1600×900.
+
+**Reason:** Separate feature tests could prove buying, travel, events, market memory, side deals, and endings without proving that they form a coherent game from a clean save. One named path makes the complete economic and political arc reproducible, while an ordinary-trade-only control demonstrates that the black market remains genuinely optional.
+
+**Trade-off:** The canonical path is an evaluation fixture rather than a prescribed strategy or tutorial script. It fixes a seed and chooses certain responses to make evidence stable, but the player-facing campaign retains all route, event, trade, contract, crew, and recovery alternatives.

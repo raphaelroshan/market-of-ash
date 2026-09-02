@@ -112,7 +112,7 @@ var menu_columns
 var intro_columns
 var intro_scene
 var intro_title_label: Label
-var intro_body_label: Label
+var intro_body_label: RichTextLabel
 var intro_progress_label: Label
 var intro_back_button: Button
 var intro_next_button: Button
@@ -336,10 +336,7 @@ func _clamped_window_size(current_size: Vector2i, usable_size: Vector2i) -> Vect
 	return Vector2i(floori(float(current_size.x) * fit_scale), floori(float(current_size.y) * fit_scale))
 
 func _refresh_responsive_layout() -> void:
-	var layout_width := int(get_viewport().get_visible_rect().size.x)
-	if layout_width <= 0:
-		layout_width = _report_viewport_size().x
-	var compact := _opening_layout_should_compact(layout_width)
+	var compact := _opening_layout_should_compact(_report_viewport_size().x)
 	if menu_columns != null:
 		menu_columns.set_compact(compact)
 	if intro_columns != null:
@@ -645,8 +642,11 @@ func _build_intro() -> void:
 	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_scroll.custom_minimum_size = Vector2(0, 72)
 	content.add_child(body_scroll)
-	intro_body_label = Label.new()
+	intro_body_label = RichTextLabel.new()
 	intro_body_label.name = "IntroductionBody"
+	intro_body_label.bbcode_enabled = false
+	intro_body_label.fit_content = true
+	intro_body_label.scroll_active = false
 	intro_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	intro_body_label.add_theme_font_size_override("font_size", 18)
@@ -3324,6 +3324,8 @@ func _web_ui_state() -> Dictionary:
 		"money": world.money if world != null else 0,
 		"provisions": world.provisions if world != null else 0,
 		"cargo_weight": int(world.cargo.get("weight", 0)) if world != null else 0,
+		"reputation": world.reputation.duplicate(true) if world != null else {},
+		"arms_escalation": world.arms_escalation if world != null else 0,
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
 		"recruited_crew": world.recruited_crew.duplicate() if world != null else [],
 		"assigned_crew": world.assigned_crew if world != null else "",
