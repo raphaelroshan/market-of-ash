@@ -265,6 +265,23 @@
         "unavailable_reason": ""
       },
       {
+        "id": "emberfen_sifter_kiln",
+        "settlement_id": "emberfen_refuge",
+        "name": "Fuel the Ash Sifter kiln",
+        "category": "relief",
+        "available": true,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "ash_sifters",
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "emberfen_clear_smoke_marks", "cargo_cost": {"good_id": "charcoal", "quantity": 2}, "settlement_resilience": {"settlement_id": "emberfen_refuge", "delta": 1}, "reputation": {"bellkeepers": -1}, "emergent_faction_support": {"faction_id": "ash_sifters", "delta": 1}, "route_condition": {"route_id": "emberfen_drift", "id": "sifter_smoke_marks", "label": "Ash Sifter smoke marks", "risk_delta": -0.06, "cost_delta": 0, "description": "Low blue smoke from the independent kilns marks firm peat shelves along Emberfen Drift."}},
+        "description": "Give two charcoal to the independent kiln crews who replaced the abandoned smoke ward.",
+        "tradeoff": "Forgo an immediate charcoal sale to strengthen Emberfen and reduce Drift exposure while losing Bellkeeper standing.",
+        "result": "The Ash Sifters light a clean signal kiln. Emberfen resilience and Sifter support rise by one; Drift exposure falls by six points.",
+        "unavailable_reason": "Available after the Ash Sifters replace the failed smoke-ward delivery."
+      },
+      {
         "id": "mirror_wells_signal_ledger",
         "settlement_id": "mirror_wells",
         "name": "Publish the Night Market signal ledger",
@@ -363,6 +380,26 @@
         "decision_summary": "Reliable beacon premium; commits three hold spaces and a two-day deadline.",
         "recovery_summary": "Late oil remains sellable and opens a different local buyer if official crews withdraw.",
         "failure_recovery": "Late lamp oil remains yours to sell; the Night Market replaces the withdrawn survey office with an ordinary-trade outlet."
+      },
+      {
+        "id": "emberfen_smoke_cloth_01",
+        "name": "Emberfen Smoke Cloth",
+        "sponsor": "Causeway Bellkeepers",
+        "origin_id": "mothlight_quay",
+        "destination_id": "emberfen_refuge",
+        "good_id": "cloth",
+        "quantity": 3,
+        "deadline_days": 2,
+        "reward": 78,
+        "failure_penalty": 5,
+        "success_reputation": {"bellkeepers": 1},
+        "failure_reputation": {"bellkeepers": -1},
+        "service_slots": 1,
+        "description": "Carry three waxed cloth rolls to Emberfen before peat smoke blinds the refuge markers.",
+        "tradeoff": "A guaranteed Bellkeeper premium, but three hold spaces and a short marsh deadline are committed.",
+        "decision_summary": "Guaranteed smoke-ward premium; commits three hold spaces and a two-day deadline.",
+        "recovery_summary": "Late cloth remains sellable and local kiln crews establish an independent marker exchange.",
+        "failure_recovery": "Late cloth remains yours to sell; the Ash Sifters replace the withdrawn Bellkeeper ward with an ordinary charcoal market."
       }
     ]
   },
@@ -425,6 +462,32 @@
             "summary": "Mirror Wells now pays an ordinary-trade premium for saltglass signal plates. No contract is required."
           }
         }
+      },
+      {
+        "id": "emberfen_smoke_ward",
+        "contract_id": "emberfen_smoke_cloth_01",
+        "initial_state": "offered",
+        "response_day": 9,
+        "offered_summary": "Emberfen is asking Mothlight caravans for waxed cloth before the smoke ward closes.",
+        "expired_summary": "The Bellkeeper smoke ward closed before cloth arrived. Emberfen kiln crews organized their own marker exchange.",
+        "failure_response": {
+          "type": "emergent_faction",
+          "faction_id": "ash_sifters",
+          "name": "The Ash Sifters",
+          "settlement_id": "emberfen_refuge",
+          "material_basis": "Independent peat kilns, charcoal screens, and smoke marks maintained by displaced burners.",
+          "legitimacy_claim": "Emberfen stayed visible after the official smoke ward withdrew its bells.",
+          "trade_footprint": "The Sifters discount waxed cloth and pay a premium for charcoal used in clean marker fires.",
+          "resilience_delta": 1,
+          "information_id": "ash_sifter_exchange_open",
+          "market_modifiers": {"cloth": 0.9, "charcoal": 1.3},
+          "support_market_steps": {"cloth": -0.03, "charcoal": 0.05},
+          "opportunity": {
+            "title": "Ash Sifter Kiln Exchange",
+            "good_id": "charcoal",
+            "summary": "Emberfen now pays an ordinary-trade premium for clean charcoal marker fires. No contract is required."
+          }
+        }
       }
     ]
   },
@@ -451,7 +514,8 @@
       "mirror_run": "Several beacon reflections are false; Nara marks the one line backed by wheel tracks.",
       "emberglass_byway": "Furnace haze hides fresh glassfall; Nara marks the vents whose smoke bends away from the safe wheel line.",
       "salt_causeway": "Nara listens for the live bell sequence where brine steam has swallowed the markers.",
-      "reedline_track": "Fresh-cut reed mats show the firm track; dark water beside them hides the wheel-sink margins."
+          "reedline_track": "Fresh-cut reed mats show the firm track; dark water beside them hides the wheel-sink margins.",
+          "emberfen_drift": "Blue peat smoke marks the firm shelves, but a sudden wind can make an abandoned kiln look like a safe guide."
         }
       },
       {
@@ -475,7 +539,8 @@
       "mirror_run": "Jorun packs for a single night leg and keeps one provision sealed for the return.",
       "emberglass_byway": "Jorun pads the spice jars against the fast descent but cannot remove the byway's cargo exposure.",
       "salt_causeway": "Jorun seals the load against brine spray and keeps one ration clear of the damp.",
-      "reedline_track": "Jorun widens the axle balance so a soft shoulder cannot claim the whole wagon."
+          "reedline_track": "Jorun widens the axle balance so a soft shoulder cannot claim the whole wagon.",
+          "emberfen_drift": "Jorun wets the lashings before the peat shelf so sparks cannot turn packed cloth into tinder."
         }
       },
       {
@@ -499,7 +564,8 @@
       "mirror_run": "Tess can name the licensed beacon crews and the night guides excluded from their ledgers.",
       "emberglass_byway": "Tess knows the byway is unlicensed: no toll clerk will help, and no Consortium seal will excuse a loss.",
       "salt_causeway": "Tess knows which bell keepers pool their fees and which ones answer to Brine Cross.",
-          "reedline_track": "Tess can identify the watch fires that welcome independent caravans and those that levy private dues."
+          "reedline_track": "Tess can identify the watch fires that welcome independent caravans and those that levy private dues.",
+          "emberfen_drift": "Tess knows which smoke marks belong to Bellkeepers and which are maintained by independent kiln crews."
         }
       },
       {
@@ -523,7 +589,8 @@
           "mirror_run": "Mara listens for loose iron at each beacon halt where reflections hide the road edge.",
           "emberglass_byway": "Mara tightens every hub before the hot descent and points out where glass grit will bite the axle.",
           "salt_causeway": "Mara keeps the wheel pins above the brine and names the islands wide enough for a repair stop.",
-          "reedline_track": "Mara identifies the black-water rut where one split brace can turn a wheel sink into a marked load line."
+          "reedline_track": "Mara identifies the black-water rut where one split brace can turn a wheel sink into a marked load line.",
+          "emberfen_drift": "Mara keeps the wheel rims off the hot peat seams and braces the load against the shelf descent."
         }
       },
       {
@@ -547,7 +614,8 @@
           "mirror_run": "Orin tracks which reflections move against the stars and marks the occluded true line.",
           "emberglass_byway": "Orin reads heat shimmer against the vent smoke, separating a true ridge from its reflected twin.",
           "salt_causeway": "Orin pairs the bell intervals with lamp height when brine steam hides both in turn.",
-          "reedline_track": "Orin uses watch-fire color, not brightness, to distinguish the firm road from marsh gas."
+          "reedline_track": "Orin uses watch-fire color, not brightness, to distinguish the firm road from marsh gas.",
+          "emberfen_drift": "Orin reads blue kiln smoke against the crosswind and rejects false fires without a steady bell interval."
         }
       }
     ]
@@ -1114,6 +1182,84 @@
         ]
       },
       {
+        "id": "emberfen_smoke_crossing",
+        "title": "Smoke Without Bells",
+        "category": "travel_decision",
+        "route_ids": ["emberfen_drift"],
+        "trigger_chance": 0.7,
+        "trigger_roll_salt": 91,
+        "minimum_cargo_value": 18,
+        "active_contract_relevant": true,
+        "setup": "A peat fire turns the Drift opaque while rival smoke marks point toward different shelves.",
+        "stakes": "Hire a Bellkeeper, spend water to read the smoke, wait for the fire to settle, or trust the nearest marker with one disclosed cargo unit exposed.",
+        "choices": [
+          {
+            "id": "hire_smoke_bell",
+            "label": "Hire a smoke-bell guide for 6 ashmarks",
+            "money_cost": 6,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"bellkeepers": 1},
+            "outcome": "A Bellkeeper sounds the firm shelf and records the caravan as a reliable payer."
+          },
+          {
+            "id": "wet_the_smoke_canvas",
+            "label": "Wet the smoke canvas — 1 Water",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "cargo_cost": {"good_id": "water", "quantity": 1},
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "emberfen_smoke_current",
+            "outcome": "Wet canvas reveals the clean crosswind and preserves a reliable smoke-current reading."
+          },
+          {
+            "id": "wait_below_the_peat_bank",
+            "label": "Wait below the peat bank — 1 provision, 1 day",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The caravan waits for clean air and crosses after the rival marks become visible."
+          },
+          {
+            "id": "follow_the_nearest_smoke",
+            "label": "Follow the nearest smoke mark",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.46,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"bellkeepers": -1},
+            "outcome": "The caravan follows an unlicensed kiln mark and accepts one disclosed exposed-unit roll."
+          }
+        ]
+      },
+      {
         "id": "mirror_beacon_split",
         "title": "Two Beacon Lines",
         "category": "travel_decision",
@@ -1218,9 +1364,9 @@
     },
     "siltfire_march": {
       "name": "Siltfire March",
-      "summary": "A steaming salt marsh where bell pilots, resin healers, and reed cutters keep two difficult roads commercially alive.",
-      "settlement_ids": ["mothlight_quay", "blackreed_post"],
-      "route_ids": ["salt_causeway", "reedline_track"]
+      "summary": "A steaming salt marsh where bell pilots, resin healers, reed cutters, and peat burners keep three difficult roads commercially alive.",
+      "settlement_ids": ["mothlight_quay", "blackreed_post", "emberfen_refuge"],
+      "route_ids": ["salt_causeway", "reedline_track", "emberfen_drift"]
     }
   },
   "settlements": {
@@ -1490,6 +1636,29 @@
       "price_modifiers": {"grain": 0.72, "water": 1.0, "scrap": 1.05, "medicine": 1.25, "charcoal": 0.72, "cloth": 1.2, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.18, "lamp_oil": 1.05},
       "demand": {"grain": 0.75, "water": 1.0, "scrap": 1.0, "medicine": 1.25, "charcoal": 0.75, "cloth": 1.2, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.2, "lamp_oil": 1.0},
       "faction_price_modifier": 1.0
+    },
+    "emberfen_refuge": {
+      "name": "Emberfen Refuge",
+      "role": "peat-fire haven",
+      "region_id": "siltfire_march",
+      "identity": {
+        "scene_id": "emberfen_smoke_market",
+        "caption": "BLUE SMOKE MARKS THE FIRM SHELVES",
+        "market_read": "Peat burners export charcoal and spice while the smoke ward buys waxed cloth, medicine, and clean water.",
+        "landmark": "peat_stacks",
+        "map_cell": [1, 5],
+        "tint": "#9a684d",
+        "sky": "#3d312d",
+        "ground": "#4b392f"
+      },
+      "trade_profile": {
+        "produces": {"charcoal": "Dry peat stacks produce dense marker fuel for the marsh roads.", "dune_spice": "Warm fen beds grow pungent roots that survive the wet crossing."},
+        "consumes": {"cloth": "Smoke screens and shelter roofs consume waxed cloth.", "medicine": "Burners pay for resin salves and field medicine.", "water": "Clean barrels cool the kiln beds without fouling them."},
+        "ordinary_trade_note": "Charcoal and spice leave the refuge; cloth, medicine, and clean water command the strongest return prices."
+      },
+      "price_modifiers": {"grain": 1.05, "water": 1.18, "scrap": 1.0, "medicine": 1.2, "charcoal": 0.68, "cloth": 1.3, "sealed_arms_crate": 1.0, "saltglass": 1.05, "dune_spice": 0.76, "lamp_oil": 1.1},
+      "demand": {"grain": 1.0, "water": 1.18, "scrap": 1.0, "medicine": 1.2, "charcoal": 0.72, "cloth": 1.3, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 0.8, "lamp_oil": 1.1},
+      "faction_price_modifier": 1.0
     }
   },
   "arms_trade": {
@@ -1578,6 +1747,7 @@
     "mirror_run": {"name": "Mirror Run", "map_label": "Mirror Run", "endpoints": ["sunfall_exchange", "mirror_wells"], "map_path": ["sunfall_exchange", "mirror_wells"], "cost": 3, "days": 1, "risk": 0.42, "description": "A short night road whose mirror beacons trade speed for uncertain visibility."},
     "emberglass_byway": {"name": "Emberglass Byway", "map_label": "Emberglass", "endpoints": ["kiln_rest", "mirror_wells"], "map_path": ["kiln_rest", "mirror_wells"], "cost": 2, "days": 1, "risk": 0.58, "description": "A fast unlicensed furnace track where heat mirage hides fresh glassfall."},
     "salt_causeway": {"name": "Salt Causeway", "map_label": "Salt Way", "endpoints": ["brine_cross", "mothlight_quay"], "map_path": ["brine_cross", "mothlight_quay"], "cost": 3, "days": 1, "risk": 0.38, "description": "A cheap raised crossing where brine steam can erase every marker except the bell line."},
-    "reedline_track": {"name": "Reedline Track", "map_label": "Reedline", "endpoints": ["mothlight_quay", "reedwatch"], "stops": ["mothlight_quay", "blackreed_post", "reedwatch"], "map_path": ["mothlight_quay", "blackreed_post", "reedwatch"], "segments": [{"endpoints": ["mothlight_quay", "blackreed_post"], "cost": 4, "days": 1, "risk": 0.2}, {"endpoints": ["blackreed_post", "reedwatch"], "cost": 3, "days": 1, "risk": 0.24}, {"endpoints": ["mothlight_quay", "reedwatch"], "cost": 7, "days": 2, "risk": 0.22}], "cost": 7, "days": 2, "risk": 0.22, "description": "A slower marked marsh road with firm reed mats, watch fires, and recoverable wheel-sink risk."}
+    "reedline_track": {"name": "Reedline Track", "map_label": "Reedline", "endpoints": ["mothlight_quay", "reedwatch"], "stops": ["mothlight_quay", "blackreed_post", "reedwatch"], "map_path": ["mothlight_quay", "blackreed_post", "reedwatch"], "segments": [{"endpoints": ["mothlight_quay", "blackreed_post"], "cost": 4, "days": 1, "risk": 0.2}, {"endpoints": ["blackreed_post", "reedwatch"], "cost": 3, "days": 1, "risk": 0.24}, {"endpoints": ["mothlight_quay", "reedwatch"], "cost": 7, "days": 2, "risk": 0.22}], "cost": 7, "days": 2, "risk": 0.22, "description": "A slower marked marsh road with firm reed mats, watch fires, and recoverable wheel-sink risk."},
+    "emberfen_drift": {"name": "Emberfen Drift", "map_label": "Emberfen", "endpoints": ["mothlight_quay", "emberfen_refuge"], "map_path": ["mothlight_quay", "emberfen_refuge"], "cost": 4, "days": 1, "risk": 0.46, "description": "A peat shelf road where clean blue smoke competes with false kiln marks."}
   }
 }

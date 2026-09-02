@@ -62,6 +62,7 @@ for test_script in \
   test_game_quality.gd \
   test_second_region.gd \
   test_third_region.gd \
+	  test_gpt56_regional_breadth.gd \
   test_ma_ea_4.gd \
   test_ma_ea_5.gd \
   test_investment_vertical.gd \

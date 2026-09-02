@@ -19,6 +19,7 @@ const SETTLEMENT_STYLES := {
 	"mirror_wells": {"market_accent": "#78658f", "motif": "mirrors", "arrival_treatment": "beacon_reflection"},
 	"mothlight_quay": {"market_accent": "#6f8b72", "motif": "quay", "arrival_treatment": "resin_lamps"},
 	"blackreed_post": {"market_accent": "#65765a", "motif": "watchtower", "arrival_treatment": "watch_fires"},
+	"emberfen_refuge": {"market_accent": "#9a684d", "motif": "peat_stacks", "arrival_treatment": "sifter_smoke"},
 }
 
 const REGION_STYLES := {
@@ -36,6 +37,7 @@ const ROUTE_STYLES := {
 	"emberglass_byway": {"scene_id": "emberglass_ventway", "title": "FURNACE VENTWAY", "waypoint": "The cooling vent", "texture": "ember_vents", "sky": "#4a2e29", "ground": "#2d201c", "road": "#684033", "accent": "#cf7348"},
 	"salt_causeway": {"scene_id": "brine_bell_causeway", "title": "SALT CAUSEWAY", "waypoint": "The next bell marker", "texture": "causeway_bells", "sky": "#314643", "ground": "#263934", "road": "#65746a", "accent": "#7fb5ab"},
 	"reedline_track": {"scene_id": "blackreed_marsh_track", "title": "REEDLINE TRACK", "waypoint": "The raised watch fire", "texture": "reed_marks", "sky": "#30372d", "ground": "#252c22", "road": "#4f593e", "accent": "#879765"},
+	"emberfen_drift": {"scene_id": "emberfen_peat_road", "title": "EMBERFEN DRIFT", "waypoint": "The blue smoke shelf", "texture": "peat_smoke", "sky": "#3d312d", "ground": "#2a211d", "road": "#604331", "accent": "#b97a55"},
 }
 
 const BAZAAR_SECTION_ACCENTS := {

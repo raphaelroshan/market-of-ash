@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Any
 
 REQUIRED_GOODS = ("grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil")
-REQUIRED_SETTLEMENTS = ("ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells", "mothlight_quay", "blackreed_post")
-REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "emberglass_byway", "salt_causeway", "reedline_track")
+REQUIRED_SETTLEMENTS = ("ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells", "mothlight_quay", "blackreed_post", "emberfen_refuge")
+REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "emberglass_byway", "salt_causeway", "reedline_track", "emberfen_drift")
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -828,7 +828,7 @@ def validate(data: Any) -> list[str]:
             if map_cell_key in occupied_map_cells:
                 fail(errors, f"settlement {settlement_id}.identity.map_cell overlaps {occupied_map_cells[map_cell_key]}")
             occupied_map_cells[map_cell_key] = settlement_id
-        if identity.get("landmark") not in {"gate", "brine", "forge", "lanterns", "reeds", "glass", "kiln", "mirrors", "quay", "watchtower"}:
+        if identity.get("landmark") not in {"gate", "brine", "forge", "lanterns", "reeds", "glass", "kiln", "mirrors", "quay", "watchtower", "peat_stacks"}:
             fail(errors, f"settlement {settlement_id}.identity.landmark is unsupported")
         for field in ("tint", "sky", "ground"):
             color = identity.get(field)

@@ -239,13 +239,14 @@ func adaptive_market_modifiers() -> Dictionary:
 func adaptive_response_summary() -> String:
 	var faction_ids: Array = emergent_factions.keys()
 	faction_ids.sort()
+	var summaries: Array[String] = []
 	for faction_id_value in faction_ids:
 		var faction: Dictionary = emergent_faction(String(faction_id_value))
 		var scenario := MarketContent.adaptive_scenario(String(faction.get("scenario_id", "")))
 		var response: Dictionary = scenario.get("failure_response", {})
 		var opportunity: Dictionary = response.get("opportunity", {})
-		return "%s · support %+d — %s\n%s" % [String(response.get("name", faction_id_value)), int(faction.get("support", 0)), String(response.get("legitimacy_claim", "A local actor responded to an unmet need.")), String(opportunity.get("summary", response.get("trade_footprint", "A replacement market is now active.")))]
-	return ""
+		summaries.append("%s · support %+d — %s\n%s" % [String(response.get("name", faction_id_value)), int(faction.get("support", 0)), String(response.get("legitimacy_claim", "A local actor responded to an unmet need.")), String(opportunity.get("summary", response.get("trade_footprint", "A replacement market is now active.")))])
+	return "\n\n".join(summaries)
 
 func contract_offer_closed_reason(contract_id: String) -> String:
 	var scenario := MarketContent.adaptive_scenario_for_contract(contract_id)

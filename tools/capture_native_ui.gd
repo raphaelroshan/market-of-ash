@@ -71,6 +71,14 @@ const CAPTURE_SCREENS := [
 	"siltfire_blackreed_arrival",
 	"siltfire_blackreed_market",
 	"siltfire_blackreed_actions",
+	"siltfire_emberfen_departure_desk",
+	"siltfire_emberfen_departure",
+	"siltfire_emberfen_road",
+	"siltfire_emberfen_event",
+	"siltfire_emberfen_arrival",
+	"siltfire_emberfen_market",
+	"siltfire_ash_sifter_opportunity",
+	"siltfire_ash_sifter_result",
 	"ma_ea_5_mara_roster",
 	"ma_ea_5_reedline_event",
 	"ma_ea_5_reedline_result",
@@ -478,6 +486,51 @@ func _run() -> void:
 	await _capture(ui, "siltfire_blackreed_market", "siltfire-blackreed-market")
 	ui._on_bazaar_navigation_pressed("information")
 	await _capture(ui, "siltfire_blackreed_actions", "siltfire-blackreed-actions")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 1
+	ui.world.current_settlement = "mothlight_quay"
+	ui.world.reset_visit_slots()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._select_option_by_id(ui.shop_good_option, "cloth")
+	ui.shop_quantity.value = 3
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "emberfen_refuge")
+	ui._on_destination_changed(ui.destination_option.selected)
+	await _capture(ui, "siltfire_emberfen_departure_desk", "siltfire-emberfen-departure-desk")
+	ui._on_depart_pressed()
+	if ui.world.pending_event.get("id", "") != "emberfen_smoke_crossing":
+		push_error("Native capture expected the deterministic Emberfen smoke event.")
+		quit(1)
+		return
+	await _capture(ui, "siltfire_emberfen_departure", "siltfire-emberfen-departure")
+	ui.map_panel._process(2.0)
+	await _capture(ui, "siltfire_emberfen_road", "siltfire-emberfen-road")
+	ui._on_continue_journey_pressed()
+	await _capture(ui, "siltfire_emberfen_event", "siltfire-emberfen-event")
+	ui._on_event_choice_pressed("emberfen_smoke_crossing", "hire_smoke_bell")
+	await _capture(ui, "siltfire_emberfen_arrival", "siltfire-emberfen-arrival")
+	ui._on_enter_settlement_pressed()
+	await _capture(ui, "siltfire_emberfen_market", "siltfire-emberfen-market")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 9
+	ui.world.advance_day(8)
+	ui.world.current_settlement = "emberfen_refuge"
+	ui.world.cargo = {"charcoal": 2, "weight": 2}
+	ui.world.reset_visit_slots()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("information")
+	await _focus_bazaar_action(ui, "settlement_action_emberfen_sifter_kiln")
+	await _capture(ui, "siltfire_ash_sifter_opportunity", "siltfire-ash-sifter-opportunity")
+	ui._on_settlement_action_pressed("emberfen_sifter_kiln")
+	await _capture(ui, "siltfire_ash_sifter_result", "siltfire-ash-sifter-result")
 
 	ui._on_start_game_pressed()
 	ui.world.seed = 1

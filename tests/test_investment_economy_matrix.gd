@@ -9,6 +9,7 @@ const STRATEGIES := [
 	{"origin": "sunfall_exchange", "destination": "mirror_wells", "route": "mirror_run", "good": "lamp_oil", "quantity": 3, "day": 5},
 	{"origin": "kiln_rest", "destination": "mirror_wells", "route": "emberglass_byway", "good": "lamp_oil", "quantity": 3, "day": 5},
 	{"origin": "mothlight_quay", "destination": "blackreed_post", "route": "reedline_track", "good": "medicine", "quantity": 3, "day": 1},
+	{"origin": "mothlight_quay", "destination": "emberfen_refuge", "route": "emberfen_drift", "good": "cloth", "quantity": 3, "day": 1},
 ]
 
 var failures: Array[String] = []
@@ -81,8 +82,8 @@ func _init() -> void:
 	_expect(completed == TRIALS, "all 100 seeded economy trials should complete")
 	_expect(bankruptcies == 0, "the 100 seeded ordinary-trade trials should not create bankruptcy")
 	_expect(profitable >= 75, "at least 75% of seeded ordinary-trade trials should remain profitable after disclosed route losses")
-	_expect(maximum_route_share <= 0.25, "no route should dominate more than 25% of the balanced trial matrix")
-	_expect(maximum_good_share <= 0.50, "no good should dominate more than half of the balanced trial matrix")
+	_expect(maximum_route_share <= 0.20, "no route should dominate more than 20% of the balanced trial matrix")
+	_expect(maximum_good_share <= 0.40, "no good should dominate more than 40% of the balanced trial matrix")
 	_expect(event_outcomes.size() >= 3, "the seeded matrix should exercise multiple event outcomes plus quiet roads")
 	if failures.is_empty():
 		print("Investment economy matrix: PASS")
