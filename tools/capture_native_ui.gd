@@ -40,6 +40,19 @@ const CAPTURE_SCREENS := [
 	"glasswind_arrival",
 	"mirror_wells_market",
 	"night_market",
+	"siltfire_mothlight_market",
+	"siltfire_mothlight_actions",
+	"siltfire_departure_desk",
+	"siltfire_departure",
+	"siltfire_road",
+	"siltfire_event",
+	"siltfire_arrival",
+	"siltfire_reedline_departure_desk",
+	"siltfire_reedline_departure",
+	"siltfire_reedline_road",
+	"siltfire_blackreed_arrival",
+	"siltfire_blackreed_market",
+	"siltfire_blackreed_actions",
 	"new_game_confirmation",
 ]
 
@@ -268,6 +281,66 @@ func _run() -> void:
 	ui._refresh_ui()
 	ui._on_bazaar_navigation_pressed("information")
 	await _capture(ui, "night_market", "night-market")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 1
+	ui.world.current_settlement = "brine_cross"
+	ui.world.day = 1
+	ui.world._update_crisis_modifiers()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "mothlight_quay")
+	ui._on_destination_changed(ui.destination_option.selected)
+	await _capture(ui, "siltfire_departure_desk", "siltfire-departure-desk")
+	ui._on_depart_pressed()
+	if ui.world.pending_event.get("id", "") != "causeway_whiteout":
+		push_error("Native capture expected the deterministic causeway whiteout event.")
+		quit(1)
+		return
+	await _capture(ui, "siltfire_departure", "siltfire-departure")
+	ui.map_panel._process(2.0)
+	await _capture(ui, "siltfire_road", "siltfire-road")
+	ui._on_continue_journey_pressed()
+	await _capture(ui, "siltfire_event", "siltfire-event")
+	ui._on_event_choice_pressed("causeway_whiteout", "wait_on_salt_island")
+	await _capture(ui, "siltfire_arrival", "siltfire-arrival")
+	ui._on_enter_settlement_pressed()
+	ui._select_option_by_id(ui.destination_option, "blackreed_post")
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._select_option_by_id(ui.shop_good_option, "medicine")
+	ui.shop_quantity.value = 2
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	await _capture(ui, "siltfire_mothlight_market", "siltfire-mothlight-market")
+	ui._on_bazaar_navigation_pressed("information")
+	await _capture(ui, "siltfire_mothlight_actions", "siltfire-mothlight-actions")
+	ui._on_settlement_action_pressed("mothlight_bell_chart")
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "blackreed_post")
+	ui._on_destination_changed(ui.destination_option.selected)
+	await _capture(ui, "siltfire_reedline_departure_desk", "siltfire-reedline-departure-desk")
+	ui._on_depart_pressed()
+	await _capture(ui, "siltfire_reedline_departure", "siltfire-reedline-departure")
+	ui.map_panel._process(2.0)
+	await _capture(ui, "siltfire_reedline_road", "siltfire-reedline-road")
+	ui._on_continue_journey_pressed()
+	ui.map_panel._process(2.0)
+	await _capture(ui, "siltfire_blackreed_arrival", "siltfire-blackreed-arrival")
+	ui._on_enter_settlement_pressed()
+	ui._select_option_by_id(ui.destination_option, "mothlight_quay")
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._select_option_by_id(ui.shop_good_option, "grain")
+	ui.shop_quantity.value = 2
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	await _capture(ui, "siltfire_blackreed_market", "siltfire-blackreed-market")
+	ui._on_bazaar_navigation_pressed("information")
+	await _capture(ui, "siltfire_blackreed_actions", "siltfire-blackreed-actions")
 
 	ui._on_start_game_pressed()
 	ui.world.seed = 5
