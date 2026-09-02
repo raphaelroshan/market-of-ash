@@ -149,3 +149,10 @@ Before adding broader content, read [`early_access_requirements.md`](early_acces
 Do not make human testing a prerequisite. Use automated economy trials, deterministic replay, complete-flow launches, responsive layout checks, controller/scaling checks, save boundaries, screenshots, and known-limitations notes as the active gates. Ordinary buying and selling must remain a complete viable path, and no contract chain may be required for progress or an ending.
 
 The recommended feeds are **MA-EA-1** responsive Basin completion, **MA-EA-2** second-region trade slice, **MA-EA-3** third-region map connection, **MA-EA-4** faction/replacement breadth, **MA-EA-5** crew/events/replay depth, and **MA-EA-6** release hardening.
+
+
+## Investment-evaluation feed
+
+Read [`investment_evaluation_roadmap.md`](investment_evaluation_roadmap.md) before continuing beyond the current vertical slice. The investment standard requires a complete Frontier-style trade fantasy, not only a scenario shell: first purchase, route comparison, travel consequence, arrival sale or recovery, changed return market, optional black-market pressure, and terminal economic/political receipt.
+
+Issue the feeds in order: **MA-I1** repair the 1280×720 opening shell and deterministic save-round-trip performance budget; **MA-I2** make the first trade fantasy visible in one complete flow; **MA-I3** lock the creative vertical with authored characters, motifs, audio, black-market option, and ending receipt; **MA-I4** add a distinct second region; **MA-I5** connect a third region and basin memory; **MA-I6** harden the Early Access package. Do not add broad content while a required action is clipped or ordinary trade is not visibly viable. Human testing is optional and must not block implementation.
