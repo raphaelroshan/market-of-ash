@@ -641,3 +641,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The third region must make the map more connected and ordinary trading more legible, not inflate the catalog. Two complementary markets create a repeatable loop, while the two Basin connections let the player enter and leave without retracing a single branch. Distinct route hazards and preparations make road choice consequential.
 
 **Trade-off:** Siltfire uses existing factions and goods, reserving the fourth standing faction and additional endings for MA-EA-4. Its visuals remain code-native production scaffolding, and the shared Basin crisis clock still governs all regions.
+
+## ADR-081: Adaptive endings share authored causal requirements
+
+**Decision:** Promote the Causeway Bellkeepers to a fourth standing faction whose trusted threshold discounts only the Salt Causeway. Express both replacement-actor endings through shared scenario-state, support, local-resilience, post-activation ordinary-delivery, reputation, and escalation requirements. Add support, opposition, and reconciliation actions for the Night Market before enabling `Beacons Without Licenses`.
+
+**Reason:** A replacement market is meaningful only if the player can materially support or oppose it and if its outcome remembers how legitimacy was earned. The shared evaluator prevents the Well Commons from remaining a one-off code path and ensures ordinary trade—not a contract or event transfer—can establish either alternate institution.
+
+**Trade-off:** The fourth faction currently changes one route fee and two event/service decisions rather than owning a full quest chain. The Night Market ending shares the Basin crisis clock, so its political resolution arrives at Day 10 even when most play occurred outside the Basin.

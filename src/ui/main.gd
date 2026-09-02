@@ -4498,7 +4498,12 @@ func _refresh_ui() -> void:
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
 		var leads_text := " · Leads %d" % world.known_information.size() if not world.known_information.is_empty() else ""
-		var regional_faction_text := " · Glass Consortium %+d" % int(world.reputation.get("glass_consortium", 0)) if String(settlement.get("region_id", "five_well_basin")) == "glasswind_reach" else ""
+		var regional_faction_text := ""
+		match String(settlement.get("region_id", "five_well_basin")):
+			"glasswind_reach":
+				regional_faction_text = " · Glass Consortium %+d" % int(world.reputation.get("glass_consortium", 0))
+			"siltfire_march":
+				regional_faction_text = " · Bellkeepers %+d" % int(world.reputation.get("bellkeepers", 0))
 		shop_status_label.text = "MARKET — %s · Day %d · Crisis %d: %s · Resilience %d/10\nREGION — %s · Wardens %+d · Caravans %+d%s · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), world.resilience_for(world.current_settlement), String(crisis.get("objective", "Keep trading.")), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), regional_faction_text, world.arms_escalation, arms_label, leads_text]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]

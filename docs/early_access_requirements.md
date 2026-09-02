@@ -1,6 +1,6 @@
 # Market of Ash — Early Access Requirements
 
-**Status:** Active execution contract; MA-EA-1 through MA-EA-3 complete, MA-EA-4 next
+**Status:** Active execution contract; MA-EA-1 through MA-EA-4 complete, MA-EA-5 next
 **Current baseline:** Deterministic Five-Well Basin, Glasswind Reach, and Siltfire March form a connected three-region trade map with ordinary trade, authored events, adaptive faction responses, alternate endings, and the game-quality roadmap in progress.
 
 ## Product decision
@@ -75,7 +75,7 @@ New content must be data-driven and use stable IDs. An agent may add one region,
 **MA-EA-1 — complete:** repair the 1280×720 shell and complete the polished Basin journey. The acceptance gate now exercises the real player-facing trade path, rejects visible developer surfaces in every native frame, and covers the full responsive matrix plus deterministic journey, input, save, and campaign suites.
 **MA-EA-2 — complete:** Glasswind Reach adds Sunfall Exchange, Kiln Rest, and Mirror Wells; saltglass, dune spice, and lamp oil; the Glasswind Trace and Mirror Run; the Shardwind Tithe event; an optional beacon-oil contract; and the failure-forward Night Market. Its save-safe flow and four-resolution native evidence are enforced by `scripts/verify_ma_ea_2.sh`.
 **MA-EA-3 — complete:** Siltfire March adds Mothlight Quay and Blackreed Post; profitable ordinary medicine/cloth and grain/charcoal patterns; the Salt Causeway and Reedline Track; persistent bell-chart and reed-skid preparations; and the three-branch `Bells in the Whiteout` recovery event. The seven-road graph reaches all ten settlements through player-legal segments, and native evidence covers both March bazaars, roads, services, event, and arrival handoffs.
-**MA-EA-4:** add the fourth faction and second replacement actor, then validate alternate endings.  
+**MA-EA-4 — complete:** Causeway Bellkeepers become the fourth standing faction and alter Salt Causeway fees through visible trust. The existing second replacement actor, the Night Market, now supports cooperation, opposition, reconciliation, and a sixth ending earned through post-activation ordinary saltglass trade. Both replacement endings use one generic authored requirement evaluator.
 **MA-EA-5:** add crew depth, map breadth, event variety, and the Early Access release artifact only where they improve replay decisions.  
 **MA-EA-6:** harden packaging, migration, accessibility, performance, and versioned documentation.
 

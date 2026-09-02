@@ -260,15 +260,23 @@ static func campaign_debrief(world) -> Dictionary:
 		if good_id == "weight" or int(world.cargo.get(good_id_value, 0)) <= 0:
 			continue
 		cargo_parts.append("%s x%d" % [good_id.capitalize(), int(world.cargo.get(good_id_value, 0))])
-	var consequence_parts: Array[String] = [
-		"Wardens %+d" % int(world.reputation.get("wardens", 0)),
-		"Caravans %+d" % int(world.reputation.get("caravans", 0)),
-		"Reedwatch resilience %d/10" % world.resilience_for("reedwatch"),
-		"arms pressure %d/6" % world.arms_escalation,
-	]
-	var commons: Dictionary = world.emergent_faction("well_commons")
-	if not commons.is_empty():
-		consequence_parts.append("Well Commons support %+d" % int(commons.get("support", 0)))
+	var consequence_parts: Array[String] = []
+	var standing_ids: Array = MarketContent.factions().keys()
+	standing_ids.sort()
+	for faction_id_value in standing_ids:
+		var faction_id := String(faction_id_value)
+		consequence_parts.append("%s %+d" % [String(MarketContent.faction(faction_id).get("name", faction_id)), int(world.reputation.get(faction_id, 0))])
+	consequence_parts.append("Reedwatch resilience %d/10" % world.resilience_for("reedwatch"))
+	consequence_parts.append("Mirror Wells resilience %d/10" % world.resilience_for("mirror_wells"))
+	consequence_parts.append("arms pressure %d/6" % world.arms_escalation)
+	var emergent_ids: Array = world.emergent_factions.keys()
+	emergent_ids.sort()
+	for faction_id_value in emergent_ids:
+		var faction_id := String(faction_id_value)
+		var emergent: Dictionary = world.emergent_faction(faction_id)
+		var scenario := MarketContent.adaptive_scenario(String(emergent.get("scenario_id", "")))
+		var faction_name := String(scenario.get("failure_response", {}).get("name", faction_id))
+		consequence_parts.append("%s support %+d" % [faction_name, int(emergent.get("support", 0))])
 	var replay_experiment := _replay_experiment(world.ending_id)
 	var initial_money: int = world.money - money_delta
 	var initial_provisions: int = world.provisions - provision_delta
@@ -304,6 +312,8 @@ static func _replay_experiment(ending_id: String) -> String:
 			return "Leave the first relief unanswered, meet the Well Commons response, and test whether ordinary charcoal deliveries can build a different basin."
 		"ending_commons_exchange":
 			return "Accept and complete Water Relief before Day 4, then compare public resilience with the Commons-led exchange."
+		"ending_night_market_network":
+			return "Complete the licensed beacon delivery before Day 8, then compare Consortium access with the independent signal network."
 		"ending_warden_reserve":
 			return "Avoid Warden services, gather open-road information, and support a public water response instead."
 		"ending_free_caravan_routes":

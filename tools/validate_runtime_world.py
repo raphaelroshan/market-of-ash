@@ -520,7 +520,7 @@ def validate_events(value: Any, errors: list[str]) -> None:
                 fail(errors, f"event {event_id} choice {choice_id}.reputation_delta must be an object")
             else:
                 for faction_id, delta in reputation_delta.items():
-                    if faction_id not in ("wardens", "caravans", "glass_consortium") or not isinstance(delta, int) or abs(delta) > 10:
+                    if faction_id not in ("wardens", "caravans", "glass_consortium", "bellkeepers") or not isinstance(delta, int) or abs(delta) > 10:
                         fail(errors, f"event {event_id} choice {choice_id}.reputation_delta is invalid")
             condition = choice.get("route_condition", {})
             if not isinstance(condition, dict):
@@ -575,7 +575,7 @@ def validate_crew(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
 
 def validate_factions(value: Any, errors: list[str]) -> None:
     factions = as_object(value, "factions", errors)
-    for required_faction_id in ("wardens", "caravans", "glass_consortium"):
+    for required_faction_id in ("wardens", "caravans", "glass_consortium", "bellkeepers"):
         if required_faction_id not in factions:
             fail(errors, f"factions.{required_faction_id} must be an object")
     for faction_id, raw_faction in factions.items():
@@ -683,30 +683,32 @@ def validate_crisis(value: Any, errors: list[str]) -> None:
             seen_ids.add(ending_id)
         if not isinstance(ending.get("maximum_arms_escalation"), int) or ending["maximum_arms_escalation"] < 0:
             fail(errors, f"crisis ending {ending_id} must declare a non-negative maximum_arms_escalation")
+        if isinstance(ending.get("required_scenario_id"), str) and ending.get("required_scenario_id"):
+            if not isinstance(ending.get("required_faction_id"), str) or not ending["required_faction_id"]:
+                fail(errors, f"adaptive ending {ending_id} must declare its faction requirement")
+            scenario_states = ending.get("required_scenario_states")
+            if not isinstance(scenario_states, list) or not scenario_states or any(state not in {"expired", "failed"} for state in scenario_states):
+                fail(errors, f"adaptive ending {ending_id} must require expired or failed scenario states")
+            if not isinstance(ending.get("minimum_faction_support"), int) or ending["minimum_faction_support"] < 1:
+                fail(errors, f"adaptive ending {ending_id} must require positive faction support")
+            resilience = as_object(ending.get("minimum_settlement_resilience"), f"adaptive ending {ending_id}.minimum_settlement_resilience", errors)
+            if resilience.get("settlement_id") not in REQUIRED_SETTLEMENTS or not isinstance(resilience.get("minimum"), int) or not 1 <= resilience["minimum"] <= 10:
+                fail(errors, f"adaptive ending {ending_id} must require valid settlement resilience")
+            delivery = as_object(ending.get("required_ordinary_delivery"), f"adaptive ending {ending_id}.required_ordinary_delivery", errors)
+            if delivery.get("settlement_id") not in REQUIRED_SETTLEMENTS or delivery.get("good_id") not in REQUIRED_GOODS:
+                fail(errors, f"adaptive ending {ending_id} ordinary delivery must reference known content")
+            if not isinstance(delivery.get("minimum_quantity"), int) or delivery["minimum_quantity"] <= 0 or delivery.get("after_faction_activation") is not True:
+                fail(errors, f"adaptive ending {ending_id} must require a positive post-activation ordinary delivery")
+            maximum_reputation = as_object(ending.get("maximum_reputation", {}), f"adaptive ending {ending_id}.maximum_reputation", errors)
+            for faction_id, maximum in maximum_reputation.items():
+                if faction_id not in {"wardens", "caravans", "glass_consortium", "bellkeepers"} or not isinstance(maximum, int) or not -10 <= maximum <= 10:
+                    fail(errors, f"adaptive ending {ending_id} maximum_reputation is invalid")
+            continue
         if ending_id == "open_routes_relief":
             if not isinstance(ending.get("required_contract_id"), str) or not ending["required_contract_id"]:
                 fail(errors, "open_routes_relief must declare required_contract_id")
             if not isinstance(ending.get("minimum_reedwatch_resilience"), int) or ending["minimum_reedwatch_resilience"] < 0:
                 fail(errors, "open_routes_relief must declare a non-negative resilience bound")
-        elif ending_id == "ending_commons_exchange":
-            if ending.get("required_scenario_id") != "reedwatch_water_relief":
-                fail(errors, "ending_commons_exchange must require the Reedwatch relief scenario")
-            scenario_states = ending.get("required_scenario_states")
-            if not isinstance(scenario_states, list) or not scenario_states or any(state not in {"expired", "failed"} for state in scenario_states):
-                fail(errors, "ending_commons_exchange must require expired or failed scenario states")
-            if ending.get("required_faction_id") != "well_commons":
-                fail(errors, "ending_commons_exchange must require the Well Commons")
-            if not isinstance(ending.get("minimum_faction_support"), int) or ending["minimum_faction_support"] < 1:
-                fail(errors, "ending_commons_exchange must require positive faction support")
-            if not isinstance(ending.get("minimum_reedwatch_resilience"), int) or ending["minimum_reedwatch_resilience"] < 1:
-                fail(errors, "ending_commons_exchange must require positive Reedwatch resilience")
-            delivery = as_object(ending.get("required_ordinary_delivery"), "ending_commons_exchange.required_ordinary_delivery", errors)
-            if delivery.get("settlement_id") != "reedwatch" or delivery.get("good_id") != "charcoal":
-                fail(errors, "ending_commons_exchange must require ordinary charcoal delivery to Reedwatch")
-            if not isinstance(delivery.get("minimum_quantity"), int) or delivery["minimum_quantity"] <= 0:
-                fail(errors, "ending_commons_exchange must require a positive ordinary delivery quantity")
-            if delivery.get("after_faction_activation") is not True:
-                fail(errors, "ending_commons_exchange delivery must follow faction activation")
         elif ending_id == "ending_warden_reserve":
             for field in ("minimum_warden_reputation", "maximum_caravan_reputation"):
                 if not isinstance(ending.get(field), int) or ending[field] < 0:
