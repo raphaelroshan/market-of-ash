@@ -18,6 +18,7 @@ REQUIRED_NATIVE_SCREENS = {
     "introduction_road_large_text",
     "settlement_shop",
     "trade_receipt",
+    "market_change_receipt",
     "bazaar_jobs",
     "bazaar_crew",
     "pause",
@@ -125,6 +126,7 @@ EXPECTED_UI_STATE = {
     "ma_ea_5_mirror_event": "route_event",
     "ma_ea_5_mirror_result": "arrival_handoff",
     "trade_receipt": "settlement_shop",
+    "market_change_receipt": "settlement_shop",
     "trade_receipt_large_text": "settlement_shop",
     "route_departure": "route_travel",
     "route_event_large_text": "route_event",
@@ -141,6 +143,7 @@ REQUIRED_LAYOUT_CONTROLS = {
     "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
     "settlement_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "trade_receipt": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
+    "market_change_receipt": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
     "settlement_shop_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "trade_receipt_large_text": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
     "bazaar_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
@@ -427,6 +430,12 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Commons ending capture is missing its causal campaign state")
         if bool(ui_state.get("large_text")) != screen.endswith("_large_text"):
             raise AssertionError(f"{file_name}: Large text state does not match its capture name")
+        if screen == "market_change_receipt" and (
+            ui_state.get("settlement_id") != "reedwatch"
+            or ui_state.get("trade_receipt_title") != "SALE RECORDED"
+            or "after supply" not in ui_state.get("trade_receipt_detail", "")
+        ):
+            raise AssertionError(f"{file_name}: market-change receipt must show the Reedwatch sale and its new local price")
         require_release_surface(capture)
         require_layout_bounds(capture)
         if screen in {"main_menu", "introduction_basin", "introduction_caravan", "introduction_road", "introduction_road_large_text"}:
@@ -443,6 +452,7 @@ def main() -> int:
         require_distinct_screen(screens["introduction_road"], screens["settlement_shop"], f"{viewport} Begin guided campaign")
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["trade_receipt"], f"{viewport} Complete purchase", minimum_ratio=0.005)
+        require_distinct_screen(screens["trade_receipt"], screens["market_change_receipt"], f"{viewport} Sell into changed destination market", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop_large_text"], screens["trade_receipt_large_text"], f"{viewport} Complete purchase with large text", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
         require_distinct_screen(screens["bazaar_jobs"], screens["bazaar_crew"], f"{viewport} Open Caravan Yard")

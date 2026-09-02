@@ -8,6 +8,8 @@ The repository contains a complete, replayable alpha vertical slice presented as
 
 The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, export Windows and Web builds, create and validate a single-file portable Windows ZIP, clean-extract and launch-smoke that executable, and upload GUI evidence, checksums, provenance, and a source snapshot.
 
+The MA-I2 guided path now proves ordinary trade before optional work: buy Water, compare and travel the Old Road, sell into Reedwatch demand, observe the local price response, and bring Grain back to Ashgate. The Job Board is introduced afterward and does not require acceptance.
+
 The current release candidate is [`v0.14.0-early-access-rc1`](docs/releases/v0.14.0-early-access-rc1.md). It is an unsigned portable Windows prerelease with in-package install, upgrade, rollback, verification, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
 
 ## Run the prototype
@@ -99,8 +101,9 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 | `docs/ma_ea_1_completion.md` | Executable acceptance record for the responsive, release-facing Five-Well Basin journey. |
 | `docs/ma_ea_2_completion.md` | Executable acceptance record for the Glasswind Reach trade, journey, and failure-forward slice. |
 | `docs/ma_i1_completion.md` | Investment-gate evidence for the responsive opening shell and deterministic save-round-trip repair. |
+| `docs/ma_i2_completion.md` | Investment-gate evidence for the contract-free first trade circuit and before/after market receipt. |
 
 
 ## Investment evaluation roadmap
 
-The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). MA-I1 is complete with responsive-shell and measured performance evidence in [`docs/ma_i1_completion.md`](docs/ma_i1_completion.md); the current investment gate is MA-I2, making the first trade fantasy explicit through one normal-flow journey.
+The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). MA-I1 and MA-I2 are complete with responsive, performance, and first-trade evidence in their completion records; the current investment gate is MA-I3, locking one memorable authored journey and terminal receipt.

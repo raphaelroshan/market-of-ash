@@ -8,6 +8,7 @@ const CAPTURE_SCREENS := [
 	"introduction_road_large_text",
 	"settlement_shop",
 	"trade_receipt",
+	"market_change_receipt",
 	"bazaar_jobs",
 	"bazaar_crew",
 	"pause",
@@ -144,6 +145,16 @@ func _run() -> void:
 	await _capture(ui, "departure_desk", "departure-desk")
 	ui._on_return_to_shop_pressed()
 	await _capture(ui, "returned_shop", "returned-shop")
+	ui._on_plan_departure_pressed()
+	ui._on_depart_pressed()
+	ui.map_panel._process(2.0)
+	ui._on_continue_journey_pressed()
+	ui._on_event_choice_pressed("three_riders_no_banner", "pay_for_escort")
+	ui._on_enter_settlement_pressed()
+	ui._select_option_by_id(ui.shop_good_option, "water")
+	ui.shop_quantity.value = int(ui.world.cargo.get("water", 0))
+	ui._on_sell_pressed()
+	await _capture(ui, "market_change_receipt", "market-change-receipt")
 
 	ui.pending_tutorial_enabled = false
 	ui._on_start_game_pressed()
@@ -526,7 +537,6 @@ func _parse_arguments() -> bool:
 	return true
 
 func _complete_player_opening_trade(ui: Control) -> bool:
-	ui._on_accept_contract_pressed("reedwatch_water_relief_01")
 	ui._on_bazaar_navigation_pressed("trade")
 	var command_count_before: int = ui.world.command_history.size()
 	ui._on_buy_pressed()

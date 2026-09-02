@@ -1220,7 +1220,7 @@ def main() -> int:
                     "selected_quantity": 4,
                     "selected_destination_id": "reedwatch",
                     "selected_route_id": "old_road",
-                    "tutorial": {"version": 1, "enabled": True, "intro_seen": True, "completed": False, "outlook_seen": False, "current_step": "accept_contract", "completed_steps": []},
+                    "tutorial": {"version": 2, "enabled": True, "intro_seen": True, "completed": False, "outlook_seen": False, "optional_work_seen": False, "current_step": "buy_water", "completed_steps": []},
                 },
             )
         validate_capture_matrix(captures)
