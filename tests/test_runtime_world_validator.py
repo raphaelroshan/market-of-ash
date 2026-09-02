@@ -52,6 +52,13 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_route_label = copy.deepcopy(runtime)
+    invalid_route_label["routes"]["emberglass_byway"]["map_label"] = "Emberglass Byway Is Too Long"
+    route_label_errors = validate(invalid_route_label)
+    if not any("emberglass_byway.map_label must contain 1 through 12 characters" in error for error in route_label_errors):
+        print("FAIL: an oversized compact route label was not rejected")
+        return 1
+
     invalid_reward_assumptions = copy.deepcopy(runtime)
     invalid_reward_assumptions["planning_assumptions"]["reward_fixture_minutes"] = 0
     invalid_reward_assumptions["planning_assumptions"]["contract_expected_net_min_ratio"] = 1.3

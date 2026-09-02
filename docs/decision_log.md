@@ -697,3 +697,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The Reach already has three markets and multiple ordinary goods, but two roads leave Kiln Rest and Mirror Wells dependent on the same Sunfall junction. A direct high-risk edge creates a legible speed-versus-exposure decision, closes the local triangle, and satisfies the investment gate without inventing another settlement, currency, or mandatory quest.
 
 **Trade-off:** The byway reuses an established event family and existing trade goods. Its value comes from topology and route terms rather than a new subsystem; final route illustration and balance still require human playtest calibration.
+
+## ADR-088: The map legend sits outside the route field
+
+**Decision:** Keep the compact data-authored route labels, but show only the current region's roads in a dedicated strip immediately below the map board rather than inside its bottom grid row. Keep the in-map heading to the region name because the objective and instruction immediately above already provide pressure and selection context. Show the map detail card only during an actual pointer hover; a selected destination remains fully described by its itinerary card. Use the full route name everywhere interactive.
+
+**Reason:** Eight global routes made the old in-board footer collide with Kiln Rest, Mirror Wells, and Reedwatch, while repeated objective and selection text extended the regional heading beneath Mothlight Quay. The selected-destination fallback also pinned a duplicate tooltip across the network. A local key, separated layers, and contextual hover preserve the Frontier-style network at a glance without covering settlements or weakening the detailed pre-commitment comparison.
+
+**Trade-off:** The legend uses a smaller ten-point base label and a narrow amount of space above the journey text. Large Text still scales it, and responsive bounds tests require the strip to remain between the board and the result rail.

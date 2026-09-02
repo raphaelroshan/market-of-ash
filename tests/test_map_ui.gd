@@ -669,7 +669,7 @@ func _initialize() -> void:
 		_expect(ui.map_panel._route_points("old_road").size() == 3, "old road does not expose a traversable three-point corridor")
 		_expect(ui.map_panel._road_profile("old_road").get("scene_id") == "ashen_milestones" and ui.map_panel._road_profile("toll_road").get("scene_id") == "warden_causeway" and ui.map_panel._road_profile("dry_cut").get("scene_id") == "saltwind_cut", "each authored corridor should expose a distinct travel-scene identity")
 		_expect(ui.map_panel.departure_dust_texture != null and ui.map_panel.departure_dust_texture.get_size() == Vector2(512, 512), "the road view should decode the export-safe licensed departure-dust texture")
-		_expect(ui.map_panel._map_heading().contains("ORDINARY PRESSURE") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "map text should identify the crisis stage and current location without relying on color")
+		_expect(ui.map_panel._map_heading() == "FIVE-WELL BASIN" and ui.playtest_banner.text.contains("Ordinary pressure") and ui.map_panel._settlement_marker_detail("ashgate").contains("HERE") and not ui.map_panel._settlement_marker_detail("reedwatch").contains("HERE"), "the map and objective text should identify region, crisis stage, and current location without relying on color")
 		_expect(ui.map_panel._caravan_motion_label() == "AT REST", "the docked caravan should expose its state without relying on motion or color")
 		var board_rect: Rect2 = ui.map_panel._board_rect()
 		var caravan_x_ratio: float = (ui.map_panel._caravan_position().x - board_rect.position.x) / board_rect.size.x
@@ -697,7 +697,10 @@ func _initialize() -> void:
 		var hover_motion := InputEventMouseMotion.new()
 		hover_motion.position = ui.map_panel._settlement_point("reedwatch")
 		ui.map_panel._gui_input(hover_motion)
-		_expect(ui.map_panel.hovered_settlement_id == "reedwatch" and ui.map_panel._hover_text("reedwatch").contains("accepted assignment") and ui.map_panel._hover_text("reedwatch").contains("4 ashmarks"), "hovering a map node should expose its assignment state and current travel cost")
+		_expect(ui.map_panel._map_info_settlement_id() == "reedwatch" and ui.map_panel._hover_text("reedwatch").contains("accepted assignment") and ui.map_panel._hover_text("reedwatch").contains("4 ashmarks"), "hovering a map node should expose its assignment state and current travel cost")
+		hover_motion.position = Vector2(-20, -20)
+		ui.map_panel._gui_input(hover_motion)
+		_expect(ui.map_panel._map_info_settlement_id().is_empty() and not ui.map_panel.selected_destination_id.is_empty(), "leaving the map should clear the duplicate detail card while preserving the selected itinerary")
 		if JSON.stringify(ui.world.serialize()) != map_before:
 			failures.append("map destination selection mutated authoritative world state")
 		ui._on_depart_pressed()
@@ -1073,17 +1076,25 @@ func _initialize() -> void:
 	await process_frame
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(is_equal_approx(ui.map_panel.text_scale, 1.25) and ui.map_panel._font_size(12) == 15 and is_equal_approx(ui.bazaar_scene.text_scale, 1.25) and ui.bazaar_scene._font_size(12) == 15, "large text should also scale custom-drawn map and Bazaar labels")
+	ui.map_panel.set_text_scale(1.0)
 	var route_footer_rects: Array[Rect2] = []
-	for route_index in range(ui.map_panel._route_ids().size()):
+	var map_key_routes: Array[String] = ui.map_panel._route_legend_ids()
+	_expect(map_key_routes == ["old_road", "toll_road", "dry_cut"], "the compact map key should show only the current region's roads")
+	for route_index in range(map_key_routes.size()):
 		route_footer_rects.append(ui.map_panel._route_footer_rect(route_index))
-	_expect(not route_footer_rects[0].intersects(route_footer_rects[1]) and not route_footer_rects[1].intersects(route_footer_rects[2]) and route_footer_rects[2].end.x <= ui.map_panel._board_rect().end.x and route_footer_rects[0].position.y >= ui.map_panel._board_rect().end.y - 28.0, "large map route labels should remain separated inside the board footer strip")
+	for route_index in range(route_footer_rects.size() - 1):
+		_expect(not route_footer_rects[route_index].intersects(route_footer_rects[route_index + 1]), "compact map-key labels should retain distinct slots")
+	_expect(route_footer_rects.back().end.x <= ui.map_panel._board_rect().end.x and route_footer_rects[0].position.y >= ui.map_panel._board_rect().end.y and route_footer_rects.back().end.y <= ui.event_scroll.get_global_rect().position.y, "the compact map key should remain between the route field and journey result")
+	ui.map_panel.set_text_scale(1.25)
+	_expect(ui.map_panel._route_footer_rect(0) == Rect2(), "Large Text should suppress the compact map key in favor of the fully labeled itinerary cards")
 	var map_heading_width: float = ThemeDB.fallback_font.get_string_size(ui.map_panel._map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(16)).x
 	_expect(map_heading_width <= ui.map_panel._board_rect().size.x - 16.0, "large map heading should remain inside the board width")
 	var map_hint: Label = ui.find_child("MapHint", true, false)
 	var map_heading_rect: Rect2 = ui.map_panel._map_heading_rect()
 	_expect(map_hint.get_global_rect().end.y <= map_heading_rect.position.y, "large map instructions should not overlap the custom-drawn heading: instructions %.1f, heading %.1f" % [map_hint.get_global_rect().end.y, map_heading_rect.position.y])
 	_expect(map_heading_rect.position.y >= ui.map_panel._board_rect().position.y and map_heading_rect.end.y <= ui.map_panel._board_rect().position.y + ui.map_panel.MAP_HEADER_HEIGHT, "large map heading should remain inside its reserved board strip")
-	_expect(route_footer_rects[2].end.y <= ui.event_scroll.get_global_rect().position.y, "large map footer labels should not overlap the journey result text: footer %.1f, result %.1f" % [route_footer_rects[2].end.y, ui.event_scroll.get_global_rect().position.y])
+	var mothlight_marker: Rect2 = ui.map_panel._settlement_marker_rect("mothlight_quay")
+	_expect(map_heading_rect.end.x < mothlight_marker.position.x, "the concise regional heading should remain clear of the top-row Mothlight marker")
 	var oversized_settlement_labels: Array[String] = []
 	for settlement_id_value in ui.map_panel._settlement_ids():
 		var settlement_id := String(settlement_id_value)
