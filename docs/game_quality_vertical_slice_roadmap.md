@@ -2,15 +2,15 @@
 
 **Project:** Market of Ash
 **Current baseline:** `0.13.12-alpha-basin-vertical-slice`
-**Completed milestones:** `0.13.0-alpha-basin-vertical-slice` deterministic vertical-slice scope; MA-EA-1 responsive Basin completion; MA-EA-2 Glasswind Reach trade slice; MA-EA-3 Siltfire March connected-map trade slice; MA-EA-4 fourth-faction and adaptive-ending validation
-**Next target:** MA-EA-5 crew depth, event variety, and Early Access breadth completion
+**Completed milestones:** `0.13.0-alpha-basin-vertical-slice` deterministic vertical-slice scope; MA-EA-1 responsive Basin completion; MA-EA-2 Glasswind Reach trade slice; MA-EA-3 Siltfire March connected-map trade slice; MA-EA-4 fourth-faction and adaptive-ending validation; MA-EA-5 crew and event replay depth
+**Next target:** MA-EA-6 release hardening and Early Access candidate publication
 **Platform:** Windows desktop first, Web as a verification surface
 **Engine:** Godot 4.4.1, GDScript
 **Development model:** Agent-first, deterministic, content-driven, private alpha
 
 > **Purpose:** Turn the current technically validated trade-and-consequence prototype into a convincing, replayable, human-playtestable game-quality slice of the Five-Well Basin without rewriting the economy or expanding the game into an uncontrolled campaign.
 >
-> **Status clarification (updated 2026-09-02):** The deterministic Five-Well Basin vertical slice and MA-EA-1 through MA-EA-4 are complete and verified. The project now meets the breadth floors for regions, settlements, goods, routes, standing factions, replacement actors, and endings, but is **not** complete as an Early Access game: MA-EA-5 and MA-EA-6 still provide crew/event breadth and release hardening. The earlier 1280×720 clipping claim reused the same cropped Xvfb frames under two version labels and is superseded by native and packaged-browser bounds evidence.
+> **Status clarification (updated 2026-09-02):** The deterministic Five-Well Basin vertical slice and MA-EA-1 through MA-EA-5 are complete and verified. The project now meets every numeric Early Access content floor, including five decision-changing crew and eight event families, but is **not** yet an Early Access release: MA-EA-6 still owns packaging, migration, accessibility, performance, versioned release documentation, and publication. The earlier 1280×720 clipping claim reused the same cropped Xvfb frames under two version labels and is superseded by native and packaged-browser bounds evidence.
 
 This document is an implementation contract for GPT coding agents, visual agents, audio agents, test agents, and the product lead. It is intentionally narrower than the full Market of Ash design. The goal is not to implement every faction, good, settlement, or event. The goal is to make the **existing first basin journey feel like a game**.
 

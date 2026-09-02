@@ -58,6 +58,12 @@ const CAPTURE_SCREENS := [
 	"siltfire_blackreed_arrival",
 	"siltfire_blackreed_market",
 	"siltfire_blackreed_actions",
+	"ma_ea_5_mara_roster",
+	"ma_ea_5_reedline_event",
+	"ma_ea_5_reedline_result",
+	"ma_ea_5_orin_roster",
+	"ma_ea_5_mirror_event",
+	"ma_ea_5_mirror_result",
 	"new_game_confirmation",
 ]
 
@@ -367,6 +373,69 @@ func _run() -> void:
 	await _capture(ui, "siltfire_blackreed_market", "siltfire-blackreed-market")
 	ui._on_bazaar_navigation_pressed("information")
 	await _capture(ui, "siltfire_blackreed_actions", "siltfire-blackreed-actions")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 1
+	ui.world.current_settlement = "blackreed_post"
+	ui.world.reset_visit_slots()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("crew")
+	await _capture(ui, "ma_ea_5_mara_roster", "ma-ea-5-mara-roster")
+	var mara_recruit := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.RECRUIT_CREW, "inputs": {"crew_id": "mara_voss"}})
+	var mara_assign := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.ASSIGN_CREW, "inputs": {"crew_id": "mara_voss"}}) if mara_recruit.ok else {"ok": false}
+	if not mara_assign.ok:
+		push_error("Native capture could not recruit and assign Mara Voss.")
+		quit(1)
+		return
+	ui.world.cargo = {"scrap": 2, "medicine": 2, "weight": 4}
+	ui._refresh_ui()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "mothlight_quay")
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._on_depart_pressed()
+	ui.map_panel._process(2.0)
+	ui._on_continue_journey_pressed()
+	if ui.world.pending_event.get("id", "") != "reedline_wheel_sink":
+		push_error("Native capture expected the deterministic Reedline wheel-sink event.")
+		quit(1)
+		return
+	await _capture(ui, "ma_ea_5_reedline_event", "ma-ea-5-reedline-event")
+	ui._on_event_choice_pressed("reedline_wheel_sink", "mara_split_axle_brace")
+	await _capture(ui, "ma_ea_5_reedline_result", "ma-ea-5-reedline-result")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 3
+	ui.world.current_settlement = "mirror_wells"
+	ui.world.resolved_event_ids.append("shardwind_tithe")
+	ui.world.reset_visit_slots()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("crew")
+	await _capture(ui, "ma_ea_5_orin_roster", "ma-ea-5-orin-roster")
+	var orin_recruit := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.RECRUIT_CREW, "inputs": {"crew_id": "orin_bell"}})
+	var orin_assign := MarketCommandProcessor.execute(ui.world, {"id": MarketCommandProcessor.ASSIGN_CREW, "inputs": {"crew_id": "orin_bell"}}) if orin_recruit.ok else {"ok": false}
+	if not orin_assign.ok:
+		push_error("Native capture could not recruit and assign Orin Bell.")
+		quit(1)
+		return
+	ui.world.cargo = {"lamp_oil": 2, "saltglass": 2, "weight": 4}
+	ui._refresh_ui()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "sunfall_exchange")
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._on_depart_pressed()
+	ui.map_panel._process(2.0)
+	ui._on_continue_journey_pressed()
+	if ui.world.pending_event.get("id", "") != "mirror_beacon_split":
+		push_error("Native capture expected the deterministic divided-beacon event.")
+		quit(1)
+		return
+	await _capture(ui, "ma_ea_5_mirror_event", "ma-ea-5-mirror-event")
+	ui._on_event_choice_pressed("mirror_beacon_split", "orin_occlusion_marks")
+	await _capture(ui, "ma_ea_5_mirror_result", "ma-ea-5-mirror-result")
 
 	ui._on_start_game_pressed()
 	ui.world.seed = 5
