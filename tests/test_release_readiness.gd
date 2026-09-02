@@ -29,6 +29,14 @@ func _test_early_access_content_floor() -> void:
 	_expect(MarketContent.ending_records().size() >= 6, "release candidate needs at least six endings")
 
 func _test_runtime_budget_and_bounded_history() -> void:
+	var isolated_snapshot := MarketContent.runtime_world()
+	var isolated_settlements: Dictionary = isolated_snapshot.get("settlements", {})
+	var isolated_ashgate: Dictionary = isolated_settlements.get("ashgate", {})
+	isolated_ashgate["name"] = "Mutated test settlement"
+	isolated_settlements["ashgate"] = isolated_ashgate
+	isolated_snapshot["settlements"] = isolated_settlements
+	_expect(String(MarketContent.settlements().get("ashgate", {}).get("name", "")) == "Ashgate", "public runtime snapshots must not mutate the validated content cache")
+
 	var started_usec := Time.get_ticks_usec()
 	var checksum := 0
 	for seed in range(25):
@@ -42,6 +50,7 @@ func _test_runtime_budget_and_bounded_history() -> void:
 			failures.append("release budget fixture could not round-trip seed %d" % (seed + 1))
 			return
 	var elapsed_msec := float(Time.get_ticks_usec() - started_usec) / 1000.0
+	print("Release budget: 25 deterministic world/save round trips in %.2f ms (limit: <5000.00 ms)" % elapsed_msec)
 	_expect(checksum > 0, "release budget fixture should exercise route calculations")
 	_expect(elapsed_msec < 5000.0, "25 deterministic world/save round trips exceeded the 5-second release budget: %.2f ms" % elapsed_msec)
 

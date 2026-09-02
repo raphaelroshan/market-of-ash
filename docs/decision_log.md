@@ -665,3 +665,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A working executable is not enough for an Early Access handoff. Testers need to know what they downloaded, how to preserve and roll back saves, which limitations remain, and which artifacts and checksums came from the same commit.
 
 **Trade-off:** Release identifiers and the guide path are intentionally strict for this candidate, so the next candidate must update them together. The binary remains unsigned, and automated packaging evidence does not replace storefront, antivirus-vendor, physical-device, assistive-technology, or moderated player certification.
+
+## ADR-084: Runtime content access copies only returned records
+
+**Decision:** Keep the validated runtime JSON in one private read-only cache. Public content accessors return deep copies of the requested record or section, while `runtime_world()` remains the explicit full-snapshot API.
+
+**Reason:** Save validation repeatedly asks for individual goods, routes, factions, and rule sets. Deep-copying the entire runtime document for every lookup made deterministic save restoration scale with the whole content file and pushed the release benchmark past five seconds. Copying only the returned record preserves caller isolation while removing unrelated allocation.
+
+**Trade-off:** Internal helpers must never expose the cached dictionary to callers. Tests retain a mutation-isolation check for the public full-snapshot API, and new accessors must duplicate any mutable value they return.
