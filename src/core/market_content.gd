@@ -7,7 +7,7 @@ extends RefCounted
 const RUNTIME_WORLD_PATH := "res://content/runtime_world.json"
 const REQUIRED_GOOD_IDS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil"]
 const REQUIRED_SETTLEMENT_IDS := ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells", "mothlight_quay", "blackreed_post"]
-const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "salt_causeway", "reedline_track"]
+const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "emberglass_byway", "salt_causeway", "reedline_track"]
 
 static var _cached_result: Dictionary = {}
 

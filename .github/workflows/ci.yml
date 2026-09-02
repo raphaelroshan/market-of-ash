@@ -220,7 +220,7 @@ jobs:
             --executable build/market-of-ash.exe `
             --archive artifacts/market-of-ash-windows.zip `
             --extract-directory $cleanDirectory `
-            --readme docs/releases/v0.14.0-early-access-rc1.md
+            --readme docs/releases/v0.15.0-early-access-rc1.md
           $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
           python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
           python tools/validate_windows_export.py $cleanExecutable

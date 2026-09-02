@@ -689,3 +689,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A terminal receipt must explain the player's economic and political story, not only roads and ordinary transactions. The sealed-arms choice is optional and recoverable, but omitting it from the debrief would hide the most consequential parallel-economy decision from the campaign's closing account.
 
 **Trade-off:** The receipt can become long in mature campaigns, so it remains scrollable and route/trade lists retain their bounded recent-history presentation. It summarizes authoritative commands without adding new save state.
+
+## ADR-087: Glasswind Reach gains a direct high-risk trade road
+
+**Decision:** Add the Emberglass Byway between Kiln Rest and Mirror Wells as Glasswind Reach's third road. It is cheaper and faster than the licensed two-leg connection through Sunfall Exchange, but carries materially higher cargo risk and shares the recoverable Shardwind event family. Keep its terms, region membership, specialist notes, and visual identity in the existing runtime-content and route-presentation boundaries.
+
+**Reason:** The Reach already has three markets and multiple ordinary goods, but two roads leave Kiln Rest and Mirror Wells dependent on the same Sunfall junction. A direct high-risk edge creates a legible speed-versus-exposure decision, closes the local triangle, and satisfies the investment gate without inventing another settlement, currency, or mandatory quest.
+
+**Trade-off:** The byway reuses an established event family and existing trade goods. Its value comes from topology and route terms rather than a new subsystem; final route illustration and balance still require human playtest calibration.

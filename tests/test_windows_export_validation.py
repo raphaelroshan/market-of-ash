@@ -62,7 +62,7 @@ def main() -> int:
         portable_archive = root / "market-of-ash-windows.zip"
         package_readme = root / "README.md"
         package_readme.write_text(
-            "# Market of Ash 0.14.0 — Early Access Candidate\n"
+            "# Market of Ash 0.15.0 — Investment Vertical Candidate\n"
             "## Install\n## Upgrade and save compatibility\n## Rollback\n## Known limitations\n",
             encoding="utf-8",
         )
@@ -86,7 +86,7 @@ def main() -> int:
             archive.write(valid, "Market of Ash/market-of-ash.exe")
             archive.writestr(
                 "Market of Ash/README.txt",
-                "# Market of Ash 0.14.0 — Early Access Candidate\n"
+                "# Market of Ash 0.15.0 — Investment Vertical Candidate\n"
                 "## Install\n## Upgrade and save compatibility\n## Rollback\n## Known limitations\n",
             )
             archive.writestr("unexpected.txt", "not part of the portable contract")
@@ -107,8 +107,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.14.0.0",
-                    "product_version": "0.14.0.0",
+                    "file_version": "0.15.0.0",
+                    "product_version": "0.15.0.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                     "capture": {"x": 1, "y": 1, "width": 8, "height": 8},
@@ -131,8 +131,8 @@ def main() -> int:
             json.dumps(
                 {
                     "product_name": "Market of Ash",
-                    "file_version": "0.14.0.0",
-                    "product_version": "0.14.0.0",
+                    "file_version": "0.15.0.0",
+                    "product_version": "0.15.0.0",
                     "window_title": "Market of Ash",
                     "window": {"width": 8, "height": 8},
                 }

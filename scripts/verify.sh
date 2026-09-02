@@ -46,6 +46,7 @@ if [[ -z "$GODOT_BIN" ]]; then
   echo "Then run: godot --headless --path . --script res://tests/test_ma_ea_4.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_ma_ea_5.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_investment_vertical.gd"
+	  echo "Then run: godot --headless --path . --script res://tests/test_investment_economy_matrix.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_release_readiness.gd"
   exit 2
 fi
@@ -63,6 +64,7 @@ for test_script in \
   test_ma_ea_4.gd \
   test_ma_ea_5.gd \
   test_investment_vertical.gd \
+	  test_investment_economy_matrix.gd \
   test_release_readiness.gd; do
   "$GODOT_BIN" --headless --path . --script "res://tests/$test_script"
 done

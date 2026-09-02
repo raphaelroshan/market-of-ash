@@ -21,10 +21,10 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> int:
     details = validate_release_contract(ROOT)
     assert details == {
-        "game_version": "0.14.0-early-access-rc1",
-        "windows_version": "0.14.0.0",
-        "content_version": "1.26.0",
-        "release_notes": "docs/releases/v0.14.0-early-access-rc1.md",
+        "game_version": "0.15.0-early-access-rc1",
+        "windows_version": "0.15.0.0",
+        "content_version": "1.27.0",
+        "release_notes": "docs/releases/v0.15.0-early-access-rc1.md",
     }
 
     with tempfile.TemporaryDirectory() as temporary_directory:
@@ -37,7 +37,7 @@ def main() -> int:
             "export_presets.cfg",
             "tools/ci_manifest.json",
             "content/runtime_world.json",
-            "docs/releases/v0.14.0-early-access-rc1.md",
+            "docs/releases/v0.15.0-early-access-rc1.md",
         ):
             source = ROOT / relative
             target = fixture / relative

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.26.0",
+  "content_version": "1.27.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -449,6 +449,7 @@
           "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours.",
       "glasswind_trace": "Wrapped cairns mark the licensed lane, but fresh shards show where the wind crossed it.",
       "mirror_run": "Several beacon reflections are false; Nara marks the one line backed by wheel tracks.",
+      "emberglass_byway": "Furnace haze hides fresh glassfall; Nara marks the vents whose smoke bends away from the safe wheel line.",
       "salt_causeway": "Nara listens for the live bell sequence where brine steam has swallowed the markers.",
       "reedline_track": "Fresh-cut reed mats show the firm track; dark water beside them hides the wheel-sink margins."
         }
@@ -472,6 +473,7 @@
           "dry_cut": "Jorun portions the water stops precisely; the cut still consumes at least one provision.",
       "glasswind_trace": "Jorun layers felt between brittle loads and reserves one ration pack for the sheltered halt.",
       "mirror_run": "Jorun packs for a single night leg and keeps one provision sealed for the return.",
+      "emberglass_byway": "Jorun pads the spice jars against the fast descent but cannot remove the byway's cargo exposure.",
       "salt_causeway": "Jorun seals the load against brine spray and keeps one ration clear of the damp.",
       "reedline_track": "Jorun widens the axle balance so a soft shoulder cannot claim the whole wagon."
         }
@@ -495,6 +497,7 @@
           "dry_cut": "Tess knows who sells passage claims, but not whether the markers still exist.",
       "glasswind_trace": "Tess knows which Consortium seal opens a wind lane and what political debt follows.",
       "mirror_run": "Tess can name the licensed beacon crews and the night guides excluded from their ledgers.",
+      "emberglass_byway": "Tess knows the byway is unlicensed: no toll clerk will help, and no Consortium seal will excuse a loss.",
       "salt_causeway": "Tess knows which bell keepers pool their fees and which ones answer to Brine Cross.",
           "reedline_track": "Tess can identify the watch fires that welcome independent caravans and those that levy private dues."
         }
@@ -518,6 +521,7 @@
           "dry_cut": "Mara warns that a repaired axle still cannot outrun a vanished salt marker.",
           "glasswind_trace": "Mara wraps the hubs against glass grit but leaves the wind decision to the driver.",
           "mirror_run": "Mara listens for loose iron at each beacon halt where reflections hide the road edge.",
+          "emberglass_byway": "Mara tightens every hub before the hot descent and points out where glass grit will bite the axle.",
           "salt_causeway": "Mara keeps the wheel pins above the brine and names the islands wide enough for a repair stop.",
           "reedline_track": "Mara identifies the black-water rut where one split brace can turn a wheel sink into a marked load line."
         }
@@ -541,6 +545,7 @@
           "dry_cut": "Orin warns that noon glare can counterfeit a beacon as easily as night glass.",
           "glasswind_trace": "Orin compares every screened cairn against the sun angle before trusting its licensed mirror.",
           "mirror_run": "Orin tracks which reflections move against the stars and marks the occluded true line.",
+          "emberglass_byway": "Orin reads heat shimmer against the vent smoke, separating a true ridge from its reflected twin.",
           "salt_causeway": "Orin pairs the bell intervals with lamp height when brine steam hides both in turn.",
           "reedline_track": "Orin uses watch-fire color, not brightness, to distinguish the firm road from marsh gas."
         }
@@ -902,7 +907,7 @@
         "id": "shardwind_tithe",
         "title": "The Shardwind Tithe",
         "category": "travel_decision",
-        "route_ids": ["glasswind_trace", "mirror_run"],
+        "route_ids": ["glasswind_trace", "mirror_run", "emberglass_byway"],
         "trigger_chance": 0.72,
         "trigger_roll_salt": 41,
         "minimum_cargo_value": 40,
@@ -1209,7 +1214,7 @@
       "name": "Glasswind Reach",
       "summary": "A shard-scoured trade reach where licensed glass roads compete with night guides and beacon markets.",
       "settlement_ids": ["sunfall_exchange", "kiln_rest", "mirror_wells"],
-      "route_ids": ["glasswind_trace", "mirror_run"]
+      "route_ids": ["glasswind_trace", "mirror_run", "emberglass_byway"]
     },
     "siltfire_march": {
       "name": "Siltfire March",
@@ -1566,12 +1571,13 @@
     ]
   },
   "routes": {
-    "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "map_path": ["ashgate", "hollow_market", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
-    "toll_road": {"name": "Toll Road", "endpoints": ["ashgate", "brine_cross"], "stops": ["ashgate", "cinderford", "brine_cross"], "map_path": ["ashgate", "cinderford", "brine_cross"], "segments": [{"endpoints": ["ashgate", "cinderford"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["cinderford", "brine_cross"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.10}], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
-    "dry_cut": {"name": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "map_path": ["hollow_market", "brine_cross", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."},
-    "glasswind_trace": {"name": "Glasswind Trace", "endpoints": ["hollow_market", "kiln_rest"], "stops": ["hollow_market", "sunfall_exchange", "kiln_rest"], "map_path": ["hollow_market", "sunfall_exchange", "kiln_rest"], "segments": [{"endpoints": ["hollow_market", "sunfall_exchange"], "cost": 5, "days": 1, "risk": 0.24}, {"endpoints": ["sunfall_exchange", "kiln_rest"], "cost": 4, "days": 1, "risk": 0.28}, {"endpoints": ["hollow_market", "kiln_rest"], "cost": 9, "days": 2, "risk": 0.30}], "cost": 9, "days": 2, "risk": 0.30, "description": "A licensed shardwind corridor with exposed glass dust and marked shelter cairns."},
-    "mirror_run": {"name": "Mirror Run", "endpoints": ["sunfall_exchange", "mirror_wells"], "map_path": ["sunfall_exchange", "mirror_wells"], "cost": 3, "days": 1, "risk": 0.42, "description": "A short night road whose mirror beacons trade speed for uncertain visibility."},
-    "salt_causeway": {"name": "Salt Causeway", "endpoints": ["brine_cross", "mothlight_quay"], "map_path": ["brine_cross", "mothlight_quay"], "cost": 3, "days": 1, "risk": 0.38, "description": "A cheap raised crossing where brine steam can erase every marker except the bell line."},
-    "reedline_track": {"name": "Reedline Track", "endpoints": ["mothlight_quay", "reedwatch"], "stops": ["mothlight_quay", "blackreed_post", "reedwatch"], "map_path": ["mothlight_quay", "blackreed_post", "reedwatch"], "segments": [{"endpoints": ["mothlight_quay", "blackreed_post"], "cost": 4, "days": 1, "risk": 0.2}, {"endpoints": ["blackreed_post", "reedwatch"], "cost": 3, "days": 1, "risk": 0.24}, {"endpoints": ["mothlight_quay", "reedwatch"], "cost": 7, "days": 2, "risk": 0.22}], "cost": 7, "days": 2, "risk": 0.22, "description": "A slower marked marsh road with firm reed mats, watch fires, and recoverable wheel-sink risk."}
+    "old_road": {"name": "Old Road", "map_label": "Old Rd", "endpoints": ["ashgate", "reedwatch"], "map_path": ["ashgate", "hollow_market", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
+    "toll_road": {"name": "Toll Road", "map_label": "Toll Rd", "endpoints": ["ashgate", "brine_cross"], "stops": ["ashgate", "cinderford", "brine_cross"], "map_path": ["ashgate", "cinderford", "brine_cross"], "segments": [{"endpoints": ["ashgate", "cinderford"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["cinderford", "brine_cross"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.10}], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
+    "dry_cut": {"name": "Dry Cut", "map_label": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "map_path": ["hollow_market", "brine_cross", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."},
+    "glasswind_trace": {"name": "Glasswind Trace", "map_label": "Glasswind", "endpoints": ["hollow_market", "kiln_rest"], "stops": ["hollow_market", "sunfall_exchange", "kiln_rest"], "map_path": ["hollow_market", "sunfall_exchange", "kiln_rest"], "segments": [{"endpoints": ["hollow_market", "sunfall_exchange"], "cost": 5, "days": 1, "risk": 0.24}, {"endpoints": ["sunfall_exchange", "kiln_rest"], "cost": 4, "days": 1, "risk": 0.28}, {"endpoints": ["hollow_market", "kiln_rest"], "cost": 9, "days": 2, "risk": 0.30}], "cost": 9, "days": 2, "risk": 0.30, "description": "A licensed shardwind corridor with exposed glass dust and marked shelter cairns."},
+    "mirror_run": {"name": "Mirror Run", "map_label": "Mirror Run", "endpoints": ["sunfall_exchange", "mirror_wells"], "map_path": ["sunfall_exchange", "mirror_wells"], "cost": 3, "days": 1, "risk": 0.42, "description": "A short night road whose mirror beacons trade speed for uncertain visibility."},
+    "emberglass_byway": {"name": "Emberglass Byway", "map_label": "Emberglass", "endpoints": ["kiln_rest", "mirror_wells"], "map_path": ["kiln_rest", "mirror_wells"], "cost": 2, "days": 1, "risk": 0.58, "description": "A fast unlicensed furnace track where heat mirage hides fresh glassfall."},
+    "salt_causeway": {"name": "Salt Causeway", "map_label": "Salt Way", "endpoints": ["brine_cross", "mothlight_quay"], "map_path": ["brine_cross", "mothlight_quay"], "cost": 3, "days": 1, "risk": 0.38, "description": "A cheap raised crossing where brine steam can erase every marker except the bell line."},
+    "reedline_track": {"name": "Reedline Track", "map_label": "Reedline", "endpoints": ["mothlight_quay", "reedwatch"], "stops": ["mothlight_quay", "blackreed_post", "reedwatch"], "map_path": ["mothlight_quay", "blackreed_post", "reedwatch"], "segments": [{"endpoints": ["mothlight_quay", "blackreed_post"], "cost": 4, "days": 1, "risk": 0.2}, {"endpoints": ["blackreed_post", "reedwatch"], "cost": 3, "days": 1, "risk": 0.24}, {"endpoints": ["mothlight_quay", "reedwatch"], "cost": 7, "days": 2, "risk": 0.22}], "cost": 7, "days": 2, "risk": 0.22, "description": "A slower marked marsh road with firm reed mats, watch fires, and recoverable wheel-sink risk."}
   }
 }

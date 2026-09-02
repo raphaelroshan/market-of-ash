@@ -49,7 +49,7 @@ Do not add multiplayer, procedural text generation, a large skill tree, dozens o
 
 Each agent task must name one player-facing behavior, preserve the authoritative simulation boundary, include data and UI ownership, add deterministic tests, verify save/resume, run the normal flow, and capture the affected screen at the current build version. The final report must list changed files, exact commands, timing or test output, screenshots, known limitations, and one next task.
 
-The active sequence is **MA-I1 Shell/performance**, **MA-I2 Trade fantasy**, **MA-I3 Creative vertical**, **MA-I4 Region two**, **MA-I5 Region three and basin memory**, and **MA-I6 Early Access hardening**. MA-I1 through MA-I3 are complete with evidence in their corresponding completion records; MA-I4 is active. Human testing may calibrate the build later but is not a prerequisite for these gates.
+The active sequence is **MA-I1 Shell/performance**, **MA-I2 Trade fantasy**, **MA-I3 Creative vertical**, **MA-I4 Region two**, **MA-I5 Region three and basin memory**, and **MA-I6 Early Access hardening**. MA-I1 through MA-I6 are complete for the automated scope, with evidence in their corresponding completion records and release notes. Physical-device, storefront, assistive-technology, and moderated player testing remain explicitly external gates.
 
 ## Decision
 

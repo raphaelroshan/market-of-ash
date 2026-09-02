@@ -40,6 +40,10 @@ const CAPTURE_SCREENS := [
 	"glasswind_event",
 	"glasswind_arrival",
 	"mirror_wells_market",
+	"emberglass_departure_desk",
+	"emberglass_road",
+	"emberglass_event",
+	"emberglass_arrival",
 	"night_market",
 	"night_market_supported",
 	"night_market_opposed",
@@ -295,6 +299,34 @@ func _run() -> void:
 	await _capture(ui, "glasswind_arrival", "glasswind-arrival")
 	ui._on_enter_settlement_pressed()
 	await _capture(ui, "mirror_wells_market", "mirror-wells-market")
+
+	ui._on_start_game_pressed()
+	ui.world.seed = 1
+	ui.world.current_settlement = "kiln_rest"
+	ui.world.day = 5
+	ui.world._update_crisis_modifiers()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._select_option_by_id(ui.shop_good_option, "lamp_oil")
+	ui.shop_quantity.value = 3
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "mirror_wells")
+	ui._on_destination_changed(ui.destination_option.selected)
+	await _capture(ui, "emberglass_departure_desk", "emberglass-departure-desk")
+	ui._on_depart_pressed()
+	if ui.world.pending_event.get("id", "") != "shardwind_tithe":
+		push_error("Native capture expected Shardwind Tithe on the Emberglass Byway.")
+		quit(1)
+		return
+	ui.map_panel._process(2.0)
+	await _capture(ui, "emberglass_road", "emberglass-road")
+	ui._on_continue_journey_pressed()
+	await _capture(ui, "emberglass_event", "emberglass-event")
+	ui._on_event_choice_pressed("shardwind_tithe", "shelter_behind_cairns")
+	await _capture(ui, "emberglass_arrival", "emberglass-arrival")
 
 	ui._on_start_game_pressed()
 	ui.world.advance_day(7)

@@ -1,6 +1,6 @@
 # Market of Ash
 
-Market of Ash is an agent-first Godot 4.x prototype for a premium Windows game targeting Steam and Epic Games Store. The project is intentionally compact: three connected regions, ten settlements, seven routes, ten goods, five crew members, eight route events, four standing factions, two emergent replacement actors, a staged water crisis, six endings, and a deterministic economy.
+Market of Ash is an agent-first Godot 4.x prototype for a premium Windows game targeting Steam and Epic Games Store. The project is intentionally compact: three connected regions, ten settlements, eight routes, ten goods, five crew members, eight route events, four standing factions, two emergent replacement actors, a staged water crisis, six endings, and a deterministic economy.
 
 ## Current state
 
@@ -10,7 +10,7 @@ The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, e
 
 The MA-I2 guided path now proves ordinary trade before optional work: buy Water, compare and travel the Old Road, sell into Reedwatch demand, observe the local price response, and bring Grain back to Ashgate. The Job Board is introduced afterward and does not require acceptance.
 
-The current release candidate is [`v0.14.0-early-access-rc1`](docs/releases/v0.14.0-early-access-rc1.md). It is an unsigned portable Windows prerelease with in-package install, upgrade, rollback, verification, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
+The current release candidate is [`v0.15.0-early-access-rc1`](docs/releases/v0.15.0-early-access-rc1.md). It is an unsigned portable Windows prerelease with in-package install, upgrade, rollback, verification, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
 
 ## Run the prototype
 
