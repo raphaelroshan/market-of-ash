@@ -521,6 +521,29 @@
           "salt_causeway": "Mara keeps the wheel pins above the brine and names the islands wide enough for a repair stop.",
           "reedline_track": "Mara identifies the black-water rut where one split brace can turn a wheel sink into a marked load line."
         }
+      },
+      {
+        "id": "orin_bell",
+        "name": "Orin Bell",
+        "role": "Signal Reader",
+        "personality": "Soft-spoken around people and ruthlessly skeptical of any light that claims to be a landmark.",
+        "recruit_settlement_id": "mirror_wells",
+        "recruit_cost": 21,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "provision_discount": 0,
+        "limitation": "Orin's triangulation response only appears while he is assigned and burns one carried lamp oil to expose the false line.",
+        "hook": "Assignment opens a signal-reading response when the Mirror Run divides: spend one lamp oil to establish permanent occlusion marks.",
+        "route_notes": {
+          "old_road": "Orin treats distant lanterns as travelers until their shadows prove they are fixed markers.",
+          "toll_road": "Orin reads the gate lamps for queue changes but cannot alter the posted inspection terms.",
+          "dry_cut": "Orin warns that noon glare can counterfeit a beacon as easily as night glass.",
+          "glasswind_trace": "Orin compares every screened cairn against the sun angle before trusting its licensed mirror.",
+          "mirror_run": "Orin tracks which reflections move against the stars and marks the occluded true line.",
+          "salt_causeway": "Orin pairs the bell intervals with lamp height when brine steam hides both in turn.",
+          "reedline_track": "Orin uses watch-fire color, not brightness, to distinguish the firm road from marsh gas."
+        }
       }
     ]
   },
@@ -1082,6 +1105,94 @@
               "description": "Mara's braced wheel marks reveal the firm load line through the Reedline's black-water rut."
             },
             "outcome": "Mara splits the carried scrap into a floating axle brace, frees the wagon, and leaves a durable marker line for later caravans."
+          }
+        ]
+      },
+      {
+        "id": "mirror_beacon_split",
+        "title": "Two Beacon Lines",
+        "category": "travel_decision",
+        "route_ids": ["mirror_run"],
+        "trigger_chance": 0.66,
+        "trigger_roll_salt": 73,
+        "minimum_cargo_value": 20,
+        "active_contract_relevant": false,
+        "setup": "Two rows of mirrored lamps claim the same night road, and each vanishes when the caravan faces the other.",
+        "stakes": "Buy a licensed guide, wait for the true moon line, trust the nearer reflection, or let an assigned signal reader expose the false beacons with carried oil.",
+        "choices": [
+          {
+            "id": "buy_consortium_signal_guide",
+            "label": "Buy a licensed signal guide for 6 ashmarks",
+            "money_cost": 6,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"glass_consortium": 1},
+            "outcome": "A licensed guide shutters the false lamps and records the caravan on the Consortium night ledger."
+          },
+          {
+            "id": "wait_for_true_moon_line",
+            "label": "Wait for the moon line — 1 provision, 1 day",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "mirror_run_true_moon_line",
+            "outcome": "The false reflections sink before dawn, revealing the fixed mirrors and their true bearing."
+          },
+          {
+            "id": "follow_nearest_reflection",
+            "label": "Follow the nearest reflection",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.40,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"glass_consortium": -1},
+            "outcome": "The caravan commits to the brighter line and accepts one disclosed exposed-unit roll beyond the licensed road."
+          },
+          {
+            "id": "orin_occlusion_marks",
+            "label": "Let Orin expose the false line — 1 lamp oil",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "cargo_cost": {"good_id": "lamp_oil", "quantity": 1},
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "requires_assigned_crew_id": "orin_bell",
+            "resilience_delta": 0,
+            "information_id": "mirror_run_occlusion_marks",
+            "route_condition": {
+              "route_id": "mirror_run",
+              "id": "mirror_run_occlusion_posts",
+              "label": "Occlusion posts",
+              "risk_delta": -0.07,
+              "cost_delta": 0,
+              "description": "Orin's shuttered lamps mark which beacon reflections remain fixed against the night sky."
+            },
+            "outcome": "Orin burns one sealed lamp behind a moving shutter, exposes the counterfeit reflections, and stakes a permanent true-line pattern."
           }
         ]
       }
