@@ -12,6 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.validate_release_contract import validate_release_contract
+from tools.write_release_checksums import sha256, write_release_checksums
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,6 +54,17 @@ def main() -> int:
             assert "release_ready" in str(error)
         else:
             raise AssertionError("a non-release-ready manifest should be rejected")
+
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        fixture = Path(temporary_directory)
+        first = fixture / "candidate.exe"
+        second = fixture / "release_manifest.json"
+        first.write_bytes(b"candidate")
+        second.write_text("{}", encoding="utf-8")
+        checksum_file = fixture / "SHA256SUMS.txt"
+        entries = write_release_checksums(checksum_file, [first, second])
+        assert entries == [f"{sha256(first)}  candidate.exe", f"{sha256(second)}  release_manifest.json"]
+        assert all("/" not in entry.split("  ", 1)[1] for entry in entries)
 
     print("Release contract validator tests: PASS")
     return 0

@@ -116,18 +116,15 @@ jobs:
       - name: Record release checksums
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
-          sha256sum \
+          python tools/write_release_checksums.py \
+            --output artifacts/SHA256SUMS.txt \
             "build/${slug}.exe" \
             artifacts/market-of-ash-windows.zip \
-            build/web/index.html \
-            build/web/index.pck \
-            build/web/index.wasm \
             "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             artifacts/windows-main-menu.png \
             artifacts/windows-version.json \
-            artifacts/release_manifest.json > artifacts/SHA256SUMS.txt
+            artifacts/release_manifest.json
           test -s artifacts/SHA256SUMS.txt
-          sha256sum -c artifacts/SHA256SUMS.txt
       - name: Upload Windows release candidate
         uses: actions/upload-artifact@v7
         with:
