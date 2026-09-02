@@ -103,6 +103,9 @@ const CONTROLLER_BUTTON_LABELS := {
 var world: AshWorldState
 var game_layer: Control
 var shop_layer: Control
+var shop_background: ColorRect
+var shop_market_card: PanelContainer
+var shop_action_card: PanelContainer
 var menu_layer: Control
 var intro_layer: Control
 var menu_columns
@@ -1183,10 +1186,10 @@ func _build_shop() -> void:
 	shop_layer = Control.new()
 	shop_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(shop_layer)
-	var background := ColorRect.new()
-	background.color = Color("#17130f")
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	shop_layer.add_child(background)
+	shop_background = ColorRect.new()
+	shop_background.color = Color("#17130f")
+	shop_background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	shop_layer.add_child(shop_background)
 
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -1200,15 +1203,15 @@ func _build_shop() -> void:
 	columns.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	margin.add_child(columns)
 
-	var market_card := PanelContainer.new()
-	market_card.name = "BazaarMarketPanel"
-	market_card.custom_minimum_size = Vector2(690, 0)
-	market_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	market_card.size_flags_stretch_ratio = 1.8
-	columns.add_child(market_card)
+	shop_market_card = PanelContainer.new()
+	shop_market_card.name = "BazaarMarketPanel"
+	shop_market_card.custom_minimum_size = Vector2(690, 0)
+	shop_market_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_market_card.size_flags_stretch_ratio = 1.8
+	columns.add_child(shop_market_card)
 	var market_shell := VBoxContainer.new()
 	market_shell.add_theme_constant_override("separation", 10)
-	market_card.add_child(market_shell)
+	shop_market_card.add_child(market_shell)
 	shop_title_label = Label.new()
 	shop_title_label.text = "SETTLEMENT BAZAAR"
 	shop_title_label.add_theme_font_size_override("font_size", 30)
@@ -1361,15 +1364,15 @@ func _build_shop() -> void:
 	shop_good_option.item_selected.connect(_on_shop_plan_changed)
 	shop_quantity.value_changed.connect(_on_shop_quantity_changed)
 
-	var action_card := PanelContainer.new()
-	action_card.name = "ShopActionCard"
-	action_card.custom_minimum_size = Vector2(360, 0)
-	action_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	action_card.size_flags_stretch_ratio = 1.0
-	columns.add_child(action_card)
+	shop_action_card = PanelContainer.new()
+	shop_action_card.name = "ShopActionCard"
+	shop_action_card.custom_minimum_size = Vector2(360, 0)
+	shop_action_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	shop_action_card.size_flags_stretch_ratio = 1.0
+	columns.add_child(shop_action_card)
 	var action_shell := VBoxContainer.new()
 	action_shell.add_theme_constant_override("separation", 10)
-	action_card.add_child(action_shell)
+	shop_action_card.add_child(action_shell)
 	shop_action_scroll = ScrollContainer.new()
 	shop_action_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	shop_action_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
@@ -4422,6 +4425,28 @@ func _set_event(text: String) -> void:
 	if event_scroll:
 		event_scroll.scroll_vertical = 0
 
+func _apply_bazaar_identity_theme(settlement: Dictionary) -> void:
+	var identity: Dictionary = settlement.get("identity", {})
+	var tint := Color(String(identity.get("tint", "#80634d")))
+	var sky := Color(String(identity.get("sky", "#30251f")))
+	var ground := Color(String(identity.get("ground", "#443327")))
+	if shop_background:
+		shop_background.color = sky.darkened(0.62)
+	if shop_market_card:
+		var market_style := StyleBoxFlat.new()
+		market_style.bg_color = ground.darkened(0.42)
+		market_style.border_color = tint.darkened(0.08)
+		market_style.set_border_width_all(2)
+		market_style.set_corner_radius_all(3)
+		shop_market_card.add_theme_stylebox_override("panel", market_style)
+	if shop_action_card:
+		var action_style := StyleBoxFlat.new()
+		action_style.bg_color = sky.darkened(0.34)
+		action_style.border_color = tint.darkened(0.18)
+		action_style.set_border_width_all(2)
+		action_style.set_corner_radius_all(3)
+		shop_action_card.add_theme_stylebox_override("panel", action_style)
+
 func _refresh_ui() -> void:
 	tutorial.refresh(world, _current_ui_state_id(), arrival_pending)
 	if not tutorial.enabled and not tutorial.completed:
@@ -4465,6 +4490,7 @@ func _refresh_ui() -> void:
 		cargo_quantity.editable = not journey_locked
 	if shop_status_label:
 		var settlement := world.settlement(world.current_settlement)
+		_apply_bazaar_identity_theme(settlement)
 		
 		var crisis := MarketContent.crisis_stage(world.crisis_stage)
 		if shop_title_label:
@@ -4731,7 +4757,7 @@ class IntroScene extends Control:
 			var point := Vector2(size.x * (0.14 + well_index * 0.17), size.y * (0.56 + (well_index % 2) * 0.08))
 			draw_circle(point, 12, Color("#5f817b"), false, 3.0)
 			draw_line(point + Vector2(-20, 18), point + Vector2(20, 18), Color("#a97951"), 3.0)
-		draw_string(ThemeDB.fallback_font, Vector2(24, size.y - 32), "EIGHT MARKETS · FIVE ROADS · ONE CARAVAN NETWORK", HORIZONTAL_ALIGNMENT_LEFT, size.x - 48, 14, Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, Vector2(24, size.y - 32), "TEN MARKETS · SEVEN ROADS · ONE CARAVAN NETWORK", HORIZONTAL_ALIGNMENT_LEFT, size.x - 48, 14, Color("#e6c58d"))
 
 	func _draw_caravan_ledger() -> void:
 		var center := Vector2(size.x * 0.50, size.y * 0.48)
@@ -4828,6 +4854,25 @@ class BazaarScene extends Control:
 					var mirror_center := Vector2(mirror_x, horizon_y - 8 - float(mirror_index % 2) * 13.0)
 					draw_colored_polygon(PackedVector2Array([mirror_center + Vector2(0, -18), mirror_center + Vector2(13, 0), mirror_center + Vector2(0, 18), mirror_center + Vector2(-13, 0)]), ink.darkened(0.12))
 					draw_line(mirror_center + Vector2(0, 18), mirror_center + Vector2(0, 34), ink, 3.0)
+			"quay":
+				draw_rect(Rect2(area.position.x, horizon_y + 9, area.size.x, 7), Color("#36544e"), true)
+				for pier_index in range(4):
+					var pier_x := area.position.x + area.size.x * (0.18 + pier_index * 0.2)
+					draw_line(Vector2(pier_x, horizon_y - 2), Vector2(pier_x, horizon_y + 27), ink.darkened(0.22), 5.0)
+					draw_line(Vector2(pier_x - 22, horizon_y - 2), Vector2(pier_x + 22, horizon_y - 2), ink, 4.0)
+				draw_line(Vector2(area.position.x + 18, horizon_y - 37), Vector2(area.end.x - 22, horizon_y - 25), ink.darkened(0.14), 2.0)
+				for lamp_index in range(6):
+					var lamp_x := area.position.x + 34.0 + lamp_index * (area.size.x - 68.0) / 5.0
+					draw_circle(Vector2(lamp_x, horizon_y - 31.0 + lamp_index * 2.4), 4.5, Color("#d7b568"))
+			"watchtower":
+				var tower_center := Vector2(area.position.x + area.size.x * 0.68, horizon_y)
+				draw_line(tower_center + Vector2(-24, 12), tower_center + Vector2(-13, -48), ink.darkened(0.16), 6.0)
+				draw_line(tower_center + Vector2(24, 12), tower_center + Vector2(13, -48), ink.darkened(0.16), 6.0)
+				draw_rect(Rect2(tower_center + Vector2(-29, -55), Vector2(58, 18)), ink, true)
+				draw_circle(tower_center + Vector2(0, -64), 7.0, Color("#d99a55"))
+				for reed_index in range(13):
+					var reed_x := area.position.x + 12.0 + reed_index * (area.size.x - 24.0) / 12.0
+					draw_line(Vector2(reed_x, horizon_y + 15), Vector2(reed_x + 2, horizon_y - float((reed_index * 5) % 17)), ink.darkened(0.18), 2.0)
 			"brine":
 				for pan_index in range(5):
 					var pan_x := area.position.x + 30.0 + pan_index * area.size.x / 5.0
@@ -5034,10 +5079,11 @@ class MapPanel extends Control:
 
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell := _settlement_cell(settlement_id)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 52, 40))
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 52.0, 40))
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
-		return _settlement_marker_rect(settlement_id).grow_individual(0.0, 10.0, 0.0, 10.0)
+		var vertical_margin := 0.0 if String(MarketContent.settlements().get(settlement_id, {}).get("region_id", "")) == "siltfire_march" else 10.0
+		return _settlement_marker_rect(settlement_id).grow_individual(0.0, vertical_margin, 0.0, vertical_margin)
 
 	func _route_points(route_id: String) -> Array[Vector2]:
 		var route_record: Dictionary = world.routes.get(route_id, {}) if world != null else MarketContent.route(route_id)
@@ -5061,6 +5107,10 @@ class MapPanel extends Control:
 				return Color("#d19a64")
 			"mirror_run":
 				return Color("#9f8bc0")
+			"salt_causeway":
+				return Color("#7fb5ab")
+			"reedline_track":
+				return Color("#879765")
 		return Color("#705746")
 
 	func _route_label(route_id: String) -> String:
@@ -5341,6 +5391,10 @@ class MapPanel extends Control:
 				return {"scene_id": "glasswind_shards", "title": "GLASSWIND TRACE", "waypoint": "The wrapped marker", "sky": Color("#46372f"), "ground": Color("#2d211c"), "road": Color("#72513c"), "accent": Color("#d19a64")}
 			"mirror_run":
 				return {"scene_id": "mirror_night_road", "title": "MIRROR RUN", "waypoint": "The last beacon", "sky": Color("#302d40"), "ground": Color("#24212c"), "road": Color("#554a63"), "accent": Color("#9f8bc0")}
+			"salt_causeway":
+				return {"scene_id": "brine_bell_causeway", "title": "SALT CAUSEWAY", "waypoint": "The next bell marker", "sky": Color("#314643"), "ground": Color("#263934"), "road": Color("#65746a"), "accent": Color("#7fb5ab")}
+			"reedline_track":
+				return {"scene_id": "blackreed_marsh_track", "title": "REEDLINE TRACK", "waypoint": "The raised watch fire", "sky": Color("#30372d"), "ground": Color("#252c22"), "road": Color("#4f593e"), "accent": Color("#879765")}
 		return {
 			"scene_id": "basin_road",
 			"title": "BASIN ROAD",
@@ -5458,6 +5512,30 @@ class MapPanel extends Control:
 			mirror + Vector2(18, 15),
 		]), accent, 2.0)
 
+	func _draw_salt_causeway_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(7):
+			var drift := fmod(float(index * 139) - travel_progress * 610.0, board.size.x + 120.0) - 60.0
+			var base := Vector2(board.position.x + drift, horizon_y + 30.0 + float(index % 3) * 24.0)
+			draw_line(base, base + Vector2(0, -34), accent.darkened(0.24), 3.0)
+			draw_arc(base + Vector2(0, -39), 6.0, 0.0, TAU, 16, accent, 2.0)
+			draw_line(base + Vector2(-6, -39), base + Vector2(6, -39), accent, 2.0)
+		for steam_index in range(4):
+			var steam_x := board.position.x + board.size.x * (0.18 + steam_index * 0.2)
+			draw_arc(Vector2(steam_x, horizon_y + 12), 24.0 + steam_index * 4.0, PI * 1.15, PI * 1.75, 18, Color(accent, 0.24), 3.0)
+
+	func _draw_reedline_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(16):
+			var drift := fmod(float(index * 71) - travel_progress * 470.0, board.size.x + 80.0) - 40.0
+			var base := Vector2(board.position.x + drift, horizon_y + 38.0 + float(index % 4) * 18.0)
+			var bend := -5.0 if index % 2 == 0 else 5.0
+			draw_line(base, base + Vector2(bend, -27.0 - float(index % 3) * 5.0), accent.darkened(0.28), 2.0)
+		if travel_phase in ["road", "encounter"]:
+			var watch := Vector2(board.position.x + board.size.x * 0.73, horizon_y + 31.0)
+			draw_line(watch + Vector2(-13, 18), watch + Vector2(-7, -32), accent.darkened(0.18), 4.0)
+			draw_line(watch + Vector2(13, 18), watch + Vector2(7, -32), accent.darkened(0.18), 4.0)
+			draw_rect(Rect2(watch + Vector2(-17, -38), Vector2(34, 11)), accent, true)
+			draw_circle(watch + Vector2(0, -45), 5.0, Color("#d99a55"))
+
 	func _draw_road_scene() -> void:
 		var board := _board_rect()
 		var profile := _road_profile(travel_route_id)
@@ -5495,6 +5573,10 @@ class MapPanel extends Control:
 				_draw_glasswind_landmarks(board, horizon_y, accent)
 			"mirror_run":
 				_draw_mirror_run_landmarks(board, horizon_y, accent)
+			"salt_causeway":
+				_draw_salt_causeway_landmarks(board, horizon_y, accent)
+			"reedline_track":
+				_draw_reedline_landmarks(board, horizon_y, accent)
 		var route_name := _route_label(travel_route_id).to_upper()
 		var origin_name := String(world.settlement(travel_origin_id).get("name", travel_origin_id)) if world != null else travel_origin_id
 		var destination_name := String(world.settlement(travel_destination_id).get("name", travel_destination_id)) if world != null else travel_destination_id

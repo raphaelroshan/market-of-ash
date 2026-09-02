@@ -115,16 +115,17 @@ func _init() -> void:
 	_expect(merchant_world.ending_summary.contains("concentrated profit") and merchant_world.ending_summary.contains("public reserve remains fragile"), "the merchant ending should explain its supply and trade-style consequences")
 
 	var tour_world := AshWorldState.new(1107)
+	tour_world.provisions = 30
 	var visited := {"ashgate": true}
-	var tour_destinations := ["cinderford", "brine_cross", "ashgate", "reedwatch", "hollow_market", "sunfall_exchange", "kiln_rest", "sunfall_exchange", "mirror_wells"]
-	var tour_routes := ["toll_road", "toll_road", "toll_road", "old_road", "dry_cut", "glasswind_trace", "glasswind_trace", "glasswind_trace", "mirror_run"]
+	var tour_destinations := ["cinderford", "brine_cross", "mothlight_quay", "blackreed_post", "reedwatch", "ashgate", "reedwatch", "hollow_market", "sunfall_exchange", "kiln_rest", "sunfall_exchange", "mirror_wells"]
+	var tour_routes := ["toll_road", "toll_road", "salt_causeway", "reedline_track", "reedline_track", "old_road", "old_road", "dry_cut", "glasswind_trace", "glasswind_trace", "glasswind_trace", "mirror_run"]
 	for index in range(tour_destinations.size()):
 		var tour_result := _command(tour_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": tour_routes[index], "destination_id": tour_destinations[index]})
-		_expect_ok(tour_result, "reach %s during the eight-settlement tour" % tour_destinations[index])
+		_expect_ok(tour_result, "reach %s during the ten-settlement tour" % tour_destinations[index])
 		if tour_result.ok:
 			visited[tour_world.current_settlement] = true
-	_expect(visited.size() == 8 and tour_world.current_settlement == "mirror_wells", "the authored five-route graph should make all eight settlements reachable from a fresh save")
-	_expect(tour_world.money >= 0 and tour_world.provisions >= 0, "the empty-cargo eight-settlement tour should not soft-lock on route resources")
+	_expect(visited.size() == 10 and tour_world.current_settlement == "mirror_wells", "the authored seven-route graph should make all ten settlements reachable through legal segments")
+	_expect(tour_world.money >= 0 and tour_world.provisions >= 0, "the empty-cargo ten-settlement tour should not soft-lock on route resources")
 
 	var fresh_ashgate := AshWorldState.new(1107)
 	var loaded_exposed_route := AshWorldState.new(1107)

@@ -27,6 +27,7 @@ if command -v godot >/dev/null 2>&1; then
   godot --headless --path . --script res://tests/test_campaign.gd
   godot --headless --path . --script res://tests/test_game_quality.gd
   godot --headless --path . --script res://tests/test_second_region.gd
+  godot --headless --path . --script res://tests/test_third_region.gd
 elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --path . --script res://tests/test_economy.gd
   godot4 --headless --path . --script res://tests/test_map_ui.gd
@@ -36,6 +37,7 @@ elif command -v godot4 >/dev/null 2>&1; then
   godot4 --headless --path . --script res://tests/test_campaign.gd
   godot4 --headless --path . --script res://tests/test_game_quality.gd
   godot4 --headless --path . --script res://tests/test_second_region.gd
+  godot4 --headless --path . --script res://tests/test_third_region.gd
 else
   echo "Godot 4.x is not installed or not on PATH."
   echo "Run: godot --headless --path . --script res://tests/test_economy.gd"
@@ -46,5 +48,6 @@ else
   echo "Then run: godot --headless --path . --script res://tests/test_campaign.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_game_quality.gd"
   echo "Then run: godot --headless --path . --script res://tests/test_second_region.gd"
+  echo "Then run: godot --headless --path . --script res://tests/test_third_region.gd"
   exit 2
 fi

@@ -6,8 +6,8 @@ extends RefCounted
 
 const RUNTIME_WORLD_PATH := "res://content/runtime_world.json"
 const REQUIRED_GOOD_IDS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil"]
-const REQUIRED_SETTLEMENT_IDS := ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells"]
-const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run"]
+const REQUIRED_SETTLEMENT_IDS := ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells", "mothlight_quay", "blackreed_post"]
+const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "salt_causeway", "reedline_track"]
 
 static var _cached_result: Dictionary = {}
 
@@ -400,7 +400,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 					if occupied_map_cells.has(map_cell_key):
 						errors.append("settlement %s identity map_cell overlaps %s" % [settlement_id, String(occupied_map_cells[map_cell_key])])
 					occupied_map_cells[map_cell_key] = settlement_id
-				if String(identity.get("landmark", "")) not in ["gate", "brine", "forge", "lanterns", "reeds", "glass", "kiln", "mirrors"]:
+				if String(identity.get("landmark", "")) not in ["gate", "brine", "forge", "lanterns", "reeds", "glass", "kiln", "mirrors", "quay", "watchtower"]:
 					errors.append("settlement %s identity landmark is unsupported" % settlement_id)
 				for color_field in ["tint", "sky", "ground"]:
 					var color_value := String(identity.get(color_field, ""))

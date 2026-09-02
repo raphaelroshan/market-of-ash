@@ -50,6 +50,19 @@ REQUIRED_NATIVE_SCREENS = {
     "glasswind_arrival",
     "mirror_wells_market",
     "night_market",
+    "siltfire_mothlight_market",
+    "siltfire_mothlight_actions",
+    "siltfire_departure_desk",
+    "siltfire_departure",
+    "siltfire_road",
+    "siltfire_event",
+    "siltfire_arrival",
+    "siltfire_reedline_departure_desk",
+    "siltfire_reedline_departure",
+    "siltfire_reedline_road",
+    "siltfire_blackreed_arrival",
+    "siltfire_blackreed_market",
+    "siltfire_blackreed_actions",
     "new_game_confirmation",
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
@@ -76,6 +89,19 @@ EXPECTED_UI_STATE = {
     "glasswind_arrival": "arrival_handoff",
     "mirror_wells_market": "settlement_shop",
     "night_market": "settlement_shop",
+    "siltfire_mothlight_market": "settlement_shop",
+    "siltfire_mothlight_actions": "settlement_shop",
+    "siltfire_departure_desk": "departure_desk",
+    "siltfire_departure": "route_travel",
+    "siltfire_road": "route_travel",
+    "siltfire_event": "route_event",
+    "siltfire_arrival": "arrival_handoff",
+    "siltfire_reedline_departure_desk": "departure_desk",
+    "siltfire_reedline_departure": "route_travel",
+    "siltfire_reedline_road": "route_travel",
+    "siltfire_blackreed_arrival": "arrival_handoff",
+    "siltfire_blackreed_market": "settlement_shop",
+    "siltfire_blackreed_actions": "settlement_shop",
     "trade_receipt": "settlement_shop",
     "trade_receipt_large_text": "settlement_shop",
     "route_departure": "route_travel",
@@ -113,6 +139,19 @@ REQUIRED_LAYOUT_CONTROLS = {
     "glasswind_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
     "mirror_wells_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "night_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "siltfire_mothlight_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "siltfire_mothlight_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "siltfire_departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "siltfire_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
+    "siltfire_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "siltfire_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "siltfire_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
+    "siltfire_reedline_departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "siltfire_reedline_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
+    "siltfire_reedline_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "siltfire_blackreed_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll"),
+    "siltfire_blackreed_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "siltfire_blackreed_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "route_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
@@ -268,6 +307,16 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Glasswind road capture is missing the Mirror Run identity")
         if screen == "glasswind_event" and ui_state.get("pending_event_id") != "shardwind_tithe":
             raise AssertionError(f"{file_name}: Glasswind event capture is missing Shardwind Tithe")
+        if screen in {"siltfire_departure", "siltfire_road"} and ui_state.get("road_scene_id") != "brine_bell_causeway":
+            raise AssertionError(f"{file_name}: Siltfire causeway capture is missing its bell-road identity")
+        if screen == "siltfire_event" and ui_state.get("pending_event_id") != "causeway_whiteout":
+            raise AssertionError(f"{file_name}: Siltfire event capture is missing Bells in the Whiteout")
+        if screen == "siltfire_mothlight_market" and ui_state.get("bazaar_scene_id") != "mothlight_resin_quay":
+            raise AssertionError(f"{file_name}: Siltfire arrival is missing Mothlight Quay's identity")
+        if screen in {"siltfire_reedline_departure", "siltfire_reedline_road"} and ui_state.get("road_scene_id") != "blackreed_marsh_track":
+            raise AssertionError(f"{file_name}: Reedline capture is missing its marsh-road identity")
+        if screen == "siltfire_blackreed_market" and ui_state.get("bazaar_scene_id") != "blackreed_watch_market":
+            raise AssertionError(f"{file_name}: Siltfire arrival is missing Blackreed Post's identity")
         if screen in {"well_commons_jobs", "well_commons_market", "well_commons_actions"} and (
             ui_state.get("adaptive_scenario_state") != "expired"
             or "well_commons" not in ui_state.get("emergent_factions", [])
@@ -325,6 +374,18 @@ def main() -> int:
         require_distinct_screen(screens["glasswind_event"], screens["glasswind_arrival"], f"{viewport} Resolve Shardwind Tithe")
         require_distinct_screen(screens["glasswind_arrival"], screens["mirror_wells_market"], f"{viewport} Enter Mirror Wells")
         require_distinct_screen(screens["mirror_wells_market"], screens["night_market"], f"{viewport} Activate Night Market")
+        require_distinct_screen(screens["destination_shop"], screens["siltfire_mothlight_market"], f"{viewport} Enter Siltfire March")
+        require_distinct_screen(screens["siltfire_mothlight_market"], screens["siltfire_mothlight_actions"], f"{viewport} Open Mothlight services")
+        require_distinct_screen(screens["siltfire_departure_desk"], screens["siltfire_departure"], f"{viewport} Commit Salt Causeway departure")
+        require_distinct_screen(screens["siltfire_departure"], screens["siltfire_road"], f"{viewport} Reach Salt Causeway road stop", minimum_ratio=0.005)
+        require_distinct_screen(screens["siltfire_road"], screens["siltfire_event"], f"{viewport} Reveal causeway whiteout")
+        require_distinct_screen(screens["siltfire_event"], screens["siltfire_arrival"], f"{viewport} Resolve causeway whiteout")
+        require_distinct_screen(screens["siltfire_arrival"], screens["siltfire_mothlight_market"], f"{viewport} Enter Mothlight Quay")
+        require_distinct_screen(screens["siltfire_reedline_departure_desk"], screens["siltfire_reedline_departure"], f"{viewport} Commit Reedline departure")
+        require_distinct_screen(screens["siltfire_reedline_departure"], screens["siltfire_reedline_road"], f"{viewport} Reach Reedline road stop", minimum_ratio=0.005)
+        require_distinct_screen(screens["siltfire_reedline_road"], screens["siltfire_blackreed_arrival"], f"{viewport} Complete Reedline travel")
+        require_distinct_screen(screens["siltfire_blackreed_arrival"], screens["siltfire_blackreed_market"], f"{viewport} Enter Blackreed Post")
+        require_distinct_screen(screens["siltfire_blackreed_market"], screens["siltfire_blackreed_actions"], f"{viewport} Open Blackreed services")
         require_distinct_screen(screens["main_menu"], screens["new_game_confirmation"], f"{viewport} New game confirmation", minimum_ratio=0.01)
         for screen in ("main_menu", "settlement_shop", "pause", "departure_desk"):
             require_distinct_screen(

@@ -633,3 +633,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Early Access breadth needs another complete economic loop, not decorative map nodes or a prescribed quest chain. Saltglass, dune spice, and lamp oil create ordinary two-way trading among Sunfall Exchange, Kiln Rest, and Mirror Wells. The official beacon contract offers a modest alternate path, while ignoring it creates the Night Market and a new saltglass premium instead of removing play.
 
 **Trade-off:** The region uses provisional code-native art and shares the Basin's crisis clock and interface shell. It adds no new combat model, pathfinder, or parallel economy; the third region and broader crew/event/ending targets remain separate milestones.
+
+## ADR-080: Siltfire March closes the map through ordinary trade
+
+**Decision:** Add Siltfire March as two settlements connected to opposite sides of the existing network. Mothlight Quay and Blackreed Post reuse the canonical goods catalog but invert medicine/cloth and grain/charcoal supply roles. The Salt Causeway carries a recoverable whiteout event; the Reedline Track provides a steadier return connection. Both roads expose one save-safe local preparation. Bazaar card palettes derive from authored settlement identity so arrival changes the full place presentation.
+
+**Reason:** The third region must make the map more connected and ordinary trading more legible, not inflate the catalog. Two complementary markets create a repeatable loop, while the two Basin connections let the player enter and leave without retracing a single branch. Distinct route hazards and preparations make road choice consequential.
+
+**Trade-off:** Siltfire uses existing factions and goods, reserving the fourth standing faction and additional endings for MA-EA-4. Its visuals remain code-native production scaffolding, and the shared Basin crisis clock still governs all regions.

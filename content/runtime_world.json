@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.23.0",
+  "content_version": "1.24.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -231,6 +231,38 @@
         "tradeoff": "Forgo an immediate sale to strengthen Mirror Wells and the replacement market while losing Consortium favor.",
         "result": "Two lamp oil keep the night beacons burning. Mirror Wells resilience and Night Market support rise by one.",
         "unavailable_reason": "Available after the Night Market replaces the failed lamp delivery."
+      },
+      {
+        "id": "mothlight_bell_chart",
+        "settlement_id": "mothlight_quay",
+        "name": "Chart the causeway bells",
+        "category": "information",
+        "available": true,
+        "once_per_campaign": true,
+        "cost": 8,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "salt_causeway_bell_chart", "route_condition": {"route_id": "salt_causeway", "id": "causeway_bells_charted", "label": "Causeway bells charted", "risk_delta": -0.08, "cost_delta": 0, "description": "A current bell chart keeps the caravan aligned when brine steam hides the causeway."}},
+        "description": "Pay Mothlight pilots to mark the live bell sequence across the salt flats.",
+        "tradeoff": "Spend eight ashmarks and one visit slot to reduce Salt Causeway risk by eight points.",
+        "result": "The pilots mark the live bell sequence. Salt Causeway exposure falls by eight points and the chart is recorded.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "blackreed_reed_skids",
+        "settlement_id": "blackreed_post",
+        "name": "Fit blackreed skids",
+        "category": "information",
+        "available": true,
+        "once_per_campaign": true,
+        "cost": 7,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"information_id": "reedline_skid_pattern", "route_condition": {"route_id": "reedline_track", "id": "blackreed_skids_fitted", "label": "Blackreed skids fitted", "risk_delta": -0.07, "cost_delta": 0, "description": "Wide reed skids stop the caravan wheels sinking into the soft margins of the Reedline Track."}},
+        "description": "Let the post's wheelwrights bind wide reed skids beneath the caravan axles.",
+        "tradeoff": "Spend seven ashmarks, one day, and one visit slot to reduce Reedline Track risk by seven points.",
+        "result": "The wheelwrights bind broad skids beneath the axles. Reedline Track exposure falls by seven points.",
+        "unavailable_reason": ""
       }
     ]
   },
@@ -381,8 +413,10 @@
           "old_road": "Fresh wheel cuts leave room for improvised blocks and unmarked riders.",
           "toll_road": "The road surface is sound; queues, chalk marks, and inspections remain the uncertainty.",
           "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours.",
-          "glasswind_trace": "Wrapped cairns mark the licensed lane, but fresh shards show where the wind crossed it.",
-          "mirror_run": "Several beacon reflections are false; Nara marks the one line backed by wheel tracks."
+      "glasswind_trace": "Wrapped cairns mark the licensed lane, but fresh shards show where the wind crossed it.",
+      "mirror_run": "Several beacon reflections are false; Nara marks the one line backed by wheel tracks.",
+      "salt_causeway": "Nara listens for the live bell sequence where brine steam has swallowed the markers.",
+      "reedline_track": "Fresh-cut reed mats show the firm track; dark water beside them hides the wheel-sink margins."
         }
       },
       {
@@ -402,8 +436,10 @@
           "old_road": "Jorun shifts the dense crates over the rear axle and seals one ration pack for later.",
           "toll_road": "Jorun matches the manifest order to the gate queue and avoids opening a second ration pack.",
           "dry_cut": "Jorun portions the water stops precisely; the cut still consumes at least one provision.",
-          "glasswind_trace": "Jorun layers felt between brittle loads and reserves one ration pack for the sheltered halt.",
-          "mirror_run": "Jorun packs for a single night leg and keeps one provision sealed for the return."
+      "glasswind_trace": "Jorun layers felt between brittle loads and reserves one ration pack for the sheltered halt.",
+      "mirror_run": "Jorun packs for a single night leg and keeps one provision sealed for the return.",
+      "salt_causeway": "Jorun seals the load against brine spray and keeps one ration clear of the damp.",
+      "reedline_track": "Jorun widens the axle balance so a soft shoulder cannot claim the whole wagon."
         }
       },
       {
@@ -423,8 +459,10 @@
           "old_road": "Tess names the brokers who profit when official traffic abandons the road.",
           "toll_road": "Tess recognizes which seal numbers force a clerk to defend the posted rate.",
           "dry_cut": "Tess knows who sells passage claims, but not whether the markers still exist.",
-          "glasswind_trace": "Tess knows which Consortium seal opens a wind lane and what political debt follows.",
-          "mirror_run": "Tess can name the licensed beacon crews and the night guides excluded from their ledgers."
+      "glasswind_trace": "Tess knows which Consortium seal opens a wind lane and what political debt follows.",
+      "mirror_run": "Tess can name the licensed beacon crews and the night guides excluded from their ledgers.",
+      "salt_causeway": "Tess knows which bell keepers pool their fees and which ones answer to Brine Cross.",
+      "reedline_track": "Tess can identify the watch fires that welcome independent caravans and those that levy private dues."
         }
       }
     ]
@@ -829,6 +867,67 @@
             "outcome": "The caravan keeps its money and accepts one disclosed exposed-unit roll through the glass dust."
           }
         ]
+      },
+      {
+        "id": "causeway_whiteout",
+        "title": "Bells in the Whiteout",
+        "category": "travel_decision",
+        "route_ids": ["salt_causeway"],
+        "trigger_chance": 0.76,
+        "trigger_roll_salt": 53,
+        "minimum_cargo_value": 30,
+        "active_contract_relevant": false,
+        "setup": "Hot brine rolls across the Salt Causeway and erases every marker except the bell line.",
+        "stakes": "Pay the bell keepers for a close guide, wait on a raised salt island, or push through with one disclosed cargo unit exposed.",
+        "choices": [
+          {
+            "id": "hire_bell_keeper",
+            "label": "Hire a bell keeper for 6 ashmarks",
+            "money_cost": 6,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"caravans": 1},
+            "outcome": "A bell keeper walks the lead axle from marker to marker and records the caravan as a reliable payer."
+          },
+          {
+            "id": "wait_on_salt_island",
+            "label": "Wait on the marked salt island",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "causeway_salt_islands",
+            "outcome": "The caravan waits above the brine and records a safe salt-island sequence before continuing."
+          },
+          {
+            "id": "follow_the_fading_bells",
+            "label": "Follow the fading bells",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.38,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The caravan keeps moving through the whiteout and accepts the disclosed exposed-unit risk."
+          }
+        ]
       }
     ]
   },
@@ -844,6 +943,12 @@
       "summary": "A shard-scoured trade reach where licensed glass roads compete with night guides and beacon markets.",
       "settlement_ids": ["sunfall_exchange", "kiln_rest", "mirror_wells"],
       "route_ids": ["glasswind_trace", "mirror_run"]
+    },
+    "siltfire_march": {
+      "name": "Siltfire March",
+      "summary": "A steaming salt marsh where bell pilots, resin healers, and reed cutters keep two difficult roads commercially alive.",
+      "settlement_ids": ["mothlight_quay", "blackreed_post"],
+      "route_ids": ["salt_causeway", "reedline_track"]
     }
   },
   "settlements": {
@@ -1067,6 +1172,52 @@
       "price_modifiers": {"grain": 1.05, "water": 0.92, "scrap": 1.0, "medicine": 1.18, "charcoal": 1.0, "cloth": 1.05, "sealed_arms_crate": 1.0, "saltglass": 1.28, "dune_spice": 0.7, "lamp_oil": 1.3},
       "demand": {"grain": 1.0, "water": 0.9, "scrap": 1.0, "medicine": 1.18, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0, "saltglass": 1.28, "dune_spice": 0.72, "lamp_oil": 1.3},
       "faction_price_modifier": 1.0
+    },
+    "mothlight_quay": {
+      "name": "Mothlight Quay",
+      "role": "resin and sailcloth port",
+      "region_id": "siltfire_march",
+      "identity": {
+        "scene_id": "mothlight_resin_quay",
+        "caption": "RESIN LAMPS BURN ABOVE THE BRINE",
+        "market_read": "Quay healers and sail lofts export medicine and cloth while pilots buy grain, lamp oil, and signal glass.",
+        "landmark": "quay",
+        "map_cell": [9, 0],
+        "tint": "#6f8b72",
+        "sky": "#283832",
+        "ground": "#37483e"
+      },
+      "trade_profile": {
+        "produces": {"medicine": "Moth resin and marsh herbs make compact field medicine the quay's prized export.", "cloth": "Sail lofts weave waxed reed cloth for wet roads."},
+        "consumes": {"grain": "Pilots and dock crews depend on imported dry grain.", "lamp_oil": "Resin lamps still require clean oil to keep the fog bells visible.", "saltglass": "Bell towers buy clear signal plates from Glasswind cutters."},
+        "ordinary_trade_note": "Medicine and waxed cloth leave the quay; food, beacon oil, and signal glass pay best on the return."
+      },
+      "price_modifiers": {"grain": 1.25, "water": 0.95, "scrap": 1.05, "medicine": 0.72, "charcoal": 1.05, "cloth": 0.78, "sealed_arms_crate": 1.0, "saltglass": 1.2, "dune_spice": 1.05, "lamp_oil": 1.22},
+      "demand": {"grain": 1.25, "water": 0.95, "scrap": 1.0, "medicine": 0.78, "charcoal": 1.0, "cloth": 0.8, "sealed_arms_crate": 1.0, "saltglass": 1.2, "dune_spice": 1.0, "lamp_oil": 1.2},
+      "faction_price_modifier": 1.0
+    },
+    "blackreed_post": {
+      "name": "Blackreed Post",
+      "role": "marsh harvest station",
+      "region_id": "siltfire_march",
+      "identity": {
+        "scene_id": "blackreed_watch_market",
+        "caption": "WATCH FIRES MARK THE FIRM GROUND",
+        "market_read": "Raised granaries and charcoal mounds supply the road while isolated cutters pay for medicine, cloth, and spice.",
+        "landmark": "watchtower",
+        "map_cell": [16, 6],
+        "tint": "#65765a",
+        "sky": "#30372d",
+        "ground": "#404733"
+      },
+      "trade_profile": {
+        "produces": {"grain": "Raised reed-bed plots produce dry grain above the marsh line.", "charcoal": "Slow blackreed clamps supply dense fuel for distant kilns."},
+        "consumes": {"medicine": "Isolated cutting crews pay heavily for resin medicine.", "cloth": "Wet work destroys ordinary wraps and keeps waxed cloth valuable.", "dune_spice": "Watch crews pay for compact spice that survives the damp."},
+        "ordinary_trade_note": "Cheap grain and charcoal fund return runs; medicine, cloth, and spice command frontier premiums."
+      },
+      "price_modifiers": {"grain": 0.72, "water": 1.0, "scrap": 1.05, "medicine": 1.25, "charcoal": 0.72, "cloth": 1.2, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.18, "lamp_oil": 1.05},
+      "demand": {"grain": 0.75, "water": 1.0, "scrap": 1.0, "medicine": 1.25, "charcoal": 0.75, "cloth": 1.2, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.2, "lamp_oil": 1.0},
+      "faction_price_modifier": 1.0
     }
   },
   "arms_trade": {
@@ -1139,6 +1290,8 @@
     "toll_road": {"name": "Toll Road", "endpoints": ["ashgate", "brine_cross"], "stops": ["ashgate", "cinderford", "brine_cross"], "map_path": ["ashgate", "cinderford", "brine_cross"], "segments": [{"endpoints": ["ashgate", "cinderford"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["cinderford", "brine_cross"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.10}], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
     "dry_cut": {"name": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "map_path": ["hollow_market", "brine_cross", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."},
     "glasswind_trace": {"name": "Glasswind Trace", "endpoints": ["hollow_market", "kiln_rest"], "stops": ["hollow_market", "sunfall_exchange", "kiln_rest"], "map_path": ["hollow_market", "sunfall_exchange", "kiln_rest"], "segments": [{"endpoints": ["hollow_market", "sunfall_exchange"], "cost": 5, "days": 1, "risk": 0.24}, {"endpoints": ["sunfall_exchange", "kiln_rest"], "cost": 4, "days": 1, "risk": 0.28}, {"endpoints": ["hollow_market", "kiln_rest"], "cost": 9, "days": 2, "risk": 0.30}], "cost": 9, "days": 2, "risk": 0.30, "description": "A licensed shardwind corridor with exposed glass dust and marked shelter cairns."},
-    "mirror_run": {"name": "Mirror Run", "endpoints": ["sunfall_exchange", "mirror_wells"], "map_path": ["sunfall_exchange", "mirror_wells"], "cost": 3, "days": 1, "risk": 0.42, "description": "A short night road whose mirror beacons trade speed for uncertain visibility."}
+    "mirror_run": {"name": "Mirror Run", "endpoints": ["sunfall_exchange", "mirror_wells"], "map_path": ["sunfall_exchange", "mirror_wells"], "cost": 3, "days": 1, "risk": 0.42, "description": "A short night road whose mirror beacons trade speed for uncertain visibility."},
+    "salt_causeway": {"name": "Salt Causeway", "endpoints": ["brine_cross", "mothlight_quay"], "map_path": ["brine_cross", "mothlight_quay"], "cost": 3, "days": 1, "risk": 0.38, "description": "A cheap raised crossing where brine steam can erase every marker except the bell line."},
+    "reedline_track": {"name": "Reedline Track", "endpoints": ["mothlight_quay", "reedwatch"], "stops": ["mothlight_quay", "blackreed_post", "reedwatch"], "map_path": ["mothlight_quay", "blackreed_post", "reedwatch"], "segments": [{"endpoints": ["mothlight_quay", "blackreed_post"], "cost": 4, "days": 1, "risk": 0.2}, {"endpoints": ["blackreed_post", "reedwatch"], "cost": 3, "days": 1, "risk": 0.24}, {"endpoints": ["mothlight_quay", "reedwatch"], "cost": 7, "days": 2, "risk": 0.22}], "cost": 7, "days": 2, "risk": 0.22, "description": "A slower marked marsh road with firm reed mats, watch fires, and recoverable wheel-sink risk."}
   }
 }
