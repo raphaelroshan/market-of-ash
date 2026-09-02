@@ -4086,6 +4086,7 @@ func _refresh_opportunities() -> void:
 		if not required_emergent_faction_id.is_empty() and world.emergent_faction(required_emergent_faction_id).is_empty():
 			continue
 		var action_button := _wrapped_action_button()
+		var action_category := String(action.get("category", ""))
 		var cost := int(action.get("cost", 0))
 		var slots := int(action.get("service_slots", 1))
 		var time_cost := int(action.get("time_cost", 0))
@@ -4106,7 +4107,8 @@ func _refresh_opportunities() -> void:
 			var support_effect: Dictionary = effects.get("emergent_faction_support", {})
 			var support_name := String(support_effect.get("faction_id", "local group")).replace("_", " ").capitalize()
 			effect_summary += ", %s support %+d" % [support_name, int(support_effect.get("delta", 0))]
-		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
+		var action_prefix := "BLACK MARKET · OPTIONAL\n" if action_category == "arms_trade" else ""
+		action_button.text = "%s%s — %d ashmarks, %s" % [action_prefix, String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
 			action_button.disabled = true
@@ -4148,7 +4150,8 @@ func _refresh_opportunities() -> void:
 		details.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		details.add_theme_font_size_override("font_size", 12)
 		details.add_theme_color_override("font_color", Color("#aa9a87"))
-		details.text = unavailable_reason if action_button.disabled else "%s Cost: %d ashmarks, %d visit slot, %s. %s" % [String(action.get("description", "")), cost, slots, "no day" if time_cost == 0 else "%d day" % time_cost, String(action.get("tradeoff", ""))]
+		var optional_context := "OPTIONAL PARALLEL ECONOMY — Ordinary Water relief remains viable.\n" if action_category == "arms_trade" else ""
+		details.text = unavailable_reason if action_button.disabled else optional_context + "%s Cost: %d ashmarks, %d visit slot, %s. %s" % [String(action.get("description", "")), cost, slots, "no day" if time_cost == 0 else "%d day" % time_cost, String(action.get("tradeoff", ""))]
 		details.set_meta("bazaar_section", "information")
 		opportunity_list.add_child(details)
 	_append_crew_opportunity()

@@ -102,6 +102,7 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 | `docs/ma_ea_2_completion.md` | Executable acceptance record for the Glasswind Reach trade, journey, and failure-forward slice. |
 | `docs/ma_i1_completion.md` | Investment-gate evidence for the responsive opening shell and deterministic save-round-trip repair. |
 | `docs/ma_i2_completion.md` | Investment-gate evidence for the contract-free first trade circuit and before/after market receipt. |
+| `docs/ma_i3_completion.md` | Investment-gate evidence for the authored, save-safe journey, optional black-market pressure, and terminal receipt. |
 
 
 ## Investment evaluation roadmap

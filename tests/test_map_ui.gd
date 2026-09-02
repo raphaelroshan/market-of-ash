@@ -1014,7 +1014,7 @@ func _initialize() -> void:
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	ui._on_buy_pressed()
-	_expect(not ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[1].text.contains("escalation +2"), "arms offer did not expose its cargo gate, payout, and escalation")
+	_expect(not ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[1].text.contains("BLACK MARKET · OPTIONAL") and ui.opportunity_buttons[1].text.contains("escalation +2"), "arms offer did not expose its optional status, cargo gate, payout, and escalation")
 	ui._on_settlement_action_pressed("ashgate_cinder_rider_arms_sale")
 	_expect(ui.world.arms_escalation == 2 and int(ui.world.cargo.get("sealed_arms_crate", 0)) == 1, "arms offer UI did not apply the named sale")
 	_expect(ui.shop_status_label.text.contains("Arms 2/6") and ui.event_label.text.contains("Reedwatch Water Relief"), "arms result did not show its threshold and non-arms alternative")

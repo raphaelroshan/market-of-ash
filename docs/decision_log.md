@@ -681,3 +681,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The investment vertical must demonstrate that local production, demand, capacity, road burden, and changing prices form a complete game without a contract. Introducing optional work only after the player has profited from a two-way circuit makes its added deadline and political value legible as a choice rather than disguised mandatory progression.
 
 **Trade-off:** The guided path no longer demonstrates contract completion in its first journey; deterministic campaign tests and the optional Job Board retain that coverage. Existing guided saves that already completed relief remain recoverable through derived tutorial state.
+
+## ADR-086: The ending receipt includes crew and optional side deals
+
+**Decision:** Extend the terminal campaign debrief with recruited/assigned crew and every successful settlement service or side deal from command history. Arms-market and recovery entries include the visible escalation transition.
+
+**Reason:** A terminal receipt must explain the player's economic and political story, not only roads and ordinary transactions. The sealed-arms choice is optional and recoverable, but omitting it from the debrief would hide the most consequential parallel-economy decision from the campaign's closing account.
+
+**Trade-off:** The receipt can become long in mature campaigns, so it remains scrollable and route/trade lists retain their bounded recent-history presentation. It summarizes authoritative commands without adding new save state.

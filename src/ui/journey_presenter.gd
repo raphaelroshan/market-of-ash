@@ -224,6 +224,7 @@ static func campaign_debrief(world) -> Dictionary:
 	var ending: Dictionary = MarketContent.ending(world.ending_id)
 	var route_lines: Array[String] = []
 	var trade_lines: Array[String] = []
+	var service_lines: Array[String] = []
 	var money_delta := 0
 	var provision_delta := 0
 	for command_value in world.command_history:
@@ -247,6 +248,17 @@ static func campaign_debrief(world) -> Dictionary:
 			var quantity := int(inputs.get("quantity", 0))
 			var good_id := String(inputs.get("good_id", "cargo"))
 			trade_lines.append("%s %d %s · %+d ashmarks" % ["Bought" if command_id == "buy_goods" else "Sold", quantity, good_id.capitalize(), int(delta.get("money", 0))])
+		elif command_id == "use_settlement_action":
+			var action_id := String(inputs.get("action_id", ""))
+			var action := MarketContent.settlement_action(action_id)
+			var consequence_bits: Array[String] = []
+			var escalation: Dictionary = delta.get("arms_escalation", {})
+			if not escalation.is_empty():
+				consequence_bits.append("arms pressure %d→%d" % [int(escalation.get("before", 0)), int(escalation.get("after", 0))])
+			if not String(delta.get("information_id", "")).is_empty():
+				consequence_bits.append("new public lead")
+			var consequence_text := " · %s" % " · ".join(consequence_bits) if not consequence_bits.is_empty() else ""
+			service_lines.append("%s · %+d ashmarks%s" % [String(action.get("name", action_id)), int(delta.get("money", 0)), consequence_text])
 	var event_lines: Array[String] = []
 	for event_value in world.event_history:
 		if typeof(event_value) != TYPE_DICTIONARY:
@@ -283,8 +295,13 @@ static func campaign_debrief(world) -> Dictionary:
 	var timeline_text := "No roads taken." if route_lines.is_empty() else "\n".join(route_lines.slice(maxi(0, route_lines.size() - 6)))
 	var trade_text := "No market trades recorded." if trade_lines.is_empty() else "\n".join(trade_lines.slice(maxi(0, trade_lines.size() - 6)))
 	var event_text := "No roadside event changed this campaign." if event_lines.is_empty() else "\n".join(event_lines)
+	var crew_names: Array[String] = []
+	for crew_id in world.recruited_crew:
+		crew_names.append(String(MarketContent.crew_member(crew_id).get("name", crew_id)))
+	var crew_text := "No specialist joined this caravan." if crew_names.is_empty() else "%s. Assigned at the ending: %s." % [", ".join(crew_names), String(MarketContent.crew_member(world.assigned_crew).get("name", "none")) if not world.assigned_crew.is_empty() else "none"]
+	var service_text := "No optional services or side deals recorded." if service_lines.is_empty() else "\n".join(service_lines)
 	var held_text := "empty" if cargo_parts.is_empty() else ", ".join(cargo_parts)
-	var text := "CAMPAIGN DEBRIEF\n%s\n%s\n\nROUTE TIMELINE\n%s\n\nCARGO & CASH\n%s\nStarted with %d ashmarks; finished with %d (%+d). Hold: %s.\n\nTIME & PROVISIONS\nDay %d · %d → %d provisions (%+d).\n\nEVENT DECISIONS\n%s\n\nREGIONAL CONSEQUENCES\n%s\n\nCAUSAL LESSON\n%s\n\nREPLAY EXPERIMENT\n%s\nSeed %d fixes world rolls; a different command sequence creates the comparison." % [
+	var text := "CAMPAIGN DEBRIEF\n%s\n%s\n\nROUTE TIMELINE\n%s\n\nCARGO & CASH\n%s\nStarted with %d ashmarks; finished with %d (%+d). Hold: %s.\n\nCREW & SIDE DEALS\n%s\n%s\n\nTIME & PROVISIONS\nDay %d · %d → %d provisions (%+d).\n\nEVENT DECISIONS\n%s\n\nREGIONAL CONSEQUENCES\n%s\n\nCAUSAL LESSON\n%s\n\nREPLAY EXPERIMENT\n%s\nSeed %d fixes world rolls; a different command sequence creates the comparison." % [
 		String(ending.get("title", world.ending_id)),
 		String(world.ending_summary),
 		timeline_text,
@@ -293,6 +310,8 @@ static func campaign_debrief(world) -> Dictionary:
 		world.money,
 		money_delta,
 		held_text,
+		crew_text,
+		service_text,
 		world.day,
 		initial_provisions,
 		world.provisions,
@@ -303,7 +322,7 @@ static func campaign_debrief(world) -> Dictionary:
 		replay_experiment,
 		world.seed,
 	]
-	return {"text": text, "replay_experiment": replay_experiment, "route_count": route_lines.size(), "event_count": event_lines.size()}
+	return {"text": text, "replay_experiment": replay_experiment, "route_count": route_lines.size(), "event_count": event_lines.size(), "service_count": service_lines.size()}
 
 
 static func _replay_experiment(ending_id: String) -> String:
