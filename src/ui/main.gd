@@ -4152,6 +4152,8 @@ func _append_crew_opportunity() -> void:
 				accent = Color("#c6a15b")
 			"tess_oryn":
 				accent = Color("#c9785a")
+			"mara_voss":
+				accent = Color("#8fb56c")
 		var card := PanelContainer.new()
 		card.name = "CrewRosterCard%d" % crew_profile_cards.size()
 		card.set_meta("bazaar_section", "crew")
@@ -4666,6 +4668,11 @@ class CrewPortrait extends Control:
 				draw_arc(center, 19.0, PI, TAU, 16, accent.darkened(0.28), 7.0, true)
 				draw_line(Vector2(size.x * 0.31, size.y * 0.66), Vector2(size.x * 0.69, size.y * 0.80), Color("#e2bd8d"), 4.0, true)
 				draw_circle(Vector2(size.x * 0.69, size.y * 0.80), 5.0, accent, false, 2.0)
+			"mara_voss":
+				draw_rect(Rect2(center + Vector2(-19, -19), Vector2(38, 6)), accent.darkened(0.30), true)
+				draw_circle(Vector2(size.x * 0.33, size.y * 0.76), 11.0, Color("#2c281f"), false, 3.0)
+				draw_circle(Vector2(size.x * 0.67, size.y * 0.76), 11.0, Color("#2c281f"), false, 3.0)
+				draw_line(Vector2(size.x * 0.33, size.y * 0.76), Vector2(size.x * 0.67, size.y * 0.76), Color("#e7d1a6"), 4.0, true)
 
 
 class JourneyConsequenceGlyph extends Control:

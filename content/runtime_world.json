@@ -496,7 +496,30 @@
       "glasswind_trace": "Tess knows which Consortium seal opens a wind lane and what political debt follows.",
       "mirror_run": "Tess can name the licensed beacon crews and the night guides excluded from their ledgers.",
       "salt_causeway": "Tess knows which bell keepers pool their fees and which ones answer to Brine Cross.",
-      "reedline_track": "Tess can identify the watch fires that welcome independent caravans and those that levy private dues."
+          "reedline_track": "Tess can identify the watch fires that welcome independent caravans and those that levy private dues."
+        }
+      },
+      {
+        "id": "mara_voss",
+        "name": "Mara Voss",
+        "role": "Wheelwright",
+        "personality": "Unhurried until an axle bends, then faster than anyone holding the rope.",
+        "recruit_settlement_id": "blackreed_post",
+        "recruit_cost": 19,
+        "recruit_service_slots": 1,
+        "assignment_service_slots": 1,
+        "report_valid_days": 0,
+        "provision_discount": 0,
+        "limitation": "Mara's split-axle brace only appears while she is assigned and consumes one carried scrap when used.",
+        "hook": "Assignment opens a repair response at the Reedline wheel sink: trade one scrap for a persistent safer load line.",
+        "route_notes": {
+          "old_road": "Mara marks the bridge approaches where a loaded rear axle should cross alone.",
+          "toll_road": "Mara checks wheel width against the Warden grooves before the queue closes around the caravan.",
+          "dry_cut": "Mara warns that a repaired axle still cannot outrun a vanished salt marker.",
+          "glasswind_trace": "Mara wraps the hubs against glass grit but leaves the wind decision to the driver.",
+          "mirror_run": "Mara listens for loose iron at each beacon halt where reflections hide the road edge.",
+          "salt_causeway": "Mara keeps the wheel pins above the brine and names the islands wide enough for a repair stop.",
+          "reedline_track": "Mara identifies the black-water rut where one split brace can turn a wheel sink into a marked load line."
         }
       }
     ]
@@ -973,6 +996,92 @@
             "resilience_delta": 0,
             "reputation_delta": {"bellkeepers": -1},
             "outcome": "The caravan keeps moving through the whiteout and accepts the disclosed exposed-unit risk."
+          }
+        ]
+      },
+      {
+        "id": "reedline_wheel_sink",
+        "title": "The Reedline Takes a Wheel",
+        "category": "travel_decision",
+        "route_ids": ["reedline_track"],
+        "trigger_chance": 0.68,
+        "trigger_roll_salt": 10,
+        "minimum_cargo_value": 20,
+        "active_contract_relevant": false,
+        "setup": "A loaded wheel drops through the reed mats into black water while the watch fires recede behind the caravan.",
+        "stakes": "Pay the mat crew, spend time winching by hand, force the axle across exposed ground, or let an assigned wheelwright turn carried scrap into a lasting repair.",
+        "choices": [
+          {
+            "id": "pay_reed_mat_crew",
+            "label": "Pay the mat crew 5 ashmarks",
+            "money_cost": 5,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The mat crew lays a temporary crossing, frees the wheel, and takes its fee before the road closes again."
+          },
+          {
+            "id": "winch_through_black_water",
+            "label": "Winch by hand — 1 provision, 1 day",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "reedline_black_water_rut",
+            "outcome": "The caravan winches free by dusk and records the dark-water edge for a later crossing."
+          },
+          {
+            "id": "force_the_loaded_axle",
+            "label": "Force the loaded axle through",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.34,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "outcome": "The team drives for firm ground and accepts one disclosed exposed-unit roll against the twisting axle."
+          },
+          {
+            "id": "mara_split_axle_brace",
+            "label": "Let Mara brace the axle — 1 scrap",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "cargo_cost": {"good_id": "scrap", "quantity": 1},
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "requires_assigned_crew_id": "mara_voss",
+            "resilience_delta": 0,
+            "information_id": "reedline_split_axle_line",
+            "route_condition": {
+              "route_id": "reedline_track",
+              "id": "reedline_split_axle_markers",
+              "label": "Split-axle markers",
+              "risk_delta": -0.08,
+              "cost_delta": 0,
+              "description": "Mara's braced wheel marks reveal the firm load line through the Reedline's black-water rut."
+            },
+            "outcome": "Mara splits the carried scrap into a floating axle brace, frees the wagon, and leaves a durable marker line for later caravans."
           }
         ]
       }
