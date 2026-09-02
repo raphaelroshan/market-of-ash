@@ -75,6 +75,7 @@ REQUIRED_NATIVE_SCREENS = {
     "ma_ea_5_orin_roster",
     "ma_ea_5_mirror_event",
     "ma_ea_5_mirror_result",
+    "black_market_offer",
     "new_game_confirmation",
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
@@ -125,6 +126,7 @@ EXPECTED_UI_STATE = {
     "ma_ea_5_orin_roster": "settlement_shop",
     "ma_ea_5_mirror_event": "route_event",
     "ma_ea_5_mirror_result": "arrival_handoff",
+    "black_market_offer": "settlement_shop",
     "trade_receipt": "settlement_shop",
     "market_change_receipt": "settlement_shop",
     "trade_receipt_large_text": "settlement_shop",
@@ -188,6 +190,7 @@ REQUIRED_LAYOUT_CONTROLS = {
     "ma_ea_5_orin_roster": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "CrewRosterCard0", "CrewPortrait0", "CrewIdentity0", "CrewAction0", "BazaarPrimaryAction"),
     "ma_ea_5_mirror_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
     "ma_ea_5_mirror_result": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
+    "black_market_offer": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "route_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
@@ -436,6 +439,13 @@ def main() -> int:
             or "after supply" not in ui_state.get("trade_receipt_detail", "")
         ):
             raise AssertionError(f"{file_name}: market-change receipt must show the Reedwatch sale and its new local price")
+        if screen == "black_market_offer" and not any(
+            action.get("id") == "settlement_action_ashgate_cinder_rider_arms_sale"
+            and "BLACK MARKET · OPTIONAL" in action.get("label", "")
+            and not action.get("disabled", False)
+            for action in ui_state.get("accessibility_actions", [])
+        ):
+            raise AssertionError(f"{file_name}: optional black-market offer is not visible and enabled")
         require_release_surface(capture)
         require_layout_bounds(capture)
         if screen in {"main_menu", "introduction_basin", "introduction_caravan", "introduction_road", "introduction_road_large_text"}:
@@ -453,6 +463,7 @@ def main() -> int:
         require_distinct_screen(screens["main_menu"], screens["settlement_shop"], f"{viewport} Start")
         require_distinct_screen(screens["settlement_shop"], screens["trade_receipt"], f"{viewport} Complete purchase", minimum_ratio=0.005)
         require_distinct_screen(screens["trade_receipt"], screens["market_change_receipt"], f"{viewport} Sell into changed destination market", minimum_ratio=0.005)
+        require_distinct_screen(screens["settlement_shop"], screens["black_market_offer"], f"{viewport} Open optional black market", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop_large_text"], screens["trade_receipt_large_text"], f"{viewport} Complete purchase with large text", minimum_ratio=0.005)
         require_distinct_screen(screens["settlement_shop"], screens["bazaar_jobs"], f"{viewport} Open Job Board")
         require_distinct_screen(screens["bazaar_jobs"], screens["bazaar_crew"], f"{viewport} Open Caravan Yard")

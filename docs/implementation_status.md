@@ -1,6 +1,6 @@
 # Market of Ash — Implementation Status
 
-**Investment update (2026-09-02):** MA-I1 and MA-I2 are complete. The guided opening now proves a contract-free Water-and-Grain circuit, records ordinary market pressure, presents before/after sale pricing, and introduces the Job Board only as an optional comparison. MA-I3 is active.
+**Investment update (2026-09-02):** MA-I1 through MA-I3 are complete. The guided opening proves a contract-free Water-and-Grain circuit and visible market response; the authored journey now carries crew and optional side deals into the terminal economic/political receipt. MA-I4 is active.
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  

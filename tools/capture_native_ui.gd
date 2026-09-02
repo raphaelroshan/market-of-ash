@@ -65,6 +65,7 @@ const CAPTURE_SCREENS := [
 	"ma_ea_5_orin_roster",
 	"ma_ea_5_mirror_event",
 	"ma_ea_5_mirror_result",
+	"black_market_offer",
 	"new_game_confirmation",
 ]
 
@@ -472,6 +473,13 @@ func _run() -> void:
 	await _capture(ui, "route_event_loss_result_large_text", "route-event-loss-result-large-text")
 	ui.large_text_checkbox.set_pressed_no_signal(false)
 	ui._on_large_text_toggled(false)
+	ui._on_start_game_pressed()
+	ui._select_option_by_id(ui.shop_good_option, "sealed_arms_crate")
+	ui.shop_quantity.value = 2
+	ui._on_shop_quantity_changed(ui.shop_quantity.value)
+	ui._on_buy_pressed()
+	ui._on_bazaar_navigation_pressed("information")
+	await _capture(ui, "black_market_offer", "black-market-offer")
 	if not ui._write_save("SAVED"):
 		push_error("Native capture could not create its isolated confirmation save.")
 		quit(1)
