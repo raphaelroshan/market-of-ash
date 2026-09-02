@@ -83,7 +83,7 @@ jobs:
             --executable build/market-of-ash.exe `
             --archive artifacts/market-of-ash-windows.zip `
             --extract-directory $cleanDirectory `
-            --readme docs/releases/v0.15.0-early-access-rc2.md
+            --readme docs/releases/v0.16.0-early-access-rc1.md
           $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
           python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
           python tools/validate_windows_export.py $cleanExecutable
@@ -108,11 +108,23 @@ jobs:
           python tools/validate_windows_gui_capture.py \
             --image artifacts/windows-main-menu.png \
             --metadata artifacts/windows-version.json
+      - name: Capture complete 1600 journey
+        env:
+          MARKET_CAPTURE_GEOMETRIES: 1600x900
+        run: bash scripts/capture_native_ui.sh artifacts/private-alpha-1600
+      - name: Archive 1600 journey evidence
+        run: python tools/package_capture_evidence.py --source artifacts/private-alpha-1600 --output artifacts/market-of-ash-1600-capture.zip
       - name: Create release manifest
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
           tar --exclude=.git --exclude=.godot --exclude=artifacts --exclude=build -czf "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" .
-          python -c "import json, os, re; m=json.load(open('tools/ci_manifest.json')); p=open('project.godot', encoding='utf-8').read(); c=json.load(open('content/runtime_world.json')); m.update({'game_version': re.search(r'^config/version=\"([^\"]+)\"', p, re.M).group(1), 'content_version': c['content_version'], 'commit': os.environ['GITHUB_SHA'], 'ref': os.environ['GITHUB_REF'], 'run_id': os.environ['GITHUB_RUN_ID'], 'run_number': os.environ['GITHUB_RUN_NUMBER']}); json.dump(m, open('artifacts/release_manifest.json','w'), indent=2); print(json.dumps(m, indent=2))"
+          python tools/create_release_manifest.py \
+            --repo . \
+            --output artifacts/release_manifest.json \
+            --commit "${GITHUB_SHA}" \
+            --ref "${GITHUB_REF}" \
+            --run-id "${GITHUB_RUN_ID}" \
+            --run-number "${GITHUB_RUN_NUMBER}"
       - name: Record release checksums
         run: |
           slug=$(python -c "import json; print(json.load(open('tools/ci_manifest.json'))['slug'])")
@@ -123,6 +135,7 @@ jobs:
             "artifacts/${slug}-source-${GITHUB_SHA}.tar.gz" \
             artifacts/windows-main-menu.png \
             artifacts/windows-version.json \
+            artifacts/market-of-ash-1600-capture.zip \
             artifacts/release_manifest.json
           test -s artifacts/SHA256SUMS.txt
       - name: Upload Windows release candidate
@@ -168,4 +181,5 @@ jobs:
             candidate/artifacts/release_manifest.json \
             candidate/artifacts/windows-main-menu.png \
             candidate/artifacts/windows-version.json \
+            candidate/artifacts/market-of-ash-1600-capture.zip \
             "candidate/artifacts/market-of-ash-source-${GITHUB_SHA}.tar.gz"

@@ -18,6 +18,14 @@ REQUIRED_RELEASE_SECTIONS = (
     "## Known limitations",
     "## Verification",
 )
+REQUIRED_PRIVATE_ALPHA_TERMS = (
+    "30–90 minutes",
+    "operates offline",
+    "automatic `.bak`",
+    "physical controller",
+    "1600×900",
+    "provenance",
+)
 
 
 def _setting(text: str, name: str, source: str) -> str:
@@ -45,6 +53,15 @@ def validate_release_contract(root: Path) -> dict[str, str]:
 
     if manifest.get("release_ready") is not True:
         raise AssertionError("tools/ci_manifest.json must mark the candidate release_ready")
+    private_alpha = manifest.get("private_alpha")
+    if not isinstance(private_alpha, dict):
+        raise AssertionError("tools/ci_manifest.json must declare private_alpha requirements")
+    if (
+        private_alpha.get("minimum_session_minutes") != 30
+        or private_alpha.get("maximum_session_minutes") != 90
+        or private_alpha.get("offline_required") is not True
+    ):
+        raise AssertionError("private_alpha must require a 30–90 minute offline session")
     notes_relative = manifest.get("release_notes")
     if not isinstance(notes_relative, str) or notes_relative != f"docs/releases/v{game_version}.md":
         raise AssertionError("release_notes must match the project version")
@@ -53,6 +70,9 @@ def validate_release_contract(root: Path) -> dict[str, str]:
     for section in REQUIRED_RELEASE_SECTIONS:
         if section not in notes:
             raise AssertionError(f"release notes are missing {section}")
+    for term in REQUIRED_PRIVATE_ALPHA_TERMS:
+        if term not in notes:
+            raise AssertionError(f"release notes are missing private-alpha requirement: {term}")
     content_version = runtime.get("content_version")
     if not isinstance(content_version, str) or f"Content: `{content_version}`" not in notes:
         raise AssertionError("release notes must name the runtime content version")

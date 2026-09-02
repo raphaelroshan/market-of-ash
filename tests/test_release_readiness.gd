@@ -17,15 +17,15 @@ func _init() -> void:
 		quit(1)
 
 func _test_early_access_content_floor() -> void:
-	_expect(MarketContent.content_version() == "1.27.0", "release candidate should use content version 1.27.0")
+	_expect(MarketContent.content_version() == "1.28.0", "release candidate should use content version 1.28.0")
 	_expect(MarketContent.regions().size() >= 3, "release candidate needs at least three regions")
-	_expect(MarketContent.settlements().size() >= 9, "release candidate needs at least nine settlements")
+	_expect(MarketContent.settlements().size() >= 11, "release candidate needs at least eleven settlements")
 	_expect(MarketContent.good_ids().size() >= 10, "release candidate needs at least ten goods")
-	_expect(MarketContent.routes().size() >= 8, "release candidate needs at least eight routes")
+	_expect(MarketContent.routes().size() >= 9, "release candidate needs at least nine routes")
 	_expect(MarketContent.crew_records().size() >= 5, "release candidate needs at least five decision-changing crew")
-	_expect(MarketContent.event_rules().get("records", []).size() >= 8, "release candidate needs at least eight event families")
+	_expect(MarketContent.event_rules().get("records", []).size() >= 9, "release candidate needs at least nine event families")
 	_expect(MarketContent.factions().size() >= 4, "release candidate needs at least four standing factions")
-	_expect(MarketContent.adaptive_scenarios().size() >= 2, "release candidate needs at least two replacement actors")
+	_expect(MarketContent.adaptive_scenarios().size() >= 3, "release candidate needs at least three replacement actors")
 	_expect(MarketContent.ending_records().size() >= 6, "release candidate needs at least six endings")
 
 func _test_runtime_budget_and_bounded_history() -> void:
