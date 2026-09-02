@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.22.0",
+  "content_version": "1.23.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -8,7 +8,10 @@
     {"id": "medicine", "name": "Medicine", "base_price": 32, "weight": 1},
     {"id": "charcoal", "name": "Charcoal", "base_price": 14, "weight": 1},
     {"id": "cloth", "name": "Dyed Cloth", "base_price": 24, "weight": 1},
-    {"id": "sealed_arms_crate", "name": "Sealed Arms Crate", "base_price": 45, "weight": 2, "tags": ["arms", "regulated", "high_value"]}
+    {"id": "sealed_arms_crate", "name": "Sealed Arms Crate", "base_price": 45, "weight": 2, "tags": ["arms", "regulated", "high_value"]},
+    {"id": "saltglass", "name": "Saltglass", "base_price": 28, "weight": 1},
+    {"id": "dune_spice", "name": "Dune Spice", "base_price": 20, "weight": 1},
+    {"id": "lamp_oil", "name": "Lamp Oil", "base_price": 16, "weight": 1}
   ],
   "planning_assumptions": {
     "provision_value": 3,
@@ -195,6 +198,39 @@
         "tradeoff": "Gain official access and Warden standing, but reduce Commons support; ordinary market trade remains available.",
         "result": "The permit bypasses the ration queue. Warden standing rises by one and Commons support falls by one without closing the market.",
         "unavailable_reason": "Available after the Well Commons organizes in Reedwatch."
+      },
+      {
+        "id": "sunfall_shardwind_wrapping",
+        "settlement_id": "sunfall_exchange",
+        "name": "Wrap the caravan for shardwind",
+        "category": "information",
+        "available": true,
+        "once_per_campaign": true,
+        "cost": 9,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "glasswind_wrapping_pattern", "route_condition": {"route_id": "glasswind_trace", "id": "shardwind_wrapped", "label": "Shardwind wrapping fitted", "risk_delta": -0.08, "cost_delta": 0, "description": "Layered felt and reed screens reduce exposed cargo damage on the Glasswind Trace."}},
+        "description": "Hire Sunfall riggers to fit layered screens over the caravan's exposed crates.",
+        "tradeoff": "Spend nine ashmarks and one visit slot to reduce Glasswind Trace risk by eight points.",
+        "result": "The riggers bind felt and reed screens across the load. Glasswind Trace exposure falls by eight points.",
+        "unavailable_reason": ""
+      },
+      {
+        "id": "mirror_wells_night_beacons",
+        "settlement_id": "mirror_wells",
+        "name": "Fuel the Night Market beacons",
+        "category": "relief",
+        "available": true,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "night_market",
+        "cost": 0,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "night_market_beacons_lit", "cargo_cost": {"good_id": "lamp_oil", "quantity": 2}, "settlement_resilience": {"settlement_id": "mirror_wells", "delta": 1}, "reputation": {"glass_consortium": -1}, "emergent_faction_support": {"faction_id": "night_market", "delta": 1}},
+        "description": "Give two lamp oil to the informal night guides who keep the mirror paths visible.",
+        "tradeoff": "Forgo an immediate sale to strengthen Mirror Wells and the replacement market while losing Consortium favor.",
+        "result": "Two lamp oil keep the night beacons burning. Mirror Wells resilience and Night Market support rise by one.",
+        "unavailable_reason": "Available after the Night Market replaces the failed lamp delivery."
       }
     ]
   },
@@ -241,6 +277,26 @@
         "decision_summary": "Guaranteed margin and Warden access; accepts a named manifest and official scrutiny.",
         "recovery_summary": "Late medicine remains sellable; money and standing losses are bounded.",
         "failure_recovery": "Late medicine remains yours to sell; the office charges at most six ashmarks and withdraws one Warden standing."
+      },
+      {
+        "id": "mirror_wells_lamp_relief_01",
+        "name": "Mirror Wells Beacon Oil",
+        "sponsor": "Glass Consortium Survey Office",
+        "origin_id": "sunfall_exchange",
+        "destination_id": "mirror_wells",
+        "good_id": "lamp_oil",
+        "quantity": 3,
+        "deadline_days": 2,
+        "reward": 82,
+        "failure_penalty": 5,
+        "success_reputation": {"glass_consortium": 1},
+        "failure_reputation": {"glass_consortium": -1},
+        "service_slots": 1,
+        "description": "Carry three sealed lamp-oil tins to Mirror Wells before its licensed beacon crews abandon the night road.",
+        "tradeoff": "A reliable premium and Consortium standing, but three hold spaces and a short night-road deadline are committed.",
+        "decision_summary": "Reliable beacon premium; commits three hold spaces and a two-day deadline.",
+        "recovery_summary": "Late oil remains sellable and opens a different local buyer if official crews withdraw.",
+        "failure_recovery": "Late lamp oil remains yours to sell; the Night Market replaces the withdrawn survey office with an ordinary-trade outlet."
       }
     ]
   },
@@ -277,6 +333,32 @@
             "summary": "Reedwatch's public boiling fires now pay a durable premium for ordinary charcoal deliveries. No contract is required."
           }
         }
+      },
+      {
+        "id": "mirror_wells_beacon_oil",
+        "contract_id": "mirror_wells_lamp_relief_01",
+        "initial_state": "offered",
+        "response_day": 8,
+        "offered_summary": "Mirror Wells is paying licensed caravans to keep its night beacons supplied.",
+        "expired_summary": "The licensed beacon crews withdrew before oil arrived. Local night guides opened their own exchange.",
+        "failure_response": {
+          "type": "emergent_faction",
+          "faction_id": "night_market",
+          "name": "The Night Market",
+          "settlement_id": "mirror_wells",
+          "material_basis": "Unlicensed guides, mirrored signal boards, and pooled lamp-oil tins.",
+          "legitimacy_claim": "Mirror Wells stayed connected after the Consortium stopped funding its beacons.",
+          "trade_footprint": "The Night Market discounts lamp oil and pays a premium for saltglass used in signal boards.",
+          "resilience_delta": 1,
+          "information_id": "night_market_exchange_open",
+          "market_modifiers": {"lamp_oil": 0.9, "saltglass": 1.25},
+          "support_market_steps": {"lamp_oil": -0.03, "saltglass": 0.05},
+          "opportunity": {
+            "title": "Night Market Signal Exchange",
+            "good_id": "saltglass",
+            "summary": "Mirror Wells now pays an ordinary-trade premium for saltglass signal plates. No contract is required."
+          }
+        }
       }
     ]
   },
@@ -298,7 +380,9 @@
         "route_notes": {
           "old_road": "Fresh wheel cuts leave room for improvised blocks and unmarked riders.",
           "toll_road": "The road surface is sound; queues, chalk marks, and inspections remain the uncertainty.",
-          "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours."
+          "dry_cut": "The markers are thin and the salt wind can erase a safe-looking line within hours.",
+          "glasswind_trace": "Wrapped cairns mark the licensed lane, but fresh shards show where the wind crossed it.",
+          "mirror_run": "Several beacon reflections are false; Nara marks the one line backed by wheel tracks."
         }
       },
       {
@@ -317,7 +401,9 @@
         "route_notes": {
           "old_road": "Jorun shifts the dense crates over the rear axle and seals one ration pack for later.",
           "toll_road": "Jorun matches the manifest order to the gate queue and avoids opening a second ration pack.",
-          "dry_cut": "Jorun portions the water stops precisely; the cut still consumes at least one provision."
+          "dry_cut": "Jorun portions the water stops precisely; the cut still consumes at least one provision.",
+          "glasswind_trace": "Jorun layers felt between brittle loads and reserves one ration pack for the sheltered halt.",
+          "mirror_run": "Jorun packs for a single night leg and keeps one provision sealed for the return."
         }
       },
       {
@@ -336,7 +422,9 @@
         "route_notes": {
           "old_road": "Tess names the brokers who profit when official traffic abandons the road.",
           "toll_road": "Tess recognizes which seal numbers force a clerk to defend the posted rate.",
-          "dry_cut": "Tess knows who sells passage claims, but not whether the markers still exist."
+          "dry_cut": "Tess knows who sells passage claims, but not whether the markers still exist.",
+          "glasswind_trace": "Tess knows which Consortium seal opens a wind lane and what political debt follows.",
+          "mirror_run": "Tess can name the licensed beacon crews and the night guides excluded from their ledgers."
         }
       }
     ]
@@ -365,6 +453,18 @@
       "trusted_label": "Known road-sharer",
       "effect": "Known road-sharers pay 2 fewer ashmarks in Old Road guide and camp fees.",
       "tradeoff": "The informal discount does not reduce the route's exposed cargo risk."
+    },
+    "glass_consortium": {
+      "name": "Glass Consortium",
+      "minimum": -10,
+      "maximum": 10,
+      "trusted_threshold": 2,
+      "toll_route_id": "glasswind_trace",
+      "toll_discount": 2,
+      "below_label": "Unlicensed carrier",
+      "trusted_label": "Licensed glass runner",
+      "effect": "Licensed runners pay 2 fewer ashmarks on the Glasswind Trace.",
+      "tradeoff": "Consortium favor improves licensed access but conflicts with the independent Night Market."
     }
   },
   "events": {
@@ -667,18 +767,96 @@
             "outcome": "At dusk the riders leave; their tack has pressed a repeated sponsor mark into the ash."
           }
         ]
+      },
+      {
+        "id": "shardwind_tithe",
+        "title": "The Shardwind Tithe",
+        "category": "travel_decision",
+        "route_ids": ["glasswind_trace", "mirror_run"],
+        "trigger_chance": 0.72,
+        "trigger_roll_salt": 41,
+        "minimum_cargo_value": 40,
+        "active_contract_relevant": true,
+        "setup": "A Glass Consortium patrol lowers mirrored screens across the road as the shardwind begins to rise.",
+        "stakes": "Pay for a licensed wind lane, shelter and spend time, or cross before the glass dust thickens and expose one cargo unit.",
+        "choices": [
+          {
+            "id": "buy_wind_lane_seal",
+            "label": "Buy a wind-lane seal for 7 ashmarks",
+            "money_cost": 7,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"glass_consortium": 1},
+            "outcome": "The patrol opens a screened lane and records the caravan as a licensed runner."
+          },
+          {
+            "id": "shelter_behind_cairns",
+            "label": "Shelter behind the cairns",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 1,
+            "material_quantity": 0,
+            "days": 1,
+            "cargo_risk": 0.0,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "information_id": "glasswind_shelter_cairns",
+            "outcome": "The caravan waits out the cutting wind and records a dependable shelter line for later crossings."
+          },
+          {
+            "id": "race_the_shardwind",
+            "label": "Race the shardwind",
+            "money_cost": 0,
+            "money_reward": 0,
+            "provision_cost": 0,
+            "material_quantity": 0,
+            "days": 0,
+            "cargo_risk": 0.35,
+            "arrival_target": "destination",
+            "trade_mode": "none",
+            "requires_active_contract": false,
+            "resilience_delta": 0,
+            "reputation_delta": {"glass_consortium": -1},
+            "outcome": "The caravan keeps its money and accepts one disclosed exposed-unit roll through the glass dust."
+          }
+        ]
       }
     ]
+  },
+  "regions": {
+    "five_well_basin": {
+      "name": "Five-Well Basin",
+      "summary": "A regulated basin of wells, foundries, exposed roads, and competing relief networks.",
+      "settlement_ids": ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch"],
+      "route_ids": ["old_road", "toll_road", "dry_cut"]
+    },
+    "glasswind_reach": {
+      "name": "Glasswind Reach",
+      "summary": "A shard-scoured trade reach where licensed glass roads compete with night guides and beacon markets.",
+      "settlement_ids": ["sunfall_exchange", "kiln_rest", "mirror_wells"],
+      "route_ids": ["glasswind_trace", "mirror_run"]
+    }
   },
   "settlements": {
     "ashgate": {
       "name": "Ashgate",
       "role": "regulated hub",
+      "region_id": "five_well_basin",
       "identity": {
         "scene_id": "warden_gate_market",
         "caption": "THE GATE BELLS MARK EVERY LOAD",
         "market_read": "Licensed water and grain leave under Warden seals; repair scrap and durable cloth return through the gate.",
         "landmark": "gate",
+        "map_cell": [6, 5],
         "tint": "#8f5742",
         "sky": "#39251f",
         "ground": "#4a3024"
@@ -696,18 +874,20 @@
         },
         "ordinary_trade_note": "A stable departure market: modest sources, regulated access, and clear outward spreads."
       },
-      "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
-      "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0},
+      "price_modifiers": {"grain": 1.0, "water": 0.85, "scrap": 1.1, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0, "saltglass": 1.05, "dune_spice": 1.1, "lamp_oil": 1.0},
+      "demand": {"grain": 1.0, "water": 1.0, "scrap": 0.95, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.1, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.05, "lamp_oil": 1.0},
       "faction_price_modifier": 1.0
     },
     "brine_cross": {
       "name": "Brine Cross",
       "role": "water market",
+      "region_id": "five_well_basin",
       "identity": {
         "scene_id": "brine_pan_exchange",
         "caption": "SALT PANS AND CISTERN QUEUES",
         "market_read": "Brine wells export cheap water while well crews pay more for grain, medicine, and pump scrap.",
         "landmark": "brine",
+        "map_cell": [14, 2],
         "tint": "#557b79",
         "sky": "#1f3435",
         "ground": "#344a45"
@@ -723,18 +903,20 @@
         },
         "ordinary_trade_note": "Water leaves cheaply; food, repair stock, and medicine return at a premium."
       },
-      "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
-      "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0},
+      "price_modifiers": {"grain": 1.1, "water": 0.65, "scrap": 1.0, "medicine": 1.15, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.05, "lamp_oil": 1.0},
+      "demand": {"grain": 1.1, "water": 0.75, "scrap": 1.0, "medicine": 1.2, "charcoal": 1.0, "cloth": 0.95, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.0, "lamp_oil": 1.0},
       "faction_price_modifier": 1.0
     },
     "cinderford": {
       "name": "Cinderford",
       "role": "foundry town",
+      "region_id": "five_well_basin",
       "identity": {
         "scene_id": "cinder_span_yard",
         "caption": "FORGES WORK BESIDE THE SPAN",
         "market_read": "Foundry yards sell scrap and charcoal; their shifts consume grain, water, and hard-wearing cloth.",
         "landmark": "forge",
+        "map_cell": [10, 5],
         "tint": "#8d684b",
         "sky": "#382b24",
         "ground": "#4d3828"
@@ -752,18 +934,20 @@
         },
         "ordinary_trade_note": "Heavy industry turns cheap material exports into recurring demand for food, water, and cloth."
       },
-      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15, "sealed_arms_crate": 1.0},
-      "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0, "sealed_arms_crate": 1.0},
+      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 0.65, "medicine": 1.0, "charcoal": 0.7, "cloth": 1.15, "sealed_arms_crate": 1.0, "saltglass": 1.1, "dune_spice": 1.0, "lamp_oil": 0.95},
+      "demand": {"grain": 1.15, "water": 1.0, "scrap": 0.8, "medicine": 1.0, "charcoal": 0.75, "cloth": 1.0, "sealed_arms_crate": 1.0, "saltglass": 1.05, "dune_spice": 1.0, "lamp_oil": 0.95},
       "faction_price_modifier": 1.0
     },
     "hollow_market": {
       "name": "Hollow Market",
       "role": "free-trade bazaar",
+      "region_id": "five_well_basin",
       "identity": {
         "scene_id": "hollow_lantern_market",
         "caption": "LANTERNS TRADE RUMOUR FOR COIN",
         "market_read": "Independent stalls export medicine, grain, and cloth; information matters because buyers and water prices move quickly.",
         "landmark": "lanterns",
+        "map_cell": [2, 2],
         "tint": "#796985",
         "sky": "#2d2735",
         "ground": "#403447"
@@ -781,18 +965,20 @@
         },
         "ordinary_trade_note": "Low formal costs reward information, timing, and tolerance for volatile buyers."
       },
-      "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75, "sealed_arms_crate": 1.0},
-      "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8, "sealed_arms_crate": 1.0},
+      "price_modifiers": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.1, "cloth": 0.75, "sealed_arms_crate": 1.0, "saltglass": 1.1, "dune_spice": 1.15, "lamp_oil": 1.05},
+      "demand": {"grain": 0.9, "water": 1.1, "scrap": 1.0, "medicine": 0.9, "charcoal": 1.0, "cloth": 0.8, "sealed_arms_crate": 1.0, "saltglass": 1.05, "dune_spice": 1.1, "lamp_oil": 1.0},
       "faction_price_modifier": 0.95
     },
     "reedwatch": {
       "name": "Reedwatch",
       "role": "frontier settlement",
+      "region_id": "five_well_basin",
       "identity": {
         "scene_id": "reedwatch_water_market",
         "caption": "EVERY BARREL HAS A WITNESS",
         "market_read": "Low wells reward water, medicine, and repair cargo; reed grain and cloth can fund the return road.",
         "landmark": "reeds",
+        "map_cell": [14, 9],
         "tint": "#71835c",
         "sky": "#293328",
         "ground": "#3d4933"
@@ -809,9 +995,78 @@
         },
         "ordinary_trade_note": "Frontier shortages pay well, while local grain and cloth make the return journey viable."
       },
-      "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9, "sealed_arms_crate": 1.0},
-      "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0},
+      "price_modifiers": {"grain": 0.8, "water": 1.25, "scrap": 1.15, "medicine": 1.2, "charcoal": 1.05, "cloth": 0.9, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.05, "lamp_oil": 1.1},
+      "demand": {"grain": 0.8, "water": 1.35, "scrap": 1.15, "medicine": 1.3, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0, "saltglass": 1.0, "dune_spice": 1.0, "lamp_oil": 1.05},
       "faction_price_modifier": 1.05
+    },
+    "sunfall_exchange": {
+      "name": "Sunfall Exchange",
+      "role": "licensed glass port",
+      "region_id": "glasswind_reach",
+      "identity": {
+        "scene_id": "sunfall_glass_exchange",
+        "caption": "EVERY SHARD TRAVELS UNDER SEAL",
+        "market_read": "Consortium yards export saltglass and imported lamp oil while paying for cloth, water, and spice carried across the basin edge.",
+        "landmark": "glass",
+        "map_cell": [1, 8],
+        "tint": "#a66f50",
+        "sky": "#48342c",
+        "ground": "#594034"
+      },
+      "trade_profile": {
+        "produces": {"saltglass": "Licensed cutters sort the Reach's clearest panes for caravan export.", "lamp_oil": "Consortium stores release imported lamp oil at a controlled gateway price."},
+        "consumes": {"cloth": "Wind screens and packing crews consume durable cloth.", "water": "The exposed exchange imports every drinkable barrel.", "dune_spice": "Broker houses pay for spice arriving from the inner Reach."},
+        "ordinary_trade_note": "The Reach gateway sells glass and beacon oil while importing basic protection and water."
+      },
+      "price_modifiers": {"grain": 1.05, "water": 1.2, "scrap": 1.0, "medicine": 1.05, "charcoal": 1.0, "cloth": 1.15, "sealed_arms_crate": 1.0, "saltglass": 0.72, "dune_spice": 1.2, "lamp_oil": 0.88},
+      "demand": {"grain": 1.0, "water": 1.2, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.15, "sealed_arms_crate": 1.0, "saltglass": 0.78, "dune_spice": 1.2, "lamp_oil": 0.9},
+      "faction_price_modifier": 1.0
+    },
+    "kiln_rest": {
+      "name": "Kiln Rest",
+      "role": "oil and firing camp",
+      "region_id": "glasswind_reach",
+      "identity": {
+        "scene_id": "kiln_rest_firing_yard",
+        "caption": "THE KILNS BURN AFTER SUNSET",
+        "market_read": "Firing camps export lamp oil and dune spice, then buy saltglass blanks, grain, and charcoal for the next kiln cycle.",
+        "landmark": "kiln",
+        "map_cell": [5, 9],
+        "tint": "#a15f3f",
+        "sky": "#3f2b27",
+        "ground": "#513229"
+      },
+      "trade_profile": {
+        "produces": {"lamp_oil": "Rendered seed oil is sealed beside the night kilns.", "dune_spice": "Dry garden plots make aromatic root a compact export."},
+        "consumes": {"saltglass": "Firing crews buy unfinished saltglass for lenses and kiln gauges.", "grain": "Seasonal crews consume imported grain.", "charcoal": "Every firing cycle absorbs additional fuel."},
+        "ordinary_trade_note": "Oil and spice fund return loads of glass, food, and kiln fuel."
+      },
+      "price_modifiers": {"grain": 1.15, "water": 1.05, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.15, "cloth": 1.0, "sealed_arms_crate": 1.0, "saltglass": 1.22, "dune_spice": 0.78, "lamp_oil": 0.68},
+      "demand": {"grain": 1.15, "water": 1.05, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.15, "cloth": 1.0, "sealed_arms_crate": 1.0, "saltglass": 1.22, "dune_spice": 0.8, "lamp_oil": 0.72},
+      "faction_price_modifier": 1.0
+    },
+    "mirror_wells": {
+      "name": "Mirror Wells",
+      "role": "night-road oasis",
+      "region_id": "glasswind_reach",
+      "identity": {
+        "scene_id": "mirror_wells_night_market",
+        "caption": "BEACONS TURN GLASS INTO ROAD",
+        "market_read": "Mirror gardens export dune spice while guides pay for lamp oil, medicine, and signal-grade saltglass.",
+        "landmark": "mirrors",
+        "map_cell": [9, 9],
+        "tint": "#78658f",
+        "sky": "#2d293d",
+        "ground": "#3d3448"
+      },
+      "trade_profile": {
+        "produces": {"dune_spice": "Sheltered mirror gardens grow the Reach's richest spice roots.", "water": "Deep mirrored wells release small, dependable water lots."},
+        "consumes": {"lamp_oil": "Night-road beacons consume sealed oil every evening.", "saltglass": "Signal crews replace wind-scoured mirror plates.", "medicine": "Remote guides pay heavily for compact medicine."},
+        "ordinary_trade_note": "Beacon and signal demand rewards prepared caravans; spice and water finance the return."
+      },
+      "price_modifiers": {"grain": 1.05, "water": 0.92, "scrap": 1.0, "medicine": 1.18, "charcoal": 1.0, "cloth": 1.05, "sealed_arms_crate": 1.0, "saltglass": 1.28, "dune_spice": 0.7, "lamp_oil": 1.3},
+      "demand": {"grain": 1.0, "water": 0.9, "scrap": 1.0, "medicine": 1.18, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0, "saltglass": 1.28, "dune_spice": 0.72, "lamp_oil": 1.3},
+      "faction_price_modifier": 1.0
     }
   },
   "arms_trade": {
@@ -880,8 +1135,10 @@
     ]
   },
   "routes": {
-    "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
-    "toll_road": {"name": "Toll Road", "endpoints": ["ashgate", "brine_cross"], "stops": ["ashgate", "cinderford", "brine_cross"], "segments": [{"endpoints": ["ashgate", "cinderford"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["cinderford", "brine_cross"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.10}], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
-    "dry_cut": {"name": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."}
+    "old_road": {"name": "Old Road", "endpoints": ["ashgate", "reedwatch"], "map_path": ["ashgate", "hollow_market", "reedwatch"], "cost": 4, "days": 1, "risk": 0.35, "description": "Cheap, exposed, and watched by opportunists."},
+    "toll_road": {"name": "Toll Road", "endpoints": ["ashgate", "brine_cross"], "stops": ["ashgate", "cinderford", "brine_cross"], "map_path": ["ashgate", "cinderford", "brine_cross"], "segments": [{"endpoints": ["ashgate", "cinderford"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["cinderford", "brine_cross"], "cost": 6, "days": 1, "risk": 0.08}, {"endpoints": ["ashgate", "brine_cross"], "cost": 12, "days": 1, "risk": 0.10}], "cost": 12, "days": 1, "risk": 0.1, "description": "Expensive but maintained by the Ash Wardens."},
+    "dry_cut": {"name": "Dry Cut", "endpoints": ["hollow_market", "reedwatch"], "map_path": ["hollow_market", "brine_cross", "reedwatch"], "cost": 2, "days": 2, "risk": 0.55, "description": "Fast on the map, punishing on provisions."},
+    "glasswind_trace": {"name": "Glasswind Trace", "endpoints": ["hollow_market", "kiln_rest"], "stops": ["hollow_market", "sunfall_exchange", "kiln_rest"], "map_path": ["hollow_market", "sunfall_exchange", "kiln_rest"], "segments": [{"endpoints": ["hollow_market", "sunfall_exchange"], "cost": 5, "days": 1, "risk": 0.24}, {"endpoints": ["sunfall_exchange", "kiln_rest"], "cost": 4, "days": 1, "risk": 0.28}, {"endpoints": ["hollow_market", "kiln_rest"], "cost": 9, "days": 2, "risk": 0.30}], "cost": 9, "days": 2, "risk": 0.30, "description": "A licensed shardwind corridor with exposed glass dust and marked shelter cairns."},
+    "mirror_run": {"name": "Mirror Run", "endpoints": ["sunfall_exchange", "mirror_wells"], "map_path": ["sunfall_exchange", "mirror_wells"], "cost": 3, "days": 1, "risk": 0.42, "description": "A short night road whose mirror beacons trade speed for uncertain visibility."}
   }
 }

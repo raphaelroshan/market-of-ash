@@ -2058,20 +2058,25 @@ func _on_bazaar_navigation_pressed(section_id: String) -> void:
 	_refresh_playtest_status()
 	_apply_bazaar_section()
 	var target: Control
+	var section_has_options := false
 	match section_id:
 		"trade":
 			target = shop_good_option
+			section_has_options = true
 		"assignments":
+			section_has_options = not contract_buttons.is_empty()
 			for button in contract_buttons:
 				if not button.disabled:
 					target = button
 					break
 		"information":
+			section_has_options = not opportunity_buttons.is_empty()
 			for button in opportunity_buttons:
 				if not button.disabled:
 					target = button
 					break
 		"crew":
+			section_has_options = not crew_buttons.is_empty()
 			for button in crew_buttons:
 				if not button.disabled:
 					target = button
@@ -2083,6 +2088,8 @@ func _on_bazaar_navigation_pressed(section_id: String) -> void:
 	if target != null and _grab_focus_if_available(target):
 		_ensure_focused_control_visible()
 		shop_transaction_status_label.text = "BAZAAR — %s is ready." % section_id.replace("_", " ").capitalize()
+	elif section_has_options:
+		shop_transaction_status_label.text = "BAZAAR — %s has posted terms, but none are currently actionable." % section_id.replace("_", " ").capitalize()
 	else:
 		shop_transaction_status_label.text = "BAZAAR — No %s option is available at this settlement today." % section_id.replace("_", " ")
 	call_deferred("_reset_bazaar_scroll_positions", section_id == "trade")
@@ -3310,6 +3317,7 @@ func _web_ui_state() -> Dictionary:
 		"cargo_weight": int(world.cargo.get("weight", 0)) if world != null else 0,
 		"pending_event_id": String(world.pending_event.get("id", "")) if world != null else "",
 		"adaptive_scenario_state": String(world.scenario_state("reedwatch_water_relief").get("state", "")) if world != null else "",
+		"adaptive_scenario_states": world.scenario_states.duplicate(true) if world != null else {},
 		"emergent_factions": world.emergent_factions.keys() if world != null else [],
 		"adaptive_response": world.adaptive_response_summary() if world != null else "",
 		"ending_id": world.ending_id if world != null else "",
@@ -4079,7 +4087,8 @@ func _refresh_opportunities() -> void:
 			effect_summary = "%+d%% %s risk, information" % [int(round(float(route_effect.get("risk_delta", 0.0)) * 100.0)), String(route_effect.get("route_id", "route")).replace("_", " ").capitalize()]
 		if effects.has("emergent_faction_support"):
 			var support_effect: Dictionary = effects.get("emergent_faction_support", {})
-			effect_summary += ", Commons support %+d" % int(support_effect.get("delta", 0))
+			var support_name := String(support_effect.get("faction_id", "local group")).replace("_", " ").capitalize()
+			effect_summary += ", %s support %+d" % [support_name, int(support_effect.get("delta", 0))]
 		action_button.text = "%s — %d ashmarks, %s" % [String(action.get("name", "Opportunity")), cost, effect_summary]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
@@ -4463,7 +4472,8 @@ func _refresh_ui() -> void:
 		var arms_rules := MarketContent.arms_trade_rules()
 		var arms_label := String(arms_rules.get("noticed_label", "Noticed traffic")) if world.arms_escalation >= int(arms_rules.get("inspection_threshold", 2)) else String(arms_rules.get("quiet_label", "Quiet manifests"))
 		var leads_text := " · Leads %d" % world.known_information.size() if not world.known_information.is_empty() else ""
-		shop_status_label.text = "MARKET — %s · Day %d · Crisis %d: %s · Resilience %d/10\nREGION — %s · Wardens %+d · Caravans %+d · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), world.resilience_for(world.current_settlement), String(crisis.get("objective", "Keep trading.")), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), world.arms_escalation, arms_label, leads_text]
+		var regional_faction_text := " · Glass Consortium %+d" % int(world.reputation.get("glass_consortium", 0)) if String(settlement.get("region_id", "five_well_basin")) == "glasswind_reach" else ""
+		shop_status_label.text = "MARKET — %s · Day %d · Crisis %d: %s · Resilience %d/10\nREGION — %s · Wardens %+d · Caravans %+d%s · Arms %d/6 (%s)%s" % [String(settlement.get("role", "market")).capitalize(), world.day, world.crisis_stage, String(crisis.get("label", "Regional pressure")), world.resilience_for(world.current_settlement), String(crisis.get("objective", "Keep trading.")), int(world.reputation.get("wardens", 0)), int(world.reputation.get("caravans", 0)), regional_faction_text, world.arms_escalation, arms_label, leads_text]
 		if not world.ending_id.is_empty():
 			shop_status_label.text += "\nENDING — %s\n%s" % [String(MarketContent.ending(world.ending_id).get("title", world.ending_id)), world.ending_summary]
 	if ending_panel and ending_label:
@@ -4721,7 +4731,7 @@ class IntroScene extends Control:
 			var point := Vector2(size.x * (0.14 + well_index * 0.17), size.y * (0.56 + (well_index % 2) * 0.08))
 			draw_circle(point, 12, Color("#5f817b"), false, 3.0)
 			draw_line(point + Vector2(-20, 18), point + Vector2(20, 18), Color("#a97951"), 3.0)
-		draw_string(ThemeDB.fallback_font, Vector2(24, size.y - 32), "FIVE MARKETS · THREE ROADS · ONE FAILING RESERVOIR", HORIZONTAL_ALIGNMENT_LEFT, size.x - 48, 14, Color("#e6c58d"))
+		draw_string(ThemeDB.fallback_font, Vector2(24, size.y - 32), "EIGHT MARKETS · FIVE ROADS · ONE CARAVAN NETWORK", HORIZONTAL_ALIGNMENT_LEFT, size.x - 48, 14, Color("#e6c58d"))
 
 	func _draw_caravan_ledger() -> void:
 		var center := Vector2(size.x * 0.50, size.y * 0.48)
@@ -4802,6 +4812,22 @@ class BazaarScene extends Control:
 		draw_rect(Rect2(area.position.x, horizon_y, area.size.x, area.end.y - horizon_y), Color(profile.get("ground", Color("#443327"))), true)
 		var ink := tint.lightened(0.12)
 		match String(profile.get("landmark", "gate")):
+			"glass":
+				for shard_index in range(7):
+					var shard_x := area.position.x + 34.0 + shard_index * (area.size.x - 68.0) / 6.0
+					var shard_height := 18.0 + float((shard_index * 11) % 26)
+					draw_colored_polygon(PackedVector2Array([Vector2(shard_x - 8, horizon_y + 10), Vector2(shard_x, horizon_y - shard_height), Vector2(shard_x + 9, horizon_y + 10)]), ink.darkened(0.08 + 0.04 * (shard_index % 2)))
+			"kiln":
+				for kiln_index in range(4):
+					var kiln_x := area.position.x + area.size.x * (0.28 + kiln_index * 0.15)
+					draw_arc(Vector2(kiln_x, horizon_y + 8), 22, PI, TAU, 20, ink, 5.0)
+					draw_line(Vector2(kiln_x + 17, horizon_y - 6), Vector2(kiln_x + 17, horizon_y - 35), ink.darkened(0.2), 6.0)
+			"mirrors":
+				for mirror_index in range(6):
+					var mirror_x := area.position.x + 38.0 + mirror_index * (area.size.x - 76.0) / 5.0
+					var mirror_center := Vector2(mirror_x, horizon_y - 8 - float(mirror_index % 2) * 13.0)
+					draw_colored_polygon(PackedVector2Array([mirror_center + Vector2(0, -18), mirror_center + Vector2(13, 0), mirror_center + Vector2(0, 18), mirror_center + Vector2(-13, 0)]), ink.darkened(0.12))
+					draw_line(mirror_center + Vector2(0, 18), mirror_center + Vector2(0, 34), ink, 3.0)
 			"brine":
 				for pan_index in range(5):
 					var pan_x := area.position.x + 30.0 + pan_index * area.size.x / 5.0
@@ -4921,16 +4947,6 @@ class MapPanel extends Control:
 	const MIN_CELL_HEIGHT := 14.0
 	const MAP_HEADER_HEIGHT := 30.0
 	const ENCOUNTER_PROGRESS := 0.39
-	const ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
-	const ROUTE_PROFILES := ["cheap / exposed", "safe / expensive", "fast / provision-heavy"]
-	const SETTLEMENT_CELLS := {
-		"ashgate": Vector2i(7, 6),
-		"brine_cross": Vector2i(13, 2),
-		"cinderford": Vector2i(11, 6),
-		"hollow_market": Vector2i(4, 3),
-		"reedwatch": Vector2i(14, 9)
-	}
-
 	var world
 	var travel_route_id: String = ""
 	var travel_origin_id: String = ""
@@ -4999,24 +5015,39 @@ class MapPanel extends Control:
 		return _cell_rect(cell).get_center()
 
 	func _settlement_point(settlement_id: String) -> Vector2:
-		return _cell_center(SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO))
+		return _cell_center(_settlement_cell(settlement_id))
+
+	func _settlement_cell(settlement_id: String) -> Vector2i:
+		var settlement_record: Dictionary = world.settlement(settlement_id) if world != null else MarketContent.settlements().get(settlement_id, {})
+		var coordinates: Array = settlement_record.get("identity", {}).get("map_cell", [0, 0])
+		return Vector2i(int(coordinates[0]), int(coordinates[1]))
+
+	func _settlement_ids() -> Array[String]:
+		return MarketContent.settlement_ids()
+
+	func _route_ids() -> Array[String]:
+		var ids: Array[String] = []
+		var route_records: Dictionary = world.routes if world != null else MarketContent.routes()
+		for route_id_value in route_records.keys():
+			ids.append(String(route_id_value))
+		return ids
 
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
-		var cell: Vector2i = SETTLEMENT_CELLS.get(settlement_id, Vector2i.ZERO)
-		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 38, 40))
+		var cell := _settlement_cell(settlement_id)
+		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 52, 40))
 
 	func _settlement_footprint(settlement_id: String) -> Rect2:
 		return _settlement_marker_rect(settlement_id).grow_individual(0.0, 10.0, 0.0, 10.0)
 
 	func _route_points(route_id: String) -> Array[Vector2]:
-		match route_id:
-			"old_road":
-				return [_settlement_point("ashgate"), _settlement_point("hollow_market"), _settlement_point("reedwatch")]
-			"toll_road":
-				return [_settlement_point("ashgate"), _settlement_point("cinderford"), _settlement_point("brine_cross")]
-			"dry_cut":
-				return [_settlement_point("hollow_market"), _settlement_point("brine_cross"), _settlement_point("reedwatch")]
-		return []
+		var route_record: Dictionary = world.routes.get(route_id, {}) if world != null else MarketContent.route(route_id)
+		var path: Array = route_record.get("map_path", route_record.get("stops", route_record.get("endpoints", [])))
+		var points: Array[Vector2] = []
+		for settlement_id_value in path:
+			var settlement_id := String(settlement_id_value)
+			if _settlement_ids().has(settlement_id):
+				points.append(_settlement_point(settlement_id))
+		return points
 
 	func _route_color(route_id: String) -> Color:
 		match route_id:
@@ -5026,6 +5057,10 @@ class MapPanel extends Control:
 				return Color("#e6c58d")
 			"dry_cut":
 				return Color("#7d9ca4")
+			"glasswind_trace":
+				return Color("#d19a64")
+			"mirror_run":
+				return Color("#9f8bc0")
 		return Color("#705746")
 
 	func _route_label(route_id: String) -> String:
@@ -5035,7 +5070,9 @@ class MapPanel extends Control:
 
 	func _map_heading() -> String:
 		var crisis_label := String(MarketContent.crisis_stage(world.crisis_stage).get("label", "Regional pressure")) if world != null else "Regional pressure"
-		return "FIVE-WELL BASIN — %s — SELECT A SETTLEMENT" % crisis_label.to_upper()
+		var region := MarketContent.region_for_settlement(world.current_settlement) if world != null else {}
+		var region_name := String(region.get("name", "Ashland Trade Network"))
+		return "%s — %s — SELECT A SETTLEMENT" % [region_name.to_upper(), crisis_label.to_upper()]
 
 	func _settlement_marker_detail(settlement_id: String) -> String:
 		if world == null:
@@ -5066,7 +5103,7 @@ class MapPanel extends Control:
 	func _route_to(settlement_id: String) -> String:
 		if world == null:
 			return ""
-		for route_id in ROUTE_IDS:
+		for route_id in _route_ids():
 			if MarketContent.route_connects(route_id, world.current_settlement, settlement_id):
 				return route_id
 		return ""
@@ -5102,10 +5139,12 @@ class MapPanel extends Control:
 		return "AT REST"
 
 	func _route_footer_rect(route_index: int) -> Rect2:
-		var text := "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]]
+		var route_ids := _route_ids()
+		var text := _route_label(route_ids[route_index])
 		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
-		var footer_x: float = float([8.0, cell_width * 5.3, cell_width * 10.7][route_index])
-		return Rect2(board_origin + Vector2(footer_x, _board_rect().size.y - text_size.y - 6.0), text_size)
+		var slot_width := _board_rect().size.x / float(route_ids.size())
+		var footer_x := slot_width * float(route_index) + 5.0
+		return Rect2(board_origin + Vector2(footer_x, _board_rect().size.y - text_size.y - 6.0), Vector2(slot_width - 8.0, text_size.y))
 
 	func _map_heading_rect() -> Rect2:
 		var text_size := ThemeDB.fallback_font.get_string_size(_map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16))
@@ -5298,6 +5337,10 @@ class MapPanel extends Control:
 					"road": Color("#665f4e"),
 					"accent": Color("#7d9ca4"),
 				}
+			"glasswind_trace":
+				return {"scene_id": "glasswind_shards", "title": "GLASSWIND TRACE", "waypoint": "The wrapped marker", "sky": Color("#46372f"), "ground": Color("#2d211c"), "road": Color("#72513c"), "accent": Color("#d19a64")}
+			"mirror_run":
+				return {"scene_id": "mirror_night_road", "title": "MIRROR RUN", "waypoint": "The last beacon", "sky": Color("#302d40"), "ground": Color("#24212c"), "road": Color("#554a63"), "accent": Color("#9f8bc0")}
 		return {
 			"scene_id": "basin_road",
 			"title": "BASIN ROAD",
@@ -5377,6 +5420,44 @@ class MapPanel extends Control:
 		draw_line(marker + Vector2(0, -39), marker + Vector2(17, -31), accent, 3.0)
 		draw_line(marker + Vector2(0, -27), marker + Vector2(-14, -19), accent.darkened(0.15), 3.0)
 
+	func _draw_glasswind_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(6):
+			var drift := fmod(float(index * 157) - travel_progress * 650.0, board.size.x + 120.0) - 60.0
+			var base := Vector2(board.position.x + drift, horizon_y + 30.0 + float(index % 3) * 24.0)
+			var height := 25.0 + float(index % 2) * 14.0
+			draw_colored_polygon(PackedVector2Array([
+				base + Vector2(-9, 0),
+				base + Vector2(1, -height),
+				base + Vector2(11, 0),
+			]), Color(accent, 0.42))
+			draw_line(base + Vector2(1, -height), base + Vector2(5, -4), accent.lightened(0.18), 1.5)
+		if travel_phase in ["road", "encounter"]:
+			var cairn := Vector2(board.position.x + board.size.x * 0.67, horizon_y + 42.0)
+			for stone in range(4):
+				var width := 32.0 - float(stone) * 6.0
+				draw_rect(Rect2(cairn.x - width * 0.5, cairn.y - float(stone + 1) * 8.0, width, 7.0), accent.darkened(0.22 + stone * 0.05), true)
+
+	func _draw_mirror_run_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(5):
+			var drift := fmod(float(index * 191) - travel_progress * 580.0, board.size.x + 140.0) - 70.0
+			var base := Vector2(board.position.x + drift, horizon_y + 36.0 + float(index % 2) * 31.0)
+			draw_line(base, base + Vector2(0, -38), accent.darkened(0.18), 3.0)
+			draw_circle(base + Vector2(0, -43), 6.0, Color("#e5d2a3"))
+			draw_circle(base + Vector2(0, -43), 12.0, Color(0.62, 0.49, 0.76, 0.16))
+		var mirror := Vector2(board.position.x + board.size.x * 0.76, horizon_y + 28.0)
+		draw_colored_polygon(PackedVector2Array([
+			mirror + Vector2(-18, 15),
+			mirror + Vector2(-12, -35),
+			mirror + Vector2(13, -28),
+			mirror + Vector2(18, 15),
+		]), Color(accent, 0.30))
+		draw_polyline(PackedVector2Array([
+			mirror + Vector2(-18, 15),
+			mirror + Vector2(-12, -35),
+			mirror + Vector2(13, -28),
+			mirror + Vector2(18, 15),
+		]), accent, 2.0)
+
 	func _draw_road_scene() -> void:
 		var board := _board_rect()
 		var profile := _road_profile(travel_route_id)
@@ -5410,6 +5491,10 @@ class MapPanel extends Control:
 				_draw_toll_road_landmarks(board, horizon_y, accent)
 			"dry_cut":
 				_draw_dry_cut_landmarks(board, horizon_y, accent)
+			"glasswind_trace":
+				_draw_glasswind_landmarks(board, horizon_y, accent)
+			"mirror_run":
+				_draw_mirror_run_landmarks(board, horizon_y, accent)
 		var route_name := _route_label(travel_route_id).to_upper()
 		var origin_name := String(world.settlement(travel_origin_id).get("name", travel_origin_id)) if world != null else travel_origin_id
 		var destination_name := String(world.settlement(travel_destination_id).get("name", travel_destination_id)) if world != null else travel_destination_id
@@ -5457,7 +5542,7 @@ class MapPanel extends Control:
 			return
 		if event is InputEventMouseMotion:
 			var next_hover := ""
-			for settlement_id_value in SETTLEMENT_CELLS.keys():
+			for settlement_id_value in _settlement_ids():
 				var candidate_id := String(settlement_id_value)
 				if _settlement_footprint(candidate_id).has_point(event.position):
 					next_hover = candidate_id
@@ -5468,7 +5553,7 @@ class MapPanel extends Control:
 			return
 		if not event is InputEventMouseButton or not event.pressed or event.button_index != MOUSE_BUTTON_LEFT:
 			return
-		for settlement_id_value in SETTLEMENT_CELLS.keys():
+		for settlement_id_value in _settlement_ids():
 			var settlement_id := String(settlement_id_value)
 			if _settlement_footprint(settlement_id).has_point(event.position):
 				settlement_selected.emit(settlement_id)
@@ -5491,7 +5576,7 @@ class MapPanel extends Control:
 		draw_rect(Rect2(board.position, Vector2(board.size.x, MAP_HEADER_HEIGHT)), Color("#231b16"), true)
 		var heading_rect := _map_heading_rect()
 		draw_string(ThemeDB.fallback_font, heading_rect.position + Vector2(0, heading_rect.size.y), _map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16), Color("#e6c58d"))
-		for route_id in ROUTE_IDS:
+		for route_id in _route_ids():
 			var route_points: Array[Vector2] = _route_points(route_id)
 			if route_points.size() < 2:
 				continue
@@ -5511,9 +5596,12 @@ class MapPanel extends Control:
 				else:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
 		draw_rect(Rect2(board.position + Vector2(0, board.size.y - 28), Vector2(board.size.x, 28)), Color("#231b16"), true)
-		for route_index in range(ROUTE_IDS.size()):
-			draw_string(ThemeDB.fallback_font, _route_footer_rect(route_index).position + Vector2(0, _font_size(12)), "%s: %s" % [_route_label(ROUTE_IDS[route_index]), ROUTE_PROFILES[route_index]], HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), _route_color(ROUTE_IDS[route_index]))
-		for settlement_id_value in SETTLEMENT_CELLS.keys():
+		var route_ids := _route_ids()
+		for route_index in range(route_ids.size()):
+			var footer_rect := _route_footer_rect(route_index)
+			var footer_text := _route_label(route_ids[route_index])
+			draw_string(ThemeDB.fallback_font, footer_rect.position + Vector2(0, _font_size(12)), footer_text, HORIZONTAL_ALIGNMENT_CENTER, footer_rect.size.x, _font_size(12), _route_color(route_ids[route_index]))
+		for settlement_id_value in _settlement_ids():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
 			var is_current: bool = world != null and settlement_id == world.current_settlement

@@ -116,15 +116,15 @@ func _init() -> void:
 
 	var tour_world := AshWorldState.new(1107)
 	var visited := {"ashgate": true}
-	var tour_destinations := ["cinderford", "brine_cross", "ashgate", "reedwatch", "hollow_market"]
-	var tour_routes := ["toll_road", "toll_road", "toll_road", "old_road", "dry_cut"]
+	var tour_destinations := ["cinderford", "brine_cross", "ashgate", "reedwatch", "hollow_market", "sunfall_exchange", "kiln_rest", "sunfall_exchange", "mirror_wells"]
+	var tour_routes := ["toll_road", "toll_road", "toll_road", "old_road", "dry_cut", "glasswind_trace", "glasswind_trace", "glasswind_trace", "mirror_run"]
 	for index in range(tour_destinations.size()):
 		var tour_result := _command(tour_world, MarketCommandProcessor.DEPART_ROUTE, {"route_id": tour_routes[index], "destination_id": tour_destinations[index]})
-		_expect_ok(tour_result, "reach %s during the five-settlement tour" % tour_destinations[index])
+		_expect_ok(tour_result, "reach %s during the eight-settlement tour" % tour_destinations[index])
 		if tour_result.ok:
 			visited[tour_world.current_settlement] = true
-	_expect(visited.size() == 5 and tour_world.current_settlement == "hollow_market", "the authored three-route graph should make all five settlements reachable from a fresh save")
-	_expect(tour_world.money >= 0 and tour_world.provisions >= 0, "the empty-cargo five-settlement tour should not soft-lock on route resources")
+	_expect(visited.size() == 8 and tour_world.current_settlement == "mirror_wells", "the authored five-route graph should make all eight settlements reachable from a fresh save")
+	_expect(tour_world.money >= 0 and tour_world.provisions >= 0, "the empty-cargo eight-settlement tour should not soft-lock on route resources")
 
 	var fresh_ashgate := AshWorldState.new(1107)
 	var loaded_exposed_route := AshWorldState.new(1107)

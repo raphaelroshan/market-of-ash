@@ -353,7 +353,7 @@ func _initialize() -> void:
 	_expect(buy_cargo_button.disabled, "normal trade controls should communicate unaffordability through the real Buy action")
 	ui.world.money = 120
 	ui._refresh_ui()
-	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.22.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
+	_expect(ui.diagnostics_label.text.contains("build development") and ui.diagnostics_label.text.contains("seed 1107") and ui.diagnostics_label.text.contains("save v12") and ui.diagnostics_label.text.contains("content 1.23.0"), "shop diagnostics should expose reproducible build/seed/save/content versions")
 	var state_before_missing_load := JSON.stringify(ui.world.serialize())
 	ui._on_load_pressed()
 	_expect(JSON.stringify(ui.world.serialize()) == state_before_missing_load and ui.save_status_label.text.contains("No saved campaign exists"), "loading a missing save should explain the block without changing the current run")
@@ -676,7 +676,7 @@ func _initialize() -> void:
 		_expect(caravan_x_ratio >= 0.35 and caravan_x_ratio <= 0.65, "the opening caravan should occupy the central map stage instead of hugging a screen edge")
 		_expect(ui.status_label.get_global_rect().position.x > board_rect.end.x, "caravan resources should remain in the right-side rail instead of crowding the map stage")
 		_expect(ui.map_panel._settlement_marker_rect("brine_cross").size.x >= 126.0 and ui.map_panel._settlement_marker_rect("brine_cross").size.y == 40.0 and ui.map_panel._settlement_footprint("brine_cross").size.y >= 60.0 and not ui.map_panel._settlement_marker_rect("ashgate").intersects(ui.map_panel._settlement_marker_rect("cinderford")), "map settlement markers should preserve distinct visual and enlarged pointer bounds while scaling horizontally")
-		var settlement_ids: Array = ui.map_panel.SETTLEMENT_CELLS.keys()
+		var settlement_ids: Array = ui.map_panel._settlement_ids()
 		var hit_targets_overlap := false
 		for first_index in range(settlement_ids.size()):
 			for second_index in range(first_index + 1, settlement_ids.size()):
@@ -1074,7 +1074,7 @@ func _initialize() -> void:
 	_expect(ui.theme.default_font_size == 20 and ui.diagnostics_label.get_theme_font_size("font_size") == 14, "large text should scale inherited and explicit font sizes")
 	_expect(is_equal_approx(ui.map_panel.text_scale, 1.25) and ui.map_panel._font_size(12) == 15 and is_equal_approx(ui.bazaar_scene.text_scale, 1.25) and ui.bazaar_scene._font_size(12) == 15, "large text should also scale custom-drawn map and Bazaar labels")
 	var route_footer_rects: Array[Rect2] = []
-	for route_index in range(ui.map_panel.ROUTE_IDS.size()):
+	for route_index in range(ui.map_panel._route_ids().size()):
 		route_footer_rects.append(ui.map_panel._route_footer_rect(route_index))
 	_expect(not route_footer_rects[0].intersects(route_footer_rects[1]) and not route_footer_rects[1].intersects(route_footer_rects[2]) and route_footer_rects[2].end.x <= ui.map_panel._board_rect().end.x and route_footer_rects[0].position.y >= ui.map_panel._board_rect().end.y - 28.0, "large map route labels should remain separated inside the board footer strip")
 	var map_heading_width: float = ThemeDB.fallback_font.get_string_size(ui.map_panel._map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, ui.map_panel._font_size(16)).x
@@ -1085,7 +1085,7 @@ func _initialize() -> void:
 	_expect(map_heading_rect.position.y >= ui.map_panel._board_rect().position.y and map_heading_rect.end.y <= ui.map_panel._board_rect().position.y + ui.map_panel.MAP_HEADER_HEIGHT, "large map heading should remain inside its reserved board strip")
 	_expect(route_footer_rects[2].end.y <= ui.event_scroll.get_global_rect().position.y, "large map footer labels should not overlap the journey result text: footer %.1f, result %.1f" % [route_footer_rects[2].end.y, ui.event_scroll.get_global_rect().position.y])
 	var oversized_settlement_labels: Array[String] = []
-	for settlement_id_value in ui.map_panel.SETTLEMENT_CELLS.keys():
+	for settlement_id_value in ui.map_panel._settlement_ids():
 		var settlement_id := String(settlement_id_value)
 		var marker_width: float = ui.map_panel._settlement_marker_rect(settlement_id).size.x - 10.0
 		var marker_name := settlement_id.replace("_", " ").capitalize()

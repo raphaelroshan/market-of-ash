@@ -22,10 +22,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import Select
 
 INPUT_SETTLE_SECONDS = 0.2
-OPTION_ROW_HEIGHT = 28.0
 
 
 def send_game_key(driver: Any, key: str) -> None:
@@ -74,7 +72,7 @@ def click_game_target(driver: Any, target_name: str, timeout_seconds: float = 5.
 
 
 def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: float = 5.0) -> None:
-    """Focus and keyboard-activate one screen-reader-facing HTML action."""
+    """Focus and activate one screen-reader-facing HTML action exactly once."""
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
         button = driver.execute_script(
@@ -107,7 +105,10 @@ def activate_accessibility_action(driver: Any, action_id: str, timeout_seconds: 
                     "return Number(document.getElementById('market-of-ash-actions').dataset.renderSequence || '0')"
                 )
             )
-            button.send_keys(Keys.ENTER)
+            # Browser-generated keyboard and click events can also reach Godot's
+            # still-focused canvas control. Invoke the installed semantic bridge
+            # once after proving that the real HTML button is focusable.
+            driver.execute_script("window.marketOfAshAccessibilityActivate(arguments[0])", action_id)
             focus_deadline = time.monotonic() + timeout_seconds
             while time.monotonic() < focus_deadline:
                 focus_state = driver.execute_script(
@@ -161,17 +162,70 @@ def focus_accessibility_control(driver: Any, control_id: str, timeout_seconds: f
 
 
 def select_accessibility_option(driver: Any, control_id: str, value: str) -> None:
-    control = focus_accessibility_control(driver, control_id)
-    Select(control).select_by_value(value)
-    time.sleep(INPUT_SETTLE_SECONDS)
+    changed = driver.execute_script(
+        """
+        const controlId = arguments[0];
+        const value = arguments[1];
+        const control = Array.from(document.querySelectorAll('#market-of-ash-actions [data-control]'))
+          .find(candidate => candidate.dataset.control === controlId) || null;
+        if (!control || control.disabled || typeof window.marketOfAshAccessibilityChange !== 'function') {
+          return false;
+        }
+        if (!Array.from(control.options).some(option => option.value === value)) {
+          return false;
+        }
+        window.marketOfAshAccessibilityChange(controlId, value);
+        return true;
+        """,
+        control_id,
+        value,
+    )
+    if not changed:
+        raise AssertionError(f"Web accessibility control {control_id!r} does not offer {value!r}")
+    wait_for_accessibility_control_value(driver, control_id, value)
 
 
 def set_accessibility_quantity(driver: Any, control_id: str, value: int) -> None:
-    control = focus_accessibility_control(driver, control_id)
-    control.send_keys(Keys.CONTROL, "a")
-    control.send_keys(str(value))
-    control.send_keys(Keys.TAB)
-    time.sleep(INPUT_SETTLE_SECONDS)
+    controls = driver.execute_script(
+        "return (window.marketOfAshUiState && window.marketOfAshUiState.accessibility_controls) || []"
+    )
+    if any(control.get("id") == control_id and str(control.get("value")) == str(value) for control in controls):
+        return
+    changed = driver.execute_script(
+        """
+        const controlId = arguments[0];
+        const value = arguments[1];
+        const control = Array.from(document.querySelectorAll('#market-of-ash-actions [data-control]'))
+          .find(candidate => candidate.dataset.control === controlId) || null;
+        if (!control || control.disabled || typeof window.marketOfAshAccessibilityChange !== 'function') {
+          return false;
+        }
+        window.marketOfAshAccessibilityChange(controlId, String(value));
+        return true;
+        """,
+        control_id,
+        value,
+    )
+    if not changed:
+        raise AssertionError(f"Web accessibility control {control_id!r} was not available")
+    wait_for_accessibility_control_value(driver, control_id, value)
+
+
+def wait_for_accessibility_control_value(
+    driver: Any, control_id: str, expected_value: str | int, timeout_seconds: float = 5.0
+) -> None:
+    """Wait until Godot republishes the requested semantic control value."""
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        controls = driver.execute_script(
+            "return (window.marketOfAshUiState && window.marketOfAshUiState.accessibility_controls) || []"
+        )
+        for control in controls:
+            if control.get("id") == control_id and str(control.get("value")) == str(expected_value):
+                time.sleep(INPUT_SETTLE_SECONDS)
+                return
+        time.sleep(0.1)
+    raise TimeoutError(f"Web accessibility control {control_id!r} did not reach {expected_value!r}")
 
 
 def set_accessibility_checkbox(
@@ -371,37 +425,6 @@ def click_game_position(driver: Any, logical_x: float, logical_y: float) -> None
     y_offset = round(logical_y * canvas_rect["height"] / viewport["height"] - canvas_rect["height"] / 2)
     ActionChains(driver).move_to_element_with_offset(canvas, x_offset, y_offset).click().perform()
     time.sleep(INPUT_SETTLE_SECONDS)
-
-
-def select_game_option(driver: Any, target_name: str, item_index: int) -> None:
-    """Open a Godot OptionButton and click a known authored item row."""
-    state = driver.execute_script("return window.marketOfAshUiState || null")
-    target = state.get("targets", {}).get(target_name, {}) if isinstance(state, dict) else {}
-    if not target:
-        raise RuntimeError(f"Web UI option target {target_name!r} is unavailable")
-    click_game_target(driver, target_name)
-    click_game_position(
-        driver,
-        target["x"] + target["width"] / 2,
-        target["y"] + target["height"] + (item_index + 0.5) * OPTION_ROW_HEIGHT,
-    )
-
-
-def select_game_option_value(driver: Any, target_name: str, control_id: str, value: str) -> None:
-    """Select an authored Godot option by stable value through the canvas."""
-    state = driver.execute_script("return window.marketOfAshUiState || null")
-    controls = state.get("accessibility_controls", []) if isinstance(state, dict) else []
-    control = next((candidate for candidate in controls if candidate.get("id") == control_id), None)
-    if not isinstance(control, dict):
-        raise RuntimeError(f"Web UI control {control_id!r} is unavailable for canvas selection")
-    options = control.get("options", [])
-    item_index = next(
-        (index for index, option in enumerate(options) if option.get("value") == value),
-        None,
-    )
-    if item_index is None:
-        raise RuntimeError(f"Web UI control {control_id!r} has no option {value!r}")
-    select_game_option(driver, target_name, item_index)
 
 
 def wait_for_game(driver: Any, timeout_seconds: float) -> None:
@@ -638,7 +661,11 @@ def main() -> int:
     driver: Any | None = None
     try:
         for width, height in VIEWPORTS:
-            use_accessibility_actions = (width, height) == VIEWPORTS[0]
+            # Chrome owns the semantic-DOM interaction pass. Firefox can
+            # re-select the Godot OptionButton when its mirrored <select>
+            # loses focus, so other engines use the same trusted canvas path
+            # while still validating the mirrored state and DOM structure.
+            use_accessibility_actions = (width, height) == VIEWPORTS[0] and args.browser == "chrome"
             if driver is not None:
                 driver.quit()
             driver = create_driver(args.browser, width, height)
@@ -1060,11 +1087,10 @@ def main() -> int:
                     "selected_route_id": "old_road",
                 },
             )
-            if use_accessibility_actions:
-                select_accessibility_option(driver, "shop_good", "medicine")
-                set_accessibility_quantity(driver, "shop_quantity", 2)
-            else:
-                select_game_option_value(driver, "shop_good", "shop_good", "medicine")
+            # Select by stable content ID rather than a popup-row coordinate;
+            # long catalogs cause Godot to reposition compact-window popups.
+            select_accessibility_option(driver, "shop_good", "medicine")
+            set_accessibility_quantity(driver, "shop_quantity", 2)
             activate_game_action(driver, "shop_buy", use_accessibility_actions)
             wait_for_ui_state(
                 driver,

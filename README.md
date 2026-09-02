@@ -1,6 +1,6 @@
 # Market of Ash
 
-Market of Ash is an agent-first Godot 4.x prototype for a premium Windows game targeting Steam and Epic Games Store. The project is intentionally compact: one regional map, five settlements, three routes, seven goods, three crew members, four route events, two standing factions, one emergent replacement actor, a staged water crisis, five endings, and a deterministic economy.
+Market of Ash is an agent-first Godot 4.x prototype for a premium Windows game targeting Steam and Epic Games Store. The project is intentionally compact: two connected regions, eight settlements, five routes, ten goods, three crew members, five route events, three standing factions, two emergent replacement actors, a staged water crisis, five endings, and a deterministic economy.
 
 ## Current state
 
@@ -97,3 +97,4 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 | `docs/early_access_requirements.md` | Skeletal-but-playable Early Access breadth floor, quality gates, and agent-executable expansion order. |
 | `docs/early_access_decision.md` | Decision record explaining the breadth-versus-polish and authored-pressure trade-offs. |
 | `docs/ma_ea_1_completion.md` | Executable acceptance record for the responsive, release-facing Five-Well Basin journey. |
+| `docs/ma_ea_2_completion.md` | Executable acceptance record for the Glasswind Reach trade, journey, and failure-forward slice. |

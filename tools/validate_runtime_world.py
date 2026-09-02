@@ -10,9 +10,9 @@ import sys
 from pathlib import Path
 from typing import Any
 
-REQUIRED_GOODS = ("grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate")
-REQUIRED_SETTLEMENTS = ("ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch")
-REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut")
+REQUIRED_GOODS = ("grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil")
+REQUIRED_SETTLEMENTS = ("ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells")
+REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run")
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -520,7 +520,7 @@ def validate_events(value: Any, errors: list[str]) -> None:
                 fail(errors, f"event {event_id} choice {choice_id}.reputation_delta must be an object")
             else:
                 for faction_id, delta in reputation_delta.items():
-                    if faction_id not in ("wardens", "caravans") or not isinstance(delta, int) or abs(delta) > 10:
+                    if faction_id not in ("wardens", "caravans", "glass_consortium") or not isinstance(delta, int) or abs(delta) > 10:
                         fail(errors, f"event {event_id} choice {choice_id}.reputation_delta is invalid")
             condition = choice.get("route_condition", {})
             if not isinstance(condition, dict):
@@ -575,8 +575,11 @@ def validate_crew(value: Any, visit_slot_limit: Any, errors: list[str]) -> None:
 
 def validate_factions(value: Any, errors: list[str]) -> None:
     factions = as_object(value, "factions", errors)
-    for faction_id in ("wardens", "caravans"):
-        faction = as_object(factions.get(faction_id), f"factions.{faction_id}", errors)
+    for required_faction_id in ("wardens", "caravans", "glass_consortium"):
+        if required_faction_id not in factions:
+            fail(errors, f"factions.{required_faction_id} must be an object")
+    for faction_id, raw_faction in factions.items():
+        faction = as_object(raw_faction, f"factions.{faction_id}", errors)
         for field in ("name", "below_label", "trusted_label", "effect", "tradeoff"):
             if not isinstance(faction.get(field), str) or not faction[field]:
                 fail(errors, f"factions.{faction_id} must declare {field}")
@@ -589,6 +592,39 @@ def validate_factions(value: Any, errors: list[str]) -> None:
             fail(errors, f"factions.{faction_id}.toll_route_id must reference a known route")
         if not isinstance(faction.get("toll_discount"), int) or faction["toll_discount"] <= 0:
             fail(errors, f"factions.{faction_id}.toll_discount must be a positive integer")
+
+
+def validate_regions(value: Any, settlement_ids: set[str], route_ids: set[str], errors: list[str]) -> None:
+    regions = as_object(value, "regions", errors)
+    if len(regions) < 2:
+        fail(errors, "regions must define at least two playable regions")
+    assigned_settlements: set[str] = set()
+    for region_id, raw_region in regions.items():
+        if not isinstance(region_id, str) or not re.fullmatch(r"[a-z][a-z0-9_]*", region_id):
+            fail(errors, "region ids must use lower_snake_case")
+        region = as_object(raw_region, f"region {region_id}", errors)
+        for field in ("name", "summary"):
+            if not isinstance(region.get(field), str) or not region[field]:
+                fail(errors, f"region {region_id} must declare {field}")
+        member_settlements = region.get("settlement_ids")
+        if not isinstance(member_settlements, list) or len(member_settlements) < 2:
+            fail(errors, f"region {region_id}.settlement_ids must contain at least two settlements")
+            member_settlements = []
+        for settlement_id in member_settlements:
+            if settlement_id not in settlement_ids:
+                fail(errors, f"region {region_id} references unknown settlement {settlement_id}")
+            elif settlement_id in assigned_settlements:
+                fail(errors, f"settlement {settlement_id} belongs to more than one region")
+            assigned_settlements.add(settlement_id)
+        member_routes = region.get("route_ids")
+        if not isinstance(member_routes, list) or not member_routes:
+            fail(errors, f"region {region_id}.route_ids must contain at least one route")
+            member_routes = []
+        for route_id in member_routes:
+            if route_id not in route_ids:
+                fail(errors, f"region {region_id} references unknown route {route_id}")
+    if assigned_settlements != settlement_ids:
+        fail(errors, "every settlement must belong to exactly one region")
 
 
 def validate_arms_trade(value: Any, errors: list[str]) -> None:
@@ -765,6 +801,7 @@ def validate(data: Any) -> list[str]:
     settlements = as_object(root.get("settlements"), "settlements", errors)
     source_coverage: set[str] = set()
     consumer_coverage: set[str] = set()
+    occupied_map_cells: dict[tuple[int, int], str] = {}
     for settlement_id in REQUIRED_SETTLEMENTS:
         settlement = as_object(settlements.get(settlement_id), f"settlement {settlement_id}", errors)
         if not isinstance(settlement.get("name"), str) or not settlement["name"]:
@@ -775,7 +812,21 @@ def validate(data: Any) -> list[str]:
         for field in ("scene_id", "caption", "market_read", "landmark"):
             if not isinstance(identity.get(field), str) or not identity[field]:
                 fail(errors, f"settlement {settlement_id}.identity.{field} must be a non-empty string")
-        if identity.get("landmark") not in {"gate", "brine", "forge", "lanterns", "reeds"}:
+        map_cell = identity.get("map_cell")
+        if (
+            not isinstance(map_cell, list)
+            or len(map_cell) != 2
+            or any(not isinstance(axis, int) for axis in map_cell)
+            or not 0 <= map_cell[0] < 17
+            or not 0 <= map_cell[1] < 11
+        ):
+            fail(errors, f"settlement {settlement_id}.identity.map_cell must fit the 17x11 route grid")
+        else:
+            map_cell_key = (map_cell[0], map_cell[1])
+            if map_cell_key in occupied_map_cells:
+                fail(errors, f"settlement {settlement_id}.identity.map_cell overlaps {occupied_map_cells[map_cell_key]}")
+            occupied_map_cells[map_cell_key] = settlement_id
+        if identity.get("landmark") not in {"gate", "brine", "forge", "lanterns", "reeds", "glass", "kiln", "mirrors"}:
             fail(errors, f"settlement {settlement_id}.identity.landmark is unsupported")
         for field in ("tint", "sky", "ground"):
             color = identity.get(field)
@@ -852,6 +903,7 @@ def validate(data: Any) -> list[str]:
             segment_risk = segment.get("risk")
             if not isinstance(segment_risk, (int, float)) or not 0 <= segment_risk <= 1:
                 fail(errors, f"route {route_id} segment {segment_index}.risk must be between 0 and 1")
+    validate_regions(root.get("regions"), set(settlements), set(routes), errors)
     return errors
 
 
