@@ -673,3 +673,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Save validation repeatedly asks for individual goods, routes, factions, and rule sets. Deep-copying the entire runtime document for every lookup made deterministic save restoration scale with the whole content file and pushed the release benchmark past five seconds. Copying only the returned record preserves caller isolation while removing unrelated allocation.
 
 **Trade-off:** Internal helpers must never expose the cached dictionary to callers. Tests retain a mutation-isolation check for the public full-snapshot API, and new accessors must duplicate any mutable value they return.
+
+## ADR-085: The guided opening proves ordinary trade before optional work
+
+**Decision:** Start the tutorial with an ordinary Ashgate Water purchase and Reedwatch sale, then teach return Grain trade before asking the player to inspect—but not accept—a Job Board assignment. Every successful sale shows the realized payout and the local unit price before and after new supply.
+
+**Reason:** The investment vertical must demonstrate that local production, demand, capacity, road burden, and changing prices form a complete game without a contract. Introducing optional work only after the player has profited from a two-way circuit makes its added deadline and political value legible as a choice rather than disguised mandatory progression.
+
+**Trade-off:** The guided path no longer demonstrates contract completion in its first journey; deterministic campaign tests and the optional Job Board retain that coverage. Existing guided saves that already completed relief remain recoverable through derived tutorial state.

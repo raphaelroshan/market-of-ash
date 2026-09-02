@@ -2053,8 +2053,11 @@ func _on_bazaar_navigation_pressed(section_id: String) -> void:
 	active_bazaar_section = section_id
 	if section_changed and section_id == "information":
 		_play_ui_cue("information")
-	if section_id == "outlook" and tutorial.enabled:
-		tutorial.mark_outlook_seen()
+	if tutorial.enabled and section_id in ["assignments", "outlook"]:
+		if section_id == "outlook":
+			tutorial.mark_outlook_seen()
+		elif tutorial.current_step == TutorialDirector.STEP_REVIEW_OPTIONAL_WORK:
+			tutorial.mark_optional_work_seen()
 		tutorial.refresh(world, _current_ui_state_id(), arrival_pending)
 		if autosave_enabled:
 			_write_save("AUTOSAVED")
@@ -3335,6 +3338,8 @@ func _web_ui_state() -> Dictionary:
 		"bazaar_section": active_bazaar_section,
 		"bazaar_scene_id": bazaar_scene.scene_id() if bazaar_scene != null and world != null else "",
 		"trade_decision_summary": shop_decision_summary_label.text if shop_decision_summary_label != null else "",
+		"trade_receipt_title": trade_receipt_title_label.text if trade_receipt_panel != null and trade_receipt_panel.visible else "",
+		"trade_receipt_detail": trade_receipt_detail_label.text if trade_receipt_panel != null and trade_receipt_panel.visible else "",
 		"selected_good_id": selected_good_id,
 		"selected_destination_id": _selected_id(destination_option) if destination_option != null else "",
 		"selected_route_id": _selected_id(route_option) if route_option != null else "",
@@ -3592,6 +3597,8 @@ func _on_sell_pressed() -> void:
 	var good_id := _selected_id(cargo_good_option)
 	var quantity := int(cargo_quantity.value)
 	var money_before := world.money
+	var settlement := world.settlement(world.current_settlement)
+	var unit_price_before := MarketEconomy.price_for(good_id, settlement, world.pricing_context())
 	var result := MarketCommandProcessor.execute(world, {
 		"id": MarketCommandProcessor.SELL_GOODS,
 		"inputs": {
@@ -3602,7 +3609,8 @@ func _on_sell_pressed() -> void:
 	_record_first_trade(result)
 	_show_command_result(result, "Sale")
 	if result.ok:
-		_show_trade_receipt("SALE RECORDED", "%s x%d released · %d ashmarks received · hold %d/%d" % [good_id.capitalize(), quantity, world.money - money_before, int(world.cargo.get("weight", 0)), world.cargo_capacity])
+		var unit_price_after := MarketEconomy.price_for(good_id, settlement, world.pricing_context())
+		_show_trade_receipt("SALE RECORDED", "%s x%d released · %d ashmarks received · local unit %d → %d after supply · hold %d/%d" % [good_id.capitalize(), quantity, world.money - money_before, unit_price_before, unit_price_after, int(world.cargo.get("weight", 0)), world.cargo_capacity])
 	if result.ok and shop_sell_button != null and shop_sell_button.disabled:
 		_grab_focus_if_available(plan_departure_button)
 
@@ -3983,6 +3991,9 @@ func _refresh_tutorial_guidance() -> void:
 			_select_option_by_id(route_option, "old_road")
 			_select_option_by_id(cargo_good_option, "water")
 			cargo_quantity.value = 4
+		TutorialDirector.STEP_SELL_WATER:
+			_select_option_by_id(shop_good_option, "water")
+			shop_quantity.value = maxi(1, mini(4, int(world.cargo.get("water", 0))))
 		TutorialDirector.STEP_BUY_GRAIN:
 			_select_option_by_id(shop_good_option, "grain")
 			_select_option_by_id(cargo_good_option, "grain")
