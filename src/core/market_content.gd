@@ -43,28 +43,33 @@ static func load_runtime() -> Dictionary:
 	return _cached_result.duplicate(true)
 
 static func runtime_world() -> Dictionary:
-	var result := load_runtime()
-	if not result.ok:
+	return _runtime_world_ref().duplicate(true)
+
+static func _runtime_world_ref() -> Dictionary:
+	if _cached_result.is_empty():
+		load_runtime()
+	if not bool(_cached_result.get("ok", false)):
 		return {}
-	return result.data.duplicate(true)
+	var data: Variant = _cached_result.get("data", {})
+	return data if typeof(data) == TYPE_DICTIONARY else {}
 
 static func content_version() -> String:
-	return String(runtime_world().get("content_version", "unknown"))
+	return String(_runtime_world_ref().get("content_version", "unknown"))
 
 static func planning_assumptions() -> Dictionary:
-	var assumptions: Variant = runtime_world().get("planning_assumptions", {})
+	var assumptions: Variant = _runtime_world_ref().get("planning_assumptions", {})
 	if typeof(assumptions) != TYPE_DICTIONARY:
 		return {}
 	return assumptions.duplicate(true)
 
 static func market_memory_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("market_memory", {})
+	var rules: Variant = _runtime_world_ref().get("market_memory", {})
 	if typeof(rules) != TYPE_DICTIONARY:
 		return {}
 	return rules.duplicate(true)
 
 static func settlement_action_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("settlement_actions", {})
+	var rules: Variant = _runtime_world_ref().get("settlement_actions", {})
 	if typeof(rules) != TYPE_DICTIONARY:
 		return {}
 	return rules.duplicate(true)
@@ -91,7 +96,7 @@ static func settlement_actions_for(settlement_id: String) -> Array[Dictionary]:
 	return matches
 
 static func contract_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("contracts", {})
+	var rules: Variant = _runtime_world_ref().get("contracts", {})
 	if typeof(rules) != TYPE_DICTIONARY:
 		return {}
 	return rules.duplicate(true)
@@ -118,7 +123,7 @@ static func contracts_from(settlement_id: String) -> Array[Dictionary]:
 	return matches
 
 static func adaptive_scenario_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("adaptive_scenarios", {})
+	var rules: Variant = _runtime_world_ref().get("adaptive_scenarios", {})
 	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
 
 static func adaptive_scenarios() -> Array[Dictionary]:
@@ -141,7 +146,7 @@ static func adaptive_scenario_for_contract(contract_id: String) -> Dictionary:
 	return {}
 
 static func event_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("events", {})
+	var rules: Variant = _runtime_world_ref().get("events", {})
 	if typeof(rules) != TYPE_DICTIONARY:
 		return {}
 	return rules.duplicate(true)
@@ -157,7 +162,7 @@ static func event(event_id: String) -> Dictionary:
 	return {}
 
 static func crew_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("crew", {})
+	var rules: Variant = _runtime_world_ref().get("crew", {})
 	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
 
 static func crew_member(crew_id: String) -> Dictionary:
@@ -180,15 +185,15 @@ static func faction(faction_id: String) -> Dictionary:
 	return records.get(faction_id, {}).duplicate(true)
 
 static func factions() -> Dictionary:
-	var records: Variant = runtime_world().get("factions", {})
+	var records: Variant = _runtime_world_ref().get("factions", {})
 	return records.duplicate(true) if typeof(records) == TYPE_DICTIONARY else {}
 
 static func arms_trade_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("arms_trade", {})
+	var rules: Variant = _runtime_world_ref().get("arms_trade", {})
 	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
 
 static func crisis_rules() -> Dictionary:
-	var rules: Variant = runtime_world().get("crisis", {})
+	var rules: Variant = _runtime_world_ref().get("crisis", {})
 	return rules.duplicate(true) if typeof(rules) == TYPE_DICTIONARY else {}
 
 static func crisis_stage(stage_id: int) -> Dictionary:
@@ -212,7 +217,7 @@ static func ending(ending_id: String) -> Dictionary:
 
 static func good_ids() -> Array[String]:
 	var ids: Array[String] = []
-	var data := runtime_world()
+	var data := _runtime_world_ref()
 	var goods: Array = data.get("goods", [])
 	for raw_good in goods:
 		if typeof(raw_good) == TYPE_DICTIONARY:
@@ -221,7 +226,7 @@ static func good_ids() -> Array[String]:
 	return ids
 
 static func good(good_id: String) -> Dictionary:
-	var data := runtime_world()
+	var data := _runtime_world_ref()
 	var goods: Array = data.get("goods", [])
 	for raw_good in goods:
 		if typeof(raw_good) != TYPE_DICTIONARY:
@@ -232,7 +237,7 @@ static func good(good_id: String) -> Dictionary:
 	return {}
 
 static func settlements() -> Dictionary:
-	return runtime_world().get("settlements", {}).duplicate(true)
+	return _runtime_world_ref().get("settlements", {}).duplicate(true)
 
 static func settlement_ids() -> Array[String]:
 	var ids: Array[String] = []
@@ -242,7 +247,7 @@ static func settlement_ids() -> Array[String]:
 	return ids
 
 static func regions() -> Dictionary:
-	var records: Variant = runtime_world().get("regions", {})
+	var records: Variant = _runtime_world_ref().get("regions", {})
 	return records.duplicate(true) if typeof(records) == TYPE_DICTIONARY else {}
 
 static func region(region_id: String) -> Dictionary:
@@ -258,7 +263,7 @@ static func region_for_settlement(settlement_id: String) -> Dictionary:
 	return {}
 
 static func routes() -> Dictionary:
-	return runtime_world().get("routes", {}).duplicate(true)
+	return _runtime_world_ref().get("routes", {}).duplicate(true)
 
 static func route(route_id: String) -> Dictionary:
 	return routes().get(route_id, {}).duplicate(true)

@@ -98,8 +98,9 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 | `docs/early_access_decision.md` | Decision record explaining the breadth-versus-polish and authored-pressure trade-offs. |
 | `docs/ma_ea_1_completion.md` | Executable acceptance record for the responsive, release-facing Five-Well Basin journey. |
 | `docs/ma_ea_2_completion.md` | Executable acceptance record for the Glasswind Reach trade, journey, and failure-forward slice. |
+| `docs/ma_i1_completion.md` | Investment-gate evidence for the responsive opening shell and deterministic save-round-trip repair. |
 
 
 ## Investment evaluation roadmap
 
-The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). The current investment gate is MA-I1: repair the opening shell and deterministic save-round-trip performance before adding further breadth.
+The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). MA-I1 is complete with responsive-shell and measured performance evidence in [`docs/ma_i1_completion.md`](docs/ma_i1_completion.md); the current investment gate is MA-I2, making the first trade fantasy explicit through one normal-flow journey.
