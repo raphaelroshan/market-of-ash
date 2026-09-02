@@ -100,6 +100,7 @@ def validate_release_contract(root: Path) -> dict[str, str]:
         "needs: [capture-1600]",
         "actions/download-artifact@v7",
         "python tools/package_capture_evidence.py",
+        "windows-release-candidate-${{ github.run_id }}",
     ):
         if token not in candidate_job:
             raise AssertionError(f"Windows release candidate job is missing: {token}")

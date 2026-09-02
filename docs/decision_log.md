@@ -740,7 +740,7 @@ The objective is presentation state derived from serialized successful buy/sell 
 
 ## ADR-093: Full-size release evidence runs on a fixed Linux display
 
-**Decision:** Generate the complete 1600×900 release journey in a dedicated Ubuntu/Xvfb job with a fixed 1920×1080 virtual display, upload it as a workflow artifact, and make the Windows packaging job consume and archive that validated capture. Keep the Windows runner responsible for the executable, clean-install smoke, and packaged native GUI evidence at its available desktop size. Advance the repaired candidate to `0.16.0-early-access-rc2` rather than moving the failed RC1 tag.
+**Decision:** Generate the complete 1600×900 release journey in a dedicated Ubuntu/Xvfb job with a fixed 1920×1080 virtual display, upload it as a workflow artifact, and make the Windows packaging job consume and archive that validated capture. Name cross-job artifacts by numeric workflow run ID so tagged and manually dispatched branch runs use the same filesystem-safe path. Keep the Windows runner responsible for the executable, clean-install smoke, and packaged native GUI evidence at its available desktop size. Advance the repaired candidate to `0.16.0-early-access-rc2` rather than moving the failed RC1 tag.
 
 **Reason:** GitHub's hosted Windows desktop exposed only a 1028×578 drawable area when asked for 1600×900, so the capture correctly rejected the scaled frame. Xvfb gives the evidence harness an explicit viewport while the Windows-specific checks continue to validate the platform artifact. Separate jobs preserve both guarantees without weakening the dimension assertion or rewriting a public tag.
 
