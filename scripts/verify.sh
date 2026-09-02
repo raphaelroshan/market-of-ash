@@ -54,6 +54,7 @@ fi
 for test_script in \
   test_economy.gd \
   test_map_ui.gd \
+	  test_visual_registry.gd \
   test_presenters.gd \
   test_tutorial_flow.gd \
   test_controller_flow.gd \

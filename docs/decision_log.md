@@ -713,3 +713,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Separate feature tests could prove buying, travel, events, market memory, side deals, and endings without proving that they form a coherent game from a clean save. One named path makes the complete economic and political arc reproducible, while an ordinary-trade-only control demonstrates that the black market remains genuinely optional.
 
 **Trade-off:** The canonical path is an evaluation fixture rather than a prescribed strategy or tutorial script. It fixes a seed and chooses certain responses to make evidence stable, but the player-facing campaign retains all route, event, trade, contract, crew, and recovery alternatives.
+
+## ADR-090: Presentation identity has one registry and read-only view boundary
+
+**Decision:** Centralize settlement motifs, market accents, route textures, route colors, risk cues, and arrival treatments in `src/ui/visual_registry.gd`. Extract the Bazaar canvas, journey map/road canvas, and departure-road-event-arrival copy state from `main.gd` into dedicated presentation modules. These modules may read world snapshots and emit navigation signals, but they may not execute market or campaign commands.
+
+**Reason:** Authored place and road identity had grown inside a monolithic UI script, with route colors, scene profiles, and state copy decided in separate methods. A registry makes the visual grammar inspectable and testable, while read-only views preserve the simulation/UI boundary and make later asset replacement local.
+
+**Trade-off:** Procedural drawing remains deliberately lightweight and some layout construction remains in the application shell. The extraction removes more than one thousand lines from `main.gd` without introducing a scene framework or changing authoritative outcomes.
