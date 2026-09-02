@@ -108,3 +108,10 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 ## Investment evaluation roadmap
 
 The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). MA-I1 and MA-I2 are complete with responsive, performance, and first-trade evidence in their completion records; the current investment gate is MA-I3, locking one memorable authored journey and terminal receipt.
+
+
+## GPT-5.6 investment execution packets
+
+For a full creative vertical and investment-evaluation build, issue the larger dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). The current first gate is MA-GPT56-1 after the latest automated and visual audit.
+| `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Frontier-style creative vertical and investment-evaluation campaign skeleton. |
+| `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, remaining responsive issue, and next GPT-5.6 task. |

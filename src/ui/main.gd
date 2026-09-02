@@ -50,19 +50,19 @@ const INTRO_PAGES := [
 	{
 		"eyebrow": "THE FIVE-WELL BASIN",
 		"title": "The roads are open. The wells are failing.",
-		"body": "Settlements are rebuilding after the ash years, but water, medicine, and trust rarely reach the same place at the same time. A small caravan can turn scarcity into relief, influence, or profit.",
+		"body": "Water, medicine, and trust rarely arrive together. A small caravan can turn scarcity into relief, influence, or profit.",
 		"scene": "basin",
 	},
 	{
 		"eyebrow": "YOUR CARAVAN",
 		"title": "Every load is a promise.",
-		"body": "Ashmarks buy cargo and passage. Provisions keep the caravan moving. Hold space limits what you can carry. Crew can reveal roads, conserve supplies, or change how people receive you.",
+		"body": "Ashmarks buy cargo and passage. Provisions keep you moving. Hold space limits your load. Crew reveals roads, saves supplies, or changes how people receive you.",
 		"scene": "caravan",
 	},
 	{
 		"eyebrow": "TRADE · ROAD · CONSEQUENCE",
 		"title": "A cheap road always exposes something.",
-		"body": "Read why a market needs a good. Compare the route fee, time, provisions, and cargo at risk. Face what happens between settlements, then arrive somewhere changed and decide what to do next.",
+		"body": "Read the need. Compare fee, time, provisions, and cargo at risk. Face the road, arrive changed, and decide what to do next.",
 		"scene": "road",
 	},
 ]
@@ -336,7 +336,10 @@ func _clamped_window_size(current_size: Vector2i, usable_size: Vector2i) -> Vect
 	return Vector2i(floori(float(current_size.x) * fit_scale), floori(float(current_size.y) * fit_scale))
 
 func _refresh_responsive_layout() -> void:
-	var compact := _opening_layout_should_compact(_report_viewport_size().x)
+	var layout_width := int(get_viewport().get_visible_rect().size.x)
+	if layout_width <= 0:
+		layout_width = _report_viewport_size().x
+	var compact := _opening_layout_should_compact(layout_width)
 	if menu_columns != null:
 		menu_columns.set_compact(compact)
 	if intro_columns != null:
