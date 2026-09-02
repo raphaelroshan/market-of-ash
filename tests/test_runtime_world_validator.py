@@ -390,7 +390,7 @@ def main() -> int:
     expected_commons_ending_fragments = (
         "must require expired or failed scenario states",
         "must require positive faction support",
-        "must require a positive ordinary delivery quantity",
+        "must require a positive post-activation ordinary delivery",
     )
     missing_commons_ending = [
         fragment for fragment in expected_commons_ending_fragments if not any(fragment in error for error in commons_ending_errors)

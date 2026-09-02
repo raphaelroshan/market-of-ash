@@ -40,8 +40,13 @@ const CAPTURE_SCREENS := [
 	"glasswind_arrival",
 	"mirror_wells_market",
 	"night_market",
+	"night_market_supported",
+	"night_market_opposed",
+	"night_market_reconciled",
+	"night_market_ending",
 	"siltfire_mothlight_market",
 	"siltfire_mothlight_actions",
+	"siltfire_bellkeeper_route_terms",
 	"siltfire_departure_desk",
 	"siltfire_departure",
 	"siltfire_road",
@@ -281,6 +286,22 @@ func _run() -> void:
 	ui._refresh_ui()
 	ui._on_bazaar_navigation_pressed("information")
 	await _capture(ui, "night_market", "night-market")
+	ui.world.cargo = {"lamp_oil": 2, "weight": 2}
+	ui._on_settlement_action_pressed("mirror_wells_night_beacons")
+	await _capture(ui, "night_market_supported", "night-market-supported")
+	ui._on_settlement_action_pressed("mirror_wells_consortium_license")
+	await _capture(ui, "night_market_opposed", "night-market-opposed")
+	ui.world.reset_visit_slots()
+	ui._on_settlement_action_pressed("mirror_wells_signal_ledger")
+	await _capture(ui, "night_market_reconciled", "night-market-reconciled")
+	ui.world.cargo = {"saltglass": 4, "weight": 4}
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._select_option_by_id(ui.shop_good_option, "saltglass")
+	ui.shop_quantity.value = 4
+	ui._on_sell_pressed()
+	ui.world.advance_day(maxi(0, 10 - ui.world.day))
+	ui._refresh_ui()
+	await _capture(ui, "night_market_ending", "night-market-ending")
 
 	ui._on_start_game_pressed()
 	ui.world.seed = 1
@@ -308,7 +329,7 @@ func _run() -> void:
 	await _capture(ui, "siltfire_road", "siltfire-road")
 	ui._on_continue_journey_pressed()
 	await _capture(ui, "siltfire_event", "siltfire-event")
-	ui._on_event_choice_pressed("causeway_whiteout", "wait_on_salt_island")
+	ui._on_event_choice_pressed("causeway_whiteout", "hire_bell_keeper")
 	await _capture(ui, "siltfire_arrival", "siltfire-arrival")
 	ui._on_enter_settlement_pressed()
 	ui._select_option_by_id(ui.destination_option, "blackreed_post")
@@ -321,6 +342,11 @@ func _run() -> void:
 	await _capture(ui, "siltfire_mothlight_actions", "siltfire-mothlight-actions")
 	ui._on_settlement_action_pressed("mothlight_bell_chart")
 	ui._on_bazaar_navigation_pressed("trade")
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "brine_cross")
+	ui._on_destination_changed(ui.destination_option.selected)
+	await _capture(ui, "siltfire_bellkeeper_route_terms", "siltfire-bellkeeper-route-terms")
+	ui._on_return_to_shop_pressed()
 	ui._on_plan_departure_pressed()
 	ui._select_option_by_id(ui.destination_option, "blackreed_post")
 	ui._on_destination_changed(ui.destination_option.selected)

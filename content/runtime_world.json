@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "content_version": "1.24.0",
+  "content_version": "1.25.0",
   "goods": [
     {"id": "grain", "name": "Grain", "base_price": 12, "weight": 1},
     {"id": "water", "name": "Water", "base_price": 18, "weight": 1},
@@ -242,7 +242,7 @@
         "cost": 8,
         "service_slots": 1,
         "time_cost": 0,
-        "effects": {"information_id": "salt_causeway_bell_chart", "route_condition": {"route_id": "salt_causeway", "id": "causeway_bells_charted", "label": "Causeway bells charted", "risk_delta": -0.08, "cost_delta": 0, "description": "A current bell chart keeps the caravan aligned when brine steam hides the causeway."}},
+        "effects": {"information_id": "salt_causeway_bell_chart", "route_condition": {"route_id": "salt_causeway", "id": "causeway_bells_charted", "label": "Causeway bells charted", "risk_delta": -0.08, "cost_delta": 0, "description": "A current bell chart keeps the caravan aligned when brine steam hides the causeway."}, "reputation": {"bellkeepers": 1}},
         "description": "Pay Mothlight pilots to mark the live bell sequence across the salt flats.",
         "tradeoff": "Spend eight ashmarks and one visit slot to reduce Salt Causeway risk by eight points.",
         "result": "The pilots mark the live bell sequence. Salt Causeway exposure falls by eight points and the chart is recorded.",
@@ -263,6 +263,40 @@
         "tradeoff": "Spend seven ashmarks, one day, and one visit slot to reduce Reedline Track risk by seven points.",
         "result": "The wheelwrights bind broad skids beneath the axles. Reedline Track exposure falls by seven points.",
         "unavailable_reason": ""
+      },
+      {
+        "id": "mirror_wells_signal_ledger",
+        "settlement_id": "mirror_wells",
+        "name": "Publish the Night Market signal ledger",
+        "category": "information",
+        "available": true,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "night_market",
+        "cost": 6,
+        "service_slots": 1,
+        "time_cost": 1,
+        "effects": {"information_id": "night_market_signal_ledger", "route_condition": {"route_id": "mirror_run", "id": "night_signals_published", "label": "Night signals published", "risk_delta": -0.05, "cost_delta": 0, "description": "A public signal ledger makes the independent Mirror Run beacon pattern easier to follow."}, "reputation": {"glass_consortium": -1}, "emergent_faction_support": {"faction_id": "night_market", "delta": 1}},
+        "description": "Fund a public ledger of the independent guides' nightly signal sequence.",
+        "tradeoff": "Spend six ashmarks, one day, and Consortium favor to reduce Mirror Run risk and strengthen the Night Market.",
+        "result": "The signal ledger is posted publicly. Mirror Run exposure falls by five points and Night Market support rises by one.",
+        "unavailable_reason": "Available after the Night Market replaces the failed lamp delivery."
+      },
+      {
+        "id": "mirror_wells_consortium_license",
+        "settlement_id": "mirror_wells",
+        "name": "Register the beacons with the Consortium",
+        "category": "information",
+        "available": true,
+        "once_per_campaign": true,
+        "requires_emergent_faction_id": "night_market",
+        "cost": 10,
+        "service_slots": 1,
+        "time_cost": 0,
+        "effects": {"information_id": "consortium_beacon_registry", "reputation": {"glass_consortium": 1}, "emergent_faction_support": {"faction_id": "night_market", "delta": -1}},
+        "description": "Pay to place the independent beacon line under a Consortium registry.",
+        "tradeoff": "Gain licensed standing, but reduce Night Market support; ordinary trade remains open.",
+        "result": "The registry accepts the beacon line. Consortium standing rises by one and Night Market support falls by one.",
+        "unavailable_reason": "Available after the Night Market replaces the failed lamp delivery."
       }
     ]
   },
@@ -503,6 +537,18 @@
       "trusted_label": "Licensed glass runner",
       "effect": "Licensed runners pay 2 fewer ashmarks on the Glasswind Trace.",
       "tradeoff": "Consortium favor improves licensed access but conflicts with the independent Night Market."
+    },
+    "bellkeepers": {
+      "name": "Causeway Bellkeepers",
+      "minimum": -10,
+      "maximum": 10,
+      "trusted_threshold": 2,
+      "toll_route_id": "salt_causeway",
+      "toll_discount": 2,
+      "below_label": "Uncharted carrier",
+      "trusted_label": "Bell-line regular",
+      "effect": "Bell-line regulars pay 2 fewer ashmarks on the Salt Causeway.",
+      "tradeoff": "Bellkeeper trust lowers guide fees but does not remove the causeway's whiteout cargo risk."
     }
   },
   "events": {
@@ -893,7 +939,7 @@
             "trade_mode": "none",
             "requires_active_contract": false,
             "resilience_delta": 0,
-            "reputation_delta": {"caravans": 1},
+            "reputation_delta": {"bellkeepers": 1},
             "outcome": "A bell keeper walks the lead axle from marker to marker and records the caravan as a reliable payer."
           },
           {
@@ -925,6 +971,7 @@
             "trade_mode": "none",
             "requires_active_contract": false,
             "resilience_delta": 0,
+            "reputation_delta": {"bellkeepers": -1},
             "outcome": "The caravan keeps moving through the whiteout and accepts the disclosed exposed-unit risk."
           }
         ]
@@ -1254,10 +1301,23 @@
         "required_scenario_states": ["expired", "failed"],
         "required_faction_id": "well_commons",
         "minimum_faction_support": 1,
-        "minimum_reedwatch_resilience": 2,
+        "minimum_settlement_resilience": {"settlement_id": "reedwatch", "minimum": 2},
         "required_ordinary_delivery": {"settlement_id": "reedwatch", "good_id": "charcoal", "minimum_quantity": 4, "after_faction_activation": true},
         "maximum_arms_escalation": 1,
         "summary": "Official relief never arrived, but ordinary charcoal runs kept Reedwatch's boilers lit and turned the Well Commons into a durable public exchange. The caravan helped a replacement institution earn legitimacy through repeated material support rather than a restored contract."
+      },
+      {
+        "id": "ending_night_market_network",
+        "title": "Beacons Without Licenses",
+        "required_scenario_id": "mirror_wells_beacon_oil",
+        "required_scenario_states": ["expired", "failed"],
+        "required_faction_id": "night_market",
+        "minimum_faction_support": 1,
+        "minimum_settlement_resilience": {"settlement_id": "mirror_wells", "minimum": 2},
+        "required_ordinary_delivery": {"settlement_id": "mirror_wells", "good_id": "saltglass", "minimum_quantity": 4, "after_faction_activation": true},
+        "maximum_reputation": {"glass_consortium": 1},
+        "maximum_arms_escalation": 1,
+        "summary": "Licensed beacon crews withdrew, but ordinary saltglass runs and public signal ledgers made the Night Market a durable road network. Mirror Wells chose shared visibility over a single licensed gatekeeper."
       },
       {
         "id": "ending_warden_reserve",

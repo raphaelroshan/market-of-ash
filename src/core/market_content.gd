@@ -982,7 +982,7 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 				errors.append("event %s choice %s reputation_delta must be an object" % [event_id, choice_id])
 			else:
 				for faction_id in reputation_delta_value.keys():
-					if not ["wardens", "caravans", "glass_consortium"].has(String(faction_id)) or absi(int(reputation_delta_value.get(faction_id, 0))) > 10:
+					if not ["wardens", "caravans", "glass_consortium", "bellkeepers"].has(String(faction_id)) or absi(int(reputation_delta_value.get(faction_id, 0))) > 10:
 						errors.append("event %s choice %s reputation_delta is invalid" % [event_id, choice_id])
 			var condition_value: Variant = choice.get("route_condition", {})
 			if typeof(condition_value) != TYPE_DICTIONARY:
@@ -1124,19 +1124,34 @@ static func _validate_crisis(value: Variant, errors: Array[String]) -> void:
 		ending_ids[ending_id] = true
 		if int(ending.get("maximum_arms_escalation", -1)) < 0:
 			errors.append("crisis ending maximum_arms_escalation must be non-negative")
+		if ending.has("required_scenario_id"):
+			var required_delivery_value: Variant = ending.get("required_ordinary_delivery", {})
+			var required_delivery: Dictionary = required_delivery_value if typeof(required_delivery_value) == TYPE_DICTIONARY else {}
+			var resilience_value: Variant = ending.get("minimum_settlement_resilience", {})
+			var resilience_requirement: Dictionary = resilience_value if typeof(resilience_value) == TYPE_DICTIONARY else {}
+			if String(ending.get("required_scenario_id", "")).is_empty() or String(ending.get("required_faction_id", "")).is_empty():
+				errors.append("adaptive ending %s must declare its scenario and faction requirements" % ending_id)
+			var required_states: Array = ending.get("required_scenario_states", [])
+			if required_states.is_empty() or required_states.any(func(state: Variant) -> bool: return not ["expired", "failed"].has(String(state))):
+				errors.append("adaptive ending %s must require expired or failed scenario states" % ending_id)
+			if int(ending.get("minimum_faction_support", -1)) < 1:
+				errors.append("adaptive ending %s must require positive faction support" % ending_id)
+			if not REQUIRED_SETTLEMENT_IDS.has(String(resilience_requirement.get("settlement_id", ""))) or int(resilience_requirement.get("minimum", 0)) < 1 or int(resilience_requirement.get("minimum", 0)) > 10:
+				errors.append("adaptive ending %s must require valid settlement resilience" % ending_id)
+			if not REQUIRED_SETTLEMENT_IDS.has(String(required_delivery.get("settlement_id", ""))) or not REQUIRED_GOOD_IDS.has(String(required_delivery.get("good_id", ""))) or int(required_delivery.get("minimum_quantity", 0)) <= 0 or not bool(required_delivery.get("after_faction_activation", false)):
+				errors.append("adaptive ending %s must require a positive post-activation ordinary delivery" % ending_id)
+			var maximum_reputation_value: Variant = ending.get("maximum_reputation", {})
+			if typeof(maximum_reputation_value) != TYPE_DICTIONARY:
+				errors.append("adaptive ending %s maximum_reputation must be an object" % ending_id)
+			else:
+				for faction_id_value in maximum_reputation_value.keys():
+					if not ["wardens", "caravans", "glass_consortium", "bellkeepers"].has(String(faction_id_value)) or int(maximum_reputation_value.get(faction_id_value, -11)) < -10 or int(maximum_reputation_value.get(faction_id_value, 11)) > 10:
+						errors.append("adaptive ending %s maximum_reputation is invalid" % ending_id)
+			continue
 		match ending_id:
 			"open_routes_relief":
 				if String(ending.get("required_contract_id", "")).is_empty() or int(ending.get("minimum_reedwatch_resilience", -1)) < 0:
 					errors.append("open_routes_relief must declare its contract and resilience bounds")
-			"ending_commons_exchange":
-				var required_delivery_value: Variant = ending.get("required_ordinary_delivery", {})
-				var required_delivery: Dictionary = required_delivery_value if typeof(required_delivery_value) == TYPE_DICTIONARY else {}
-				if String(ending.get("required_scenario_id", "")).is_empty() or String(ending.get("required_faction_id", "")).is_empty() or ending.get("required_scenario_states", []).is_empty():
-					errors.append("ending_commons_exchange must declare its scenario and faction requirements")
-				if int(ending.get("minimum_faction_support", -1)) < 1 or int(ending.get("minimum_reedwatch_resilience", -1)) < 1:
-					errors.append("ending_commons_exchange must declare positive support and resilience bounds")
-				if String(required_delivery.get("settlement_id", "")).is_empty() or String(required_delivery.get("good_id", "")).is_empty() or int(required_delivery.get("minimum_quantity", 0)) <= 0 or not bool(required_delivery.get("after_faction_activation", false)):
-					errors.append("ending_commons_exchange must require a positive post-activation ordinary delivery")
 			"ending_warden_reserve":
 				if int(ending.get("minimum_warden_reputation", -1)) < 0 or int(ending.get("maximum_caravan_reputation", -1)) < 0:
 					errors.append("ending_warden_reserve must declare faction bounds")

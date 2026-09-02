@@ -442,6 +442,8 @@ func evaluate_ending() -> bool:
 func _ending_is_eligible(ending: Dictionary) -> bool:
 	if arms_escalation > int(ending.get("maximum_arms_escalation", 6)):
 		return false
+	if ending.has("required_scenario_id"):
+		return _adaptive_ending_is_eligible(ending)
 	match String(ending.get("id", "")):
 		"open_routes_relief":
 			var required_contract_id := String(ending.get("required_contract_id", ""))
@@ -449,16 +451,6 @@ func _ending_is_eligible(ending: Dictionary) -> bool:
 				if String(contract.get("id", "")) == required_contract_id and String(contract.get("status", "")) == "completed":
 					return resilience_for("reedwatch") >= int(ending.get("minimum_reedwatch_resilience", 0))
 			return false
-		"ending_commons_exchange":
-			var scenario := scenario_state(String(ending.get("required_scenario_id", "")))
-			if not ending.get("required_scenario_states", []).has(String(scenario.get("state", ""))):
-				return false
-			var faction := emergent_faction(String(ending.get("required_faction_id", "")))
-			if faction.is_empty() or int(faction.get("support", 0)) < int(ending.get("minimum_faction_support", 0)):
-				return false
-			if resilience_for("reedwatch") < int(ending.get("minimum_reedwatch_resilience", 0)):
-				return false
-			return _ordinary_delivery_requirement_met(ending.get("required_ordinary_delivery", {}), faction.get("ordinary_deliveries", {}))
 		"ending_warden_reserve":
 			return int(reputation.get("wardens", 0)) >= int(ending.get("minimum_warden_reputation", 0)) and int(reputation.get("caravans", 0)) <= int(ending.get("maximum_caravan_reputation", 10))
 		"ending_free_caravan_routes":
@@ -466,6 +458,23 @@ func _ending_is_eligible(ending: Dictionary) -> bool:
 		"ending_ash_merchant":
 			return money >= int(ending.get("minimum_money", 0)) and resilience_for("reedwatch") <= int(ending.get("maximum_reedwatch_resilience", 10))
 	return false
+
+func _adaptive_ending_is_eligible(ending: Dictionary) -> bool:
+	var scenario := scenario_state(String(ending.get("required_scenario_id", "")))
+	if not ending.get("required_scenario_states", []).has(String(scenario.get("state", ""))):
+		return false
+	var faction := emergent_faction(String(ending.get("required_faction_id", "")))
+	if faction.is_empty() or int(faction.get("support", 0)) < int(ending.get("minimum_faction_support", 0)):
+		return false
+	var resilience_requirement: Dictionary = ending.get("minimum_settlement_resilience", {})
+	if resilience_for(String(resilience_requirement.get("settlement_id", ""))) < int(resilience_requirement.get("minimum", 0)):
+		return false
+	var maximum_reputation: Dictionary = ending.get("maximum_reputation", {})
+	for faction_id_value in maximum_reputation.keys():
+		var faction_id := String(faction_id_value)
+		if int(reputation.get(faction_id, 0)) > int(maximum_reputation.get(faction_id_value, 10)):
+			return false
+	return _ordinary_delivery_requirement_met(ending.get("required_ordinary_delivery", {}), faction.get("ordinary_deliveries", {}))
 
 func _ordinary_delivery_requirement_met(requirement: Dictionary, delivery_value: Variant) -> bool:
 	var deliveries: Dictionary = delivery_value if typeof(delivery_value) == TYPE_DICTIONARY else {}

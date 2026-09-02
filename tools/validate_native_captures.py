@@ -50,8 +50,13 @@ REQUIRED_NATIVE_SCREENS = {
     "glasswind_arrival",
     "mirror_wells_market",
     "night_market",
+    "night_market_supported",
+    "night_market_opposed",
+    "night_market_reconciled",
+    "night_market_ending",
     "siltfire_mothlight_market",
     "siltfire_mothlight_actions",
+    "siltfire_bellkeeper_route_terms",
     "siltfire_departure_desk",
     "siltfire_departure",
     "siltfire_road",
@@ -89,8 +94,13 @@ EXPECTED_UI_STATE = {
     "glasswind_arrival": "arrival_handoff",
     "mirror_wells_market": "settlement_shop",
     "night_market": "settlement_shop",
+    "night_market_supported": "settlement_shop",
+    "night_market_opposed": "settlement_shop",
+    "night_market_reconciled": "settlement_shop",
+    "night_market_ending": "settlement_shop",
     "siltfire_mothlight_market": "settlement_shop",
     "siltfire_mothlight_actions": "settlement_shop",
+    "siltfire_bellkeeper_route_terms": "departure_desk",
     "siltfire_departure_desk": "departure_desk",
     "siltfire_departure": "route_travel",
     "siltfire_road": "route_travel",
@@ -139,8 +149,13 @@ REQUIRED_LAYOUT_CONTROLS = {
     "glasswind_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
     "mirror_wells_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "night_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "night_market_supported": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "night_market_opposed": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "night_market_reconciled": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "night_market_ending": ("BazaarMarketPanel", "ShopActionCard", "CampaignDebriefPanel", "EndingContinueAction", "EndingReplayAction", "EndingTitleAction", "EndingFeedbackAction", "BazaarPrimaryAction"),
     "siltfire_mothlight_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
     "siltfire_mothlight_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "siltfire_bellkeeper_route_terms": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "siltfire_departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "siltfire_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
     "siltfire_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
@@ -297,12 +312,24 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Glasswind capture is missing Sunfall Exchange's identity")
         if screen == "mirror_wells_market" and ui_state.get("bazaar_scene_id") != "mirror_wells_night_market":
             raise AssertionError(f"{file_name}: Glasswind arrival is missing Mirror Wells's identity")
-        if screen == "night_market" and (
+        if screen in {"night_market", "night_market_supported", "night_market_opposed", "night_market_reconciled", "night_market_ending"} and (
             ui_state.get("adaptive_scenario_states", {}).get("mirror_wells_beacon_oil", {}).get("state") != "expired"
             or "night_market" not in ui_state.get("emergent_factions", [])
             or "saltglass" not in ui_state.get("adaptive_response", "").lower()
         ):
             raise AssertionError(f"{file_name}: Night Market capture is missing its failure-forward state")
+        if screen == "night_market_supported" and "support +1" not in ui_state.get("adaptive_response", ""):
+            raise AssertionError(f"{file_name}: Night Market cooperation did not raise support")
+        if screen == "night_market_opposed" and "support +0" not in ui_state.get("adaptive_response", ""):
+            raise AssertionError(f"{file_name}: Night Market opposition did not reverse support")
+        if screen == "night_market_reconciled" and "support +1" not in ui_state.get("adaptive_response", ""):
+            raise AssertionError(f"{file_name}: Night Market reconciliation did not restore support")
+        if screen == "night_market_ending" and (
+            ui_state.get("ending_id") != "ending_night_market_network"
+            or "Beacons Without Licenses" not in ui_state.get("campaign_debrief", "")
+            or "Causeway Bellkeepers" not in ui_state.get("campaign_debrief", "")
+        ):
+            raise AssertionError(f"{file_name}: Night Market ending capture is missing its adaptive debrief")
         if screen in {"glasswind_departure", "glasswind_road"} and ui_state.get("road_scene_id") != "mirror_night_road":
             raise AssertionError(f"{file_name}: Glasswind road capture is missing the Mirror Run identity")
         if screen == "glasswind_event" and ui_state.get("pending_event_id") != "shardwind_tithe":
@@ -313,6 +340,11 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Siltfire event capture is missing Bells in the Whiteout")
         if screen == "siltfire_mothlight_market" and ui_state.get("bazaar_scene_id") != "mothlight_resin_quay":
             raise AssertionError(f"{file_name}: Siltfire arrival is missing Mothlight Quay's identity")
+        if screen == "siltfire_bellkeeper_route_terms":
+            route_cards = ui_state.get("accessibility_actions", [])
+            bellkeeper_card = next((card for card in route_cards if card.get("id") == "route_plan_brine_cross_salt_causeway"), {})
+            if "FEE 1" not in bellkeeper_card.get("label", ""):
+                raise AssertionError(f"{file_name}: Bellkeeper trust did not expose the discounted Salt Causeway fee")
         if screen in {"siltfire_reedline_departure", "siltfire_reedline_road"} and ui_state.get("road_scene_id") != "blackreed_marsh_track":
             raise AssertionError(f"{file_name}: Reedline capture is missing its marsh-road identity")
         if screen == "siltfire_blackreed_market" and ui_state.get("bazaar_scene_id") != "blackreed_watch_market":
@@ -374,8 +406,13 @@ def main() -> int:
         require_distinct_screen(screens["glasswind_event"], screens["glasswind_arrival"], f"{viewport} Resolve Shardwind Tithe")
         require_distinct_screen(screens["glasswind_arrival"], screens["mirror_wells_market"], f"{viewport} Enter Mirror Wells")
         require_distinct_screen(screens["mirror_wells_market"], screens["night_market"], f"{viewport} Activate Night Market")
+        require_distinct_screen(screens["night_market"], screens["night_market_supported"], f"{viewport} Support Night Market", minimum_ratio=0.005)
+        require_distinct_screen(screens["night_market_supported"], screens["night_market_opposed"], f"{viewport} Oppose Night Market", minimum_ratio=0.005)
+        require_distinct_screen(screens["night_market_opposed"], screens["night_market_reconciled"], f"{viewport} Reconcile Night Market", minimum_ratio=0.005)
+        require_distinct_screen(screens["night_market_reconciled"], screens["night_market_ending"], f"{viewport} Reach Night Market ending", minimum_ratio=0.01)
         require_distinct_screen(screens["destination_shop"], screens["siltfire_mothlight_market"], f"{viewport} Enter Siltfire March")
         require_distinct_screen(screens["siltfire_mothlight_market"], screens["siltfire_mothlight_actions"], f"{viewport} Open Mothlight services")
+        require_distinct_screen(screens["siltfire_mothlight_actions"], screens["siltfire_bellkeeper_route_terms"], f"{viewport} Apply Bellkeeper route terms")
         require_distinct_screen(screens["siltfire_departure_desk"], screens["siltfire_departure"], f"{viewport} Commit Salt Causeway departure")
         require_distinct_screen(screens["siltfire_departure"], screens["siltfire_road"], f"{viewport} Reach Salt Causeway road stop", minimum_ratio=0.005)
         require_distinct_screen(screens["siltfire_road"], screens["siltfire_event"], f"{viewport} Reveal causeway whiteout")
