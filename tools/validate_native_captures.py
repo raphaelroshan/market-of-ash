@@ -23,6 +23,14 @@ REQUIRED_NATIVE_SCREENS = {
     "bazaar_crew",
     "pause",
     "departure_desk",
+    "investment_departure",
+    "investment_road",
+    "investment_event",
+    "investment_arrival",
+    "investment_changed_return",
+    "investment_black_market_offer",
+    "investment_black_market_pressure",
+    "investment_terminal_receipt",
     "returned_shop",
     "well_commons_jobs",
     "well_commons_market",
@@ -91,6 +99,14 @@ EXPECTED_UI_STATE = {
     "bazaar_jobs": "settlement_shop",
     "bazaar_crew": "settlement_shop",
     "bazaar_crew_large_text": "settlement_shop",
+    "investment_departure": "route_travel",
+    "investment_road": "route_travel",
+    "investment_event": "route_event",
+    "investment_arrival": "arrival_handoff",
+    "investment_changed_return": "settlement_shop",
+    "investment_black_market_offer": "settlement_shop",
+    "investment_black_market_pressure": "settlement_shop",
+    "investment_terminal_receipt": "settlement_shop",
     "returned_shop": "settlement_shop",
     "well_commons_jobs": "settlement_shop",
     "well_commons_market": "settlement_shop",
@@ -147,10 +163,10 @@ EXPECTED_UI_STATE = {
 REQUIRED_LAYOUT_CONTROLS = {
     "main_menu": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
     "main_menu_large_text": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
-    "introduction_basin": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
-    "introduction_caravan": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
-    "introduction_road": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
-    "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_basin": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionBody", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_caravan": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionBody", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_road": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionBody", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
+    "introduction_road_large_text": ("IntroductionCard", "IntroductionProgress", "IntroductionTitle", "IntroductionBodyScroll", "IntroductionBody", "IntroductionNote", "IntroductionBackAction", "IntroductionPrimaryAction", "IntroductionSkipAction"),
     "settlement_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "BazaarPrimaryAction"),
     "trade_receipt": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
     "market_change_receipt": ("BazaarMarketPanel", "ShopActionCard", "BazaarMarketStatus", "BazaarCargoStatus", "BazaarDecisionSummary", "BuyCargoButton", "SellCargoButton", "TradeReceiptPanel", "BazaarPrimaryAction"),
@@ -205,6 +221,14 @@ REQUIRED_LAYOUT_CONTROLS = {
     "black_market_offer": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "investment_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
+    "investment_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "investment_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "investment_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
+    "investment_changed_return": ("BazaarMarketPanel", "ShopActionCard", "TradeReceiptPanel", "BazaarPrimaryAction"),
+    "investment_black_market_offer": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "investment_black_market_pressure": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
+    "investment_terminal_receipt": ("BazaarMarketPanel", "ShopActionCard", "CampaignDebriefPanel", "EndingContinueAction", "EndingReplayAction", "EndingTitleAction", "EndingFeedbackAction", "BazaarPrimaryAction"),
     "route_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
     "route_travel": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
     "route_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
@@ -340,6 +364,37 @@ def main() -> int:
             or ui_state.get("road_waypoint") != "ROAD STOP — THE NEXT INSPECTION POST"
         ):
             raise AssertionError(f"{file_name}: Toll Road capture is missing its corridor identity")
+        if screen in {"investment_departure", "investment_road", "investment_event"} and ui_state.get("road_scene_id") != "ashen_milestones":
+            raise AssertionError(f"{file_name}: investment journey is missing its Old Road identity")
+        if screen == "investment_event" and ui_state.get("pending_event_id") != "three_riders_no_banner":
+            raise AssertionError(f"{file_name}: investment journey is missing Three Riders, No Banner")
+        if screen == "investment_arrival" and (
+            ui_state.get("settlement_id") != "reedwatch"
+            or "JOURNEY RESULT" not in ui_state.get("announcement", "")
+        ):
+            raise AssertionError(f"{file_name}: investment arrival does not explain the Reedwatch result")
+        if screen == "investment_changed_return" and (
+            ui_state.get("settlement_id") != "ashgate"
+            or ui_state.get("trade_receipt_title") != "SALE RECORDED"
+            or "after supply" not in ui_state.get("trade_receipt_detail", "")
+        ):
+            raise AssertionError(f"{file_name}: investment return Bazaar is missing its changed-market receipt")
+        if screen == "investment_black_market_offer" and not any(
+            action.get("id") == "settlement_action_ashgate_cinder_rider_arms_sale"
+            and "BLACK MARKET · OPTIONAL" in action.get("label", "")
+            and not action.get("disabled", False)
+            for action in ui_state.get("accessibility_actions", [])
+        ):
+            raise AssertionError(f"{file_name}: investment journey is missing its optional black-market pressure")
+        if screen == "investment_black_market_pressure" and ui_state.get("arms_escalation") != 2:
+            raise AssertionError(f"{file_name}: black-market choice did not create visible arms pressure")
+        if screen == "investment_terminal_receipt" and (
+            ui_state.get("ending_id") != "ending_warden_reserve"
+            or "Order at the Cistern" not in ui_state.get("campaign_debrief", "")
+            or "Cinder Rider broker" not in ui_state.get("campaign_debrief", "")
+            or "public manifest audit" not in ui_state.get("campaign_debrief", "")
+        ):
+            raise AssertionError(f"{file_name}: investment terminal receipt is missing its economic and political causes")
         if screen == "settlement_shop" and ui_state.get("bazaar_scene_id") != "warden_gate_market":
             raise AssertionError(f"{file_name}: Ashgate capture is missing its gate-market identity")
         if screen == "destination_shop" and ui_state.get("bazaar_scene_id") != "brine_pan_exchange":
@@ -500,6 +555,14 @@ def main() -> int:
         require_distinct_screen(screens["well_commons_actions"], screens["commons_ending"], f"{viewport} Reach Commons ending")
         require_distinct_screen(screens["settlement_shop"], screens["pause"], f"{viewport} Pause")
         require_distinct_screen(screens["settlement_shop"], screens["departure_desk"], f"{viewport} Plan departure")
+        require_distinct_screen(screens["departure_desk"], screens["investment_departure"], f"{viewport} Investment departure")
+        require_distinct_screen(screens["investment_departure"], screens["investment_road"], f"{viewport} Investment road stop", minimum_ratio=0.005)
+        require_distinct_screen(screens["investment_road"], screens["investment_event"], f"{viewport} Investment encounter")
+        require_distinct_screen(screens["investment_event"], screens["investment_arrival"], f"{viewport} Investment arrival")
+        require_distinct_screen(screens["market_change_receipt"], screens["investment_changed_return"], f"{viewport} Investment changed return Bazaar")
+        require_distinct_screen(screens["investment_changed_return"], screens["investment_black_market_offer"], f"{viewport} Investment optional black market")
+        require_distinct_screen(screens["investment_black_market_offer"], screens["investment_black_market_pressure"], f"{viewport} Investment black-market consequence", minimum_ratio=0.005)
+        require_distinct_screen(screens["investment_black_market_pressure"], screens["investment_terminal_receipt"], f"{viewport} Investment terminal receipt")
         require_distinct_screen(screens["departure_desk"], screens["route_departure"], f"{viewport} Commit departure")
         require_distinct_screen(screens["route_departure"], screens["route_travel"], f"{viewport} Reach road stop", minimum_ratio=0.005)
         require_distinct_screen(screens["route_travel"], screens["route_event"], f"{viewport} Reveal route event")

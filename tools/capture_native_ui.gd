@@ -13,6 +13,14 @@ const CAPTURE_SCREENS := [
 	"bazaar_crew",
 	"pause",
 	"departure_desk",
+	"investment_departure",
+	"investment_road",
+	"investment_event",
+	"investment_arrival",
+	"investment_changed_return",
+	"investment_black_market_offer",
+	"investment_black_market_pressure",
+	"investment_terminal_receipt",
 	"returned_shop",
 	"well_commons_jobs",
 	"well_commons_market",
@@ -152,14 +160,67 @@ func _run() -> void:
 	await _capture(ui, "returned_shop", "returned-shop")
 	ui._on_plan_departure_pressed()
 	ui._on_depart_pressed()
+	await _capture(ui, "investment_departure", "investment-departure")
 	ui.map_panel._process(2.0)
+	await _capture(ui, "investment_road", "investment-road")
 	ui._on_continue_journey_pressed()
+	await _capture(ui, "investment_event", "investment-event")
 	ui._on_event_choice_pressed("three_riders_no_banner", "pay_for_escort")
+	await _capture(ui, "investment_arrival", "investment-arrival")
 	ui._on_enter_settlement_pressed()
 	ui._select_option_by_id(ui.shop_good_option, "water")
 	ui.shop_quantity.value = int(ui.world.cargo.get("water", 0))
 	ui._on_sell_pressed()
 	await _capture(ui, "market_change_receipt", "market-change-receipt")
+	ui._select_option_by_id(ui.shop_good_option, "grain")
+	ui.shop_quantity.value = 4
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	if not await _finish_capture_journey(ui, "ashgate"):
+		quit(1)
+		return
+	ui._select_option_by_id(ui.shop_good_option, "grain")
+	ui.shop_quantity.value = int(ui.world.cargo.get("grain", 0))
+	ui._on_sell_pressed()
+	await _capture(ui, "investment_changed_return", "investment-changed-return")
+	ui._select_option_by_id(ui.shop_good_option, "sealed_arms_crate")
+	ui.shop_quantity.value = 2
+	ui._on_buy_pressed()
+	ui._on_bazaar_navigation_pressed("information")
+	await _focus_bazaar_action(ui, "settlement_action_ashgate_cinder_rider_arms_sale")
+	await _capture(ui, "investment_black_market_offer", "investment-black-market-offer")
+	ui._on_settlement_action_pressed("ashgate_cinder_rider_arms_sale")
+	await _focus_bazaar_action(ui, "settlement_action_ashgate_public_manifest_audit")
+	await _capture(ui, "investment_black_market_pressure", "investment-black-market-pressure")
+	ui._on_settlement_action_pressed("ashgate_public_manifest_audit")
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._on_plan_departure_pressed()
+	if not await _finish_capture_journey(ui, "brine_cross", "pay_posted_toll"):
+		quit(1)
+		return
+	ui._on_plan_departure_pressed()
+	if not await _finish_capture_journey(ui, "ashgate"):
+		quit(1)
+		return
+	ui._on_bazaar_navigation_pressed("information")
+	ui._on_settlement_action_pressed("ashgate_provision_bundle")
+	ui._on_settlement_action_pressed("ashgate_provision_bundle")
+	for investment_destination in ["reedwatch", "ashgate", "reedwatch", "ashgate"]:
+		ui._on_bazaar_navigation_pressed("trade")
+		ui._on_plan_departure_pressed()
+		if not await _finish_capture_journey(ui, investment_destination):
+			quit(1)
+			return
+		if investment_destination == "ashgate" and int(ui.world.reputation.get("wardens", 0)) < 3:
+			ui._on_bazaar_navigation_pressed("information")
+			while int(ui.world.reputation.get("wardens", 0)) < 3 and ui.world.visit_slots_remaining > 0:
+				ui._on_settlement_action_pressed("ashgate_provision_bundle")
+	if ui.world.ending_id != "ending_warden_reserve" or not ui.ending_panel.visible:
+		push_error("Native capture expected the clean investment journey to reach Order at the Cistern.")
+		quit(1)
+		return
+	ui._on_bazaar_navigation_pressed("outlook")
+	await _capture(ui, "investment_terminal_receipt", "investment-terminal-receipt")
 
 	ui.pending_tutorial_enabled = false
 	ui._on_start_game_pressed()
@@ -576,6 +637,42 @@ func _parse_arguments() -> bool:
 		return false
 	return true
 
+func _finish_capture_journey(ui: Control, destination_id: String, event_choice_id: String = "") -> bool:
+	ui._select_option_by_id(ui.destination_option, destination_id)
+	ui._on_destination_changed(ui.destination_option.selected)
+	ui._on_depart_pressed()
+	if ui._current_ui_state_id() != "route_travel":
+		push_error("Investment capture could not depart for %s." % destination_id)
+		return false
+	ui.map_panel._process(2.0)
+	if not ui.continue_journey_button.visible:
+		push_error("Investment capture did not reach the road stop for %s." % destination_id)
+		return false
+	ui._on_continue_journey_pressed()
+	if not ui.world.pending_event.is_empty():
+		var event_id := String(ui.world.pending_event.get("id", ""))
+		var selected_choice_id := event_choice_id
+		if selected_choice_id.is_empty():
+			var choices: Array = ui.world.pending_event.get("choices", [])
+			for choice_index in range(mini(choices.size(), ui.event_choice_buttons.size())):
+				if not ui.event_choice_buttons[choice_index].disabled:
+					selected_choice_id = String(choices[choice_index].get("id", ""))
+					break
+		if selected_choice_id.is_empty():
+			push_error("Investment capture event %s has no available response." % event_id)
+			return false
+		ui._on_event_choice_pressed(event_id, selected_choice_id)
+	else:
+		ui.map_panel._process(2.0)
+	if not ui.arrival_pending or not ui.enter_settlement_button.visible:
+		push_error("Investment capture did not reach the arrival handoff for %s." % destination_id)
+		return false
+	ui._on_enter_settlement_pressed()
+	if ui.world.current_settlement != destination_id:
+		push_error("Investment capture arrived at %s instead of %s." % [ui.world.current_settlement, destination_id])
+		return false
+	return true
+
 func _complete_player_opening_trade(ui: Control) -> bool:
 	ui._on_bazaar_navigation_pressed("trade")
 	var command_count_before: int = ui.world.command_history.size()
@@ -588,6 +685,18 @@ func _complete_player_opening_trade(ui: Control) -> bool:
 	if not purchase_succeeded:
 		push_error("Native capture could not complete the opening trade through player-facing actions.")
 	return purchase_succeeded
+
+func _focus_bazaar_action(ui: Control, accessibility_id: String) -> bool:
+	await process_frame
+	for button in ui.opportunity_buttons:
+		if String(button.get_meta("web_accessibility_id", "")) != accessibility_id:
+			continue
+		button.grab_focus()
+		ui._ensure_focused_control_visible()
+		await process_frame
+		return true
+	push_error("Native capture could not focus Bazaar action %s." % accessibility_id)
+	return false
 
 func _capture(ui: Control, screen: String, file_stem: String) -> void:
 	await process_frame
@@ -645,6 +754,7 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"IntroductionProgress",
 		"IntroductionTitle",
 		"IntroductionBodyScroll",
+		"IntroductionBody",
 		"IntroductionNote",
 		"IntroductionBackAction",
 		"IntroductionPrimaryAction",
