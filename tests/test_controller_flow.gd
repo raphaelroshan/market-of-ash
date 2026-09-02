@@ -13,6 +13,7 @@ func _run() -> void:
 	await process_frame
 	ui.settings_persistence_enabled = false
 	ui.autosave_enabled = false
+	ui._on_interface_sounds_toggled(false)
 	ui.save_path = "user://market_of_ash_controller_test_%d.save" % OS.get_process_id()
 	ui.save_status_text = "SAVE — No save written this session."
 	ui._on_restore_default_bindings()

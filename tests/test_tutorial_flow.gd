@@ -19,6 +19,7 @@ func _run() -> void:
 	ui.report_path = prefix + ".json"
 	ui.autosave_enabled = false
 	ui.settings_persistence_enabled = false
+	ui._on_interface_sounds_toggled(false)
 
 	_expect(ui._current_ui_state_id() == "main_menu", "the game should begin at the player-facing main menu")
 	_expect(ui.start_game_button.text == "New Game" and ui.settings_button.text == "Settings" and ui.credits_button.text == "Credits", "the main menu should use game-facing actions")
@@ -123,6 +124,7 @@ func _run() -> void:
 
 	_cleanup(prefix)
 	ui.queue_free()
+	await process_frame
 	if failures.is_empty():
 		print("Tutorial flow: PASS")
 		quit(0)
