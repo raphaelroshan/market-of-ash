@@ -10,7 +10,7 @@ The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, e
 
 The MA-I2 guided path now proves ordinary trade before optional work: buy Water, compare and travel the Old Road, sell into Reedwatch demand, observe the local price response, and bring Grain back to Ashgate. The Job Board is introduced afterward and does not require acceptance.
 
-The current release candidate is [`v0.15.0-early-access-rc1`](docs/releases/v0.15.0-early-access-rc1.md). It is an unsigned portable Windows prerelease with in-package install, upgrade, rollback, verification, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
+The current release candidate is [`v0.15.0-early-access-rc2`](docs/releases/v0.15.0-early-access-rc2.md). It is an unsigned portable Windows prerelease with in-package install, upgrade, rollback, verification, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
 
 ## Run the prototype
 

@@ -2,7 +2,7 @@
 
 ## Candidate contract
 
-- Game version: `0.15.0-early-access-rc1`.
+- Game version: `0.15.0-early-access-rc2`.
 - Windows file/product version: `0.15.0.0`.
 - Runtime content version: `1.27.0`; save format remains 12.
 - Versioned install, upgrade, rollback, test, limitation, and verification guidance ships inside the portable Windows ZIP.
