@@ -1,0 +1,56 @@
+# Market of Ash — Investment-Evaluation Roadmap
+
+## Purpose
+
+The next milestone is not another isolated feature or a documentation-complete vertical slice. It is a **full creative vertical** that lets an investor or prospective player understand the game immediately: buy low, sell where demand is real, choose a road, manage risk, survive a consequence, return to a changing market, and understand why the basin changed.
+
+The intended reference shape is a modern, original Frontier-style caravan-trading game. It may use the familiar structure of a caravan, settlement markets, route risk, cargo capacity, provisions, crew, and black-market opportunities, but all writing, art, characters, maps, music, and specific content must remain original. The game should feel like a real product even if the second and third regions use compact or temporary art.
+
+## Verified baseline
+
+The current repository contains a substantial deterministic Five-Well Basin slice, a connected three-region network, ordinary trade, optional contracts, factions, replacement actors, multiple endings, five decision-changing specialists, events, persistence, and automated economy/game-quality checks. The current audit also found two investment blockers: the 1280×720 Introduction remains visibly clipped, and the full verification suite reports 25 deterministic world/save round trips above the five-second release budget at approximately 5,161.91 ms.
+
+Therefore, the next agent must treat the vertical slice as **mechanically complete but not yet presentation- or performance-ready**. Do not add more factions or goods until the opening shell is clean, the first trade is legible, and the deterministic performance regression is either fixed or explicitly bounded and explained.
+
+## Definition of the full creative vertical
+
+A reviewer must be able to start a fresh run and complete the following without debug fixtures: title → introduction → first Bazaar purchase → destination comparison → road commitment → travel/event consequence → arrival sale or recovery → return to a changed Bazaar → optional contract or black-market choice → terminal regional outcome.
+
+The vertical must include one authored caravan identity, five distinctive settlement presentations, three visually differentiated road types, seven goods with readable supply/demand stories, five specialists, at least four event families, four factions or faction-like actors, one black-market pressure chain, one replacement-faction response, six endings, and a final receipt that explains the player's economic and political story. Every choice must expose cash, capacity, provisions, time, risk, standing, or resilience before commitment.
+
+The black-market layer should be an optional **parallel economy**, not the optimal route. It may offer scarce medicines, restricted tools, weapons, forged papers, or contraband routes with better margins but added inspection, faction, legitimacy, and seizure risks. Ordinary trade must remain profitable through at least four unrelated patterns, and a clean run must be completable without taking a black-market offer.
+
+## Skeletal Early Access floor
+
+Beyond the creative vertical, the investment build needs enough breadth to prove the game is not a one-route demo. The first Early Access candidate should contain three connected regions, nine to ten settlements, ten to twelve goods, seven to nine routes, five to six specialists, eight to ten event families, four major factions, two replacement actors, six to eight composable endings, and at least three viable non-contract trade patterns per region.
+
+The later regions may reuse shared UI, map grammar, settlement construction kits, temporary audio, and placeholder travel backgrounds. They may not reuse the same economic question with renamed locations. Each region must add one new market relationship, one route risk, one settlement service trade-off, one event or black-market pressure, one recovery option, and one failure-forward consequence.
+
+## Ordered implementation gates
+
+| Gate | Player-facing deliverable | Required evidence |
+|---|---|---|
+| **MA-I1 — Shell and performance** | The full opening and first Bazaar are readable at 1280×720, 1600×900, minimum width, large text, and controller focus. Save/world round-trips return below the release budget. | Bounds tests, focused performance benchmark, fresh-save launch, screenshots, and exact timing output. |
+| **MA-I2 — Trade fantasy** | The first five minutes visibly teach buying, demand, capacity, route cost, provisions, sale, and return-market change. | Normal-flow test, deterministic trade fixture, before/after market receipt, and a three-screenshot sequence. |
+| **MA-I3 — Creative vertical** | One complete authored journey with characters, art motifs, audio cues, event consequence, black-market option, and ending receipt. | Clean-flow fixture, save/resume at every phase, controller/large-text checks, and a recorded 1600×900 capture. |
+| **MA-I4 — Region two** | A second region with three settlements, three routes, three goods, one new risk, one optional contract, one event family, and one alternate ordinary-trade pattern. | Region manifest, deterministic seeded matrix, route/economy report, complete-flow capture, and failure-forward save test. |
+| **MA-I5 — Region three and basin memory** | A connected third region with a distinct market identity, black-market or faction pressure, replacement actor, and changed return conditions. | Map continuity test, no-dead-end test, ending matrix, and post-consequence screenshot sequence. |
+| **MA-I6 — Early Access hardening** | A repeatable 30–90 minute campaign loop with restart, save recovery, settings, controller, offline operation, clean package, known limitations, and a credible update boundary. | Full verification, 100 seeded economy trials, packaged launch smoke, migration/backup checks, and release manifest. |
+
+## Content authoring rule
+
+Every new settlement, good, route, specialist, event, or faction must answer four questions: what player question does it create; what resource or risk does it change; what is the ordinary-trade alternative; and what remains true if the player ignores it? Content that only adds prose, a larger number, or a renamed icon should be rejected.
+
+## What not to build yet
+
+Do not add multiplayer, procedural text generation, a large skill tree, dozens of goods, a universal reputation meter, a mandatory contract campaign, or a full black-market economy before MA-I1 through MA-I3 pass. Do not commission final key art before the first complete creative vertical is playable. Do not use the black market to force the player down the authored story.
+
+## Agent task contract
+
+Each agent task must name one player-facing behavior, preserve the authoritative simulation boundary, include data and UI ownership, add deterministic tests, verify save/resume, run the normal flow, and capture the affected screen at the current build version. The final report must list changed files, exact commands, timing or test output, screenshots, known limitations, and one next task.
+
+The active sequence is **MA-I1 Shell/performance**, **MA-I2 Trade fantasy**, **MA-I3 Creative vertical**, **MA-I4 Region two**, **MA-I5 Region three and basin memory**, and **MA-I6 Early Access hardening**. Human testing may calibrate the build later but is not a prerequisite for these gates.
+
+## Decision
+
+The investment target is a compact but honest game: one memorable trade fantasy, one complete creative journey, and enough adjacent systemic breadth to demonstrate continuation. We prefer three regions with strong decision density over ten empty regions, and a black-market option that enriches ordinary commerce over a black-market route that invalidates the core game.
