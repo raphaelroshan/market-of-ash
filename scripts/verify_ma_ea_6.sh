@@ -34,7 +34,7 @@ python3 tools/validate_release_contract.py --repo "$ROOT"
 python3 tools/validate_windows_export.py "$WINDOWS_EXE"
 python3 tools/package_windows_portable.py \
   --executable "$WINDOWS_EXE" \
-  --readme docs/releases/v0.15.0-early-access-rc2.md \
+  --readme docs/releases/v0.16.0-early-access-rc1.md \
   --archive "$WINDOWS_ZIP" \
   --extract-directory "$CLEAN_DIR"
 python3 tools/validate_windows_distribution.py "$WINDOWS_ZIP"

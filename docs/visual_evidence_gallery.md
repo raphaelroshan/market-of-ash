@@ -163,3 +163,15 @@ Successful purchases and sales now receive a brief stamped market receipt contai
 ![Purchase receipt with Large Text](visual_evidence/v0.13.8-alpha-basin-vertical-slice/trade-receipt-large-text-1280x720.png)
 
 Full provenance is in the patch [`capture record`](visual_evidence/v0.13.8-alpha-basin-vertical-slice/README.md).
+
+## 0.16.0 GPT-5.6 private-alpha campaign
+
+The current candidate validates 86 release-facing states at 1600×900, spanning the clean opening, ordinary trade, route comparison, in-between travel, authored contact, changed market, optional black-market pressure, terminal receipt, all three regional sandboxes, and failure-forward replacement actors.
+
+![Investment route comparison](visual_evidence/v0.16.0-private-alpha-2026-09-03/investment-departure-1600x900.png)
+
+![Emberfen route comparison](visual_evidence/v0.16.0-private-alpha-2026-09-03/siltfire-emberfen-departure-desk-1600x900.png)
+
+![Ash Sifter result](visual_evidence/v0.16.0-private-alpha-2026-09-03/siltfire-ash-sifter-result-1600x900.png)
+
+The durable subset and complete manifest are in the [`0.16.0 capture record`](visual_evidence/v0.16.0-private-alpha-2026-09-03/README.md); the tagged release publishes all 86 frames as a separate archive.

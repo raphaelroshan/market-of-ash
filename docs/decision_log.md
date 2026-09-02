@@ -729,3 +729,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Two settlements and two roads demonstrated a loop but not a regional sandbox. A third market, a distinct high-exposure road event, faction pressure, and a material response after failure let the March support comparison, consequence, and recovery on its own. Region-scoped map drawing keeps eleven global settlements readable without hiding gateway destinations.
 
 **Trade-off:** Emberfen reuses the shared goods catalog and crisis clock rather than adding a currency or separate campaign. Its procedural peat-stack and smoke art is replaceable through the visual registry. The Ash Sifters currently have one cooperation action rather than the broader support/oppose/reconcile set available to the older replacement factions.
+
+## ADR-092: The private alpha is one reproducible offline package
+
+**Decision:** Ship `0.16.0-early-access-rc1` as a portable Windows ZIP and standalone executable, accompanied by a provenance manifest, SHA-256 list, versioned tester guide, and the complete validated 1600×900 journey capture. Generate local and tagged manifests and capture archives through shared tested helpers. Require the release contract to declare a 30–90 minute offline campaign and to document backup recovery, migration, rollback, controller/scaling coverage, known limitations, and provenance.
+
+**Reason:** The four GPT-5.6 packets must end in a tester-ready artifact rather than a collection of passing source tests. A self-describing offline package lets a private-alpha tester install, preserve a save, exercise the full creative vertical, report the exact build, and recover or roll back without repository access. Shared package helpers keep the local acceptance run and tagged GitHub workflow structurally identical.
+
+**Trade-off:** The Windows build remains unsigned and cannot establish SmartScreen reputation, physical-controller behavior, assistive-technology compatibility, or moderated comprehension by automation. Those are explicit external calibration gates, not hidden release claims.

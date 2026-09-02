@@ -10,7 +10,7 @@ The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, e
 
 The MA-I2 guided path now proves ordinary trade before optional work: buy Water, compare and travel the Old Road, sell into Reedwatch demand, observe the local price response, and bring Grain back to Ashgate. The Job Board is introduced afterward and does not require acceptance.
 
-The current release candidate is [`v0.15.0-early-access-rc2`](docs/releases/v0.15.0-early-access-rc2.md). It is an unsigned portable Windows prerelease with in-package install, upgrade, rollback, verification, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
+The current private-alpha candidate is [`v0.16.0-early-access-rc1`](docs/releases/v0.16.0-early-access-rc1.md). It is an unsigned, offline portable Windows prerelease with in-package install, upgrade, backup recovery, rollback, verification, provenance, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
 
 ## Run the prototype
 
@@ -107,11 +107,12 @@ The skeletal-but-playable Early Access target is defined in [`docs/early_access_
 
 ## Investment evaluation roadmap
 
-The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). MA-I1 and MA-I2 are complete with responsive, performance, and first-trade evidence in their completion records; the current investment gate is MA-I3, locking one memorable authored journey and terminal receipt.
+The full creative vertical and skeletal campaign requirements are defined in [`docs/investment_evaluation_roadmap.md`](docs/investment_evaluation_roadmap.md). The dated build audit and screenshots are in [`docs/investment_evaluation_review_2026-09-02.md`](docs/investment_evaluation_review_2026-09-02.md). MA-I1 through MA-I6 are complete for the repository-owned scope, with responsive, performance, trade, authored-journey, regional-breadth, and Windows-package evidence in their completion records.
 
 
 ## GPT-5.6 investment execution packets
 
-For the investment-evaluation build, follow the dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). MA-GPT56-1 through MA-GPT56-3 have completion records; the current gate is MA-GPT56-4 private-alpha packaging.
+For the investment-evaluation build, follow the dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). MA-GPT56-1 through MA-GPT56-4 are implemented and have completion records; the current candidate is `v0.16.0-early-access-rc1`.
 | `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Frontier-style creative vertical and investment-evaluation campaign skeleton. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, remaining responsive issue, and next GPT-5.6 task. |
+| `docs/ma_gpt56_4_completion.md` | Private-alpha package acceptance, artifacts, verification, and external calibration limits. |

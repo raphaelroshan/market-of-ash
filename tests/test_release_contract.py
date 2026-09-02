@@ -7,12 +7,15 @@ import json
 import shutil
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from tools.validate_release_contract import validate_release_contract
 from tools.write_release_checksums import sha256, write_release_checksums
+from tools.create_release_manifest import create_manifest
+from tools.package_capture_evidence import package_capture
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,11 +24,34 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> int:
     details = validate_release_contract(ROOT)
     assert details == {
-        "game_version": "0.15.0-early-access-rc2",
-        "windows_version": "0.15.0.0",
-        "content_version": "1.27.0",
-        "release_notes": "docs/releases/v0.15.0-early-access-rc2.md",
+        "game_version": "0.16.0-early-access-rc1",
+        "windows_version": "0.16.0.0",
+        "content_version": "1.28.0",
+        "release_notes": "docs/releases/v0.16.0-early-access-rc1.md",
     }
+
+    with tempfile.TemporaryDirectory() as temporary_directory:
+        fixture = Path(temporary_directory)
+        manifest_path = fixture / "release_manifest.json"
+        manifest = create_manifest(ROOT, manifest_path, "abc123", "refs/tags/v0.16.0-early-access-rc1", "42", "7")
+        assert manifest["game_version"] == "0.16.0-early-access-rc1"
+        assert manifest["content_version"] == "1.28.0"
+        assert manifest["private_alpha"] == {
+            "minimum_session_minutes": 30,
+            "maximum_session_minutes": 90,
+            "offline_required": True,
+        }
+        capture_dir = fixture / "capture"
+        capture_dir.mkdir()
+        (capture_dir / "native-capture-1600x900.json").write_text("{}", encoding="utf-8")
+        (capture_dir / "main-menu-1600x900.png").write_bytes(b"png")
+        capture_zip = fixture / "capture.zip"
+        assert package_capture(capture_dir, capture_zip) == 2
+        with zipfile.ZipFile(capture_zip) as archive:
+            assert sorted(archive.namelist()) == [
+                "market-of-ash-1600-capture/main-menu-1600x900.png",
+                "market-of-ash-1600-capture/native-capture-1600x900.json",
+            ]
 
     with tempfile.TemporaryDirectory() as temporary_directory:
         fixture = Path(temporary_directory)
@@ -37,7 +63,7 @@ def main() -> int:
             "export_presets.cfg",
             "tools/ci_manifest.json",
             "content/runtime_world.json",
-            "docs/releases/v0.15.0-early-access-rc2.md",
+            "docs/releases/v0.16.0-early-access-rc1.md",
         ):
             source = ROOT / relative
             target = fixture / relative
