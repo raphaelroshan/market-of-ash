@@ -12,7 +12,7 @@ from typing import Any
 
 REQUIRED_GOODS = ("grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil")
 REQUIRED_SETTLEMENTS = ("ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells", "mothlight_quay", "blackreed_post")
-REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "salt_causeway", "reedline_track")
+REQUIRED_ROUTES = ("old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run", "emberglass_byway", "salt_causeway", "reedline_track")
 
 
 def fail(errors: list[str], message: str) -> None:

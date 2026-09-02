@@ -5144,6 +5144,8 @@ class MapPanel extends Control:
 				return Color("#d19a64")
 			"mirror_run":
 				return Color("#9f8bc0")
+			"emberglass_byway":
+				return Color("#cf7348")
 			"salt_causeway":
 				return Color("#7fb5ab")
 			"reedline_track":
@@ -5154,6 +5156,10 @@ class MapPanel extends Control:
 		if world != null and world.routes.has(route_id):
 			return String(world.routes[route_id].get("name", route_id))
 		return route_id.replace("_", " ").capitalize()
+
+	func _route_map_label(route_id: String) -> String:
+		var route_record: Dictionary = world.routes.get(route_id, {}) if world != null else MarketContent.route(route_id)
+		return String(route_record.get("map_label", route_record.get("name", route_id)))
 
 	func _map_heading() -> String:
 		var crisis_label := String(MarketContent.crisis_stage(world.crisis_stage).get("label", "Regional pressure")) if world != null else "Regional pressure"
@@ -5428,6 +5434,8 @@ class MapPanel extends Control:
 				return {"scene_id": "glasswind_shards", "title": "GLASSWIND TRACE", "waypoint": "The wrapped marker", "sky": Color("#46372f"), "ground": Color("#2d211c"), "road": Color("#72513c"), "accent": Color("#d19a64")}
 			"mirror_run":
 				return {"scene_id": "mirror_night_road", "title": "MIRROR RUN", "waypoint": "The last beacon", "sky": Color("#302d40"), "ground": Color("#24212c"), "road": Color("#554a63"), "accent": Color("#9f8bc0")}
+			"emberglass_byway":
+				return {"scene_id": "emberglass_ventway", "title": "FURNACE VENTWAY", "waypoint": "The cooling vent", "sky": Color("#4a2e29"), "ground": Color("#2d201c"), "road": Color("#684033"), "accent": Color("#cf7348")}
 			"salt_causeway":
 				return {"scene_id": "brine_bell_causeway", "title": "SALT CAUSEWAY", "waypoint": "The next bell marker", "sky": Color("#314643"), "ground": Color("#263934"), "road": Color("#65746a"), "accent": Color("#7fb5ab")}
 			"reedline_track":
@@ -5549,6 +5557,27 @@ class MapPanel extends Control:
 			mirror + Vector2(18, 15),
 		]), accent, 2.0)
 
+	func _draw_emberglass_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
+		for index in range(7):
+			var drift := fmod(float(index * 149) - travel_progress * 680.0, board.size.x + 120.0) - 60.0
+			var base := Vector2(board.position.x + drift, horizon_y + 34.0 + float(index % 3) * 23.0)
+			var vent_height := 24.0 + float(index % 2) * 13.0
+			draw_colored_polygon(PackedVector2Array([
+				base + Vector2(-12, 0),
+				base + Vector2(-5, -vent_height),
+				base + Vector2(7, -vent_height + 4),
+				base + Vector2(13, 0),
+			]), accent.darkened(0.42))
+			draw_arc(base + Vector2(1, -vent_height - 5), 11.0, PI * 1.08, PI * 1.92, 14, Color(accent, 0.38), 2.0)
+		for shard_index in range(5):
+			var shard_x := board.position.x + board.size.x * (0.16 + shard_index * 0.17)
+			var shard_base := Vector2(shard_x, horizon_y + 70.0 + float(shard_index % 2) * 27.0)
+			draw_colored_polygon(PackedVector2Array([
+				shard_base + Vector2(-5, 0),
+				shard_base + Vector2(1, -18),
+				shard_base + Vector2(7, 0),
+			]), Color(Color("#e5a16d"), 0.46))
+
 	func _draw_salt_causeway_landmarks(board: Rect2, horizon_y: float, accent: Color) -> void:
 		for index in range(7):
 			var drift := fmod(float(index * 139) - travel_progress * 610.0, board.size.x + 120.0) - 60.0
@@ -5610,6 +5639,8 @@ class MapPanel extends Control:
 				_draw_glasswind_landmarks(board, horizon_y, accent)
 			"mirror_run":
 				_draw_mirror_run_landmarks(board, horizon_y, accent)
+			"emberglass_byway":
+				_draw_emberglass_landmarks(board, horizon_y, accent)
 			"salt_causeway":
 				_draw_salt_causeway_landmarks(board, horizon_y, accent)
 			"reedline_track":
@@ -5718,7 +5749,7 @@ class MapPanel extends Control:
 		var route_ids := _route_ids()
 		for route_index in range(route_ids.size()):
 			var footer_rect := _route_footer_rect(route_index)
-			var footer_text := _route_label(route_ids[route_index])
+			var footer_text := _route_map_label(route_ids[route_index])
 			draw_string(ThemeDB.fallback_font, footer_rect.position + Vector2(0, _font_size(12)), footer_text, HORIZONTAL_ALIGNMENT_CENTER, footer_rect.size.x, _font_size(12), _route_color(route_ids[route_index]))
 		for settlement_id_value in _settlement_ids():
 			var settlement_id := String(settlement_id_value)

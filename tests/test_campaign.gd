@@ -124,7 +124,7 @@ func _init() -> void:
 		_expect_ok(tour_result, "reach %s during the ten-settlement tour" % tour_destinations[index])
 		if tour_result.ok:
 			visited[tour_world.current_settlement] = true
-	_expect(visited.size() == 10 and tour_world.current_settlement == "mirror_wells", "the authored seven-route graph should make all ten settlements reachable through legal segments")
+	_expect(visited.size() == 10 and tour_world.current_settlement == "mirror_wells", "the authored eight-route graph should make all ten settlements reachable through legal segments")
 	_expect(tour_world.money >= 0 and tour_world.provisions >= 0, "the empty-cargo ten-settlement tour should not soft-lock on route resources")
 
 	var fresh_ashgate := AshWorldState.new(1107)

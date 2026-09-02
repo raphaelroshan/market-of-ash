@@ -50,6 +50,10 @@ REQUIRED_NATIVE_SCREENS = {
     "glasswind_event",
     "glasswind_arrival",
     "mirror_wells_market",
+    "emberglass_departure_desk",
+    "emberglass_road",
+    "emberglass_event",
+    "emberglass_arrival",
     "night_market",
     "night_market_supported",
     "night_market_opposed",
@@ -101,6 +105,10 @@ EXPECTED_UI_STATE = {
     "glasswind_event": "route_event",
     "glasswind_arrival": "arrival_handoff",
     "mirror_wells_market": "settlement_shop",
+    "emberglass_departure_desk": "departure_desk",
+    "emberglass_road": "route_travel",
+    "emberglass_event": "route_event",
+    "emberglass_arrival": "arrival_handoff",
     "night_market": "settlement_shop",
     "night_market_supported": "settlement_shop",
     "night_market_opposed": "settlement_shop",
@@ -165,6 +173,10 @@ REQUIRED_LAYOUT_CONTROLS = {
     "glasswind_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
     "glasswind_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
     "mirror_wells_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "emberglass_departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "emberglass_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "emberglass_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "emberglass_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
     "night_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "night_market_supported": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "night_market_opposed": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
@@ -358,6 +370,20 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Glasswind road capture is missing the Mirror Run identity")
         if screen == "glasswind_event" and ui_state.get("pending_event_id") != "shardwind_tithe":
             raise AssertionError(f"{file_name}: Glasswind event capture is missing Shardwind Tithe")
+        if screen in {"emberglass_road", "emberglass_event"} and ui_state.get("road_scene_id") != "emberglass_ventway":
+            raise AssertionError(f"{file_name}: Emberglass capture is missing its furnace-road identity")
+        if screen == "emberglass_event" and ui_state.get("pending_event_id") != "shardwind_tithe":
+            raise AssertionError(f"{file_name}: Emberglass event capture is missing Shardwind Tithe")
+        if screen == "emberglass_arrival" and ui_state.get("settlement_id") != "mirror_wells":
+            raise AssertionError(f"{file_name}: Emberglass arrival did not reach Mirror Wells")
+        if screen == "emberglass_departure_desk" and not any(
+            action.get("id") == "route_plan_mirror_wells_emberglass_byway"
+            and "FEE 2" in action.get("label", "")
+            and "DAY 1" in action.get("label", "")
+            and "58%" in action.get("label", "")
+            for action in ui_state.get("accessibility_actions", [])
+        ):
+            raise AssertionError(f"{file_name}: Emberglass departure does not expose fee, time, and risk")
         if screen in {"siltfire_departure", "siltfire_road"} and ui_state.get("road_scene_id") != "brine_bell_causeway":
             raise AssertionError(f"{file_name}: Siltfire causeway capture is missing its bell-road identity")
         if screen == "siltfire_event" and ui_state.get("pending_event_id") != "causeway_whiteout":
@@ -488,6 +514,9 @@ def main() -> int:
         require_distinct_screen(screens["glasswind_road"], screens["glasswind_event"], f"{viewport} Reveal Shardwind Tithe")
         require_distinct_screen(screens["glasswind_event"], screens["glasswind_arrival"], f"{viewport} Resolve Shardwind Tithe")
         require_distinct_screen(screens["glasswind_arrival"], screens["mirror_wells_market"], f"{viewport} Enter Mirror Wells")
+        require_distinct_screen(screens["glasswind_road"], screens["emberglass_road"], f"{viewport} Distinguish the Emberglass Byway", minimum_ratio=0.01)
+        require_distinct_screen(screens["emberglass_road"], screens["emberglass_event"], f"{viewport} Reveal the byway encounter")
+        require_distinct_screen(screens["emberglass_event"], screens["emberglass_arrival"], f"{viewport} Resolve the byway encounter")
         require_distinct_screen(screens["mirror_wells_market"], screens["night_market"], f"{viewport} Activate Night Market")
         require_distinct_screen(screens["night_market"], screens["night_market_supported"], f"{viewport} Support Night Market", minimum_ratio=0.005)
         require_distinct_screen(screens["night_market_supported"], screens["night_market_opposed"], f"{viewport} Oppose Night Market", minimum_ratio=0.005)
