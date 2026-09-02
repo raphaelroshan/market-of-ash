@@ -10,7 +10,7 @@ The source and CI target Godot 4.4.1. Pull requests test on Linux and Windows, e
 
 The MA-I2 guided path now proves ordinary trade before optional work: buy Water, compare and travel the Old Road, sell into Reedwatch demand, observe the local price response, and bring Grain back to Ashgate. The Job Board is introduced afterward and does not require acceptance.
 
-The current private-alpha candidate is [`v0.16.0-early-access-rc1`](docs/releases/v0.16.0-early-access-rc1.md). It is an unsigned, offline portable Windows prerelease with in-package install, upgrade, backup recovery, rollback, verification, provenance, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
+The current private-alpha candidate is [`v0.16.0-early-access-rc2`](docs/releases/v0.16.0-early-access-rc2.md). It is an unsigned, offline portable Windows prerelease with in-package install, upgrade, backup recovery, rollback, verification, provenance, and known-limitations guidance. Automated release publication remains gated on the tagged Windows workflow.
 
 ## Run the prototype
 
@@ -112,7 +112,7 @@ The full creative vertical and skeletal campaign requirements are defined in [`d
 
 ## GPT-5.6 investment execution packets
 
-For the investment-evaluation build, follow the dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). MA-GPT56-1 through MA-GPT56-4 are implemented and have completion records; the current candidate is `v0.16.0-early-access-rc1`.
+For the investment-evaluation build, follow the dependency-aware tasks in [`docs/gpt56_investment_execution_packets.md`](docs/gpt56_investment_execution_packets.md). MA-GPT56-1 through MA-GPT56-4 are implemented and have completion records; the current candidate is `v0.16.0-early-access-rc2`.
 | `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Frontier-style creative vertical and investment-evaluation campaign skeleton. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, remaining responsive issue, and next GPT-5.6 task. |
 | `docs/ma_gpt56_4_completion.md` | Private-alpha package acceptance, artifacts, verification, and external calibration limits. |

@@ -24,17 +24,17 @@ ROOT = Path(__file__).resolve().parents[1]
 def main() -> int:
     details = validate_release_contract(ROOT)
     assert details == {
-        "game_version": "0.16.0-early-access-rc1",
+        "game_version": "0.16.0-early-access-rc2",
         "windows_version": "0.16.0.0",
         "content_version": "1.28.0",
-        "release_notes": "docs/releases/v0.16.0-early-access-rc1.md",
+        "release_notes": "docs/releases/v0.16.0-early-access-rc2.md",
     }
 
     with tempfile.TemporaryDirectory() as temporary_directory:
         fixture = Path(temporary_directory)
         manifest_path = fixture / "release_manifest.json"
-        manifest = create_manifest(ROOT, manifest_path, "abc123", "refs/tags/v0.16.0-early-access-rc1", "42", "7")
-        assert manifest["game_version"] == "0.16.0-early-access-rc1"
+        manifest = create_manifest(ROOT, manifest_path, "abc123", "refs/tags/v0.16.0-early-access-rc2", "42", "7")
+        assert manifest["game_version"] == "0.16.0-early-access-rc2"
         assert manifest["content_version"] == "1.28.0"
         assert manifest["private_alpha"] == {
             "minimum_session_minutes": 30,
@@ -63,7 +63,8 @@ def main() -> int:
             "export_presets.cfg",
             "tools/ci_manifest.json",
             "content/runtime_world.json",
-            "docs/releases/v0.16.0-early-access-rc1.md",
+            "docs/releases/v0.16.0-early-access-rc2.md",
+            ".github/workflows/release.yml",
         ):
             source = ROOT / relative
             target = fixture / relative

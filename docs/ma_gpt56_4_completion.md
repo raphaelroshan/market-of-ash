@@ -2,7 +2,7 @@
 
 **Status:** Complete
 
-**Candidate:** `0.16.0-early-access-rc1`
+**Candidate:** `0.16.0-early-access-rc2`
 
 **Content:** `1.28.0`
 

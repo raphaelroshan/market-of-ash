@@ -5,7 +5,7 @@
   "primary_repo": "raphaelroshan/market-of-ash",
   "release_platforms": ["steam", "epic-games-store"],
   "release_ready": true,
-  "release_notes": "docs/releases/v0.16.0-early-access-rc1.md",
+  "release_notes": "docs/releases/v0.16.0-early-access-rc2.md",
   "private_alpha": {
     "minimum_session_minutes": 30,
     "maximum_session_minutes": 90,
