@@ -23,7 +23,8 @@ def write_release_checksums(output: Path, inputs: list[Path]) -> list[str]:
         raise AssertionError("release checksum inputs must have unique basenames")
     entries = [f"{sha256(path)}  {path.name}" for path in resolved]
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_text("\n".join(entries) + "\n", encoding="utf-8")
+    with output.open("w", encoding="utf-8", newline="\n") as destination:
+        destination.write("\n".join(entries) + "\n")
     return entries
 
 

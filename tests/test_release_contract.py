@@ -65,6 +65,7 @@ def main() -> int:
         entries = write_release_checksums(checksum_file, [first, second])
         assert entries == [f"{sha256(first)}  candidate.exe", f"{sha256(second)}  release_manifest.json"]
         assert all("/" not in entry.split("  ", 1)[1] for entry in entries)
+        assert b"\r" not in checksum_file.read_bytes(), "release checksums must use portable LF newlines"
 
     print("Release contract validator tests: PASS")
     return 0
