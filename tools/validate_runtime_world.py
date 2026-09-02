@@ -868,6 +868,9 @@ def validate(data: Any) -> list[str]:
         route = as_object(routes.get(route_id), f"route {route_id}", errors)
         if not isinstance(route.get("name"), str) or not route["name"]:
             fail(errors, f"route {route_id} must have a non-empty name")
+        map_label = route.get("map_label")
+        if not isinstance(map_label, str) or not 1 <= len(map_label) <= 12:
+            fail(errors, f"route {route_id}.map_label must contain 1 through 12 characters")
         endpoints = route.get("endpoints")
         if not isinstance(endpoints, list) or len(endpoints) != 2:
             fail(errors, f"route {route_id}.endpoints must contain exactly two settlement ids")

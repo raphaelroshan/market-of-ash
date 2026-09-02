@@ -449,6 +449,9 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 			var route: Dictionary = route_value
 			if String(route.get("name", "")).is_empty():
 				errors.append("route %s must have a name" % route_id)
+			var map_label := String(route.get("map_label", ""))
+			if map_label.is_empty() or map_label.length() > 12:
+				errors.append("route %s map_label must contain 1 through 12 characters" % route_id)
 			var endpoints_value: Variant = route.get("endpoints", [])
 			if typeof(endpoints_value) != TYPE_ARRAY or endpoints_value.size() != 2:
 				errors.append("route %s must declare exactly two endpoints" % route_id)

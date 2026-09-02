@@ -5114,6 +5114,17 @@ class MapPanel extends Control:
 			ids.append(String(route_id_value))
 		return ids
 
+	func _route_legend_ids() -> Array[String]:
+		if world == null:
+			return _route_ids()
+		var region := MarketContent.region_for_settlement(world.current_settlement)
+		var ids: Array[String] = []
+		for route_id_value in region.get("route_ids", []):
+			var route_id := String(route_id_value)
+			if world.routes.has(route_id):
+				ids.append(route_id)
+		return ids if not ids.is_empty() else _route_ids()
+
 	func _settlement_marker_rect(settlement_id: String) -> Rect2:
 		var cell := _settlement_cell(settlement_id)
 		return Rect2(_cell_rect(cell).position - Vector2(10, 8), Vector2(cell_width * 2.0 + 52.0, 40))
@@ -5162,10 +5173,9 @@ class MapPanel extends Control:
 		return String(route_record.get("map_label", route_record.get("name", route_id)))
 
 	func _map_heading() -> String:
-		var crisis_label := String(MarketContent.crisis_stage(world.crisis_stage).get("label", "Regional pressure")) if world != null else "Regional pressure"
 		var region := MarketContent.region_for_settlement(world.current_settlement) if world != null else {}
 		var region_name := String(region.get("name", "Ashland Trade Network"))
-		return "%s — %s — SELECT A SETTLEMENT" % [region_name.to_upper(), crisis_label.to_upper()]
+		return region_name.to_upper()
 
 	func _settlement_marker_detail(settlement_id: String) -> String:
 		if world == null:
@@ -5216,6 +5226,9 @@ class MapPanel extends Control:
 		var response_text := " · Well Commons exchange active" if settlement_id == "reedwatch" and not world.emergent_faction("well_commons").is_empty() else ""
 		return "%s%s%s · %s\n%s · %d ashmarks · %d provisions · %d day" % [String(settlement.get("name", settlement_id)), assignment_text, response_text, String(settlement.get("role", "market")), String(route.get("name", route_id)), int(route.get("cost", 0)), world.route_provision_cost(route_id, settlement_id), int(route.get("days", 0))]
 
+	func _map_info_settlement_id() -> String:
+		return hovered_settlement_id
+
 	func _font_size(base_size: int) -> int:
 		return int(round(float(base_size) * text_scale))
 
@@ -5232,12 +5245,14 @@ class MapPanel extends Control:
 		return "AT REST"
 
 	func _route_footer_rect(route_index: int) -> Rect2:
-		var route_ids := _route_ids()
-		var text := _route_label(route_ids[route_index])
-		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12))
+		if text_scale > 1.0:
+			return Rect2()
+		var route_ids := _route_legend_ids()
+		var text := _route_map_label(route_ids[route_index])
+		var text_size := ThemeDB.fallback_font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(10))
 		var slot_width := _board_rect().size.x / float(route_ids.size())
 		var footer_x := slot_width * float(route_index) + 5.0
-		return Rect2(board_origin + Vector2(footer_x, _board_rect().size.y - text_size.y - 6.0), Vector2(slot_width - 8.0, text_size.y))
+		return Rect2(Vector2(board_origin.x + footer_x, _board_rect().end.y), Vector2(slot_width - 8.0, text_size.y))
 
 	func _map_heading_rect() -> Rect2:
 		var text_size := ThemeDB.fallback_font.get_string_size(_map_heading(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(16))
@@ -5745,12 +5760,13 @@ class MapPanel extends Control:
 					draw_rect(Rect2(midpoint - Vector2(5, 5), Vector2(10, 10)), Color("#f0dca8"), false, 2.0)
 				else:
 					draw_circle(midpoint, 4.0, Color("#9fc1c5"))
-		draw_rect(Rect2(board.position + Vector2(0, board.size.y - 28), Vector2(board.size.x, 28)), Color("#231b16"), true)
-		var route_ids := _route_ids()
-		for route_index in range(route_ids.size()):
-			var footer_rect := _route_footer_rect(route_index)
-			var footer_text := _route_map_label(route_ids[route_index])
-			draw_string(ThemeDB.fallback_font, footer_rect.position + Vector2(0, _font_size(12)), footer_text, HORIZONTAL_ALIGNMENT_CENTER, footer_rect.size.x, _font_size(12), _route_color(route_ids[route_index]))
+		if text_scale <= 1.0:
+			draw_rect(Rect2(board.position + Vector2(0, board.size.y), Vector2(board.size.x, 18.0)), Color("#231b16"), true)
+			var route_ids := _route_legend_ids()
+			for route_index in range(route_ids.size()):
+				var footer_rect := _route_footer_rect(route_index)
+				var footer_text := _route_map_label(route_ids[route_index])
+				draw_string(ThemeDB.fallback_font, footer_rect.position + Vector2(0, _font_size(10)), footer_text, HORIZONTAL_ALIGNMENT_CENTER, footer_rect.size.x, _font_size(10), _route_color(route_ids[route_index]))
 		for settlement_id_value in _settlement_ids():
 			var settlement_id := String(settlement_id_value)
 			var footprint := _settlement_marker_rect(settlement_id)
@@ -5770,5 +5786,4 @@ class MapPanel extends Control:
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(text_inset, 18), name_text, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(12), Color("#f4e6c7"))
 			draw_string(ThemeDB.fallback_font, footprint.position + Vector2(text_inset, 35), _settlement_marker_detail(settlement_id), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), Color("#c7b49a"))
 		_draw_caravan(_caravan_position())
-		var info_settlement := hovered_settlement_id if not hovered_settlement_id.is_empty() else selected_destination_id
-		_draw_hover_card(info_settlement)
+		_draw_hover_card(_map_info_settlement_id())
