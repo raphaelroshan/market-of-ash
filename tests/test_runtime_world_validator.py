@@ -32,6 +32,7 @@ def main() -> int:
         "tint": "red",
         "sky": "#123456",
         "ground": "#654321",
+        "map_cell": [99, -1],
     }
     identity_errors = validate(invalid_identity)
     expected_identity_fragments = (
@@ -40,6 +41,7 @@ def main() -> int:
         "identity.market_read must be a non-empty string",
         "identity.landmark is unsupported",
         "identity.tint must be a six-digit hex color",
+        "identity.map_cell must fit the 17x11 route grid",
     )
     missing_identity_errors = [
         fragment for fragment in expected_identity_fragments if not any(fragment in error for error in identity_errors)
@@ -303,6 +305,40 @@ def main() -> int:
     if missing_factions:
         print("FAIL: invalid faction fixture did not produce expected errors")
         for fragment in missing_factions:
+            print(f"- missing: {fragment}")
+        return 1
+
+    invalid_regions = copy.deepcopy(runtime)
+    invalid_regions["regions"] = {
+        "Bad Region": {
+            "name": "",
+            "summary": "",
+            "settlement_ids": ["ashgate", "missing_town"],
+            "route_ids": ["missing_road"],
+        },
+        "overlap": {
+            "name": "Overlap",
+            "summary": "Duplicates an existing settlement for validation.",
+            "settlement_ids": ["ashgate", "brine_cross"],
+            "route_ids": ["old_road"],
+        },
+    }
+    region_errors = validate(invalid_regions)
+    expected_region_fragments = (
+        "region ids must use lower_snake_case",
+        "must declare name",
+        "must declare summary",
+        "references unknown settlement missing_town",
+        "references unknown route missing_road",
+        "settlement ashgate belongs to more than one region",
+        "every settlement must belong to exactly one region",
+    )
+    missing_region_errors = [
+        fragment for fragment in expected_region_fragments if not any(fragment in error for error in region_errors)
+    ]
+    if missing_region_errors:
+        print("FAIL: invalid region fixture did not produce expected errors")
+        for fragment in missing_region_errors:
             print(f"- missing: {fragment}")
         return 1
 

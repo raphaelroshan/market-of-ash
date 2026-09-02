@@ -718,14 +718,12 @@ static func _use_settlement_action(world: AshWorldState, inputs: Dictionary) -> 
 	match action_id:
 		"ashgate_provision_bundle":
 			return _apply_provision_bundle(world, action)
-		"brine_cross_cistern_queue", "cinderford_repair_bench", "hollow_market_route_rumor", "reedwatch_supply_shelter", "reedwatch_commons_boiler_fuel", "reedwatch_commons_open_ledger", "reedwatch_warden_cistern_bypass":
-			return _apply_civic_action(world, action)
 		"ashgate_cinder_rider_arms_sale":
 			return _apply_arms_sale(world, action)
 		"ashgate_public_manifest_audit":
 			return _apply_arms_recovery(world, action)
 		_:
-			return _failure(String(action.get("unavailable_reason", "this opportunity is not implemented yet")))
+			return _apply_civic_action(world, action)
 
 static func _apply_civic_action(world: AshWorldState, action: Dictionary) -> Dictionary:
 	var cost := int(action.get("cost", 0))

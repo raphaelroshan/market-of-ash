@@ -625,3 +625,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The prior Caravan Yard was a stack of buttons followed by prose, which made three mechanically distinct characters read like debug actions. Stable faces and repeated information hierarchy make the hiring decision recognizable without hiding cost or consequence.
 
 **Trade-off:** The portraits are restrained procedural illustrations rather than final commissioned character art, and the cards require scrolling to inspect the full roster at smaller windows. All three actions remain keyboard/controller reachable and Web-accessible in their authored order.
+
+## ADR-079: Glasswind Reach extends the same trade-and-travel grammar
+
+**Decision:** Add Glasswind Reach as a compact second region connected to Hollow Market. Author three settlements, three goods, two roads, one standing faction, one optional delivery, one three-branch route event, and one failure-forward replacement market in `content/runtime_world.json`. Reuse the existing Bazaar, itinerary, command, event, save, and debrief boundaries; extend only the supported code-native landmark vocabulary needed to give glass, kiln, mirror, shardwind, and beacon scenes distinct silhouettes.
+
+**Reason:** Early Access breadth needs another complete economic loop, not decorative map nodes or a prescribed quest chain. Saltglass, dune spice, and lamp oil create ordinary two-way trading among Sunfall Exchange, Kiln Rest, and Mirror Wells. The official beacon contract offers a modest alternate path, while ignoring it creates the Night Market and a new saltglass premium instead of removing play.
+
+**Trade-off:** The region uses provisional code-native art and shares the Basin's crisis clock and interface shell. It adds no new combat model, pathfinder, or parallel economy; the third region and broader crew/event/ending targets remain separate milestones.

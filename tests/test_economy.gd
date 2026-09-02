@@ -9,6 +9,7 @@ var failures: Array[String] = []
 
 func _init() -> void:
 	_test_runtime_content()
+	_test_glasswind_reach_slice()
 	_test_base_prices()
 	_test_regional_price_spread()
 	_test_crisis_changes_water_price()
@@ -55,7 +56,7 @@ func _test_runtime_content() -> void:
 	MarketContent.reset_cache()
 	var content := MarketContent.load_runtime()
 	_expect(content.ok, "runtime world content should load and validate")
-	_expect(MarketContent.content_version() == "1.22.0", "runtime content should expose content version")
+	_expect(MarketContent.content_version() == "1.23.0", "runtime content should expose content version")
 	for settlement_id in MarketContent.settlement_ids():
 		var identity: Dictionary = MarketContent.settlements().get(settlement_id, {}).get("identity", {})
 		_expect(not identity.is_empty() and not String(identity.get("scene_id", "")).is_empty() and not String(identity.get("market_read", "")).is_empty(), "settlement %s should expose its data-driven visual and market identity" % settlement_id)
@@ -78,19 +79,43 @@ func _test_runtime_content() -> void:
 	_expect(MarketContent.event("span_at_cinderford").get("route_ids", []).has("old_road"), "runtime content should expose the Cinderford span event")
 	_expect(MarketContent.event("last_clean_barrel").get("destination_ids", []).has("reedwatch"), "runtime content should expose the shortage settlement event")
 	_expect(MarketContent.event("three_riders_no_banner").get("route_ids", []).has("old_road"), "runtime content should expose the suspicious escort event")
+	_expect(MarketContent.event("shardwind_tithe").get("route_ids", []).has("glasswind_trace"), "runtime content should expose the Glasswind pressure event")
 	_expect(MarketContent.crew_member("nara_vey").get("role", "") == "Scout", "runtime content should expose Nara Vey's stable crew record")
 	_expect(MarketContent.crew_member("jorun_pale").get("role", "") == "Quartermaster", "runtime content should expose Jorun Pale's stable crew record")
 	_expect(MarketContent.crew_member("tess_oryn").get("role", "") == "Fixer", "runtime content should expose Tess Oryn's stable crew record")
 	_expect(int(MarketContent.faction("wardens").get("trusted_threshold", 0)) == 2, "runtime content should expose the first Warden threshold")
 	_expect(int(MarketContent.faction("caravans").get("trusted_threshold", 0)) == 2, "runtime content should expose the Free Caravan threshold")
-	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate"], "runtime content should expose authored stable good ids")
-	_expect(MarketContent.settlements().size() == 5, "runtime content should expose five settlements")
-	_expect(MarketContent.routes().size() == 3, "runtime content should expose three routes")
+	_expect(int(MarketContent.faction("glass_consortium").get("trusted_threshold", 0)) == 2, "runtime content should expose Glass Consortium pressure")
+	_expect(MarketContent.good_ids() == ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil"], "runtime content should expose authored stable good ids")
+	_expect(MarketContent.settlements().size() == 8, "runtime content should expose both regions' eight settlements")
+	_expect(MarketContent.routes().size() == 5, "runtime content should expose five route families")
+	_expect(MarketContent.region("glasswind_reach").get("settlement_ids", []).size() == 3 and MarketContent.region_for_settlement("mirror_wells").get("id", "") == "glasswind_reach", "runtime content should expose the three-settlement Glasswind Reach")
 	_expect(MarketContent.route_connects("old_road", "ashgate", "reedwatch"), "old road should connect its authored endpoints")
 	_expect(not MarketContent.route_connects("old_road", "ashgate", "brine_cross"), "old road should reject destinations outside its authored endpoints")
 	_expect(MarketContent.route_connects("toll_road", "ashgate", "cinderford") and MarketContent.route_connects("toll_road", "cinderford", "brine_cross"), "Toll Road should expose Cinderford as a reachable authored stop")
 	_expect(MarketContent.destinations_from("ashgate") == ["reedwatch", "cinderford", "brine_cross"], "Ashgate should expose Reedwatch and both Toll Road destinations")
 	_expect(MarketContent.destinations_from("cinderford") == ["ashgate", "brine_cross"], "Cinderford should expose both adjacent/full Toll Road connections")
+	_expect(MarketContent.destinations_from("hollow_market").has("sunfall_exchange") and MarketContent.destinations_from("sunfall_exchange").has("mirror_wells"), "Glasswind Reach should connect to the Basin and expose its inner road")
+
+func _test_glasswind_reach_slice() -> void:
+	var sunfall: Dictionary = MarketContent.settlements().get("sunfall_exchange", {})
+	var kiln: Dictionary = MarketContent.settlements().get("kiln_rest", {})
+	var mirror: Dictionary = MarketContent.settlements().get("mirror_wells", {})
+	var context := {"crisis_modifiers": {}, "market_pressure": {}, "adaptive_market_modifiers": {}}
+	_expect(MarketEconomy.price_for("saltglass", sunfall, context) < MarketEconomy.price_for("saltglass", kiln, context), "Sunfall saltglass should support an ordinary profitable run to Kiln Rest")
+	_expect(MarketEconomy.price_for("dune_spice", mirror, context) < MarketEconomy.price_for("dune_spice", sunfall, context), "Mirror Wells spice should support an ordinary profitable return to Sunfall")
+	_expect(MarketEconomy.price_for("lamp_oil", kiln, context) < MarketEconomy.price_for("lamp_oil", mirror, context), "Kiln Rest lamp oil should support an ordinary profitable run to Mirror Wells")
+	_expect(MarketContent.contract("mirror_wells_lamp_relief_01").get("origin_id", "") == "sunfall_exchange", "Glasswind Reach should expose its optional beacon contract")
+	_expect(MarketContent.adaptive_scenario("mirror_wells_beacon_oil").get("failure_response", {}).get("faction_id", "") == "night_market", "the beacon contract should fail forward into the Night Market")
+	var world := AshWorldState.new(41)
+	world.current_settlement = "sunfall_exchange"
+	world.day = 5
+	world._update_crisis_modifiers()
+	var buy := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.BUY_GOODS, "inputs": {"good_id": "lamp_oil", "quantity": 3}})
+	_expect(buy.ok, "the second region should permit its ordinary lamp-oil trade")
+	var depart := MarketCommandProcessor.execute(world, {"id": MarketCommandProcessor.DEPART_ROUTE, "inputs": {"route_id": "mirror_run", "destination_id": "mirror_wells"}})
+	_expect(depart.ok and world.current_settlement == "mirror_wells" or not world.pending_event.is_empty(), "the second region route should complete or pause at its deterministic event")
+	_expect(world.money >= 0 and world.provisions >= 0 and int(world.cargo.get("weight", 0)) <= world.cargo_capacity, "the second-region journey should preserve resource invariants")
 
 func _test_base_prices() -> void:
 	_expect(MarketEconomy.base_price("water") == 18, "water base price should be 18")
@@ -1540,7 +1565,7 @@ func _test_save_round_trip() -> void:
 	_expect(restored.crisis_stage == 2, "save should preserve crisis stage")
 	_expect(restored.command_history.size() == 1, "save should preserve command history")
 	_expect(restored.serialize().save_version == AshWorldState.SAVE_VERSION, "serialized state should declare the current save version")
-	_expect(restored.serialize().content_version == "1.22.0", "serialized state should declare the content version")
+	_expect(restored.serialize().content_version == "1.23.0", "serialized state should declare the content version")
 	var oversized_history_save := AshWorldState.new(43).serialize()
 	for index in range(105):
 		oversized_history_save.command_history.append({"id": "test_%d" % index, "inputs": {}, "day": 1, "ok": true, "message": "", "state_delta": {}})

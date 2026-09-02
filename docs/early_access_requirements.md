@@ -1,7 +1,7 @@
 # Market of Ash — Early Access Requirements
 
-**Status:** Active execution contract; MA-EA-1 complete, MA-EA-2 next
-**Current baseline:** Deterministic Five-Well Basin vertical slice with ordinary trade, authored events, adaptive faction response, alternate endings, and the game-quality roadmap in progress.
+**Status:** Active execution contract; MA-EA-1 and MA-EA-2 complete, MA-EA-3 next
+**Current baseline:** Deterministic Five-Well Basin plus the compact Glasswind Reach trade slice, with ordinary trade, authored events, adaptive faction responses, alternate endings, and the game-quality roadmap in progress.
 
 ## Product decision
 
@@ -73,7 +73,7 @@ New content must be data-driven and use stable IDs. An agent may add one region,
 ## Recommended order
 
 **MA-EA-1 — complete:** repair the 1280×720 shell and complete the polished Basin journey. The acceptance gate now exercises the real player-facing trade path, rejects visible developer surfaces in every native frame, and covers the full responsive matrix plus deterministic journey, input, save, and campaign suites.
-**MA-EA-2:** add a compact second region with three settlements, three goods, two routes, and one failure-forward event chain.  
+**MA-EA-2 — complete:** Glasswind Reach adds Sunfall Exchange, Kiln Rest, and Mirror Wells; saltglass, dune spice, and lamp oil; the Glasswind Trace and Mirror Run; the Shardwind Tithe event; an optional beacon-oil contract; and the failure-forward Night Market. Its save-safe flow and four-resolution native evidence are enforced by `scripts/verify_ma_ea_2.sh`.
 **MA-EA-3:** add the third region and connect the map with explicit route identities and ordinary-trade patterns.  
 **MA-EA-4:** add the fourth faction and second replacement actor, then validate alternate endings.  
 **MA-EA-5:** add crew depth, map breadth, event variety, and the Early Access release artifact only where they improve replay decisions.  

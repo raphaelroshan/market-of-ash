@@ -1,7 +1,7 @@
 class_name AshWorldState
 extends RefCounted
 
-## Serializable, presentation-agnostic state for the first Market of Ash region.
+## Serializable, presentation-agnostic state for the Market of Ash trade network.
 ## The world owns state; commands validate and mutate this state through MarketCommandProcessor.
 
 const MarketContent = preload("res://src/core/market_content.gd")
@@ -55,6 +55,9 @@ func _init(world_seed: int = 1107) -> void:
 		return
 	settlements = content_result.data.settlements.duplicate(true)
 	routes = content_result.data.routes.duplicate(true)
+	reputation.clear()
+	for faction_id_value in MarketContent.factions().keys():
+		reputation[String(faction_id_value)] = 0
 	_initialize_adaptive_scenarios()
 	reset_visit_slots()
 	_update_crisis_modifiers()
@@ -395,7 +398,9 @@ func _record_emergent_faction_delivery(settlement_id: String, good_id: String, q
 		emergent_factions[faction_id] = faction
 
 func _update_crisis_modifiers() -> void:
-	crisis_modifiers = {"grain": 1.0, "water": 1.0, "scrap": 1.0, "medicine": 1.0, "charcoal": 1.0, "cloth": 1.0, "sealed_arms_crate": 1.0}
+	crisis_modifiers = {}
+	for good_id in MarketContent.good_ids():
+		crisis_modifiers[good_id] = 1.0
 	if crisis_stage >= 1:
 		crisis_modifiers["water"] = 1.35
 		crisis_modifiers["medicine"] = 1.15

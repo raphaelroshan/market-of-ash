@@ -41,6 +41,15 @@ REQUIRED_NATIVE_SCREENS = {
     "route_event_loss_result",
     "route_event_loss_result_large_text",
     "destination_shop",
+    "glasswind_market",
+    "glasswind_jobs",
+    "glasswind_departure_desk",
+    "glasswind_departure",
+    "glasswind_road",
+    "glasswind_event",
+    "glasswind_arrival",
+    "mirror_wells_market",
+    "night_market",
     "new_game_confirmation",
 }
 NATIVE_VIEWPORTS = ((960, 540), (1280, 720), (1600, 900), (1920, 1080))
@@ -58,6 +67,15 @@ EXPECTED_UI_STATE = {
     "well_commons_actions": "settlement_shop",
     "commons_ending": "settlement_shop",
     "destination_shop": "settlement_shop",
+    "glasswind_market": "settlement_shop",
+    "glasswind_jobs": "settlement_shop",
+    "glasswind_departure_desk": "departure_desk",
+    "glasswind_departure": "route_travel",
+    "glasswind_road": "route_travel",
+    "glasswind_event": "route_event",
+    "glasswind_arrival": "arrival_handoff",
+    "mirror_wells_market": "settlement_shop",
+    "night_market": "settlement_shop",
     "trade_receipt": "settlement_shop",
     "trade_receipt_large_text": "settlement_shop",
     "route_departure": "route_travel",
@@ -86,6 +104,15 @@ REQUIRED_LAYOUT_CONTROLS = {
     "well_commons_actions": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
     "commons_ending": ("BazaarMarketPanel", "ShopActionCard", "CampaignDebriefPanel", "EndingContinueAction", "EndingReplayAction", "EndingTitleAction", "EndingFeedbackAction", "BazaarPrimaryAction"),
     "destination_shop": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "glasswind_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "glasswind_jobs": ("BazaarMarketPanel", "ShopActionCard", "BazaarPrimaryAction"),
+    "glasswind_departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
+    "glasswind_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
+    "glasswind_road": ("JourneyMapPanel", "DeparturePanel", "RoadPrimaryAction", "JourneyResultScroll"),
+    "glasswind_event": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "JourneyResultScroll"),
+    "glasswind_arrival": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "ArrivalPrimaryAction", "JourneyResultScroll", "JourneyConsequenceReceipt"),
+    "mirror_wells_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarDecisionSummary", "BazaarPrimaryAction"),
+    "night_market": ("BazaarMarketPanel", "ShopActionCard", "BazaarSectionTitle", "BazaarPrimaryAction"),
     "departure_desk": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "departure_desk_large_text": ("JourneyMapPanel", "DeparturePanel", "DepartureControlsScroll", "DeparturePrimaryAction", "JourneyResultScroll"),
     "route_departure": ("JourneyMapPanel", "DeparturePanel", "JourneyResultScroll"),
@@ -227,6 +254,20 @@ def main() -> int:
             raise AssertionError(f"{file_name}: Ashgate capture is missing its gate-market identity")
         if screen == "destination_shop" and ui_state.get("bazaar_scene_id") != "brine_pan_exchange":
             raise AssertionError(f"{file_name}: destination capture is missing Brine Cross's salt-market identity")
+        if screen == "glasswind_market" and ui_state.get("bazaar_scene_id") != "sunfall_glass_exchange":
+            raise AssertionError(f"{file_name}: Glasswind capture is missing Sunfall Exchange's identity")
+        if screen == "mirror_wells_market" and ui_state.get("bazaar_scene_id") != "mirror_wells_night_market":
+            raise AssertionError(f"{file_name}: Glasswind arrival is missing Mirror Wells's identity")
+        if screen == "night_market" and (
+            ui_state.get("adaptive_scenario_states", {}).get("mirror_wells_beacon_oil", {}).get("state") != "expired"
+            or "night_market" not in ui_state.get("emergent_factions", [])
+            or "saltglass" not in ui_state.get("adaptive_response", "").lower()
+        ):
+            raise AssertionError(f"{file_name}: Night Market capture is missing its failure-forward state")
+        if screen in {"glasswind_departure", "glasswind_road"} and ui_state.get("road_scene_id") != "mirror_night_road":
+            raise AssertionError(f"{file_name}: Glasswind road capture is missing the Mirror Run identity")
+        if screen == "glasswind_event" and ui_state.get("pending_event_id") != "shardwind_tithe":
+            raise AssertionError(f"{file_name}: Glasswind event capture is missing Shardwind Tithe")
         if screen in {"well_commons_jobs", "well_commons_market", "well_commons_actions"} and (
             ui_state.get("adaptive_scenario_state") != "expired"
             or "well_commons" not in ui_state.get("emergent_factions", [])
@@ -276,6 +317,14 @@ def main() -> int:
         require_distinct_screen(screens["route_event_result"], screens["route_event_loss_result"], f"{viewport} Realized loss recovery")
         require_distinct_screen(screens["route_event_loss_result"], screens["route_event_loss_result_large_text"], f"{viewport} Realized loss recovery large text", minimum_ratio=0.01)
         require_distinct_screen(screens["route_event_result"], screens["destination_shop"], f"{viewport} Enter settlement")
+        require_distinct_screen(screens["destination_shop"], screens["glasswind_market"], f"{viewport} Enter Glasswind Reach")
+        require_distinct_screen(screens["glasswind_market"], screens["glasswind_jobs"], f"{viewport} Open Glasswind jobs")
+        require_distinct_screen(screens["glasswind_market"], screens["glasswind_departure_desk"], f"{viewport} Plan Glasswind departure")
+        require_distinct_screen(screens["glasswind_departure"], screens["glasswind_road"], f"{viewport} Reach Glasswind road stop", minimum_ratio=0.005)
+        require_distinct_screen(screens["glasswind_road"], screens["glasswind_event"], f"{viewport} Reveal Shardwind Tithe")
+        require_distinct_screen(screens["glasswind_event"], screens["glasswind_arrival"], f"{viewport} Resolve Shardwind Tithe")
+        require_distinct_screen(screens["glasswind_arrival"], screens["mirror_wells_market"], f"{viewport} Enter Mirror Wells")
+        require_distinct_screen(screens["mirror_wells_market"], screens["night_market"], f"{viewport} Activate Night Market")
         require_distinct_screen(screens["main_menu"], screens["new_game_confirmation"], f"{viewport} New game confirmation", minimum_ratio=0.01)
         for screen in ("main_menu", "settlement_shop", "pause", "departure_desk"):
             require_distinct_screen(

@@ -31,6 +31,15 @@ const CAPTURE_SCREENS := [
 	"route_event_loss_result",
 	"route_event_loss_result_large_text",
 	"destination_shop",
+	"glasswind_market",
+	"glasswind_jobs",
+	"glasswind_departure_desk",
+	"glasswind_departure",
+	"glasswind_road",
+	"glasswind_event",
+	"glasswind_arrival",
+	"mirror_wells_market",
+	"night_market",
 	"new_game_confirmation",
 ]
 
@@ -213,6 +222,52 @@ func _run() -> void:
 	await _capture(ui, "route_event_result", "route-event-result")
 	ui._on_enter_settlement_pressed()
 	await _capture(ui, "destination_shop", "destination-shop")
+
+	ui.pending_tutorial_enabled = false
+	ui._on_start_game_pressed()
+	ui.world.seed = 1107
+	ui.world.current_settlement = "sunfall_exchange"
+	ui.world.day = 5
+	ui.world._update_crisis_modifiers()
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._select_option_by_id(ui.shop_good_option, "lamp_oil")
+	ui.shop_quantity.value = 3
+	ui._on_shop_plan_changed(ui.shop_good_option.selected)
+	await _capture(ui, "glasswind_market", "glasswind-market")
+	ui._on_bazaar_navigation_pressed("assignments")
+	await _capture(ui, "glasswind_jobs", "glasswind-jobs")
+	ui._on_accept_contract_pressed("mirror_wells_lamp_relief_01")
+	ui._on_bazaar_navigation_pressed("trade")
+	ui._on_buy_pressed()
+	ui._on_plan_departure_pressed()
+	ui._select_option_by_id(ui.destination_option, "mirror_wells")
+	ui._on_destination_changed(ui.destination_option.selected)
+	await _capture(ui, "glasswind_departure_desk", "glasswind-departure-desk")
+	ui._on_depart_pressed()
+	if ui.world.pending_event.get("id", "") != "shardwind_tithe":
+		push_error("Native capture expected the deterministic Shardwind Tithe event.")
+		quit(1)
+		return
+	await _capture(ui, "glasswind_departure", "glasswind-departure")
+	ui.map_panel._process(2.0)
+	await _capture(ui, "glasswind_road", "glasswind-road")
+	ui._on_continue_journey_pressed()
+	await _capture(ui, "glasswind_event", "glasswind-event")
+	ui._on_event_choice_pressed("shardwind_tithe", "shelter_behind_cairns")
+	await _capture(ui, "glasswind_arrival", "glasswind-arrival")
+	ui._on_enter_settlement_pressed()
+	await _capture(ui, "mirror_wells_market", "mirror-wells-market")
+
+	ui._on_start_game_pressed()
+	ui.world.advance_day(7)
+	ui.world.current_settlement = "mirror_wells"
+	ui._populate_destination_options()
+	ui._populate_route_options()
+	ui._refresh_ui()
+	ui._on_bazaar_navigation_pressed("information")
+	await _capture(ui, "night_market", "night-market")
 
 	ui._on_start_game_pressed()
 	ui.world.seed = 5

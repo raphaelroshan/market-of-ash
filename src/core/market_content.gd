@@ -1,13 +1,13 @@
 class_name MarketContent
 extends RefCounted
 
-## Canonical runtime content for the first Market of Ash region.
+## Canonical runtime content for the Market of Ash trade network.
 ## Authored JSON remains data only; simulation code maps it to explicit commands.
 
 const RUNTIME_WORLD_PATH := "res://content/runtime_world.json"
-const REQUIRED_GOOD_IDS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate"]
-const REQUIRED_SETTLEMENT_IDS := ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch"]
-const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut"]
+const REQUIRED_GOOD_IDS := ["grain", "water", "scrap", "medicine", "charcoal", "cloth", "sealed_arms_crate", "saltglass", "dune_spice", "lamp_oil"]
+const REQUIRED_SETTLEMENT_IDS := ["ashgate", "brine_cross", "cinderford", "hollow_market", "reedwatch", "sunfall_exchange", "kiln_rest", "mirror_wells"]
+const REQUIRED_ROUTE_IDS := ["old_road", "toll_road", "dry_cut", "glasswind_trace", "mirror_run"]
 
 static var _cached_result: Dictionary = {}
 
@@ -237,10 +237,25 @@ static func settlements() -> Dictionary:
 static func settlement_ids() -> Array[String]:
 	var ids: Array[String] = []
 	var available := settlements()
-	for settlement_id in REQUIRED_SETTLEMENT_IDS:
-		if available.has(settlement_id):
-			ids.append(settlement_id)
+	for settlement_id_value in available.keys():
+		ids.append(String(settlement_id_value))
 	return ids
+
+static func regions() -> Dictionary:
+	var records: Variant = runtime_world().get("regions", {})
+	return records.duplicate(true) if typeof(records) == TYPE_DICTIONARY else {}
+
+static func region(region_id: String) -> Dictionary:
+	return regions().get(region_id, {}).duplicate(true)
+
+static func region_for_settlement(settlement_id: String) -> Dictionary:
+	for region_id_value in regions().keys():
+		var region_record: Dictionary = regions().get(region_id_value, {})
+		if region_record.get("settlement_ids", []).has(settlement_id):
+			var result := region_record.duplicate(true)
+			result["id"] = String(region_id_value)
+			return result
+	return {}
 
 static func routes() -> Dictionary:
 	return runtime_world().get("routes", {}).duplicate(true)
@@ -273,7 +288,8 @@ static func route_segment(route_id: String, origin_id: String, destination_id: S
 
 static func routes_from(settlement_id: String) -> Array[String]:
 	var ids: Array[String] = []
-	for route_id in REQUIRED_ROUTE_IDS:
+	for route_id_value in routes().keys():
+		var route_id := String(route_id_value)
 		var route_record := route(route_id)
 		var stops: Variant = route_record.get("stops", route_record.get("endpoints", []))
 		if typeof(stops) == TYPE_ARRAY and stops.has(settlement_id):
@@ -356,6 +372,7 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 		var settlements_dictionary: Dictionary = settlements_data
 		var source_coverage: Dictionary = {}
 		var consumer_coverage: Dictionary = {}
+		var occupied_map_cells: Dictionary = {}
 		for settlement_id in REQUIRED_SETTLEMENT_IDS:
 			if not settlements_dictionary.has(settlement_id):
 				errors.append("missing required settlement: %s" % settlement_id)
@@ -375,7 +392,15 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 				for field in ["scene_id", "caption", "market_read", "landmark", "tint", "sky", "ground"]:
 					if String(identity.get(field, "")).is_empty():
 						errors.append("settlement %s identity must define %s" % [settlement_id, field])
-				if String(identity.get("landmark", "")) not in ["gate", "brine", "forge", "lanterns", "reeds"]:
+				var map_cell_value: Variant = identity.get("map_cell", [])
+				if typeof(map_cell_value) != TYPE_ARRAY or map_cell_value.size() != 2 or int(map_cell_value[0]) < 0 or int(map_cell_value[0]) >= 17 or int(map_cell_value[1]) < 0 or int(map_cell_value[1]) >= 11:
+					errors.append("settlement %s identity map_cell must fit the 17x11 route grid" % settlement_id)
+				else:
+					var map_cell_key := "%d,%d" % [int(map_cell_value[0]), int(map_cell_value[1])]
+					if occupied_map_cells.has(map_cell_key):
+						errors.append("settlement %s identity map_cell overlaps %s" % [settlement_id, String(occupied_map_cells[map_cell_key])])
+					occupied_map_cells[map_cell_key] = settlement_id
+				if String(identity.get("landmark", "")) not in ["gate", "brine", "forge", "lanterns", "reeds", "glass", "kiln", "mirrors"]:
 					errors.append("settlement %s identity landmark is unsupported" % settlement_id)
 				for color_field in ["tint", "sky", "ground"]:
 					var color_value := String(identity.get(color_field, ""))
@@ -461,7 +486,48 @@ static func validate_runtime(data: Dictionary) -> Dictionary:
 					if segment_risk < 0.0 or segment_risk > 1.0:
 						errors.append("route %s segment risk must be between 0 and 1" % route_id)
 
+	_validate_regions(data.get("regions", {}), errors)
+
 	return {"ok": errors.is_empty(), "errors": errors}
+
+static func _validate_regions(value: Variant, errors: Array[String]) -> void:
+	if typeof(value) != TYPE_DICTIONARY:
+		errors.append("regions must be an object keyed by stable id")
+		return
+	var region_records: Dictionary = value
+	if region_records.size() < 2:
+		errors.append("regions must define at least two playable regions")
+	var assigned_settlements: Dictionary = {}
+	for region_id_value in region_records.keys():
+		var region_id := String(region_id_value)
+		var region_value: Variant = region_records.get(region_id_value, {})
+		if region_id.is_empty() or not region_id.is_valid_identifier() or region_id != region_id.to_lower():
+			errors.append("region ids must use lower_snake_case")
+		if typeof(region_value) != TYPE_DICTIONARY:
+			errors.append("region %s must be an object" % region_id)
+			continue
+		var region_record: Dictionary = region_value
+		for field in ["name", "summary"]:
+			if String(region_record.get(field, "")).is_empty():
+				errors.append("region %s must declare %s" % [region_id, field])
+		var settlement_ids: Array = region_record.get("settlement_ids", [])
+		if settlement_ids.size() < 2:
+			errors.append("region %s must contain at least two settlements" % region_id)
+		for settlement_id_value in settlement_ids:
+			var settlement_id := String(settlement_id_value)
+			if not REQUIRED_SETTLEMENT_IDS.has(settlement_id):
+				errors.append("region %s references unknown settlement %s" % [region_id, settlement_id])
+			elif assigned_settlements.has(settlement_id):
+				errors.append("settlement %s belongs to more than one region" % settlement_id)
+			assigned_settlements[settlement_id] = true
+		var route_ids: Array = region_record.get("route_ids", [])
+		if route_ids.is_empty():
+			errors.append("region %s must contain at least one route" % region_id)
+		for route_id_value in route_ids:
+			if not REQUIRED_ROUTE_IDS.has(String(route_id_value)):
+				errors.append("region %s references unknown route %s" % [region_id, String(route_id_value)])
+	if assigned_settlements.size() != REQUIRED_SETTLEMENT_IDS.size():
+		errors.append("every settlement must belong to exactly one region")
 
 static func _validate_market_memory(value: Variant, errors: Array[String]) -> void:
 	if typeof(value) != TYPE_DICTIONARY:
@@ -916,7 +982,7 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 				errors.append("event %s choice %s reputation_delta must be an object" % [event_id, choice_id])
 			else:
 				for faction_id in reputation_delta_value.keys():
-					if not ["wardens", "caravans"].has(String(faction_id)) or absi(int(reputation_delta_value.get(faction_id, 0))) > 10:
+					if not ["wardens", "caravans", "glass_consortium"].has(String(faction_id)) or absi(int(reputation_delta_value.get(faction_id, 0))) > 10:
 						errors.append("event %s choice %s reputation_delta is invalid" % [event_id, choice_id])
 			var condition_value: Variant = choice.get("route_condition", {})
 			if typeof(condition_value) != TYPE_DICTIONARY:
@@ -975,7 +1041,8 @@ static func _validate_factions(value: Variant, errors: Array[String]) -> void:
 		errors.append("factions must be an object")
 		return
 	var factions: Dictionary = value
-	for faction_id in ["wardens", "caravans"]:
+	for faction_id_value in factions.keys():
+		var faction_id := String(faction_id_value)
 		var faction_value: Variant = factions.get(faction_id, {})
 		if typeof(faction_value) != TYPE_DICTIONARY:
 			errors.append("factions.%s must be an object" % faction_id)

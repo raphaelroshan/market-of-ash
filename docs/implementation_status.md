@@ -2,7 +2,7 @@
 
 **Baseline branch:** `a0-command-result-boundary`  
 **Baseline commit:** `5859d89` (`docs: add GPT agent alpha handoff roadmap`)  
-**Roadmap status:** A0–A1 foundations, B0–B10's automated scope, the bounded Five-Well Basin deterministic vertical slice, and **MA-EA-1 responsive Basin completion** are implemented and verified. The updated vertical-slice roadmap's open-trade Feeds A–E are implemented: authored production/consumption roles, differentiated replenishment, ordinary-trade-first Bazaar language, non-contract balance gates, a causal Well Commons response, reversible replacement-faction interaction, explicit cross-path reward balance, and an alternate ending reached through scenario failure followed by ordinary trade. The game-facing onboarding slice adds an illustrated introduction and a persistent two-journey tutorial through the real campaign. Native evidence verifies the release-facing shell at 960×540, 1280×720, 1600×900, and 1920×1080; the captured opening trade now uses the same visible contract and Buy actions as a player, and every frame proves developer panels, diagnostics, and report actions are absent. **The broader Early Access roadmap is not complete:** two additional playable regions and its remaining breadth gates begin at MA-EA-2, while commercial art polish, physical-device and assistive-technology coverage, antivirus/storefront hardening, and moderated player evidence remain later gates.
+**Roadmap status:** A0–A1 foundations, B0–B10's automated scope, the bounded Five-Well Basin deterministic vertical slice, **MA-EA-1 responsive Basin completion**, and **MA-EA-2 Glasswind Reach** are implemented and verified. The open-trade Feeds A–E remain intact: authored production/consumption roles, differentiated replenishment, ordinary-trade-first Bazaar language, non-contract balance gates, causal replacement actors, reversible emergent-faction interaction, explicit cross-path reward balance, and an alternate ending reached through scenario failure followed by ordinary trade. Native evidence verifies the release-facing shell and both playable regions at 960×540, 1280×720, 1600×900, and 1920×1080; every frame proves developer panels, diagnostics, and report actions are absent. **The broader Early Access roadmap is not complete:** the third playable region and remaining breadth gates begin at MA-EA-3, while commercial art polish, physical-device and assistive-technology coverage, antivirus/storefront hardening, and moderated player evidence remain later gates.
 
 ## Implemented player-facing spine
 
@@ -12,7 +12,11 @@
 - Tutorial progress is derived from world state and bounded command evidence rather than duplicated simulation flags. Presentation progress is stored beside the world in a versioned campaign-save envelope; legacy direct-world saves still load safely.
 - Privacy-safe playtest reports record the selected fresh-run path; Main Menu Continue is identified separately so resumed saves are not misclassified as a guided opening.
 - The Settlement Bazaar owns local price inspection, buying, selling, jobs, services/intelligence, crew, optional outlook, and the handoff to travel planning through a stable stall directory.
-- The Bazaar keeps that directory spatially consistent while giving all five settlements stable visual identities: a Warden gate, brine pans, forge span, lantern market, or watched reed-water store. A compact identity strip remains visible during Trade and expands around non-trade stalls.
+- The Bazaar keeps that directory spatially consistent while giving all eight settlements stable visual identities: the Basin's Warden gate, brine pans, forge span, lantern market, and watched reed-water store, plus Glasswind Reach's glass exchange, kiln yard, and mirrored night oasis. A compact identity strip remains visible during Trade and expands around non-trade stalls.
+- Glasswind Reach is a complete second-region loop. Sunfall Exchange, Kiln Rest, and Mirror Wells exchange saltglass, dune spice, and lamp oil through two profitable ordinary-trade patterns, with no contract required.
+- The Glasswind Trace connects Hollow Market to Sunfall Exchange and Kiln Rest through legal intermediate segments. The Mirror Run links Sunfall Exchange to Mirror Wells. Both roads have authored costs, time, risk, map paths, descriptions, palettes, and code-native silhouettes.
+- `The Shardwind Tithe` presents a licensed safe lane, a time-and-provision shelter recovery, and a disclosed cargo-risk crossing. Its pending state and resolved result survive save/load.
+- Mirror Wells Beacon Oil is optional. Success rewards the Glass Consortium; ignoring or missing it activates the Night Market, changes lamp-oil and saltglass prices, adds local resilience, closes the stale offer, and exposes a reversible beacon-support action.
 - Departure Desk owns the regional map, legal destination/route selection, route forecast, assignment-aware node state, hover/selection briefs, return-to-bazaar navigation, and travel confirmation.
 - Every successful departure enters a dedicated road view before an authored event or arrival can appear; the player explicitly continues from the midpoint observation.
 - Animated departures add a short palette-tinted dust trail from the licensed temporary particle kit. It fades before the mandatory road stop, carries no state, and is suppressed by Reduce Travel Motion.
@@ -35,7 +39,7 @@
 - Buy, sell, and departure mutations pass through a serializable command/result boundary; runtime and loaded histories both retain only the newest 100 command records.
 - The human-readable campaign log retains the newest 200 entries both during play and after load, preventing long sessions or imported saves from inflating saves and diagnostic reports without bound.
 - Every command result appends a state-aware `NEXT` instruction: revise a blocked plan, resolve a pending event, enter after arrival, or continue shop planning.
-- Saves declare save version 12 and runtime content version `1.22.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event/scenario terms, or future versions cannot replace the active run.
+- Saves declare save version 12 and runtime content version `1.23.0`; successful commands autosave through a temporary file with one backup generation, manual save/load summaries are visible, older saves migrate safely, and oversized files, malformed structure, invalid bounds/references, impossible pending journeys, forged current-content contract/event/scenario terms, or future versions cannot replace the active run.
 - A deterministic 100-seed policy simulation records opening-route incentives, forecast error, safe-opening resource floors, viable strategy breadth, best-choice rotation across changed world states, real cargo-loss recovery, and tutorial preparation overhead.
 - Route forecasts and incidents share a disclosed one-exposed-unit model owned by `MarketEconomy`.
 - Successful sales create bounded per-settlement/per-good supply pressure, prices explain the effect, elapsed days decay it, and versioned saves preserve it. Consumer markets replenish at 150% of baseline decay, neutral markets at 100%, and producer markets at 75%, keeping recurring needs useful without erasing recent deliveries.
@@ -137,6 +141,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 - `tests/test_tutorial_flow.gd`: game-facing menu and introduction, hidden developer tools, the complete two-journey guided campaign, recovery, trade, crew, Outlook completion, and tutorial save/load persistence.
 - `tests/test_controller_flow.gd`: dispatches joypad A/B/Menu/D-pad events through Godot to verify Main Menu traversal, controller quantity adjustment, Pause/Resume, safe Back, non-mutating planning, and a complete Medicine → Toll Road → Gatekeeper event → Brine Cross journey.
 - `tests/test_campaign.gd`: command-only fresh campaign from relief acceptance through deterministic travel/events, public resilience, the day-ten ending, command history, and canonical save/load restoration.
+- `tests/test_second_region.gd`: Glasswind ordinary trade, Shardwind branches, pending-event save/resume, optional beacon contract, ignored-contract Night Market activation, emergent-faction interaction, and save/load persistence.
 - `tests/test_capture_validation.py`, `tests/test_policy_check.py`, and `tests/test_windows_export_validation.py`: dependency-free regression coverage for screenshot evidence, release policy, and embedded-PCK x86-64 PE structure.
 - `tools/simulate_trade_policies.gd`: read-only 100-seed opening-policy simulation through the production command boundary.
 
@@ -158,6 +163,7 @@ Derived `crisis_modifiers`, runtime settlements, and runtime routes are rebuilt 
 
 1. **Godot is not installed on the default shell `PATH`.** CI uses Godot 4.4.1 on Ubuntu and Windows. Current work was verified locally with a temporary Godot 4.4.1 binary, so future sessions must either reuse/provision that version or report the limitation explicitly.
 2. **Local Chrome cannot start inside the host sandbox.** Matching Godot 4.4.1 Web templates are installed and repeated local exports produce the complete payload without recursively importing prior build outputs. Selenium still fails before session creation because Chrome's Mach-port bootstrap is denied, while CI now supplies authoritative packaged-browser evidence in Chrome, Firefox, and Edge.
+3. **Early Access breadth is still incomplete.** The project now has two of the required three regions, eight of nine-to-ten settlements, five of seven-to-nine routes, three of four standing factions, three of five-to-six crew, and five of eight-to-ten event families. MA-EA-3 through MA-EA-6 remain required before an Early Access claim.
 
 ## Baseline verification commands
 
@@ -182,6 +188,15 @@ Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
 - Repository policy: pass, with expected warnings for local `.godot/` import metadata.
 - Content manifest, political geography, tribal conflict, economy/settlement, and runtime-world validators: pass.
 - `git diff --check`: pass.
+
+## MA-EA-2 verification result
+
+Verified locally with Godot `4.4.1.stable.official.49a5bc7b6`:
+
+- Full `scripts/verify.sh`: pass, including the dedicated second-region suite and all existing deterministic, tutorial, controller, campaign, policy, content, and validator tests.
+- Native render capture: 160 frames passed at 960×540, 1280×720, 1600×900, and 1920×1080.
+- Glasswind evidence covers Market, Jobs, Departure Desk, committed travel, road observation, Shardwind encounter, arrival, Mirror Wells Bazaar, and the failure-forward Night Market.
+- Fresh Windows export: 98,140,032-byte x86-64 executable with a valid 619,892-byte embedded PCK; local resource stamping emitted the expected missing-`rcedit` warning.
 
 ## B0 calibration result
 
