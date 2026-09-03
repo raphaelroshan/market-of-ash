@@ -116,3 +116,5 @@ For the investment-evaluation build, follow the dependency-aware tasks in [`docs
 | `docs/gpt56_investment_execution_packets.md` | Larger dependency-aware tasks for a complete Frontier-style creative vertical and investment-evaluation campaign skeleton. |
 | `docs/latest_gpt56_improvement_review_2026-09-03.md` | Latest post-change verification, visual evidence, remaining responsive issue, and next GPT-5.6 task. |
 | `docs/ma_gpt56_4_completion.md` | Private-alpha package acceptance, artifacts, verification, and external calibration limits. |
+| `docs/latest_review_2026-09-03.md` | Current main-branch review, verification result, 1280×720 visual findings, and next mandatory trade-flow gate. |
+| `docs/visual_evidence/v0.16.0-early-access-rc2-review-2026-09-03/` | Fresh 1280×720 title and Introduction captures from the current review. |
