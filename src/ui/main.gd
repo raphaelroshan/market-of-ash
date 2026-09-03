@@ -683,7 +683,7 @@ func _build_intro() -> void:
 	body_scroll.add_child(intro_body_label)
 	var note := Label.new()
 	note.name = "IntroductionNote"
-	note.text = "The tutorial uses the real campaign, economy, events, and save. Guidance never grants cargo or changes an outcome."
+	note.text = "Guidance marks the next useful action. Every load, road cost, and consequence remains yours to choose."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color("#8f8374"))

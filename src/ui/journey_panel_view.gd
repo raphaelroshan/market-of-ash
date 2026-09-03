@@ -11,27 +11,27 @@ static func snapshot(world, travel_phase: String, waypoint_label: String, arriva
 	var caravan_context := "CARAVAN AT REST\nNEXT — Choose a destination and compare its roads."
 	if actively_traveling:
 		state = "departure" if travel_phase == "moving_out" else "arrival_approach"
-		map_hint = "%s — The caravan is crossing the committed road. Presentation cannot change resolved costs or risk." % waypoint_label
-		event_text = "The caravan is moving through the selected corridor.\nNEXT — Watch for the road stop before any encounter or arrival."
-		departure_status = "ON THE ROAD — %s. No additional choice is being resolved yet." % waypoint_label
-		caravan_context = "JOURNEY — %s\nNEXT — Watch the road and continue at the travel stop." % waypoint_label
+		map_hint = "%s — Passage is paid and provisions are packed. The road ahead will reveal the next choice." % waypoint_label
+		event_text = "Wheels turn along the chosen road.\nNEXT — Follow the caravan to the first stopping place."
+		departure_status = "ON THE ROAD — %s. The caravan is committed until the next stop." % waypoint_label
+		caravan_context = "JOURNEY — %s\nNEXT — Follow the road to the first stop." % waypoint_label
 	elif road_waiting:
 		state = "road"
-		map_hint = "%s — Continue when you are ready to reveal the next road event or arrival." % waypoint_label
-		event_text = "MID-ROUTE — The caravan has reached a readable road stop.\nNEXT — Inspect the route, then continue the journey."
-		departure_status = "ROAD VIEW — %s. Inspect the corridor, then continue to the next authored encounter or arrival." % waypoint_label
-		caravan_context = "JOURNEY — %s\nNEXT — Watch the road and continue at the travel stop." % waypoint_label
+		map_hint = "%s — Read the signs, then continue toward the next encounter or arrival." % waypoint_label
+		event_text = "MID-ROUTE — The caravan has stopped where the road can be read.\nNEXT — Check the route ahead, then continue."
+		departure_status = "ROAD VIEW — %s. Read the corridor, then continue." % waypoint_label
+		caravan_context = "JOURNEY — %s\nNEXT — Read the road, then continue."
 	elif not world.pending_event.is_empty():
 		state = "event"
-		map_hint = "Road encounter. Review the visible stakes and choose one available response."
-		departure_status = "ROUTE DECISION — Travel is paused until you choose. Costs already paid remain spent; each option states whether you continue or return."
+		map_hint = "The road is blocked. Weigh the price of passage against the cargo at risk."
+		departure_status = "ROUTE DECISION — The caravan waits on your choice. Passage is already paid; each response names its cost and destination."
 		caravan_context = "ROADSIDE DECISION — %s\nNEXT — Choose what the caravan will spend or risk." % String(world.pending_event.get("title", "Route encounter"))
 	elif arrival_pending:
 		state = "arrival"
 		map_hint = "Journey complete. Review the outcome, then enter the destination bazaar."
 		if last_outcome_text.is_empty() and not committed_journey_message.is_empty():
 			event_text = "%s\nNEXT — Review the result, then choose Enter %s to trade at the destination." % [committed_journey_message, settlement_name]
-		departure_status = "ARRIVAL REPORT — %s\nReview the factual journey receipt above, then enter the settlement to trade again." % settlement_name
+		departure_status = "ARRIVAL — %s\nRead what the road cost, then enter the Bazaar." % settlement_name
 		caravan_context = "ARRIVAL\nNEXT — Review the journey result, then enter the settlement."
 	return {
 		"state": state,

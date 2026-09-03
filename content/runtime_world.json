@@ -904,7 +904,7 @@
         "minimum_cargo_value": 70,
         "active_contract_relevant": false,
         "setup": "Three unmarked riders match the caravan's pace and offer to guarantee the exposed crossing for a price.",
-        "stakes": "Buy certainty, risk one disclosed cargo unit, trade medicine for passage, or wait long enough to identify their sponsor mark.",
+        "stakes": "Buy certainty, put one cargo unit at risk, trade medicine for passage, or wait long enough to identify their sponsor mark.",
         "choices": [
           {
             "id": "pay_for_escort",
@@ -934,7 +934,7 @@
             "trade_mode": "none",
             "requires_active_contract": false,
             "resilience_delta": 0,
-            "outcome": "The caravan keeps its money and accepts the disclosed exposed-unit risk."
+            "outcome": "The caravan keeps its money and puts one cargo unit at the shown risk."
           },
           {
             "id": "trade_medicine_for_passage",
@@ -1029,7 +1029,7 @@
             "requires_active_contract": false,
             "resilience_delta": 0,
             "reputation_delta": {"glass_consortium": -1},
-            "outcome": "The caravan keeps its money and accepts one disclosed exposed-unit roll through the glass dust."
+            "outcome": "The caravan keeps its money and puts one cargo unit at the shown risk through the glass dust."
           }
         ]
       },
@@ -1043,7 +1043,7 @@
         "minimum_cargo_value": 30,
         "active_contract_relevant": false,
         "setup": "Hot brine rolls across the Salt Causeway and erases every marker except the bell line.",
-        "stakes": "Pay the bell keepers for a close guide, wait on a raised salt island, or push through with one disclosed cargo unit exposed.",
+        "stakes": "Pay the bell keepers for a close guide, wait on a raised salt island, or push through with one cargo unit at risk.",
         "choices": [
           {
             "id": "hire_bell_keeper",
@@ -1091,7 +1091,7 @@
             "requires_active_contract": false,
             "resilience_delta": 0,
             "reputation_delta": {"bellkeepers": -1},
-            "outcome": "The caravan keeps moving through the whiteout and accepts the disclosed exposed-unit risk."
+            "outcome": "The caravan keeps moving through the whiteout with one cargo unit at the shown risk."
           }
         ]
       },
@@ -1151,7 +1151,7 @@
             "trade_mode": "none",
             "requires_active_contract": false,
             "resilience_delta": 0,
-            "outcome": "The team drives for firm ground and accepts one disclosed exposed-unit roll against the twisting axle."
+            "outcome": "The team drives for firm ground with one cargo unit at the shown risk from the twisting axle."
           },
           {
             "id": "mara_split_axle_brace",
@@ -1191,7 +1191,7 @@
         "minimum_cargo_value": 18,
         "active_contract_relevant": true,
         "setup": "A peat fire turns the Drift opaque while rival smoke marks point toward different shelves.",
-        "stakes": "Hire a Bellkeeper, spend water to read the smoke, wait for the fire to settle, or trust the nearest marker with one disclosed cargo unit exposed.",
+        "stakes": "Hire a Bellkeeper, spend water to read the smoke, wait for the fire to settle, or trust the nearest marker with one cargo unit at risk.",
         "choices": [
           {
             "id": "hire_smoke_bell",
@@ -1255,7 +1255,7 @@
             "requires_active_contract": false,
             "resilience_delta": 0,
             "reputation_delta": {"bellkeepers": -1},
-            "outcome": "The caravan follows an unlicensed kiln mark and accepts one disclosed exposed-unit roll."
+            "outcome": "The caravan follows an unlicensed kiln mark with one cargo unit at the shown risk."
           }
         ]
       },
@@ -1317,7 +1317,7 @@
             "requires_active_contract": false,
             "resilience_delta": 0,
             "reputation_delta": {"glass_consortium": -1},
-            "outcome": "The caravan commits to the brighter line and accepts one disclosed exposed-unit roll beyond the licensed road."
+            "outcome": "The caravan commits to the brighter line with one cargo unit at the shown risk beyond the licensed road."
           },
           {
             "id": "orin_occlusion_marks",
@@ -1686,7 +1686,7 @@
         "required_contract_id": "reedwatch_water_relief_01",
         "minimum_reedwatch_resilience": 2,
         "maximum_arms_escalation": 1,
-        "summary": "Reedwatch's public reserve holds, relief caravans retain access, and the basin enters the next season without armed traffic controlling the roads. The caravan chose accountable supply over a single controlling buyer."
+        "summary": "Reedwatch's public reserve holds. Relief caravans keep access, armed traffic does not control the roads, and accountable supply outlasts any single buyer."
       },
       {
         "id": "ending_commons_exchange",
@@ -1698,7 +1698,7 @@
         "minimum_settlement_resilience": {"settlement_id": "reedwatch", "minimum": 2},
         "required_ordinary_delivery": {"settlement_id": "reedwatch", "good_id": "charcoal", "minimum_quantity": 4, "after_faction_activation": true},
         "maximum_arms_escalation": 1,
-        "summary": "Official relief never arrived, but ordinary charcoal runs kept Reedwatch's boilers lit and turned the Well Commons into a durable public exchange. The caravan helped a replacement institution earn legitimacy through repeated material support rather than a restored contract."
+        "summary": "Official relief never came, but ordinary charcoal runs kept Reedwatch's boilers lit. The Well Commons earned legitimacy as a public exchange."
       },
       {
         "id": "ending_night_market_network",
@@ -1711,7 +1711,7 @@
         "required_ordinary_delivery": {"settlement_id": "mirror_wells", "good_id": "saltglass", "minimum_quantity": 4, "after_faction_activation": true},
         "maximum_reputation": {"glass_consortium": 1},
         "maximum_arms_escalation": 1,
-        "summary": "Licensed beacon crews withdrew, but ordinary saltglass runs and public signal ledgers made the Night Market a durable road network. Mirror Wells chose shared visibility over a single licensed gatekeeper."
+        "summary": "Licensed beacon crews withdrew. Saltglass runs and a public signal ledger made the Night Market a durable road network."
       },
       {
         "id": "ending_warden_reserve",
@@ -1719,7 +1719,7 @@
         "minimum_warden_reputation": 3,
         "maximum_caravan_reputation": 1,
         "maximum_arms_escalation": 1,
-        "summary": "Public water reserves remain uneven, but the Ash Wardens secure the cistern roads under permits. Arms traffic stays contained; the caravan chose predictable access and regulated margins over an open network."
+        "summary": "Water reserves remain uneven, but Warden permits secure the cistern roads. Arms traffic stays contained; predictable access and regulated margins define trade."
       },
       {
         "id": "ending_free_caravan_routes",
@@ -1727,7 +1727,7 @@
         "minimum_caravan_reputation": 2,
         "maximum_warden_reputation": 1,
         "maximum_arms_escalation": 1,
-        "summary": "Shared water reaches exposed settlements through independent caravans, keeping access open without Warden permits. Arms traffic stays contained; the caravan chose volatile margins, public information, and risk shared across the road network."
+        "summary": "Independent caravans carry water to exposed settlements. Arms traffic stays contained; public information, volatile margins, and shared risk keep roads open without Warden permits."
       },
       {
         "id": "ending_ash_merchant",
@@ -1735,7 +1735,7 @@
         "minimum_money": 220,
         "maximum_reedwatch_resilience": 1,
         "maximum_arms_escalation": 1,
-        "summary": "The caravan becomes the basin's indispensable broker while Reedwatch's public reserve remains fragile. Access follows purchasing power, arms traffic stays contained, and the player chose concentrated profit over shared recovery."
+        "summary": "The caravan controls the basin's essential brokerage while Reedwatch's public reserve remains fragile; concentrated profit opens roads that shared recovery did not."
       }
     ]
   },
