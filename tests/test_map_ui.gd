@@ -243,7 +243,7 @@ func _initialize() -> void:
 	_expect(ui._web_accessibility_announcement().contains("Resume is focused"), "Web accessibility fallback should announce Pause and its primary action")
 	_expect(not Dictionary(ui._web_ui_state().get("targets", {})).get("pause_main_menu", {}).is_empty(), "Web diagnostics should publish the visible Pause exit target")
 	var pause_accessibility_actions: Array = ui._web_ui_state().get("accessibility_actions", [])
-	_expect(pause_accessibility_actions.size() == 4 and pause_accessibility_actions[0].get("id") == "pause_resume" and pause_accessibility_actions[3].get("id") == "pause_main_menu", "Web accessibility actions should expose the player-facing Pause actions with Resume first")
+	_expect(pause_accessibility_actions.size() == 5 and pause_accessibility_actions[0].get("id") == "pause_resume" and pause_accessibility_actions[3].get("id") == "pause_report" and pause_accessibility_actions[4].get("id") == "pause_main_menu", "Web accessibility actions should expose the player-facing Pause actions with Resume first and report export before leaving")
 	_expect(ui.pause_resume_button.find_next_valid_focus() == ui.pause_save_button and ui.pause_main_menu_button.find_next_valid_focus() == ui.pause_resume_button, "Pause focus should cycle through every modal action and wrap to Resume")
 	for pause_action in [ui.pause_resume_button, ui.pause_save_button, ui.pause_load_button, ui.pause_report_button, ui.pause_main_menu_button]:
 		_expect(pause_action.custom_minimum_size.y >= 44.0, "Pause action %s should expose a comfortable pointer target" % pause_action.text)
@@ -585,7 +585,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.16.1-early-access-rc1" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 7 and report.get("game_version", "") == "0.16.1-early-access-rc1" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")
@@ -599,9 +599,18 @@ func _initialize() -> void:
 	_expect(float(report.get("display_scale", 0.0)) > 0.0, "playtest report should capture browser pixel ratio or desktop display scale")
 	_expect(float(report.get("session_elapsed_seconds", -1.0)) >= 0.0, "playtest report should capture elapsed session time")
 	_expect(report.has("time_to_first_trade_seconds"), "playtest report should declare time-to-first-trade context even when the current run has not observed one")
+	var reported_pacing_trace: Array = report.get("pacing_trace", [])
+	_expect(float(report.get("pacing_session_elapsed_seconds", -1.0)) >= 0.0 and not reported_pacing_trace.is_empty(), "playtest report should include a bounded pacing timeline")
+	var pacing_has_trade := false
+	for pacing_entry in reported_pacing_trace:
+		_expect(not pacing_entry.has("player_name") and not pacing_entry.has("device") and not pacing_entry.has("text"), "pacing evidence should contain identifiers and outcomes rather than personal data or free text")
+		if pacing_entry.get("kind", "") == "command" and pacing_entry.get("action_id", "") == "buy_goods" and pacing_entry.get("outcome", "") == "ok":
+			pacing_has_trade = true
+	_expect(pacing_has_trade, "pacing timeline should record the first successful player-facing trade")
 	_expect(typeof(report.get("presentation", {})) == TYPE_DICTIONARY and report.get("presentation", {}).has("large_text") and report.get("presentation", {}).has("reduced_motion") and report.get("presentation", {}).has("interface_sounds"), "playtest report should include the presentation settings needed to reproduce usability feedback")
 	_expect(report.has("active_contracts") and report.has("contract_history") and report.has("event_history") and report.has("route_conditions") and report.has("known_information") and report.has("ending_summary"), "playtest report should include the campaign evidence needed to reconstruct decisions and outcomes")
 	_expect(ui.event_label.text.contains("No personal data is included"), "report export should explain its privacy boundary")
+	_expect(ui.pause_report_button.visible, "Pause should expose the deliberate playtest-report export in release-facing navigation")
 	ui._open_pause()
 	ui._on_export_report_pressed()
 	_expect(ui.pause_layer.visible and ui.pause_summary_label.text.contains("REPORT EXPORTED") and ui.pause_summary_label.text.contains("market_of_ash_map_ui_report_test.json"), "report export from Pause should show a visible result and output path without closing the overlay")
@@ -614,6 +623,9 @@ func _initialize() -> void:
 	_expect(ui.audio_player.stream == ui.audio_cues["blocked"], "a failed playtest report export should use the warning cue")
 	ui.report_path = valid_report_path
 	ui._close_pause()
+	for pacing_index in range(260):
+		ui._append_pacing_entry({"marker": pacing_index})
+	_expect(ui.pacing_trace.size() == 256 and int(ui.pacing_trace[0].get("marker", -1)) == 4, "pacing evidence should retain only the newest 256 entries")
 
 	var shop_state: String = JSON.stringify(ui.world.serialize())
 	ui._on_plan_departure_pressed()
