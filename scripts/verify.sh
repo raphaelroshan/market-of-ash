@@ -19,6 +19,7 @@ python3 tools/validate_economy_and_settlements.py \
 python3 tools/validate_runtime_world.py --data content/runtime_world.json
 python3 tests/test_runtime_world_validator.py
 python3 tests/test_capture_validation.py
+python3 tests/test_playtest_pacing_analysis.py
 
 GODOT_BIN="${MARKET_GODOT_BIN:-}"
 if [[ -n "$GODOT_BIN" && ! -x "$GODOT_BIN" ]]; then

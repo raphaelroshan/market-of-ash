@@ -4,7 +4,15 @@ Do not collect names, email addresses, account IDs, or other unnecessary persona
 
 ## Build context
 
-Use **Export playtest report** from the Shop or Pause menu and attach the resulting JSON when practical. Desktop builds write the named local file; Web builds trigger a browser download. The report contains no personal or controller identifiers and records the build, platform, broad last-input type, active key/button mappings, viewport and display scale, presentation settings, session duration, and observed time to first trade automatically.
+Use **Export playtest report** from the Pause menu or ending debrief and attach the resulting JSON when practical. Desktop builds write the named local file; Web builds trigger a browser download. Report version 7 contains no personal or controller identifiers and records the build, platform, broad last-input type, active key/button mappings, viewport and display scale, presentation settings, session duration, observed time to first trade, and a bounded timeline of screen/context transitions and command outcomes. Nothing is transmitted automatically.
+
+For a single report or a small cohort, generate a deterministic timing summary with:
+
+```bash
+python3 tools/analyze_playtest_pacing.py <report.json> [more-report.json ...]
+```
+
+Timing signals identify moments to inspect. Pair them with the comprehension answers below; a short dwell does not prove understanding, and a long dwell may be deliberate planning rather than friction.
 
 - Build commit/version:
 - Platform and OS version:

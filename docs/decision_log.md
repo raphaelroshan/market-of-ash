@@ -753,3 +753,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The RC2 source-level capture passed at 1280×720, but a separate Xvfb smoke run exposed a 1600-wide window inside a 1280-wide virtual display. Its cropped pixels made otherwise valid logical control bounds meaningless. Display-aware launch negotiation fixes the real window, while defensive container and prose constraints prevent intrinsic minimum sizes from recreating the overflow.
 
 **Trade-off:** The 1280 and minimum-width openings remain vertically stacked rather than compressing both illustrations and prose side by side. This preserves readable type and complete controls; 1600×900 retains the wider split composition.
+
+## ADR-095: Playtest pacing evidence is bounded, local, and interpretive
+
+**Decision:** Extend the deliberate playtest-report export with a maximum 256-entry in-memory timeline of screen/context transitions and command outcomes. Each entry records only elapsed time, stable state identifiers, broad outcome, campaign day, and settlement. Add a deterministic cohort analyzer and repo-local pacing and delivery review skills that turn this evidence into hypotheses and small acceptance-tested changes.
+
+**Reason:** Automated flow tests prove reachability but cannot show where a player hesitates, repeats blocked actions, or loses the journey's rhythm. A local timeline connects observed friction to the existing first-five, first-fifteen, and first-thirty-minute targets without introducing telemetry, identity collection, or a second gameplay state.
+
+**Trade-off:** Timing cannot establish comprehension or fun. Reports remain manually exported and must be paired with tester answers and visual evidence; the bounded timeline may omit the earliest transitions in exceptionally long, high-churn sessions.

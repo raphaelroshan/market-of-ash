@@ -74,6 +74,7 @@ const DEFAULT_SAVE_PATH := "user://market_of_ash_prototype.save"
 const DEFAULT_SETTINGS_PATH := "user://market_of_ash_settings.cfg"
 const DEFAULT_REPORT_PATH := "user://market_of_ash_playtest_report.json"
 const WEB_REPORT_FILENAME := "market_of_ash_playtest_report.json"
+const MAX_PACING_TRACE_ENTRIES := 256
 const SAVE_ENVELOPE_FORMAT := "market_of_ash_campaign"
 const SAVE_ENVELOPE_VERSION := 1
 const MAX_SAVE_BYTES := 5 * 1024 * 1024
@@ -272,6 +273,9 @@ var audio_player: AudioStreamPlayer
 var audio_cues: Dictionary = {}
 var run_started_msec := 0
 var first_trade_elapsed_msec := -1
+var pacing_session_started_msec := 0
+var pacing_trace: Array[Dictionary] = []
+var last_pacing_context_id := ""
 var active_playtest_path_id := ""
 var pending_new_game_path_id := PLAYTEST_PATH_CAMPAIGN
 var pending_tutorial_enabled := true
@@ -292,6 +296,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_fit_initial_window_to_display()
 	run_started_msec = Time.get_ticks_msec()
+	pacing_session_started_msec = run_started_msec
 	world = AshWorldState.new(PLAYTEST_SEED)
 	_load_presentation_settings()
 	theme = Theme.new()
@@ -804,18 +809,17 @@ func _build_pause_menu() -> void:
 	pause_load_button.pressed.connect(_on_pause_load_pressed)
 	content.add_child(pause_load_button)
 	pause_report_button = Button.new()
-	pause_report_button.text = "Export diagnostic report"
+	pause_report_button.text = "Export playtest report"
 	pause_report_button.custom_minimum_size = Vector2(0, 44)
-	pause_report_button.tooltip_text = "Download or write build, seed, campaign summary, command history, and game log without personal data."
+	pause_report_button.tooltip_text = "Write build, pacing timeline, campaign summary, command history, and game log locally without personal data."
 	pause_report_button.pressed.connect(_on_export_report_pressed)
 	content.add_child(pause_report_button)
-	pause_report_button.visible = false
 	pause_main_menu_button = Button.new()
 	pause_main_menu_button.text = "Return to main menu"
 	pause_main_menu_button.custom_minimum_size = Vector2(0, 44)
 	pause_main_menu_button.pressed.connect(_on_pause_main_menu_pressed)
 	content.add_child(pause_main_menu_button)
-	_link_focus_cycle([pause_resume_button, pause_save_button, pause_load_button, pause_main_menu_button])
+	_link_focus_cycle([pause_resume_button, pause_save_button, pause_load_button, pause_report_button, pause_main_menu_button])
 
 func _show_main_menu() -> void:
 	get_tree().paused = false
@@ -2588,10 +2592,80 @@ func _on_pause_main_menu_pressed() -> void:
 	_close_pause()
 	_show_main_menu()
 
+func _pacing_context_id() -> String:
+	var screen_id := _current_ui_state_id()
+	match screen_id:
+		"main_menu":
+			if settings_panel != null and settings_panel.visible:
+				return "main_menu:settings"
+			if credits_panel != null and credits_panel.visible:
+				return "main_menu:credits"
+			if developer_panel != null and developer_panel.visible:
+				return "main_menu:developer"
+		"introduction":
+			return "introduction:%d" % (intro_page + 1)
+		"settlement_shop":
+			if ending_panel != null and ending_panel.visible:
+				return "settlement_shop:ending"
+			return "settlement_shop:%s" % active_bazaar_section
+		"route_travel":
+			return "route_travel:%s" % String(map_panel.travel_phase if map_panel != null else "unknown")
+		"route_event":
+			return "route_event:%s" % String(world.pending_event.get("id", "unknown") if world != null else "unknown")
+		"arrival_handoff":
+			return "arrival_handoff:%s" % String(world.current_settlement if world != null else "unknown")
+	return screen_id
+
+func _pacing_elapsed_seconds() -> float:
+	if pacing_session_started_msec <= 0:
+		return 0.0
+	return maxf(0.0, float(Time.get_ticks_msec() - pacing_session_started_msec) / 1000.0)
+
+func _append_pacing_entry(entry: Dictionary) -> void:
+	pacing_trace.append(entry)
+	while pacing_trace.size() > MAX_PACING_TRACE_ENTRIES:
+		pacing_trace.pop_front()
+
+func _record_pacing_transition() -> void:
+	if world == null:
+		return
+	var screen_id := _current_ui_state_id()
+	if screen_id == "unknown":
+		return
+	var context_id := _pacing_context_id()
+	if context_id == last_pacing_context_id:
+		return
+	last_pacing_context_id = context_id
+	_append_pacing_entry({
+		"elapsed_seconds": _pacing_elapsed_seconds(),
+		"kind": "transition",
+		"screen_id": screen_id,
+		"context_id": context_id,
+		"day": world.day,
+		"settlement_id": world.current_settlement,
+	})
+
+func _record_pacing_command(result: Dictionary, fallback_label: String) -> void:
+	if world == null:
+		return
+	var action_id := fallback_label.to_snake_case()
+	if not world.command_history.is_empty():
+		action_id = String(world.command_history.back().get("id", action_id))
+	_append_pacing_entry({
+		"elapsed_seconds": _pacing_elapsed_seconds(),
+		"kind": "command",
+		"screen_id": _current_ui_state_id(),
+		"context_id": _pacing_context_id(),
+		"action_id": action_id,
+		"outcome": "ok" if bool(result.get("ok", false)) else "blocked",
+		"day": world.day,
+		"settlement_id": world.current_settlement,
+	})
+
 func _on_export_report_pressed() -> void:
 	var viewport_size := _report_viewport_size()
 	var report := {
-		"report_version": 6,
+		"report_version": 7,
 		"game_version": String(ProjectSettings.get_setting("application/config/version", "unknown")),
 		"content_version": MarketContent.content_version(),
 		"save_version": AshWorldState.SAVE_VERSION,
@@ -2604,7 +2678,9 @@ func _on_export_report_pressed() -> void:
 		"display_scale": _report_display_scale(),
 		"presentation": {"large_text": large_text_enabled, "reduced_motion": reduce_motion_enabled, "interface_sounds": interface_sounds_enabled},
 		"session_elapsed_seconds": maxf(0.0, float(Time.get_ticks_msec() - run_started_msec) / 1000.0),
+		"pacing_session_elapsed_seconds": _pacing_elapsed_seconds(),
 		"time_to_first_trade_seconds": null if first_trade_elapsed_msec < 0 else float(first_trade_elapsed_msec) / 1000.0,
+		"pacing_trace": pacing_trace.duplicate(true),
 		"playtest_path_id": active_playtest_path_id,
 		"playtest_path_label": _playtest_path_label(active_playtest_path_id),
 		"seed": world.seed,
@@ -2633,7 +2709,7 @@ func _on_export_report_pressed() -> void:
 	var report_json := JSON.stringify(report, "\t")
 	if _download_web_report(report_json):
 		_play_ui_cue("success")
-		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, entry path, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
+		_set_event("REPORT DOWNLOAD REQUESTED — %s\nIf the browser asks, allow the download. Build, entry path, platform, viewport, input mappings, pacing timeline, seed, and campaign evidence are included. No personal data is included." % WEB_REPORT_FILENAME)
 	else:
 		var file := FileAccess.open(report_path, FileAccess.WRITE)
 		if file == null:
@@ -2650,7 +2726,7 @@ func _on_export_report_pressed() -> void:
 			_set_event("Report export failed. The campaign remains unchanged.")
 		else:
 			_play_ui_cue("success")
-			_set_event("REPORT EXPORTED — %s\nBuild, entry path, platform, viewport, input mappings, presentation settings, timing, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
+			_set_event("REPORT EXPORTED — %s\nBuild, entry path, platform, viewport, input mappings, pacing timeline, seed, and campaign evidence are included. No personal data is included." % ProjectSettings.globalize_path(report_path))
 	_refresh_ui()
 	if pause_layer != null and pause_layer.visible:
 		_refresh_pause_summary(event_label.text)
@@ -2688,6 +2764,7 @@ func _current_ui_state_id() -> String:
 	return "unknown"
 
 func _publish_web_ui_state() -> void:
+	_record_pacing_transition()
 	if not OS.has_feature("web") or not Engine.has_singleton("JavaScriptBridge"):
 		return
 	var bridge: Object = Engine.get_singleton("JavaScriptBridge")
@@ -3762,6 +3839,7 @@ func _show_command_result(result: Dictionary, label: String) -> void:
 	else:
 		_play_ui_cue("blocked")
 		_set_event("%s blocked: %s.\nNEXT — %s" % [label, String(result.reason), _next_step_text()])
+	_record_pacing_command(result, label)
 	_refresh_ui()
 
 func _next_step_text() -> String:
