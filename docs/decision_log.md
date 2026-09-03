@@ -761,3 +761,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Automated flow tests prove reachability but cannot show where a player hesitates, repeats blocked actions, or loses the journey's rhythm. A local timeline connects observed friction to the existing first-five, first-fifteen, and first-thirty-minute targets without introducing telemetry, identity collection, or a second gameplay state.
 
 **Trade-off:** Timing cannot establish comprehension or fun. Reports remain manually exported and must be paired with tester answers and visual evidence; the bounded timeline may omit the earliest transitions in exceptionally long, high-churn sessions.
+
+## ADR-096: Journey copy speaks as a caravan, not a test harness
+
+**Decision:** Keep exact costs, risks, cargo exposure, rolls, and consequences visible, but remove implementation language from release-facing travel copy. Event responses list only non-zero costs, show rewards on a separate `RECEIVE` line, and describe the road result before the authored consequence. Tutorial and ending prose stays compact and addresses the world directly rather than narrating a test or “the player.”
+
+**Reason:** The existing copy was unusually honest but repeatedly used phrases such as “presentation cannot change,” “next authored encounter,” “disclosed exposed-unit roll,” and “factual journey receipt.” Those phrases explain the software instead of the caravan, while repeated zero values obscure the differences between choices.
+
+**Trade-off:** Mechanical labels and deterministic roll comparisons remain deliberately explicit, so the interface is not fully diegetic. Character-specific dialogue is still sparse and requires later authored content rather than longer utility prose.

@@ -78,9 +78,9 @@ func _test_event_presenter() -> void:
 	}
 	var view := JourneyPresenter.event_view(world, pending)
 	var choices: Array = view.get("choices", [])
-	_expect(view.get("title", "") == "A blocked road" and String(view.get("stakes", "")).contains("Highest disclosed cargo-loss chance: 40%"), "event presenter should expose authored identity and maximum disclosed danger")
-	_expect(view.get("threat_label", "") == "THREAT · 40% MAX CARGO-LOSS ROLL" and String(view.get("exposed_label", "")).contains("1 WATER") and String(view.get("road_label", "")).contains("OLD ROAD"), "event presenter should expose a scannable threat, cargo, and road dossier")
-	_expect(String(view.get("decision_label", "")).contains("Pay or risk the cargo") and String(view.get("rules_label", "")).contains("No hidden health"), "event dossier should preserve the authored dilemma and explicit rules boundary")
+	_expect(view.get("title", "") == "A blocked road" and String(view.get("stakes", "")).contains("Highest cargo-loss chance: 40%"), "event presenter should expose authored identity and maximum stated danger")
+	_expect(view.get("threat_label", "") == "THREAT · UP TO 40% CARGO LOSS" and String(view.get("exposed_label", "")).contains("WATER x1") and String(view.get("road_label", "")).contains("OLD ROAD"), "event presenter should expose a scannable threat, cargo, and road dossier")
+	_expect(String(view.get("decision_label", "")).contains("Pay or risk the cargo") and String(view.get("rules_label", "")).contains("Only the costs and consequences written here"), "event dossier should preserve the authored dilemma and explicit terms boundary")
 	_expect(choices.size() == 2 and bool(choices[0].get("disabled", false)) and String(choices[0].get("blocked_reason", "")).contains("999 ashmarks"), "event presenter should keep unaffordable choices visible with the exact blocker")
 	_expect(not bool(choices[1].get("disabled", true)) and String(choices[1].get("text", "")).contains("MANEUVER / RISK ROLL 40%"), "event presenter should label available risky tactics consistently")
 
@@ -97,11 +97,11 @@ func _test_arrival_presenter() -> void:
 	var comparison := JourneyPresenter.conflict_outcome_comparison(world, record)
 	_expect(comparison.contains("JOURNEY RESULT") and comparison.contains("CHOICE — WAIT / CERTAIN") and comparison.contains("+1 days") and comparison.contains("arrived at Reedwatch"), "arrival presenter should compare the disclosed plan with the authoritative result")
 	var certain_receipt := JourneyPresenter.conflict_outcome_receipt(record)
-	_expect(certain_receipt.get("state", "") == "certain" and certain_receipt.get("kicker", "") == "PLAN HELD" and String(certain_receipt.get("detail", "")).contains("no cargo-loss roll"), "certain outcomes should produce a concise plan-held receipt")
+	_expect(certain_receipt.get("state", "") == "certain" and certain_receipt.get("kicker", "") == "PLAN HELD" and String(certain_receipt.get("detail", "")).contains("never placed cargo at risk"), "certain outcomes should produce a concise plan-held receipt")
 	record["loss_basis"] = {"loss_good_id": "medicine", "loss_quantity": 1, "loss_unit_value": 52}
 	record["outcome"] = {"cargo_risk": 0.45, "resolution_roll": 0.24, "cargo": {"medicine": -1, "weight": -1}}
 	var loss_receipt := JourneyPresenter.conflict_outcome_receipt(record)
-	_expect(loss_receipt.get("state", "") == "loss" and loss_receipt.get("title", "") == "Medicine x1 lost" and String(loss_receipt.get("detail", "")).contains("24% roll") and String(loss_receipt.get("detail", "")).contains("45% threshold"), "realized cargo risk should produce a compact, factual loss receipt")
+	_expect(loss_receipt.get("state", "") == "loss" and loss_receipt.get("title", "") == "Medicine x1 lost" and String(loss_receipt.get("detail", "")).contains("Road roll 24") and String(loss_receipt.get("detail", "")).contains("risk 45"), "realized cargo risk should produce a compact, factual loss receipt")
 	record["outcome"] = {"cargo_risk": 0.45, "resolution_roll": 0.76, "cargo": {}}
 	var safe_receipt := JourneyPresenter.conflict_outcome_receipt(record)
 	_expect(safe_receipt.get("state", "") == "safe" and safe_receipt.get("kicker", "") == "RISK AVOIDED" and String(safe_receipt.get("title", "")).contains("arrived intact"), "avoided cargo risk should produce a compact intact-cargo receipt")
@@ -110,7 +110,7 @@ func _test_arrival_presenter() -> void:
 func _test_journey_panel_view() -> void:
 	var world := AshWorldState.new(1107)
 	var departure := JourneyPanelView.snapshot(world, "moving_out", "LEAVING ASHGATE", false, "", "")
-	_expect(departure.state == "departure" and String(departure.map_hint).contains("crossing the committed road"), "departure view should communicate committed travel without changing it")
+	_expect(departure.state == "departure" and String(departure.map_hint).contains("Passage is paid") and String(departure.departure_status).contains("committed until the next stop"), "departure view should communicate committed travel in caravan language")
 	var road := JourneyPanelView.snapshot(world, "road", "ROAD STOP — THE BROKEN MILEPOSTS", false, "", "")
 	_expect(road.state == "road" and String(road.event_text).contains("MID-ROUTE"), "road view should provide an explicit player-controlled pause")
 	world.pending_event = {"title": "Three Riders, No Banner"}
@@ -119,7 +119,7 @@ func _test_journey_panel_view() -> void:
 	world.pending_event.clear()
 	world.current_settlement = "reedwatch"
 	var arrival := JourneyPanelView.snapshot(world, "arrived", "ARRIVED", true, "Pay 10 ashmarks; you arrive at Reedwatch.", "")
-	_expect(arrival.state == "arrival" and arrival.enter_action == "Enter Reedwatch" and String(arrival.departure_status).contains("ARRIVAL REPORT"), "arrival view should expose the handoff and destination action")
+	_expect(arrival.state == "arrival" and arrival.enter_action == "Enter Reedwatch" and String(arrival.departure_status).contains("ARRIVAL — Reedwatch"), "arrival view should expose the handoff and destination action")
 
 
 func _test_campaign_debrief_presenter() -> void:

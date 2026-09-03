@@ -49,6 +49,8 @@ Godot 4.4.1 must be available as `godot` or `godot4`. A successful run prints a 
 | `docs/agent_feeding_guide.md` | Recommended prompt sequence and review loop. |
 | `.agents/skills/market-of-ash-pacing/` | Repo-local workflow for turning exported report timelines into evidence-backed pacing changes. |
 | `.agents/skills/market-of-ash-delivery-review/` | Repo-local visual review workflow for hierarchy, journey continuity, consequence, recovery, and identity. |
+| `.agents/skills/market-of-ash-writer/` | Repo-local workflow for auditing and writing concise, decision-bearing player copy in the ashland voice. |
+| `docs/writing_audit_2026-09-04.md` | First writer-skill audit, implemented corrections, verification, and remaining editorial judgment. |
 | `docs/gpt_agent_handoff_roadmap.md` | Dependency-ordered development roadmap and quality gates. |
 | `docs/game_quality_vertical_slice_roadmap.md` | Complete game-quality vertical-slice plan for the basin journey, economy UX, route/map, settlements, events, factions, visual identity, audio, testing, playtesting, and alpha gates. |
 | `docs/ai_game_quality_execution_plan.md` | Execution-first AI sequence based on latest automated and visual tests; human testing is optional, not blocking. |

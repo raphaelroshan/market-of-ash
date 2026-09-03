@@ -9,7 +9,7 @@ static func event_view(world, pending: Dictionary) -> Dictionary:
 	var loss_basis: Dictionary = pending.get("loss_basis", {})
 	var cargo_context := "no carried cargo"
 	if int(loss_basis.get("loss_quantity", 0)) > 0:
-		cargo_context = "1 %s unit valued at %d" % [String(loss_basis.get("loss_good_id", "")).capitalize(), int(loss_basis.get("loss_unit_value", 0))]
+		cargo_context = "%s x1 worth %d ashmarks" % [String(loss_basis.get("loss_good_id", "")).capitalize(), int(loss_basis.get("loss_unit_value", 0))]
 	var material_basis: Dictionary = pending.get("material_basis", {})
 	var material_parts: Array[String] = []
 	var material_goods: Dictionary = material_basis.get("goods", {})
@@ -29,10 +29,10 @@ static func event_view(world, pending: Dictionary) -> Dictionary:
 		if typeof(raw_choice) == TYPE_DICTIONARY:
 			maximum_cargo_risk = maxf(maximum_cargo_risk, float(raw_choice.get("cargo_risk", 0.0)))
 	var maximum_risk_percent := int(round(maximum_cargo_risk * 100.0))
-	var threat_summary := "No choice uses a cargo-loss roll." if maximum_risk_percent == 0 else "Highest disclosed cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
+	var threat_summary := "Every response keeps cargo safe." if maximum_risk_percent == 0 else "Highest cargo-loss chance: %d%% against %s." % [maximum_risk_percent, cargo_context]
 	var origin_name := String(world.settlement(String(pending.get("origin_id", ""))).get("name", "origin"))
 	var route_name := String(world.route(String(pending.get("route_id", ""))).get("name", "route"))
-	var stakes := "DANGER — %s\nROAD — %s to %s via %s.%s%s\nAT STAKE — %s\nWHAT COUNTS — Only the written money, provisions, cargo, time, or standing can change. There is no hidden health damage." % [threat_summary, origin_name, destination_name, route_name, material_context, trade_context, String(pending.get("stakes", ""))]
+	var stakes := "THREAT — %s\nROAD — %s to %s via %s.%s%s\nAT STAKE — %s\nTERMS — Only the listed ashmarks, provisions, cargo, days, or standing can change." % [threat_summary, origin_name, destination_name, route_name, material_context, trade_context, String(pending.get("stakes", ""))]
 	var choices: Array[Dictionary] = []
 	for raw_choice in pending.get("choices", []):
 		if typeof(raw_choice) != TYPE_DICTIONARY:
@@ -42,12 +42,12 @@ static func event_view(world, pending: Dictionary) -> Dictionary:
 		"title": String(pending.get("title", "Route decision")),
 		"setup": String(pending.get("setup", "")),
 		"stakes": stakes,
-		"threat_label": "THREAT · NO CARGO-LOSS ROLL" if maximum_risk_percent == 0 else "THREAT · %d%% MAX CARGO-LOSS ROLL" % maximum_risk_percent,
-		"exposed_label": "EXPOSED · NO CARRIED CARGO" if int(loss_basis.get("loss_quantity", 0)) <= 0 else "EXPOSED · 1 %s · VALUE %d" % [String(loss_basis.get("loss_good_id", "")).to_upper(), int(loss_basis.get("loss_unit_value", 0))],
+		"threat_label": "THREAT · CARGO SAFE" if maximum_risk_percent == 0 else "THREAT · UP TO %d%% CARGO LOSS" % maximum_risk_percent,
+		"exposed_label": "EXPOSED · NO CARRIED CARGO" if int(loss_basis.get("loss_quantity", 0)) <= 0 else "EXPOSED · %s x1 · %d ASHMARKS" % [String(loss_basis.get("loss_good_id", "")).to_upper(), int(loss_basis.get("loss_unit_value", 0))],
 		"road_label": "ROAD · %s → %s · %s" % [origin_name.to_upper(), destination_name.to_upper(), route_name.to_upper()],
 		"basis_label": "\n".join(visible_basis_parts),
 		"decision_label": "AT STAKE · %s" % String(pending.get("stakes", "")),
-		"rules_label": "RULES · Only listed costs and effects change. No hidden health.",
+		"rules_label": "TERMS · Only the costs and consequences written here can change.",
 		"choices": choices,
 	}
 
@@ -66,18 +66,24 @@ static func _event_choice_view(world, pending: Dictionary, choice: Dictionary, c
 	var cargo_cost_good_id := String(cargo_cost.get("good_id", ""))
 	var days := int(choice.get("days", 0))
 	var cargo_risk := int(round(float(choice.get("cargo_risk", 0.0)) * 100.0))
-	var money_text := "no ashmark change"
-	if money_reward > 0:
-		money_text = "+%d ashmarks" % money_reward
-	elif money_cost > 0:
-		money_text = "-%d ashmarks" % money_cost
+	var cost_parts: Array[String] = []
+	if money_cost > 0:
+		cost_parts.append("pay %d ashmarks" % money_cost)
 	var arrival_text := "return to origin" if String(choice.get("arrival_target", "destination")) == "origin" else "continue to destination"
-	var cargo_cost_text := "%d %s" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else "%d materials" % material_quantity if material_quantity > 0 else "no cargo spent"
+	var cargo_cost_text := "%d %s" % [trade_quantity, String(trade_basis.get("good_id", "cargo"))] if trade_quantity > 0 else "%d repair materials" % material_quantity if material_quantity > 0 else ""
 	if cargo_cost_quantity > 0:
 		cargo_cost_text = "%d %s" % [cargo_cost_quantity, cargo_cost_good_id]
+	if provision_cost > 0:
+		cost_parts.append("%d provision%s" % [provision_cost, "" if provision_cost == 1 else "s"])
+	if not cargo_cost_text.is_empty():
+		cost_parts.append(cargo_cost_text)
+	if days > 0:
+		cost_parts.append("%d day%s" % [days, "" if days == 1 else "s"])
 	var tactic_label := event_tactic_label(choice, trade_quantity, cargo_cost_quantity)
 	var certainty_label := "CERTAIN" if cargo_risk == 0 else "RISK ROLL %d%% cargo risk" % cargo_risk
-	var text := "%s / %s — %s\nCOST — %s · %d provisions · %s · %d days\nRESULT — %s · %s\nEXPECTED — %s" % [tactic_label, certainty_label, String(choice.get("label", "Choose")), money_text, provision_cost, cargo_cost_text, days, arrival_text, "no cargo-loss roll" if cargo_risk == 0 else "up to %s exposed" % cargo_context, String(choice.get("outcome", "Resolve the confrontation."))]
+	var road_result := "cargo stays intact" if cargo_risk == 0 else "%s at risk" % cargo_context
+	var return_line := "\nRECEIVE — %d ashmarks" % money_reward if money_reward > 0 else ""
+	var text := "%s / %s — %s\nCOST — %s%s\nROAD — %s · %s\nIF CHOSEN — %s" % [tactic_label, certainty_label, String(choice.get("label", "Choose")), "none" if cost_parts.is_empty() else " · ".join(cost_parts), return_line, arrival_text, road_result, String(choice.get("outcome", "The road opens."))]
 	var blocked_reason := ""
 	if world.money < money_cost:
 		blocked_reason = "Needs %d ashmarks; you have %d." % [money_cost, world.money]
@@ -153,21 +159,33 @@ static func conflict_outcome_comparison(world, event_record: Dictionary) -> Stri
 	var actual_cargo := _actual_conflict_cargo_text(Dictionary(outcome.get("cargo", {})))
 	var risk_variance := _conflict_risk_variance_text(event_record, outcome)
 	var persistent_effects := _conflict_persistent_effects_text(outcome)
-	var comparison := "JOURNEY RESULT\nCHOICE — %s / %s — %s\nEXPECTED — %s · %s · %s · %s · %s · %s.\nARRIVAL — %s · %s · %s · %s · arrived at %s.\nWHAT CHANGED — %s\nWHY — %s" % [
+	var expected_parts: Array[String] = []
+	if planned_money != 0:
+		expected_parts.append(_resource_delta_text(planned_money, "ashmarks"))
+	if int(choice.get("provision_cost", 0)) > 0:
+		expected_parts.append(_resource_delta_text(-int(choice.get("provision_cost", 0)), "provisions"))
+	if planned_cargo != "no planned cargo spend":
+		expected_parts.append(planned_cargo)
+	if int(choice.get("days", 0)) > 0:
+		expected_parts.append(_resource_delta_text(int(choice.get("days", 0)), "days"))
+	expected_parts.append("cargo safe" if risk_percent == 0 else "%d%% cargo risk" % risk_percent)
+	expected_parts.append("return to %s" % planned_settlement_name if arrival_target == "origin" else "continue to %s" % planned_settlement_name)
+	var arrival_parts: Array[String] = []
+	if int(outcome.get("money", 0)) != 0:
+		arrival_parts.append(_resource_delta_text(int(outcome.get("money", 0)), "ashmarks"))
+	if int(outcome.get("provisions", 0)) != 0:
+		arrival_parts.append(_resource_delta_text(int(outcome.get("provisions", 0)), "provisions"))
+	if actual_cargo != "cargo unchanged":
+		arrival_parts.append(actual_cargo)
+	if int(outcome.get("day", 0)) != 0:
+		arrival_parts.append(_resource_delta_text(int(outcome.get("day", 0)), "days"))
+	arrival_parts.append("arrived at %s" % actual_settlement_name)
+	var comparison := "JOURNEY RESULT\nCHOICE — %s / %s — %s\nEXPECTED — %s.\nARRIVAL — %s.\nWHAT CHANGED — %s\nWHY — %s" % [
 		tactic_label,
 		certainty_label,
 		String(choice.get("label", "Choice")),
-		_resource_delta_text(planned_money, "ashmarks"),
-		_resource_delta_text(-int(choice.get("provision_cost", 0)), "provisions"),
-		planned_cargo,
-		_resource_delta_text(int(choice.get("days", 0)), "days"),
-		"no cargo-loss roll" if risk_percent == 0 else "%d%% cargo-loss roll" % risk_percent,
-		"return to %s" % planned_settlement_name if arrival_target == "origin" else "continue to %s" % planned_settlement_name,
-		_resource_delta_text(int(outcome.get("money", 0)), "ashmarks"),
-		_resource_delta_text(int(outcome.get("provisions", 0)), "provisions"),
-		actual_cargo,
-		_resource_delta_text(int(outcome.get("day", 0)), "days"),
-		actual_settlement_name,
+		" · ".join(expected_parts),
+		" · ".join(arrival_parts),
 		risk_variance,
 		String(choice.get("outcome", "The conflict resolves.")),
 	]
@@ -193,20 +211,20 @@ static func conflict_outcome_receipt(event_record: Dictionary) -> Dictionary:
 			"state": "loss",
 			"kicker": "RISK REALIZED",
 			"title": "%s x1 lost" % good_name,
-			"detail": "%d%% roll fell below the disclosed %d%% threshold" % [int(round(roll * 100.0)), int(round(risk * 100.0))],
+			"detail": "Road roll %d against risk %d — cargo lost" % [int(round(roll * 100.0)), int(round(risk * 100.0))],
 		}
 	if risk > 0.0:
 		return {
 			"state": "safe",
 			"kicker": "RISK AVOIDED",
 			"title": "%s arrived intact" % good_name,
-			"detail": "%d%% roll cleared the disclosed %d%% threshold" % [int(round(roll * 100.0)), int(round(risk * 100.0))],
+			"detail": "Road roll %d against risk %d — cargo intact" % [int(round(roll * 100.0)), int(round(risk * 100.0))],
 		}
 	return {
 		"state": "certain",
 		"kicker": "PLAN HELD",
 		"title": "No surprise cargo loss",
-		"detail": "This response used no cargo-loss roll",
+		"detail": "The chosen terms never placed cargo at risk",
 	}
 
 
@@ -380,15 +398,15 @@ static func _actual_conflict_cargo_text(cargo_delta: Dictionary) -> String:
 static func _conflict_risk_variance_text(event_record: Dictionary, outcome: Dictionary) -> String:
 	var risk := float(outcome.get("cargo_risk", 0.0))
 	if risk <= 0.0:
-		return "Matched the disclosed plan; no cargo-loss roll occurred."
+		return "The chosen terms held; cargo stayed intact."
 	var roll := float(outcome.get("resolution_roll", 1.0))
 	var roll_percent := int(round(roll * 100.0))
 	var risk_percent := int(round(risk * 100.0))
 	var loss_basis: Dictionary = event_record.get("loss_basis", {})
 	var loss_good_id := String(loss_basis.get("loss_good_id", ""))
 	if roll < risk:
-		return "Risk realized: the %d%% roll was below %d%%; 1 %s was exposed." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo unit"]
-	return "Risk avoided: the %d%% roll cleared the %d%% threshold; the exposed %s remained intact." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo"]
+		return "Risk realized: road roll %d against %d; 1 %s was lost." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo unit"]
+	return "Risk avoided: road roll %d against %d; the exposed %s stayed intact." % [roll_percent, risk_percent, loss_good_id.capitalize() if not loss_good_id.is_empty() else "cargo"]
 
 
 static func _conflict_persistent_effects_text(outcome: Dictionary) -> String:
@@ -436,7 +454,7 @@ static func _conflict_recovery_text(world, event_record: Dictionary, outcome: Di
 		var loss_basis: Dictionary = event_record.get("loss_basis", {})
 		var loss_good_id := String(loss_basis.get("loss_good_id", "cargo"))
 		recovery_steps.append("the lost %s leaves no immediately affordable sale or route, so check the visible Local Opportunities and their exact blockers" % loss_good_id.capitalize())
-	return "RECOVERY — %s. No restart is required." % ". ".join(recovery_steps)
+	return "RECOVERY — %s. The caravan can continue." % ". ".join(recovery_steps)
 
 
 static func _best_recovery_sale(world) -> Dictionary:
