@@ -175,3 +175,15 @@ The current candidate validates 86 release-facing states at 1600×900, spanning 
 ![Ash Sifter result](visual_evidence/v0.16.0-private-alpha-2026-09-03/siltfire-ash-sifter-result-1600x900.png)
 
 The durable subset and complete manifest are in the [`0.16.0 capture record`](visual_evidence/v0.16.0-private-alpha-2026-09-03/README.md); the tagged release publishes all 86 frames as a separate archive.
+
+## 0.16.1 responsive-shell and clean-trade revalidation
+
+The post-RC2 1280×720 clipping finding is repaired. Introduction copy and actions remain inside the card with deliberate gutters, while the same clean save proceeds through ordinary purchase, route comparison, road consequence, changed markets, and a terminal receipt.
+
+![Repaired Introduction at 1280×720](visual_evidence/v0.16.1-ma-i1-i2-revalidation-2026-09-03/1280x720/introduction-caravan-1280x720.png)
+
+![Clean route comparison at 1280×720](visual_evidence/v0.16.1-ma-i1-i2-revalidation-2026-09-03/1280x720/investment-departure-1280x720.png)
+
+![Terminal receipt at 1600×900](visual_evidence/v0.16.1-ma-i1-i2-revalidation-2026-09-03/1600x900/investment-terminal-receipt-1600x900.png)
+
+The [`revalidation record`](visual_evidence/v0.16.1-ma-i1-i2-revalidation-2026-09-03/README.md) links the selected frames to complete 86-state manifests at both viewports.

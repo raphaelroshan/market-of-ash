@@ -100,6 +100,37 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  native-render-linux-1280:
+    name: Linux 1280 opening and full-flow render
+    runs-on: ubuntu-latest
+    needs: [policy, tests]
+    if: needs.policy.result == 'success' && needs.tests.result == 'success'
+    env:
+      MARKET_CAPTURE_GEOMETRIES: 1280x720
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+      - name: Capture and validate 1280 UI
+        run: |
+          command -v xvfb-run
+          xvfb-run --auto-servernum --server-args="-screen 0 1366x768x24" \
+            bash scripts/capture_native_ui.sh artifacts/native-render-linux-1280
+      - name: Upload Linux 1280 render evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: native-render-linux-1280-${{ github.run_number }}
+          path: artifacts/native-render-linux-1280/
+          if-no-files-found: error
+          retention-days: 30
+
   ai-review:
     name: Multi-agent AI review
     runs-on: ubuntu-latest
@@ -220,7 +251,7 @@ jobs:
             --executable build/market-of-ash.exe `
             --archive artifacts/market-of-ash-windows.zip `
             --extract-directory $cleanDirectory `
-            --readme docs/releases/v0.16.0-early-access-rc2.md
+            --readme docs/releases/v0.16.1-early-access-rc1.md
           $cleanExecutable = Join-Path $cleanDirectory "Market of Ash\market-of-ash.exe"
           python tools/validate_windows_distribution.py artifacts/market-of-ash-windows.zip
           python tools/validate_windows_export.py $cleanExecutable

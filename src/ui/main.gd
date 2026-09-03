@@ -321,17 +321,24 @@ func _fit_initial_window_to_display() -> void:
 		return
 	if OS.get_cmdline_user_args().has("--output-dir"):
 		return
-	for argument in OS.get_cmdline_args():
-		if String(argument).begins_with("--resolution"):
-			return
 	var screen := DisplayServer.window_get_current_screen()
 	var usable_rect := DisplayServer.screen_get_usable_rect(screen)
+	var screen_size := DisplayServer.screen_get_size(screen)
 	var current_size := DisplayServer.window_get_size()
-	var target_size := _clamped_window_size(current_size, usable_rect.size)
+	var available_size := _effective_display_size(usable_rect.size, screen_size)
+	var target_size := _clamped_window_size(current_size, available_size)
 	if target_size == current_size:
 		return
 	DisplayServer.window_set_size(target_size)
-	DisplayServer.window_set_position(usable_rect.position + (usable_rect.size - target_size) / 2)
+	var placement_size := usable_rect.size if usable_rect.size.x > 0 and usable_rect.size.y > 0 else available_size
+	DisplayServer.window_set_position(usable_rect.position + (placement_size - target_size) / 2)
+
+func _effective_display_size(usable_size: Vector2i, screen_size: Vector2i) -> Vector2i:
+	if usable_size.x <= 0 or usable_size.y <= 0:
+		return screen_size
+	if screen_size.x <= 0 or screen_size.y <= 0:
+		return usable_size
+	return Vector2i(mini(usable_size.x, screen_size.x), mini(usable_size.y, screen_size.y))
 
 func _clamped_window_size(current_size: Vector2i, usable_size: Vector2i) -> Vector2i:
 	if current_size.x <= 0 or current_size.y <= 0 or usable_size.x <= 0 or usable_size.y <= 0:
@@ -340,11 +347,18 @@ func _clamped_window_size(current_size: Vector2i, usable_size: Vector2i) -> Vect
 	return Vector2i(floori(float(current_size.x) * fit_scale), floori(float(current_size.y) * fit_scale))
 
 func _refresh_responsive_layout() -> void:
-	var compact := _opening_layout_should_compact(_report_viewport_size().x)
+	var compact := _opening_layout_should_compact(_opening_layout_width())
 	if menu_columns != null:
 		menu_columns.set_compact(compact)
 	if intro_columns != null:
 		intro_columns.set_compact(compact)
+
+func _opening_layout_width() -> int:
+	var window_width := _report_viewport_size().x
+	if window_width > 0:
+		return window_width
+	var visible_width := floori(get_viewport().get_visible_rect().size.x)
+	return visible_width if visible_width > 0 else COMPACT_OPENING_WINDOW_WIDTH
 
 func _opening_layout_should_compact(viewport_width: int) -> bool:
 	return viewport_width <= COMPACT_OPENING_WINDOW_WIDTH
@@ -608,6 +622,7 @@ func _build_intro() -> void:
 	intro_columns.separation = 30.0
 	intro_columns.first_ratio = 1.35
 	intro_columns.compact_visual_height = 220.0
+	intro_columns.clip_contents = true
 	var columns: Container = intro_columns
 	margin.add_child(columns)
 	intro_scene = IntroScene.new()
@@ -619,6 +634,7 @@ func _build_intro() -> void:
 	card.name = "IntroductionCard"
 	card.custom_minimum_size = Vector2(420, 0)
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.clip_contents = true
 	columns.add_child(card)
 	var content_margin := MarginContainer.new()
 	content_margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -627,6 +643,7 @@ func _build_intro() -> void:
 	content_margin.add_theme_constant_override("margin_right", 16)
 	card.add_child(content_margin)
 	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 14)
 	content_margin.add_child(content)
 	intro_progress_label = Label.new()
@@ -643,16 +660,19 @@ func _build_intro() -> void:
 	body_scroll.name = "IntroductionBodyScroll"
 	body_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	body_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	body_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body_scroll.custom_minimum_size = Vector2(0, 72)
 	content.add_child(body_scroll)
 	intro_body_label = RichTextLabel.new()
 	intro_body_label.name = "IntroductionBody"
 	intro_body_label.bbcode_enabled = false
-	intro_body_label.fit_content = true
+	intro_body_label.fit_content = false
 	intro_body_label.scroll_active = false
 	intro_body_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	intro_body_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	intro_body_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	intro_body_label.custom_minimum_size = Vector2(0, 72)
 	intro_body_label.add_theme_font_size_override("font_size", 18)
 	intro_body_label.add_theme_color_override("font_color", Color("#d9c6a2"))
 	body_scroll.add_child(intro_body_label)
@@ -4628,7 +4648,9 @@ class ResponsiveColumns extends Container:
 			return
 		var first := controls[0]
 		var second := controls[1]
-		if compact:
+		var required_split_width := first.get_combined_minimum_size().x + separation + second.get_combined_minimum_size().x
+		var use_compact := compact or size.x + 0.5 < required_split_width
+		if use_compact:
 			var first_height := minf(compact_visual_height, maxf(140.0, size.y * 0.42))
 			var second_height := maxf(0.0, size.y - first_height - separation)
 			fit_child_in_rect(first, Rect2(Vector2.ZERO, Vector2(size.x, first_height)))
