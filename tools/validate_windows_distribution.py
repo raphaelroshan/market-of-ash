@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 EXPECTED_EXECUTABLE = PurePosixPath("Market of Ash/market-of-ash.exe")
 EXPECTED_README = PurePosixPath("Market of Ash/README.txt")
 REQUIRED_README_SECTIONS = (
-    "Market of Ash 0.16.0 — Private Alpha Campaign",
+    "Market of Ash 0.16.1 — Private Alpha Campaign",
     "## Install",
     "## Upgrade and save compatibility",
     "## Rollback",

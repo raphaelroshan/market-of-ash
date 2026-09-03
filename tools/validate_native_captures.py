@@ -312,6 +312,12 @@ def require_layout_bounds(capture: dict[str, object]) -> None:
     opening_panel_name = "MainMenuCard" if screen.startswith("main_menu") else "IntroductionCard" if screen.startswith("introduction_") else ""
     if opening_panel_name:
         opening_panel = controls.get(opening_panel_name, {}).get("rect", {})
+        active_left = float(active_layer.get("x", 0.0))
+        active_right = active_left + float(active_layer.get("width", 0.0))
+        panel_left = float(opening_panel.get("x", 0.0))
+        panel_right = panel_left + float(opening_panel.get("width", 0.0))
+        if panel_left < active_left + 24.0 or panel_right > active_right - 24.0:
+            raise AssertionError(f"{screen}: {opening_panel_name} must preserve a 24px horizontal safe area")
         for control_name in expected_controls:
             if control_name == opening_panel_name:
                 continue

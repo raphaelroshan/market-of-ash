@@ -40,8 +40,11 @@ func _initialize() -> void:
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "the preferred desktop window should clamp to a 1280x720 display instead of opening off-screen")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1366, 728)) == Vector2i(1294, 728), "the launch clamp should preserve the preferred window aspect ratio when only one display axis is constrained")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1920, 1080)) == Vector2i(1600, 900), "the preferred 1600x900 desktop window should remain unchanged when the display can contain it")
+	_expect(ui._effective_display_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should trust the smaller physical screen when a virtual desktop overstates its usable area")
+	_expect(ui._effective_display_size(Vector2i.ZERO, Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should fall back to the physical screen when usable bounds are unavailable")
 	_expect(ui._opening_layout_should_compact(960) and ui._opening_layout_should_compact(1280), "the minimum and 1280-wide opening should use the stacked composition")
 	_expect(not ui._opening_layout_should_compact(1600), "the preferred 1600-wide opening should retain the split composition")
+	_expect(ui._opening_layout_width() == ui._report_viewport_size().x, "the opening breakpoint should follow the drawable window while the launch clamp keeps it inside the physical display")
 	_expect(ui.menu_columns != null and ui.intro_columns != null, "the Main Menu and Introduction should use the explicit responsive opening layout")
 
 	_expect(ui.menu_layer != null and ui.menu_layer.visible, "main menu should be visible on first launch")
@@ -183,6 +186,19 @@ func _initialize() -> void:
 	_expect(ui.binding_status_label.text.contains("SETTINGS WARNING") and not ui.interface_sounds_enabled, "preference write failures should remain active for the session and surface a visible warning")
 	ui.settings_path = test_settings_path
 	ui._on_interface_sounds_toggled(true)
+	ui._on_new_game_pressed()
+	await process_frame
+	ui._on_intro_next_pressed()
+	await process_frame
+	var intro_card: PanelContainer = ui.find_child("IntroductionCard", true, false)
+	var intro_layer_rect: Rect2 = ui.intro_layer.get_global_rect()
+	var intro_card_rect: Rect2 = intro_card.get_global_rect()
+	_expect(intro_card_rect.position.x >= intro_layer_rect.position.x + 32.0 and intro_card_rect.end.x <= intro_layer_rect.end.x - 32.0, "Introduction 2 should preserve both horizontal shell gutters at the compact breakpoint")
+	for intro_control in [ui.intro_progress_label, ui.intro_title_label, ui.intro_body_label, ui.intro_back_button, ui.intro_next_button, ui.intro_skip_button]:
+		_expect(intro_card_rect.encloses(intro_control.get_global_rect()), "IntroductionCard should contain required control %s at 1280x720" % intro_control.name)
+	_expect(not ui.intro_body_label.fit_content and ui.intro_body_label.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_body_label.get_parent() is ScrollContainer and ui.intro_body_label.get_parent().horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED, "Introduction copy should wrap inside a horizontal-scroll-free reading area instead of widening the card")
+	ui._on_intro_back_pressed()
+	ui._on_intro_back_pressed()
 
 	ui.pending_tutorial_enabled = false
 	ui._on_start_game_requested("guided_trade")
@@ -569,7 +585,7 @@ func _initialize() -> void:
 	var report_error := report_parser.parse(report_file.get_as_text())
 	report_file = null
 	var report: Dictionary = report_parser.data if report_error == OK and typeof(report_parser.data) == TYPE_DICTIONARY else {}
-	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.16.0-early-access-rc2" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
+	_expect(int(report.get("report_version", 0)) == 6 and report.get("game_version", "") == "0.16.1-early-access-rc1" and report.get("build_commit", "") == "development" and int(report.get("seed", 0)) == 1107 and report.get("command_history", []).size() == 2, "playtest report should include schema, build, seed, and command evidence")
 	_expect(report.get("playtest_path_id", "") == "guided_trade" and report.get("playtest_path_label", "") == "Guided Trade", "playtest report should identify the selected fresh-run path")
 	_expect(report.get("platform", "") == OS.get_name(), "playtest report should capture the runtime platform")
 	_expect(report.get("input_device", "") == "keyboard", "playtest report should capture the last broad input type without device identifiers")

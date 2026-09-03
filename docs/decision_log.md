@@ -745,3 +745,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** GitHub's hosted Windows desktop exposed only a 1028×578 drawable area when asked for 1600×900, so the capture correctly rejected the scaled frame. Xvfb gives the evidence harness an explicit viewport while the Windows-specific checks continue to validate the platform artifact. Separate jobs preserve both guarantees without weakening the dimension assertion or rewriting a public tag.
 
 **Trade-off:** The complete journey archive is rendered with Linux OpenGL rather than Windows ANGLE. The release still includes a real packaged-Windows screenshot and metadata, and the same capture script and validator run on both platforms.
+
+## ADR-094: Opening layout follows real display bounds and bounded prose
+
+**Decision:** Clamp the preferred desktop window against the smaller of the platform's usable and physical screen sizes, even when the process receives a resolution argument. Keep the authored 1280 compact/1600 split breakpoint, but let `ResponsiveColumns` stack defensively whenever visible child minimum widths cannot coexist. Bound Introduction prose inside a horizontal-scroll-free `RichTextLabel`, clip the presentation shell as a final safety boundary, and require opening cards to retain at least 24 px of horizontal safe area in native evidence.
+
+**Reason:** The RC2 source-level capture passed at 1280×720, but a separate Xvfb smoke run exposed a 1600-wide window inside a 1280-wide virtual display. Its cropped pixels made otherwise valid logical control bounds meaningless. Display-aware launch negotiation fixes the real window, while defensive container and prose constraints prevent intrinsic minimum sizes from recreating the overflow.
+
+**Trade-off:** The 1280 and minimum-width openings remain vertically stacked rather than compressing both illustrations and prose side by side. This preserves readable type and complete controls; 1600×900 retains the wider split composition.
