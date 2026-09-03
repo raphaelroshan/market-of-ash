@@ -54,3 +54,12 @@ The active sequence is **MA-I1 Shell/performance**, **MA-I2 Trade fantasy**, **M
 ## Decision
 
 The investment target is a compact but honest game: one memorable trade fantasy, one complete creative journey, and enough adjacent systemic breadth to demonstrate continuation. We prefer three regions with strong decision density over ten empty regions, and a black-market option that enriches ordinary commerce over a black-market route that invalidates the core game.
+
+
+## 2026-09-03 review checkpoint — status correction
+
+The current `0.16.0-early-access-rc2` main build passes the automated deterministic and Early Access checks, including the 150.15 ms world/save budget result. This confirms the simulation and test contract; it does not mean the creative vertical or Early Access campaign is complete.
+
+The current 1280×720 smoke evidence still shows the Introduction copy and Next action reaching the right viewport edge. Therefore **MA-I1 is not complete for game-quality scope**. The next agent must repair the actual `ResponsiveColumns`/minimum-size negotiation and add layout assertions for every required opening control. The agent must then prove MA-I2 in one clean save: first purchase, route comparison, departure, road consequence, arrival sale or recovery, changed return market, and terminal receipt. Contracts remain optional and ordinary trade remains a first-class path.
+
+The dated evidence is in `docs/latest_review_2026-09-03.md` and `docs/visual_evidence/v0.16.0-early-access-rc2-review-2026-09-03/`. The prior statement that MA-I1 through MA-I6 were complete applies only to the automated scope; it is superseded for investment evaluation by this checkpoint.
