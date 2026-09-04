@@ -89,6 +89,28 @@ const CAPTURE_SCREENS := [
 	"new_game_confirmation",
 ]
 
+const CAPTURE_COMPLETION_EXPECTATIONS := {
+	"main_menu": {"screen": "main_menu"},
+	"introduction_basin": {"screen": "introduction", "intro_page": 0},
+	"introduction_caravan": {"screen": "introduction", "intro_page": 1},
+	"introduction_road": {"screen": "introduction", "intro_page": 2},
+	"settlement_shop": {"screen": "settlement_shop", "settlement_id": "ashgate"},
+	"trade_receipt": {"screen": "settlement_shop", "trade_receipt_title": "PURCHASE SEALED"},
+	"departure_desk": {"screen": "departure_desk", "settlement_id": "ashgate"},
+	"investment_departure": {"screen": "route_travel", "travel_phase": "moving_out"},
+	"investment_road": {"screen": "route_travel", "travel_phase": "road"},
+	"investment_event": {"screen": "route_event", "pending_event_id": "three_riders_no_banner"},
+	"investment_arrival": {"screen": "arrival_handoff", "settlement_id": "reedwatch"},
+	"market_change_receipt": {"screen": "settlement_shop", "settlement_id": "reedwatch", "trade_receipt_title": "SALE RECORDED"},
+	"investment_changed_return": {"screen": "settlement_shop", "settlement_id": "ashgate", "trade_receipt_title": "SALE RECORDED"},
+	"investment_black_market_offer": {"screen": "settlement_shop", "bazaar_section": "information", "arms_escalation": 0},
+	"investment_black_market_pressure": {"screen": "settlement_shop", "bazaar_section": "information", "arms_escalation": 2},
+	"investment_terminal_receipt": {"screen": "settlement_shop", "ending_id": "ending_warden_reserve"},
+}
+
+const CAPTURE_READY_FRAMES := 2
+const CAPTURE_TIMEOUT_FRAMES := 180
+
 var output_directory := ""
 var requested_size := Vector2i.ZERO
 var captures: Array[Dictionary] = []
@@ -654,6 +676,7 @@ func _run() -> void:
 		"platform": OS.get_name(),
 		"display_scale": ui._report_display_scale(),
 		"reported_viewport": {"width": ui._report_viewport_size().x, "height": ui._report_viewport_size().y},
+		"capture_contract": _capture_window_contract(),
 		"required_screens": CAPTURE_SCREENS,
 		"captures": captures,
 	}, "  "))
@@ -752,8 +775,11 @@ func _focus_bazaar_action(ui: Control, accessibility_id: String) -> bool:
 	return false
 
 func _capture(ui: Control, screen: String, file_stem: String) -> void:
-	await process_frame
-	await process_frame
+	var completion := await _wait_for_capture_completion(ui, screen)
+	if not bool(completion.get("ready", false)):
+		push_error("Native capture timed out before %s reached %s; actual state was %s." % [screen, completion.get("expected", {}), completion.get("actual", {})])
+		quit(1)
+		return
 	RenderingServer.force_draw(false)
 	await process_frame
 	var image := root.get_texture().get_image()
@@ -778,9 +804,65 @@ func _capture(ui: Control, screen: String, file_stem: String) -> void:
 		"captured_viewport": {"width": image.get_width(), "height": image.get_height()},
 		"file": file_name,
 		"bytes": FileAccess.get_file_as_bytes(file_path).size(),
+		"completion": completion,
 		"ui_state": ui._web_ui_state(),
 		"layout": _layout_evidence(ui),
 	})
+
+func _wait_for_capture_completion(ui: Control, screen: String) -> Dictionary:
+	var expected: Dictionary = Dictionary(CAPTURE_COMPLETION_EXPECTATIONS.get(screen, {})).duplicate(true)
+	var stable_frames := 0
+	var actual: Dictionary = {}
+	for frame_index in range(CAPTURE_TIMEOUT_FRAMES):
+		await process_frame
+		actual = ui._web_ui_state()
+		if _capture_state_matches(actual, expected):
+			stable_frames += 1
+			if stable_frames >= CAPTURE_READY_FRAMES:
+				return {
+					"ready": true,
+					"expected": expected,
+					"actual": _capture_completion_values(actual, expected),
+					"frames_waited": frame_index + 1,
+					"stable_frames": stable_frames,
+				}
+		else:
+			stable_frames = 0
+	return {
+		"ready": false,
+		"expected": expected,
+		"actual": _capture_completion_values(actual, expected),
+		"frames_waited": CAPTURE_TIMEOUT_FRAMES,
+		"stable_frames": stable_frames,
+	}
+
+func _capture_state_matches(actual: Dictionary, expected: Dictionary) -> bool:
+	for key in expected.keys():
+		if actual.get(key) != expected.get(key):
+			return false
+	return true
+
+func _capture_completion_values(actual: Dictionary, expected: Dictionary) -> Dictionary:
+	var values := {}
+	for key in expected.keys():
+		values[key] = actual.get(key)
+	return values
+
+func _capture_window_contract() -> Dictionary:
+	var screen := DisplayServer.window_get_current_screen()
+	var window_size := DisplayServer.window_get_size()
+	var viewport_size := root.get_visible_rect().size
+	var screen_size := DisplayServer.screen_get_size(screen)
+	var usable_rect := DisplayServer.screen_get_usable_rect(screen)
+	return {
+		"completion_aware": true,
+		"requested_window": {"width": requested_size.x, "height": requested_size.y},
+		"window_size": {"width": window_size.x, "height": window_size.y},
+		"logical_viewport": {"width": int(viewport_size.x), "height": int(viewport_size.y)},
+		"screen_size": {"width": screen_size.x, "height": screen_size.y},
+		"usable_rect": {"x": usable_rect.position.x, "y": usable_rect.position.y, "width": usable_rect.size.x, "height": usable_rect.size.y},
+		"window_mode": DisplayServer.window_get_mode(),
+	}
 
 func _layout_evidence(ui: Control) -> Dictionary:
 	if ui.map_hint == null or ui.map_panel == null or ui.event_scroll == null:

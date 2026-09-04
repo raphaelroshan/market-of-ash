@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import struct
 import sys
 import tempfile
@@ -25,7 +26,8 @@ from tools.capture_validation import (
     validate_capture_matrix,
     write_rgb_png,
 )
-from tools.validate_native_captures import parse_viewport, require_release_surface
+from tools.extract_native_review_evidence import extract_review_evidence
+from tools.validate_native_captures import parse_viewport, require_capture_completion, require_capture_contract, require_release_surface
 
 
 def png_chunk(chunk_type: bytes, payload: bytes) -> bytes:
@@ -82,6 +84,40 @@ def main() -> int:
         pass
     else:
         raise AssertionError("visible diagnostics should fail the release-surface gate")
+    completed_capture = {
+        "screen": "introduction_caravan",
+        "completion": {
+            "ready": True,
+            "stable_frames": 2,
+            "expected": {"screen": "introduction", "intro_page": 1},
+            "actual": {"screen": "introduction", "intro_page": 1},
+        },
+    }
+    require_capture_completion(completed_capture)
+    completed_capture["completion"]["actual"]["intro_page"] = 0
+    try:
+        require_capture_completion(completed_capture)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("a capture taken before the expected navigation state should fail")
+    completed_capture["completion"]["actual"]["intro_page"] = 1
+    capture_manifest = {
+        "capture_contract": {
+            "completion_aware": True,
+            "requested_window": {"width": 960, "height": 540},
+            "window_size": {"width": 960, "height": 540},
+            "logical_viewport": {"width": 1280, "height": 720},
+        }
+    }
+    require_capture_contract(capture_manifest, 960, 540)
+    capture_manifest["capture_contract"]["window_size"]["width"] = 1600
+    try:
+        require_capture_contract(capture_manifest, 960, 540)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError("a cropped capture window should fail the native evidence contract")
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
         dark = root / "dark.png"
@@ -106,6 +142,39 @@ def main() -> int:
             pass
         else:
             raise AssertionError("identity frames should be rejected")
+
+        source_capture = root / "source.png"
+        write_solid_rgb_png(source_capture, 4, 3, (80, 60, 40))
+        source_manifest = root / "native-capture-4x3.json"
+        source_manifest.write_text(
+            json.dumps(
+                {
+                    "manifest_version": 1,
+                    "platform": "Test",
+                    "display_scale": 1.0,
+                    "reported_viewport": {"width": 4, "height": 3},
+                    "capture_contract": {"completion_aware": True},
+                    "captures": [
+                        {
+                            "screen": "introduction_caravan",
+                            "file": source_capture.name,
+                            "completion": completed_capture["completion"],
+                            "ui_state": {"screen": "introduction", "intro_page": 1},
+                        }
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        review_manifest_path = extract_review_evidence(
+            source_manifest,
+            root / "review",
+            ["introduction_caravan"],
+        )
+        review_manifest = json.loads(review_manifest_path.read_text(encoding="utf-8"))
+        assert review_manifest["capture_contract"]["completion_aware"] is True
+        assert review_manifest["captures"][0]["state"]["intro_page"] == 1
+        assert (root / "review" / "01_introduction_caravan.png").is_file()
 
     captures = [
         {"screen": screen, "requested_window": {"width": width, "height": height}}

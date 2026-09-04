@@ -176,6 +176,24 @@ EXPECTED_UI_STATE = {
     "route_event_loss_result": "arrival_handoff",
     "route_event_loss_result_large_text": "arrival_handoff",
 }
+COMPLETION_REQUIRED_SCREENS = {
+    "main_menu",
+    "introduction_basin",
+    "introduction_caravan",
+    "introduction_road",
+    "settlement_shop",
+    "trade_receipt",
+    "departure_desk",
+    "investment_departure",
+    "investment_road",
+    "investment_event",
+    "investment_arrival",
+    "market_change_receipt",
+    "investment_changed_return",
+    "investment_black_market_offer",
+    "investment_black_market_pressure",
+    "investment_terminal_receipt",
+}
 REQUIRED_LAYOUT_CONTROLS = {
     "main_menu": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
     "main_menu_large_text": ("MainMenuCard", "MainMenuHeading", "MainMenuWelcome", "MainMenuPrimaryAction", "MainMenuContinueAction", "MainMenuSettingsAction", "MainMenuCreditsAction", "MainMenuSaveStatus", "MainMenuQuitAction"),
@@ -336,6 +354,34 @@ def require_release_surface(capture: dict[str, object]) -> None:
             raise AssertionError(f"{screen}: release-surface invariant failed: {invariant}")
 
 
+def require_capture_completion(capture: dict[str, object]) -> None:
+    screen = str(capture.get("screen", "unknown"))
+    completion = capture.get("completion")
+    if not isinstance(completion, dict) or completion.get("ready") is not True:
+        raise AssertionError(f"{screen}: capture was taken before its UI state completed")
+    if int(completion.get("stable_frames", 0)) < 2:
+        raise AssertionError(f"{screen}: capture state was not stable for two renderer frames")
+    if screen not in COMPLETION_REQUIRED_SCREENS:
+        return
+    expected = completion.get("expected")
+    actual = completion.get("actual")
+    if not isinstance(expected, dict) or not expected:
+        raise AssertionError(f"{screen}: missing completion expectation")
+    if not isinstance(actual, dict) or any(actual.get(key) != value for key, value in expected.items()):
+        raise AssertionError(f"{screen}: completion evidence does not match its expected state")
+
+
+def require_capture_contract(manifest: dict[str, object], width: int, height: int, name: str = "manifest") -> None:
+    capture_contract = manifest.get("capture_contract")
+    expected_size = {"width": width, "height": height}
+    if not isinstance(capture_contract, dict) or capture_contract.get("completion_aware") is not True:
+        raise AssertionError(f"{name}: missing completion-aware capture contract")
+    if capture_contract.get("requested_window") != expected_size or capture_contract.get("window_size") != expected_size:
+        raise AssertionError(f"{name}: requested and native-window sizes must agree")
+    if capture_contract.get("logical_viewport") != {"width": 1280, "height": 720}:
+        raise AssertionError(f"{name}: logical viewport must remain the 1280x720 design canvas")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-dir", type=Path, required=True)
@@ -352,6 +398,7 @@ def main() -> int:
             raise AssertionError(f"{manifest_path.name}: missing display scale")
         if manifest.get("reported_viewport") != {"width": width, "height": height}:
             raise AssertionError(f"{manifest_path.name}: reported viewport does not match requested size")
+        require_capture_contract(manifest, width, height, manifest_path.name)
         manifest_captures = manifest.get("captures")
         if not isinstance(manifest_captures, list):
             raise AssertionError(f"{manifest_path.name}: captures must be a list")
@@ -384,6 +431,7 @@ def main() -> int:
         expected_state_screen = EXPECTED_UI_STATE.get(screen, screen.removesuffix("_large_text"))
         if ui_state.get("screen") != expected_state_screen:
             raise AssertionError(f"{file_name}: UI state does not match {expected_state_screen}")
+        require_capture_completion(capture)
         if screen == "route_departure" and (
             ui_state.get("road_scene_id") != "warden_causeway"
             or ui_state.get("road_waypoint") != "LEAVING ASHGATE"

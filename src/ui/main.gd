@@ -291,6 +291,8 @@ var map_panel
 var web_accessibility_callback: Variant
 var web_accessibility_control_callback: Variant
 var web_accessibility_key_callback: Variant
+var initial_window_fit_pending := true
+var initial_window_fit_recheck_scheduled := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -311,6 +313,7 @@ func _ready() -> void:
 	_build_intro()
 	_build_pause_menu()
 	_refresh_responsive_layout()
+	_schedule_initial_window_fit_recheck()
 	_refresh_continue_availability()
 	if large_text_enabled:
 		_apply_text_scale(self, 1.25)
@@ -320,9 +323,12 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_SIZE_CHANGED and is_inside_tree():
 		call_deferred("_refresh_responsive_layout")
+		if initial_window_fit_pending:
+			_schedule_initial_window_fit_recheck()
 
 func _fit_initial_window_to_display() -> void:
-	if OS.has_feature("web") or DisplayServer.get_name() == "headless" or DisplayServer.window_get_mode() != DisplayServer.WINDOW_MODE_WINDOWED:
+	var window_mode := DisplayServer.window_get_mode()
+	if OS.has_feature("web") or DisplayServer.get_name() == "headless" or not _startup_window_mode_allows_fit(window_mode):
 		return
 	if OS.get_cmdline_user_args().has("--output-dir"):
 		return
@@ -334,9 +340,28 @@ func _fit_initial_window_to_display() -> void:
 	var target_size := _clamped_window_size(current_size, available_size)
 	if target_size == current_size:
 		return
+	if window_mode == DisplayServer.WINDOW_MODE_MAXIMIZED:
+		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_size(target_size)
 	var placement_size := usable_rect.size if usable_rect.size.x > 0 and usable_rect.size.y > 0 else available_size
 	DisplayServer.window_set_position(usable_rect.position + (placement_size - target_size) / 2)
+
+func _startup_window_mode_allows_fit(window_mode: int) -> bool:
+	return window_mode in [DisplayServer.WINDOW_MODE_WINDOWED, DisplayServer.WINDOW_MODE_MAXIMIZED]
+
+func _schedule_initial_window_fit_recheck() -> void:
+	if initial_window_fit_recheck_scheduled or not initial_window_fit_pending:
+		return
+	initial_window_fit_recheck_scheduled = true
+	call_deferred("_settle_initial_window_fit")
+
+func _settle_initial_window_fit() -> void:
+	for _attempt in range(4):
+		await get_tree().process_frame
+		_fit_initial_window_to_display()
+	initial_window_fit_pending = false
+	initial_window_fit_recheck_scheduled = false
+	_refresh_responsive_layout()
 
 func _effective_display_size(usable_size: Vector2i, screen_size: Vector2i) -> Vector2i:
 	if usable_size.x <= 0 or usable_size.y <= 0:
@@ -4223,7 +4248,8 @@ func _refresh_opportunities() -> void:
 			var support_name := String(support_effect.get("faction_id", "local group")).replace("_", " ").capitalize()
 			effect_summary += ", %s support %+d" % [support_name, int(support_effect.get("delta", 0))]
 		var action_prefix := "BLACK MARKET · OPTIONAL\n" if action_category == "arms_trade" else ""
-		action_button.text = "%s%s — %d ashmarks, %s" % [action_prefix, String(action.get("name", "Opportunity")), cost, effect_summary]
+		var action_terms := "%d ashmarks, %s" % [cost, effect_summary] if cost > 0 else effect_summary
+		action_button.text = "%s%s — %s" % [action_prefix, String(action.get("name", "Opportunity")), action_terms]
 		var unavailable_reason := String(action.get("unavailable_reason", ""))
 		if not bool(action.get("available", false)):
 			action_button.disabled = true

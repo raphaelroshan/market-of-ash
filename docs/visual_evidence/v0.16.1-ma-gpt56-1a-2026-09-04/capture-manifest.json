@@ -1,0 +1,396 @@
+{
+  "manifest_version": 1,
+  "source_manifest_version": 1,
+  "platform": "macOS",
+  "display_scale": 2.0,
+  "reported_viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "capture_contract": {
+    "completion_aware": true,
+    "logical_viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "requested_window": {
+      "height": 720,
+      "width": 1280
+    },
+    "screen_size": {
+      "height": 2234,
+      "width": 3456
+    },
+    "usable_rect": {
+      "height": 1980,
+      "width": 3456,
+      "x": 0,
+      "y": 66
+    },
+    "window_mode": 0,
+    "window_size": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "screens": [
+    "introduction_caravan",
+    "settlement_shop",
+    "trade_receipt",
+    "departure_desk",
+    "investment_road",
+    "investment_event",
+    "investment_arrival",
+    "market_change_receipt",
+    "investment_changed_return",
+    "investment_black_market_offer",
+    "investment_black_market_pressure",
+    "investment_terminal_receipt"
+  ],
+  "captures": [
+    {
+      "screen": "introduction_caravan",
+      "file": "01_introduction_caravan.png",
+      "bytes": 71524,
+      "completion": {
+        "actual": {
+          "intro_page": 1,
+          "screen": "introduction"
+        },
+        "expected": {
+          "intro_page": 1,
+          "screen": "introduction"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "introduction",
+        "intro_page": 1,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "settlement_shop",
+      "file": "02_settlement_shop.png",
+      "bytes": 220242,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "trade_receipt",
+      "file": "03_trade_receipt.png",
+      "bytes": 231152,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "trade_receipt_title": "PURCHASE SEALED"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "trade_receipt_title": "PURCHASE SEALED"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "PURCHASE SEALED",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "departure_desk",
+      "file": "04_departure_desk.png",
+      "bytes": 206054,
+      "completion": {
+        "actual": {
+          "screen": "departure_desk",
+          "settlement_id": "ashgate"
+        },
+        "expected": {
+          "screen": "departure_desk",
+          "settlement_id": "ashgate"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "departure_desk",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_road",
+      "file": "05_investment_road.png",
+      "bytes": 144856,
+      "completion": {
+        "actual": {
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "expected": {
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_travel",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "road",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_event",
+      "file": "06_investment_event.png",
+      "bytes": 250485,
+      "completion": {
+        "actual": {
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "expected": {
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_event",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "encounter",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_arrival",
+      "file": "07_investment_arrival.png",
+      "bytes": 204338,
+      "completion": {
+        "actual": {
+          "screen": "arrival_handoff",
+          "settlement_id": "reedwatch"
+        },
+        "expected": {
+          "screen": "arrival_handoff",
+          "settlement_id": "reedwatch"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "arrival_handoff",
+        "intro_page": 2,
+        "settlement_id": "reedwatch",
+        "trade_receipt_title": "",
+        "travel_phase": "arrived",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "market_change_receipt",
+      "file": "08_market_change_receipt.png",
+      "bytes": 225362,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "settlement_id": "reedwatch",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "settlement_id": "reedwatch",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "reedwatch",
+        "trade_receipt_title": "SALE RECORDED",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_changed_return",
+      "file": "09_investment_changed_return.png",
+      "bytes": 227085,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "SALE RECORDED",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_black_market_offer",
+      "file": "10_investment_black_market_offer.png",
+      "bytes": 223895,
+      "completion": {
+        "actual": {
+          "arms_escalation": 0,
+          "bazaar_section": "information",
+          "screen": "settlement_shop"
+        },
+        "expected": {
+          "arms_escalation": 0,
+          "bazaar_section": "information",
+          "screen": "settlement_shop"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_black_market_pressure",
+      "file": "11_investment_black_market_pressure.png",
+      "bytes": 217004,
+      "completion": {
+        "actual": {
+          "arms_escalation": 2,
+          "bazaar_section": "information",
+          "screen": "settlement_shop"
+        },
+        "expected": {
+          "arms_escalation": 2,
+          "bazaar_section": "information",
+          "screen": "settlement_shop"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 2,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_terminal_receipt",
+      "file": "12_investment_terminal_receipt.png",
+      "bytes": 233872,
+      "completion": {
+        "actual": {
+          "ending_id": "ending_warden_reserve",
+          "screen": "settlement_shop"
+        },
+        "expected": {
+          "ending_id": "ending_warden_reserve",
+          "screen": "settlement_shop"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 1,
+        "ending_id": "ending_warden_reserve"
+      }
+    }
+  ]
+}

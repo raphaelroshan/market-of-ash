@@ -769,3 +769,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The existing copy was unusually honest but repeatedly used phrases such as “presentation cannot change,” “next authored encounter,” “disclosed exposed-unit roll,” and “factual journey receipt.” Those phrases explain the software instead of the caravan, while repeated zero values obscure the differences between choices.
 
 **Trade-off:** Mechanical labels and deterministic roll comparisons remain deliberately explicit, so the interface is not fully diegetic. Character-specific dialogue is still sparse and requires later authored content rather than longer utility prose.
+
+## ADR-097: Visual evidence proves the native window before judging layout
+
+**Decision:** Treat windowed and host-maximized startup states as eligible for display-bound fitting, then repeat the fit for four frames while platform metrics settle. A native capture is valid only when its requested size equals the actual native-window size, its logical viewport remains the authored 1280×720 canvas, and the expected player state is stable for two frames before rendering. Curated review sequences must be extracted from that validated manifest.
+
+**Reason:** A repeat smoke review cropped a 1600×900 game window to a 1280×720 virtual desktop and interpreted the crop as an in-game container defect. The UI's canonical 1280×720 renderer capture was contained, but the evidence systems did not record enough window or navigation state to explain the conflict.
+
+**Trade-off:** Full native capture takes slightly longer because every state waits for stability, and oversized startup windows may be restored from a host-imposed maximized state. Deliberate fullscreen modes remain untouched.
