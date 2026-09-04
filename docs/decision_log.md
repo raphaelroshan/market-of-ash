@@ -785,3 +785,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The validated sequence showed that road, encounter, and arrival all retained the planning-room heading. The controls changed correctly, but the repeated title weakened spatial continuity and made the arrival payoff look like another Departure state.
 
 **Trade-off:** The rail still shares one stable layout across journey phases. This improves identity and player orientation without introducing separate scenes, longer transitions, or simulation state.
+
+## ADR-099: Encounter action names and numeric terms have separate roles
+
+**Decision:** Allow an event choice to declare an optional concise `action_label` for its button heading while preserving the existing `label` for command results, history, and debriefs. Choice cards omit the `COST` row when nothing is spent and show all non-zero costs and rewards exactly once in dedicated rows. Any authored choice label containing a number must provide the concise action label.
+
+**Reason:** The encounter cards already separated `COST` and `RECEIVE`, but several headings repeated the same ashmark, cargo, provision, or day term. The repetition made the choice rail denser without adding information and contradicted the intended action-first hierarchy.
+
+**Trade-off:** The runtime content gains one optional presentation field. Older saved pending encounters safely fall back to their complete historical label, while authoritative choice IDs, costs, outcomes, and debrief records remain unchanged.

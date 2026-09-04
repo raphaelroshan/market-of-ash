@@ -82,8 +82,15 @@ static func _event_choice_view(world, pending: Dictionary, choice: Dictionary, c
 	var tactic_label := event_tactic_label(choice, trade_quantity, cargo_cost_quantity)
 	var certainty_label := "CERTAIN" if cargo_risk == 0 else "RISK ROLL %d%% cargo risk" % cargo_risk
 	var road_result := "cargo stays intact" if cargo_risk == 0 else "%s at risk" % cargo_context
-	var return_line := "\nRECEIVE — %d ashmarks" % money_reward if money_reward > 0 else ""
-	var text := "%s / %s — %s\nCOST — %s%s\nROAD — %s · %s\nIF CHOSEN — %s" % [tactic_label, certainty_label, String(choice.get("label", "Choose")), "none" if cost_parts.is_empty() else " · ".join(cost_parts), return_line, arrival_text, road_result, String(choice.get("outcome", "The road opens."))]
+	var action_label := String(choice.get("action_label", choice.get("label", "Choose")))
+	var text_lines: Array[String] = ["%s / %s — %s" % [tactic_label, certainty_label, action_label]]
+	if not cost_parts.is_empty():
+		text_lines.append("COST — %s" % " · ".join(cost_parts))
+	if money_reward > 0:
+		text_lines.append("RECEIVE — %d ashmarks" % money_reward)
+	text_lines.append("ROAD — %s · %s" % [arrival_text, road_result])
+	text_lines.append("IF CHOSEN — %s" % String(choice.get("outcome", "The road opens.")))
+	var text := "\n".join(text_lines)
 	var blocked_reason := ""
 	if world.money < money_cost:
 		blocked_reason = "Needs %d ashmarks; you have %d." % [money_cost, world.money]

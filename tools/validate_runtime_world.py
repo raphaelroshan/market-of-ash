@@ -484,6 +484,11 @@ def validate_events(value: Any, errors: list[str]) -> None:
             for field in ("label", "outcome"):
                 if not isinstance(choice.get(field), str) or not choice[field]:
                     fail(errors, f"event {event_id} choice {choice_id} must declare {field}")
+            action_label = choice.get("action_label", "")
+            if "action_label" in choice and (not isinstance(action_label, str) or not action_label.strip()):
+                fail(errors, f"event {event_id} choice {choice_id}.action_label must be non-empty text")
+            if isinstance(choice.get("label"), str) and any(character.isdigit() for character in choice["label"]) and not action_label:
+                fail(errors, f"event {event_id} choice {choice_id} needs action_label so numeric terms appear only in COST or RECEIVE")
             for field in ("money_cost", "money_reward", "provision_cost", "material_quantity", "days"):
                 value = choice.get(field, 0)
                 if not isinstance(value, int) or value < 0:

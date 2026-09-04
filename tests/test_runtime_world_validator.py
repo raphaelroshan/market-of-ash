@@ -274,6 +274,13 @@ def main() -> int:
             print(f"- missing: {fragment}")
         return 1
 
+    invalid_action_label = copy.deepcopy(runtime)
+    invalid_action_label["events"]["records"][0]["choices"][0].pop("action_label")
+    action_label_errors = validate(invalid_action_label)
+    if not any("needs action_label so numeric terms appear only in COST or RECEIVE" in error for error in action_label_errors):
+        print("FAIL: a numeric event label without a concise action label was not rejected")
+        return 1
+
     invalid_crew = copy.deepcopy(runtime)
     invalid_crew["crew"] = json.loads(
         (ROOT / "tests/fixtures/crew_invalid.json").read_text(encoding="utf-8")

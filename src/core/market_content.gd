@@ -953,6 +953,16 @@ static func _validate_events(value: Variant, errors: Array[String]) -> void:
 			for required_text in ["label", "outcome"]:
 				if String(choice.get(required_text, "")).is_empty():
 					errors.append("event %s choice %s must declare %s" % [event_id, choice_id, required_text])
+			var action_label := String(choice.get("action_label", ""))
+			if choice.has("action_label") and action_label.strip_edges().is_empty():
+				errors.append("event %s choice %s action_label must be non-empty text" % [event_id, choice_id])
+			var label_contains_number := false
+			for digit in ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]:
+				if String(choice.get("label", "")).contains(digit):
+					label_contains_number = true
+					break
+			if label_contains_number and action_label.is_empty():
+				errors.append("event %s choice %s needs action_label so numeric terms appear only in COST or RECEIVE" % [event_id, choice_id])
 			for non_negative_field in ["money_cost", "money_reward", "provision_cost", "material_quantity", "days"]:
 				if int(choice.get(non_negative_field, 0)) < 0:
 					errors.append("event %s choice %s %s must be non-negative" % [event_id, choice_id, non_negative_field])

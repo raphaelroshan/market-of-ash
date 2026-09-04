@@ -6,6 +6,8 @@ The latest completion-aware 1280×720 review sequence is [`v0.16.1-ma-gpt56-1a-2
 
 The follow-up [`journey phase identity`](visual_evidence/v0.16.1-journey-phase-identity-2026-09-04/README.md) sequence shows the same rail changing from Departure Desk to Road Stop, Roadside Decision, and Arrived at Reedwatch.
 
+The [`encounter copy`](visual_evidence/v0.16.1-encounter-copy-2026-09-04/README.md) sequence verifies action-first choice headings, exact single-instance costs, and omission of zero-cost noise.
+
 | Field | Value |
 |---|---|
 | Build | `v0.13.0-alpha-basin-vertical-slice` |
