@@ -777,3 +777,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A repeat smoke review cropped a 1600×900 game window to a 1280×720 virtual desktop and interpreted the crop as an in-game container defect. The UI's canonical 1280×720 renderer capture was contained, but the evidence systems did not record enough window or navigation state to explain the conflict.
 
 **Trade-off:** Full native capture takes slightly longer because every state waits for stability, and oversized startup windows may be restored from a host-imposed maximized state. Deliberate fullscreen modes remain untouched.
+
+## ADR-098: The journey rail names the current beat
+
+**Decision:** Replace the persistent `DEPARTURE DESK` heading after commitment with phase-specific titles: `ON THE ROAD`, `ROAD STOP`, `ROADSIDE DECISION`, and `ARRIVED AT <SETTLEMENT>`. Derive the title in the read-only journey presenter, publish it in capture state, and require it in the canonical investment-journey fixture.
+
+**Reason:** The validated sequence showed that road, encounter, and arrival all retained the planning-room heading. The controls changed correctly, but the repeated title weakened spatial continuity and made the arrival payoff look like another Departure state.
+
+**Trade-off:** The rail still shares one stable layout across journey phases. This improves identity and player orientation without introducing separate scenes, longer transitions, or simulation state.

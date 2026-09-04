@@ -110,16 +110,16 @@ func _test_arrival_presenter() -> void:
 func _test_journey_panel_view() -> void:
 	var world := AshWorldState.new(1107)
 	var departure := JourneyPanelView.snapshot(world, "moving_out", "LEAVING ASHGATE", false, "", "")
-	_expect(departure.state == "departure" and String(departure.map_hint).contains("Passage is paid") and String(departure.departure_status).contains("committed until the next stop"), "departure view should communicate committed travel in caravan language")
+	_expect(departure.state == "departure" and departure.panel_title == "ON THE ROAD" and String(departure.map_hint).contains("Passage is paid") and String(departure.departure_status).contains("committed until the next stop"), "departure view should communicate committed travel in caravan language")
 	var road := JourneyPanelView.snapshot(world, "road", "ROAD STOP — THE BROKEN MILEPOSTS", false, "", "")
-	_expect(road.state == "road" and String(road.event_text).contains("MID-ROUTE"), "road view should provide an explicit player-controlled pause")
+	_expect(road.state == "road" and road.panel_title == "ROAD STOP" and String(road.event_text).contains("MID-ROUTE") and String(road.caravan_context).begins_with("ROAD STOP — THE BROKEN MILEPOSTS"), "road view should provide an explicit player-controlled pause without repeating a generic journey label")
 	world.pending_event = {"title": "Three Riders, No Banner"}
 	var event := JourneyPanelView.snapshot(world, "encounter", "ENCOUNTER", false, "", "")
-	_expect(event.state == "event" and String(event.caravan_context).contains("Three Riders, No Banner"), "event view should name the authored contact")
+	_expect(event.state == "event" and event.panel_title == "ROADSIDE DECISION" and String(event.caravan_context).contains("Three Riders, No Banner"), "event view should name the authored contact under a distinct roadside heading")
 	world.pending_event.clear()
 	world.current_settlement = "reedwatch"
 	var arrival := JourneyPanelView.snapshot(world, "arrived", "ARRIVED", true, "Pay 10 ashmarks; you arrive at Reedwatch.", "")
-	_expect(arrival.state == "arrival" and arrival.enter_action == "Enter Reedwatch" and String(arrival.departure_status).contains("ARRIVAL — Reedwatch"), "arrival view should expose the handoff and destination action")
+	_expect(arrival.state == "arrival" and arrival.panel_title == "ARRIVED AT REEDWATCH" and arrival.enter_action == "Enter Reedwatch" and String(arrival.departure_status).contains("ARRIVAL — Reedwatch") and String(arrival.caravan_context).begins_with("JOURNEY COMPLETE"), "arrival view should expose a distinct handoff and destination action")
 
 
 func _test_campaign_debrief_presenter() -> void:

@@ -215,6 +215,7 @@ var enter_settlement_button: Button
 var departure_load_label: Label
 var departure_contract_label: Label
 var departure_status_label: Label
+var journey_phase_title_label: Label
 var departure_planning_panel: VBoxContainer
 var event_card: PanelContainer
 var event_mode_label: Label
@@ -1771,11 +1772,12 @@ func _build_ui() -> void:
 	var controls_shell := VBoxContainer.new()
 	controls_shell.add_theme_constant_override("separation", 10)
 	right.add_child(controls_shell)
-	var control_title := Label.new()
-	control_title.text = "DEPARTURE DESK"
-	control_title.add_theme_font_size_override("font_size", 20)
-	control_title.add_theme_color_override("font_color", Color("#e6c58d"))
-	controls_shell.add_child(control_title)
+	journey_phase_title_label = Label.new()
+	journey_phase_title_label.name = "JourneyPhaseTitle"
+	journey_phase_title_label.text = "DEPARTURE DESK"
+	journey_phase_title_label.add_theme_font_size_override("font_size", 20)
+	journey_phase_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	controls_shell.add_child(journey_phase_title_label)
 	var caravan_status_title := Label.new()
 	caravan_status_title.text = "CARAVAN STATUS"
 	caravan_status_title.add_theme_font_size_override("font_size", 13)
@@ -3468,6 +3470,7 @@ func _web_ui_state() -> Dictionary:
 		"ending_summary": world.ending_summary if world != null else "",
 		"campaign_debrief": ending_label.text if ending_panel != null and ending_panel.visible else "",
 		"travel_phase": map_panel.travel_phase if map_panel != null else "rest",
+		"journey_phase_title": journey_phase_title_label.text if journey_phase_title_label != null else "",
 		"road_scene_id": String(map_panel._road_profile(map_panel.travel_route_id).get("scene_id", "")) if map_panel != null and map_panel._is_road_view() else "",
 		"route_texture": VisualRegistry.route_texture(active_route_id) if not active_route_id.is_empty() else "",
 		"risk_cue": String(VisualRegistry.risk_cue(active_route_risk).get("tier", "stable")),
@@ -4689,6 +4692,8 @@ func _refresh_ui() -> void:
 		menu_save_status_label.text = save_status_text
 	if departure_status_label:
 		departure_status_label.text = String(journey_view.departure_status)
+	if journey_phase_title_label:
+		journey_phase_title_label.text = String(journey_view.panel_title)
 	if enter_settlement_button:
 		enter_settlement_button.text = String(journey_view.enter_action)
 		enter_settlement_button.visible = arrival_pending and map_panel != null and map_panel.travel_phase == "arrived"

@@ -4,6 +4,8 @@ These are local real-renderer captures from `v0.13.0-alpha-basin-vertical-slice`
 
 The latest completion-aware 1280×720 review sequence is [`v0.16.1-ma-gpt56-1a-2026-09-04`](visual_evidence/v0.16.1-ma-gpt56-1a-2026-09-04/README.md). Its manifest additionally proves native-window size and two-frame navigation stability from Introduction 2 through the terminal receipt.
 
+The follow-up [`journey phase identity`](visual_evidence/v0.16.1-journey-phase-identity-2026-09-04/README.md) sequence shows the same rail changing from Departure Desk to Road Stop, Roadside Decision, and Arrived at Reedwatch.
+
 | Field | Value |
 |---|---|
 | Build | `v0.13.0-alpha-basin-vertical-slice` |

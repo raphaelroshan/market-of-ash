@@ -128,3 +128,5 @@ For the investment-evaluation build, follow the dependency-aware tasks in [`docs
 | `docs/visual_evidence/v0.16.1-early-access-rc1-review-2026-09-04/` | Fresh 1280×720 title and Introduction captures with machine-readable manifest. |
 | `docs/ma_gpt56_1a_completion.md` | Resolution of the repeat-review clipping conflict and completion-aware full-journey evidence contract. |
 | `docs/visual_evidence/v0.16.1-ma-gpt56-1a-2026-09-04/` | Curated 1280×720 MA-GPT56-1A journey evidence with exact window and completion state. |
+| `docs/delivery_review_2026-09-04.md` | Delivery-skill review and correction of the journey rail's stale Departure identity. |
+| `docs/visual_evidence/v0.16.1-journey-phase-identity-2026-09-04/` | Completion-aware Departure, road, encounter, and arrival heading sequence. |
