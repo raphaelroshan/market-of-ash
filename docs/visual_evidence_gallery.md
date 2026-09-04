@@ -2,6 +2,8 @@
 
 These are local real-renderer captures from `v0.13.0-alpha-basin-vertical-slice`. They document the current game flow rather than final promotional art. Every image below is backed by a native capture manifest that records the exact viewport, screen state, focus and required-control bounds, platform, and display scale.
 
+The latest completion-aware 1280×720 review sequence is [`v0.16.1-ma-gpt56-1a-2026-09-04`](visual_evidence/v0.16.1-ma-gpt56-1a-2026-09-04/README.md). Its manifest additionally proves native-window size and two-frame navigation stability from Introduction 2 through the terminal receipt.
+
 | Field | Value |
 |---|---|
 | Build | `v0.13.0-alpha-basin-vertical-slice` |

@@ -20,7 +20,7 @@ static func snapshot(world, travel_phase: String, waypoint_label: String, arriva
 		map_hint = "%s — Read the signs, then continue toward the next encounter or arrival." % waypoint_label
 		event_text = "MID-ROUTE — The caravan has stopped where the road can be read.\nNEXT — Check the route ahead, then continue."
 		departure_status = "ROAD VIEW — %s. Read the corridor, then continue." % waypoint_label
-		caravan_context = "JOURNEY — %s\nNEXT — Read the road, then continue."
+		caravan_context = "JOURNEY — %s\nNEXT — Read the road, then continue." % waypoint_label
 	elif not world.pending_event.is_empty():
 		state = "event"
 		map_hint = "The road is blocked. Weigh the price of passage against the cargo at risk."

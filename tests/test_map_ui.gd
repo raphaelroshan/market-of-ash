@@ -42,6 +42,8 @@ func _initialize() -> void:
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1920, 1080)) == Vector2i(1600, 900), "the preferred 1600x900 desktop window should remain unchanged when the display can contain it")
 	_expect(ui._effective_display_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should trust the smaller physical screen when a virtual desktop overstates its usable area")
 	_expect(ui._effective_display_size(Vector2i.ZERO, Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should fall back to the physical screen when usable bounds are unavailable")
+	_expect(ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_WINDOWED) and ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_MAXIMIZED), "startup fitting should normalize an oversized window even when a virtual desktop reports it as maximized")
+	_expect(not ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_FULLSCREEN) and not ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN), "startup fitting should preserve deliberate fullscreen modes")
 	_expect(ui._opening_layout_should_compact(960) and ui._opening_layout_should_compact(1280), "the minimum and 1280-wide opening should use the stacked composition")
 	_expect(not ui._opening_layout_should_compact(1600), "the preferred 1600-wide opening should retain the split composition")
 	_expect(ui._opening_layout_width() == ui._report_viewport_size().x, "the opening breakpoint should follow the drawable window while the launch clamp keeps it inside the physical display")
@@ -1048,7 +1050,7 @@ func _initialize() -> void:
 	ui.shop_quantity.value = 2
 	ui._on_shop_quantity_changed(ui.shop_quantity.value)
 	ui._on_buy_pressed()
-	_expect(not ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[1].text.contains("BLACK MARKET · OPTIONAL") and ui.opportunity_buttons[1].text.contains("escalation +2"), "arms offer did not expose its optional status, cargo gate, payout, and escalation")
+	_expect(not ui.opportunity_buttons[1].disabled and ui.opportunity_buttons[1].text.contains("BLACK MARKET · OPTIONAL") and ui.opportunity_buttons[1].text.contains("+82 ashmarks") and ui.opportunity_buttons[1].text.contains("escalation +2") and not ui.opportunity_buttons[1].text.contains("— 0 ashmarks"), "arms offer did not expose its optional status, cargo gate, payout, and escalation without a false zero-cost lead")
 	ui._on_settlement_action_pressed("ashgate_cinder_rider_arms_sale")
 	_expect(ui.world.arms_escalation == 2 and int(ui.world.cargo.get("sealed_arms_crate", 0)) == 1, "arms offer UI did not apply the named sale")
 	_expect(ui.shop_status_label.text.contains("Arms 2/6") and ui.event_label.text.contains("Reedwatch Water Relief"), "arms result did not show its threshold and non-arms alternative")
