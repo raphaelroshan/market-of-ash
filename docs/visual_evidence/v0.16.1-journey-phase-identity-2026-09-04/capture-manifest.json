@@ -1,0 +1,164 @@
+{
+  "manifest_version": 1,
+  "source_manifest_version": 1,
+  "platform": "macOS",
+  "display_scale": 2.0,
+  "reported_viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "capture_contract": {
+    "completion_aware": true,
+    "logical_viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "requested_window": {
+      "height": 720,
+      "width": 1280
+    },
+    "screen_size": {
+      "height": 2234,
+      "width": 3456
+    },
+    "usable_rect": {
+      "height": 1980,
+      "width": 3456,
+      "x": 0,
+      "y": 66
+    },
+    "window_mode": 0,
+    "window_size": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "screens": [
+    "departure_desk",
+    "investment_road",
+    "investment_event",
+    "investment_arrival"
+  ],
+  "captures": [
+    {
+      "screen": "departure_desk",
+      "file": "01_departure_desk.png",
+      "bytes": 206054,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "DEPARTURE DESK",
+          "screen": "departure_desk",
+          "settlement_id": "ashgate"
+        },
+        "expected": {
+          "journey_phase_title": "DEPARTURE DESK",
+          "screen": "departure_desk",
+          "settlement_id": "ashgate"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "departure_desk",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_road",
+      "file": "02_investment_road.png",
+      "bytes": 143061,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ROAD STOP",
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "expected": {
+          "journey_phase_title": "ROAD STOP",
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_travel",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "road",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_event",
+      "file": "03_investment_event.png",
+      "bytes": 248809,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ROADSIDE DECISION",
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "expected": {
+          "journey_phase_title": "ROADSIDE DECISION",
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_event",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "encounter",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_arrival",
+      "file": "04_investment_arrival.png",
+      "bytes": 205600,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ARRIVED AT REEDWATCH",
+          "screen": "arrival_handoff",
+          "settlement_id": "reedwatch"
+        },
+        "expected": {
+          "journey_phase_title": "ARRIVED AT REEDWATCH",
+          "screen": "arrival_handoff",
+          "settlement_id": "reedwatch"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "arrival_handoff",
+        "intro_page": 2,
+        "settlement_id": "reedwatch",
+        "trade_receipt_title": "",
+        "travel_phase": "arrived",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    }
+  ]
+}
