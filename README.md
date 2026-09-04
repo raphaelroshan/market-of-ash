@@ -131,3 +131,4 @@ For the investment-evaluation build, follow the dependency-aware tasks in [`docs
 | `docs/delivery_review_2026-09-04.md` | Delivery-skill review and correction of the journey rail's stale Departure identity. |
 | `docs/visual_evidence/v0.16.1-journey-phase-identity-2026-09-04/` | Completion-aware Departure, road, encounter, and arrival heading sequence. |
 | `docs/visual_evidence/v0.16.1-encounter-copy-2026-09-04/` | Writer-reviewed encounter cards with action-first labels and non-repeating terms. |
+| `docs/visual_evidence/v0.16.1-road-endpoint-identity-2026-09-04/` | Three-region road evidence with settlement-specific horizon silhouettes. |

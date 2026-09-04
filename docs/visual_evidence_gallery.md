@@ -8,6 +8,8 @@ The follow-up [`journey phase identity`](visual_evidence/v0.16.1-journey-phase-i
 
 The [`encounter copy`](visual_evidence/v0.16.1-encounter-copy-2026-09-04/README.md) sequence verifies action-first choice headings, exact single-instance costs, and omission of zero-cost noise.
 
+The [`road endpoint identity`](visual_evidence/v0.16.1-road-endpoint-identity-2026-09-04/README.md) sequence shows registry-driven origin and destination silhouettes across all three regions.
+
 | Field | Value |
 |---|---|
 | Build | `v0.13.0-alpha-basin-vertical-slice` |

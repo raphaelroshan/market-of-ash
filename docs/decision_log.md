@@ -793,3 +793,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** The encounter cards already separated `COST` and `RECEIVE`, but several headings repeated the same ashmark, cargo, provision, or day term. The repetition made the choice rail denser without adding information and contradicted the intended action-first hierarchy.
 
 **Trade-off:** The runtime content gains one optional presentation field. Older saved pending encounters safely fall back to their complete historical label, while authoritative choice IDs, costs, outcomes, and debrief records remain unchanged.
+
+## ADR-100: Road horizons reuse settlement motif identity
+
+**Decision:** Render origin and destination silhouettes in road scenes from each settlement's existing visual-registry motif. Gate, reeds, brine, forge, lantern/quay, glass/mirror, watchtower, and peat-stack families share the same small horizon footprint and preserve written settlement labels.
+
+**Reason:** Route environments were distinct, but every endpoint used the same block-and-flag silhouette. The road therefore communicated corridor identity while relying almost entirely on text to distinguish the places being left and approached.
+
+**Trade-off:** These remain economical code-drawn marks rather than final environment paintings. Reusing the registry keeps them deterministic and replaceable, but final commercial art direction still requires authored asset work.

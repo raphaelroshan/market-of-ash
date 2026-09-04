@@ -42,6 +42,7 @@ func _initialize() -> void:
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1920, 1080)) == Vector2i(1600, 900), "the preferred 1600x900 desktop window should remain unchanged when the display can contain it")
 	_expect(ui._effective_display_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should trust the smaller physical screen when a virtual desktop overstates its usable area")
 	_expect(ui._effective_display_size(Vector2i.ZERO, Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should fall back to the physical screen when usable bounds are unavailable")
+	_expect(ui.map_panel._road_settlement_motif("ashgate") == "gate" and ui.map_panel._road_settlement_motif("reedwatch") == "reeds", "road endpoints should inherit distinct settlement motifs from the shared visual registry")
 	_expect(ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_WINDOWED) and ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_MAXIMIZED), "startup fitting should normalize an oversized window even when a virtual desktop reports it as maximized")
 	_expect(not ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_FULLSCREEN) and not ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN), "startup fitting should preserve deliberate fullscreen modes")
 	_expect(ui._opening_layout_should_compact(960) and ui._opening_layout_should_compact(1280), "the minimum and 1280-wide opening should use the stacked composition")

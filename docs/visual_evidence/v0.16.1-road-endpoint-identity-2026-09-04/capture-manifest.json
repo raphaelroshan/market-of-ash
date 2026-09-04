@@ -1,0 +1,117 @@
+{
+  "manifest_version": 1,
+  "source_manifest_version": 1,
+  "platform": "macOS",
+  "display_scale": 2.0,
+  "reported_viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "capture_contract": {
+    "completion_aware": true,
+    "logical_viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "requested_window": {
+      "height": 720,
+      "width": 1280
+    },
+    "screen_size": {
+      "height": 2234,
+      "width": 3456
+    },
+    "usable_rect": {
+      "height": 1980,
+      "width": 3456,
+      "x": 0,
+      "y": 66
+    },
+    "window_mode": 0,
+    "window_size": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "screens": [
+    "investment_road",
+    "glasswind_road",
+    "siltfire_emberfen_road"
+  ],
+  "captures": [
+    {
+      "screen": "investment_road",
+      "file": "01_investment_road.png",
+      "bytes": 143445,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ROAD STOP",
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "expected": {
+          "journey_phase_title": "ROAD STOP",
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_travel",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "road",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "glasswind_road",
+      "file": "02_glasswind_road.png",
+      "bytes": 129365,
+      "completion": {
+        "actual": {},
+        "expected": {},
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_travel",
+        "intro_page": 2,
+        "settlement_id": "sunfall_exchange",
+        "trade_receipt_title": "",
+        "travel_phase": "road",
+        "pending_event_id": "shardwind_tithe",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "siltfire_emberfen_road",
+      "file": "03_siltfire_emberfen_road.png",
+      "bytes": 130136,
+      "completion": {
+        "actual": {},
+        "expected": {},
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_travel",
+        "intro_page": 2,
+        "settlement_id": "mothlight_quay",
+        "trade_receipt_title": "",
+        "travel_phase": "road",
+        "pending_event_id": "emberfen_smoke_crossing",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    }
+  ]
+}
