@@ -124,3 +124,5 @@ For the investment-evaluation build, follow the dependency-aware tasks in [`docs
 | `docs/latest_review_2026-09-03.md` | Current main-branch review, verification result, 1280×720 visual findings, and next mandatory trade-flow gate. |
 | `docs/visual_evidence/v0.16.0-early-access-rc2-review-2026-09-03/` | Fresh 1280×720 title and Introduction captures from the current review. |
 | `docs/ma_i1_i2_revalidation_2026-09-03.md` | Resolution of the latest responsive-shell finding and renewed clean-save trade-flow evidence. |
+| `docs/latest_review_2026-09-04.md` | Repeat current-main verification and visual review; confirms the Introduction 2 clipping gate remains open. |
+| `docs/visual_evidence/v0.16.1-early-access-rc1-review-2026-09-04/` | Fresh 1280×720 title and Introduction captures with machine-readable manifest. |

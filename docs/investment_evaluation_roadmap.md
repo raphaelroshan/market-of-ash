@@ -69,3 +69,10 @@ The dated evidence is in `docs/latest_review_2026-09-03.md` and `docs/visual_evi
 The review finding is resolved in `0.16.1-early-access-rc1`. The application now clamps its preferred 1600×900 window against both usable and physical screen bounds, including virtual displays; `ResponsiveColumns` falls back to stacking when child minimum widths cannot coexist; and Introduction prose wraps inside a bounded, horizontal-scroll-free reading area. Native validation requires a 24 px safe area around every opening card and containment for every required opening control.
 
 Fresh normal-flow captures at 960×540, 1280×720, and 1600×900 prove the full clean-save MA-I2 path from Introduction through first purchase, route comparison, departure, road consequence, arrival sale, changed return Bazaar, optional black-market pressure, and terminal receipt. The canonical seed remains `1107`; every transition uses player command handlers, and ordinary trade remains sufficient. Evidence and exact acceptance output are recorded in `docs/ma_i1_i2_revalidation_2026-09-03.md`.
+
+
+## 2026-09-04 repeat-test checkpoint — MA-I1A remains open
+
+The current `0.16.1-early-access-rc1` main build passes the full automated suite and records 25 deterministic world/save round trips in 141.06 ms. The repeatable 1280×720 visual smoke run, however, still shows Introduction 2 of 3 with truncated explanatory copy and a Next action pressed against the right viewport edge. This is a player-facing evidence conflict with the earlier MA-I1/MA-I2 revalidation record, so the visual gate is reopened for investment evaluation.
+
+The next agent task is **MA-GPT56-1A**: reconcile the capture-window contract with the actual responsive container/minimum-size negotiation, add a completion-aware navigation fixture, and prove the full ordinary-trade path in the same reproducible evidence system. The agent must not solve the issue by shortening copy again, hiding controls, globally shrinking text, or making black-market activity mandatory. Evidence is recorded in `docs/latest_review_2026-09-04.md` and `docs/visual_evidence/v0.16.1-early-access-rc1-review-2026-09-04/`.
