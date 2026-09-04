@@ -1,0 +1,12 @@
+{
+  "game": "Market of Ash",
+  "build": "0.16.1-early-access-rc1",
+  "main_commit": "55b8eff",
+  "review_date": "2026-09-04",
+  "engine": "Godot 4.4.1",
+  "viewport": {"width": 1280, "height": 720},
+  "states": ["title", "introduction_1", "introduction_2"],
+  "files": ["01_title.png", "02_first_action.png", "03_followup.png"],
+  "result": "automated verification passed; Introduction 2 shows right-edge clipping and Next is too close to the viewport boundary",
+  "source": "xvfb-run visual smoke capture from current origin/main checkout"
+}
