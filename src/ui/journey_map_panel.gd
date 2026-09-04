@@ -445,11 +445,58 @@ func _road_waypoint_label() -> String:
 			return "APPROACHING %s" % destination_name.to_upper()
 	return "AT REST"
 
-func _draw_road_settlement(position: Vector2, name: String, color: Color, right_aligned: bool) -> void:
+func _road_settlement_motif(settlement_id: String) -> String:
+	var identity: Dictionary = world.settlement(settlement_id).get("identity", {}) if world != null else {}
+	return String(VisualRegistry.settlement_style(settlement_id, identity).get("motif", "gate"))
+
+func _draw_road_settlement(position: Vector2, settlement_id: String, name: String, color: Color, right_aligned: bool) -> void:
 	var direction := -1.0 if right_aligned else 1.0
-	draw_rect(Rect2(position + Vector2(-26, -22), Vector2(52, 22)), color.darkened(0.56), true)
-	draw_rect(Rect2(position + Vector2(-18, -35), Vector2(16, 35)), color.darkened(0.42), true)
-	draw_rect(Rect2(position + Vector2(6, -29), Vector2(13, 29)), color.darkened(0.34), true)
+	var ink := color.darkened(0.24)
+	draw_rect(Rect2(position + Vector2(-27, -8), Vector2(54, 8)), color.darkened(0.58), true)
+	match _road_settlement_motif(settlement_id):
+		"reeds":
+			draw_line(position + Vector2(-27, -5), position + Vector2(27, -5), Color("#52706a"), 3.0)
+			for index in range(8):
+				var x := -23.0 + index * 6.5
+				var height := 17.0 + float((index * 5) % 12)
+				draw_line(position + Vector2(x, -4), position + Vector2(x + 2, -4 - height), ink, 2.0)
+			draw_rect(Rect2(position + Vector2(10, -32), Vector2(14, 27)), ink.darkened(0.08), false, 3.0)
+		"brine":
+			for index in range(3):
+				draw_arc(position + Vector2(-18 + index * 18, -7), 10.0, 0.0, PI, 12, ink, 2.0)
+			draw_line(position + Vector2(17, -8), position + Vector2(17, -36), ink, 4.0)
+			draw_line(position + Vector2(9, -25), position + Vector2(26, -25), ink, 2.0)
+		"forge", "kiln":
+			draw_arc(position + Vector2(-8, -6), 18.0, PI, TAU, 16, ink, 5.0)
+			for index in range(2):
+				var stack_x := 9.0 + index * 11.0
+				draw_rect(Rect2(position + Vector2(stack_x, -34 - index * 5), Vector2(7, 29 + index * 5)), ink.darkened(0.1), true)
+				draw_circle(position + Vector2(stack_x + 3, -40 - index * 7), 5.0 + index * 2.0, Color(ink, 0.3))
+		"lanterns", "quay":
+			draw_line(position + Vector2(-25, -28), position + Vector2(24, -19), ink, 2.0)
+			for index in range(4):
+				var lamp := position + Vector2(-19 + index * 14, -25 + index * 2.5)
+				draw_line(lamp, lamp + Vector2(0, 7), ink, 1.5)
+				draw_circle(lamp + Vector2(0, 10), 3.0, Color("#e1a75b"))
+		"glass", "mirrors":
+			for index in range(3):
+				var center := position + Vector2(-16 + index * 16, -17 - float(index % 2) * 7)
+				draw_colored_polygon(PackedVector2Array([center + Vector2(0, -12), center + Vector2(8, 0), center + Vector2(0, 12), center + Vector2(-8, 0)]), Color(ink, 0.78))
+				draw_line(center + Vector2(0, 12), center + Vector2(0, 19), ink, 2.0)
+		"watchtower":
+			draw_line(position + Vector2(-18, -5), position + Vector2(-10, -38), ink, 4.0)
+			draw_line(position + Vector2(18, -5), position + Vector2(10, -38), ink, 4.0)
+			draw_rect(Rect2(position + Vector2(-22, -43), Vector2(44, 12)), ink, true)
+			draw_circle(position + Vector2(0, -49), 4.0, Color("#d99a55"))
+		"peat_stacks":
+			for index in range(3):
+				draw_rect(Rect2(position + Vector2(-24 + index * 17, -12 - index * 5), Vector2(15, 12 + index * 5)), ink.darkened(0.1), true)
+			draw_arc(position + Vector2(10, -34), 10.0, PI * 1.1, PI * 1.9, 12, Color("#8db7a7"), 2.0)
+		_:
+			draw_rect(Rect2(position + Vector2(-25, -31), Vector2(50, 27)), ink.darkened(0.12), true)
+			draw_arc(position + Vector2(0, -4), 14.0, PI, TAU, 16, Color("#19140f"), 8.0)
+			draw_rect(Rect2(position + Vector2(-31, -38), Vector2(9, 34)), ink, true)
+			draw_rect(Rect2(position + Vector2(22, -38), Vector2(9, 34)), ink, true)
 	draw_line(position + Vector2(0, -36), position + Vector2(0, -49), color, 2.0)
 	draw_colored_polygon(PackedVector2Array([
 		position + Vector2(0, -49),
@@ -646,8 +693,8 @@ func _draw_road_scene() -> void:
 	draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 39), _road_waypoint_label(), HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(11), accent)
 	var route_description := String(world.route(travel_route_id, travel_origin_id, travel_destination_id).get("description", "Committed caravan corridor.")) if world != null else "Committed caravan corridor."
 	draw_string(ThemeDB.fallback_font, board.position + Vector2(12, 56), route_description, HORIZONTAL_ALIGNMENT_LEFT, board.size.x - 24.0, _font_size(10), Color("#b5a18b"))
-	_draw_road_settlement(Vector2(board.position.x + 34, horizon_y + 5), origin_name, accent, false)
-	_draw_road_settlement(Vector2(board.end.x - 34, horizon_y - 5), destination_name, accent, true)
+	_draw_road_settlement(Vector2(board.position.x + 34, horizon_y + 5), travel_origin_id, origin_name, accent, false)
+	_draw_road_settlement(Vector2(board.end.x - 34, horizon_y - 5), travel_destination_id, destination_name, accent, true)
 	var progress_y := board.end.y - 18.0
 	draw_line(Vector2(board.position.x + 24, progress_y), Vector2(board.end.x - 24, progress_y), Color("#705746"), 4.0)
 	draw_line(Vector2(board.position.x + 24, progress_y), Vector2(lerpf(board.position.x + 24, board.end.x - 24, travel_progress), progress_y), _route_color(travel_route_id), 4.0)

@@ -19,3 +19,9 @@ Reviewed the completion-aware 1280×720 ordinary-trade journey in player order, 
 ## Remaining judgment
 
 The arrival receipt still carries intentionally explicit comparison detail. Only moderated observation can show whether new players read the causal receipt or move directly to the Bazaar; this pass does not shorten or hide that information without evidence.
+
+## Follow-up — recognizable road endpoints
+
+The same evidence review found that every road endpoint used one generic block-and-flag silhouette. Road scenes now reuse the settlement motifs already established in the Bazaar: Ashgate's gate, Reedwatch's reeds, Brine Cross's pans, forge or kiln stacks, lantern and quay lines, glass or mirror marks, watchtowers, and peat smoke. The route frame retains the written settlement names and color-independent geometry.
+
+Fresh 1280×720 evidence covers the Five-Well Basin, Glasswind Reach, and Siltfire March in `docs/visual_evidence/v0.16.1-road-endpoint-identity-2026-09-04/`.
