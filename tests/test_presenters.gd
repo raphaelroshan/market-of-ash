@@ -72,7 +72,7 @@ func _test_event_presenter() -> void:
 		"stakes": "Pay or risk the cargo.",
 		"loss_basis": {"loss_quantity": 1, "loss_good_id": "water", "loss_unit_value": 30},
 		"choices": [
-			{"id": "pay", "label": "Pay", "money_cost": 999, "outcome": "The road opens."},
+			{"id": "pay", "label": "Pay 999 ashmarks", "action_label": "Pay the keeper", "money_cost": 999, "outcome": "The road opens."},
 			{"id": "cross", "label": "Cross", "cargo_risk": 0.4, "outcome": "The caravan presses on."},
 		],
 	}
@@ -82,7 +82,10 @@ func _test_event_presenter() -> void:
 	_expect(view.get("threat_label", "") == "THREAT · UP TO 40% CARGO LOSS" and String(view.get("exposed_label", "")).contains("WATER x1") and String(view.get("road_label", "")).contains("OLD ROAD"), "event presenter should expose a scannable threat, cargo, and road dossier")
 	_expect(String(view.get("decision_label", "")).contains("Pay or risk the cargo") and String(view.get("rules_label", "")).contains("Only the costs and consequences written here"), "event dossier should preserve the authored dilemma and explicit terms boundary")
 	_expect(choices.size() == 2 and bool(choices[0].get("disabled", false)) and String(choices[0].get("blocked_reason", "")).contains("999 ashmarks"), "event presenter should keep unaffordable choices visible with the exact blocker")
-	_expect(not bool(choices[1].get("disabled", true)) and String(choices[1].get("text", "")).contains("MANEUVER / RISK ROLL 40%"), "event presenter should label available risky tactics consistently")
+	var paid_text := String(choices[0].get("text", ""))
+	_expect(paid_text.contains("PAY / CERTAIN — Pay the keeper") and paid_text.contains("COST — pay 999 ashmarks") and paid_text.count("999 ashmarks") == 1, "event presenter should separate the authored action from its exact cost")
+	var free_text := String(choices[1].get("text", ""))
+	_expect(not bool(choices[1].get("disabled", true)) and free_text.contains("MANEUVER / RISK ROLL 40%") and not free_text.contains("COST —"), "event presenter should label available risky tactics without a zero-cost row")
 
 
 func _test_arrival_presenter() -> void:

@@ -45,3 +45,9 @@ The utility copy is now more consistent, but most character voice still lives in
 - Full `scripts/verify.sh` repository suite: PASS, including all three regions, campaign, game-quality, investment-economy, and release-readiness gates.
 - Native 960×540 capture validation: PASS across 86 states.
 - Manual visual check: Introduction, Bazaar, Departure, road, encounter, certain arrival, realized-loss recovery, endings, and the changed Large Text states remain usable. Long event and arrival rails still depend on their visible scrolling at the minimum window, as designed.
+
+## Follow-up — encounter action hierarchy
+
+A completion-aware review found that numeric event labels still repeated their cost in the dedicated `COST` row, while free choices displayed `COST — none`. Event data now supplies concise action labels such as `Hire the riders`, `Repair the public span`, and `Wait below the peat bank`; the original complete labels remain available to results and campaign history. Choice cards name the action first, render each non-zero cost and reward once, and omit the cost row when no resource is spent.
+
+The runtime validators reject a numeric historical label without an authored action label. Presenter and full map-flow tests assert the separation, including the free risky crossing. Fresh 1280×720 evidence is in `docs/visual_evidence/v0.16.1-encounter-copy-2026-09-04/`; human reading speed remains unmeasured.

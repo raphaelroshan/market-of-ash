@@ -1,0 +1,94 @@
+{
+  "manifest_version": 1,
+  "source_manifest_version": 1,
+  "platform": "macOS",
+  "display_scale": 2.0,
+  "reported_viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "capture_contract": {
+    "completion_aware": true,
+    "logical_viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "requested_window": {
+      "height": 720,
+      "width": 1280
+    },
+    "screen_size": {
+      "height": 2234,
+      "width": 3456
+    },
+    "usable_rect": {
+      "height": 1980,
+      "width": 3456,
+      "x": 0,
+      "y": 66
+    },
+    "window_mode": 0,
+    "window_size": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "screens": [
+    "route_event",
+    "investment_event"
+  ],
+  "captures": [
+    {
+      "screen": "route_event",
+      "file": "01_route_event.png",
+      "bytes": 230768,
+      "completion": {
+        "actual": {},
+        "expected": {},
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_event",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "encounter",
+        "pending_event_id": "gatekeepers_chalk",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    },
+    {
+      "screen": "investment_event",
+      "file": "02_investment_event.png",
+      "bytes": 249030,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ROADSIDE DECISION",
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "expected": {
+          "journey_phase_title": "ROADSIDE DECISION",
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_event",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "encounter",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      }
+    }
+  ]
+}

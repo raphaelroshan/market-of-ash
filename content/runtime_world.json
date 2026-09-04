@@ -688,6 +688,7 @@
           {
             "id": "pay_posted_toll",
             "label": "Pay 6 ashmarks",
+            "action_label": "Pay the posted toll",
             "money_cost": 6,
             "reputation_delta": {"wardens": 1},
             "provision_cost": 0,
@@ -750,6 +751,7 @@
           {
             "id": "sell_materials_at_premium",
             "label": "Sell 2 repair materials for 30 ashmarks",
+            "action_label": "Sell the repair stock",
             "money_cost": 0,
             "money_reward": 30,
             "provision_cost": 0,
@@ -762,6 +764,7 @@
           {
             "id": "reserve_materials_for_span",
             "label": "Reserve 2 materials for the public span",
+            "action_label": "Repair the public span",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
@@ -834,6 +837,7 @@
           {
             "id": "sell_barrels_at_peak",
             "label": "Sell 2 water at the emergency premium",
+            "action_label": "Sell to private buyers",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
@@ -849,6 +853,7 @@
           {
             "id": "share_barrels_fairly",
             "label": "Share 2 water through the public queue",
+            "action_label": "Share through the public queue",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
@@ -909,6 +914,7 @@
           {
             "id": "pay_for_escort",
             "label": "Pay 10 ashmarks for escort",
+            "action_label": "Hire the riders",
             "money_cost": 10,
             "money_reward": 0,
             "provision_cost": 0,
@@ -939,6 +945,7 @@
           {
             "id": "trade_medicine_for_passage",
             "label": "Trade 1 medicine for passage",
+            "action_label": "Trade medicine for passage",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
@@ -986,6 +993,7 @@
           {
             "id": "buy_wind_lane_seal",
             "label": "Buy a wind-lane seal for 7 ashmarks",
+            "action_label": "Buy a wind-lane seal",
             "money_cost": 7,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1048,6 +1056,7 @@
           {
             "id": "hire_bell_keeper",
             "label": "Hire a bell keeper for 6 ashmarks",
+            "action_label": "Hire a bell keeper",
             "money_cost": 6,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1110,6 +1119,7 @@
           {
             "id": "pay_reed_mat_crew",
             "label": "Pay the mat crew 5 ashmarks",
+            "action_label": "Pay the mat crew",
             "money_cost": 5,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1125,6 +1135,7 @@
           {
             "id": "winch_through_black_water",
             "label": "Winch by hand — 1 provision, 1 day",
+            "action_label": "Winch by hand",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 1,
@@ -1156,6 +1167,7 @@
           {
             "id": "mara_split_axle_brace",
             "label": "Let Mara brace the axle — 1 scrap",
+            "action_label": "Let Mara brace the axle",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1196,6 +1208,7 @@
           {
             "id": "hire_smoke_bell",
             "label": "Hire a smoke-bell guide for 6 ashmarks",
+            "action_label": "Hire a smoke-bell guide",
             "money_cost": 6,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1212,6 +1225,7 @@
           {
             "id": "wet_the_smoke_canvas",
             "label": "Wet the smoke canvas — 1 Water",
+            "action_label": "Wet the smoke canvas",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1229,6 +1243,7 @@
           {
             "id": "wait_below_the_peat_bank",
             "label": "Wait below the peat bank — 1 provision, 1 day",
+            "action_label": "Wait below the peat bank",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 1,
@@ -1274,6 +1289,7 @@
           {
             "id": "buy_consortium_signal_guide",
             "label": "Buy a licensed signal guide for 6 ashmarks",
+            "action_label": "Buy a licensed signal guide",
             "money_cost": 6,
             "money_reward": 0,
             "provision_cost": 0,
@@ -1290,6 +1306,7 @@
           {
             "id": "wait_for_true_moon_line",
             "label": "Wait for the moon line — 1 provision, 1 day",
+            "action_label": "Wait for the moon line",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 1,
@@ -1322,6 +1339,7 @@
           {
             "id": "orin_occlusion_marks",
             "label": "Let Orin expose the false line — 1 lamp oil",
+            "action_label": "Let Orin expose the false line",
             "money_cost": 0,
             "money_reward": 0,
             "provision_cost": 0,
