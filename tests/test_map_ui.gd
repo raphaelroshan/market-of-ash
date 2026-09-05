@@ -36,12 +36,17 @@ func _initialize() -> void:
 	ui.settings_persistence_enabled = true
 	ui._refresh_continue_availability()
 	_expect(int(ProjectSettings.get_setting("display/window/size/viewport_width", 0)) == 1280 and int(ProjectSettings.get_setting("display/window/size/viewport_height", 0)) == 720, "the logical design viewport should remain 1280x720 so smaller windows reflow at the established scale")
-	_expect(int(ProjectSettings.get_setting("display/window/size/window_width_override", 0)) == 1600 and int(ProjectSettings.get_setting("display/window/size/window_height_override", 0)) == 900, "desktop builds should open in a larger 1600x900 window")
+	_expect(int(ProjectSettings.get_setting("display/window/size/window_width_override", 0)) == 1280 and int(ProjectSettings.get_setting("display/window/size/window_height_override", 0)) == 720, "desktop builds should bootstrap inside the supported 1280x720 display before runtime promotion")
+	_expect(ui.PREFERRED_DESKTOP_WINDOW_SIZE == Vector2i(1600, 900), "desktop builds should retain 1600x900 as the preferred runtime window")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "the preferred desktop window should clamp to a 1280x720 display instead of opening off-screen")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1366, 728)) == Vector2i(1294, 728), "the launch clamp should preserve the preferred window aspect ratio when only one display axis is constrained")
 	_expect(ui._clamped_window_size(Vector2i(1600, 900), Vector2i(1920, 1080)) == Vector2i(1600, 900), "the preferred 1600x900 desktop window should remain unchanged when the display can contain it")
 	_expect(ui._effective_display_size(Vector2i(1600, 900), Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should trust the smaller physical screen when a virtual desktop overstates its usable area")
 	_expect(ui._effective_display_size(Vector2i.ZERO, Vector2i(1280, 720)) == Vector2i(1280, 720), "window negotiation should fall back to the physical screen when usable bounds are unavailable")
+	_expect(ui._startup_window_target(Vector2i(1280, 720), Vector2i(1920, 1080), false) == Vector2i(1600, 900), "a safe bootstrap window should promote to the preferred desktop size when the display can contain it")
+	_expect(ui._startup_window_target(Vector2i(1280, 720), Vector2i(1280, 720), false) == Vector2i(1280, 720), "a 1280x720 display should retain the safe bootstrap size without exposing a cropped 1600x900 first frame")
+	_expect(ui._startup_window_target(Vector2i(960, 540), Vector2i(1920, 1080), true) == Vector2i(960, 540), "an explicit resolution should remain authoritative when it fits the display")
+	_expect(ui._has_explicit_resolution_argument(PackedStringArray(["--resolution", "1280x720"])) and ui._has_explicit_resolution_argument(PackedStringArray(["--resolution=1280x720"])) and ui._has_explicit_resolution_argument(PackedStringArray(["--capture-window=960x540"])) and not ui._has_explicit_resolution_argument(PackedStringArray(["--editor"])), "startup fitting should distinguish explicit and packaged-capture resolution requests from the safe desktop default")
 	_expect(ui.map_panel._road_settlement_motif("ashgate") == "gate" and ui.map_panel._road_settlement_motif("reedwatch") == "reeds", "road endpoints should inherit distinct settlement motifs from the shared visual registry")
 	_expect(ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_WINDOWED) and ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_MAXIMIZED), "startup fitting should normalize an oversized window even when a virtual desktop reports it as maximized")
 	_expect(not ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_FULLSCREEN) and not ui._startup_window_mode_allows_fit(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN), "startup fitting should preserve deliberate fullscreen modes")
@@ -191,16 +196,22 @@ func _initialize() -> void:
 	ui._on_interface_sounds_toggled(true)
 	ui._on_new_game_pressed()
 	await process_frame
-	ui._on_intro_next_pressed()
-	await process_frame
 	var intro_card: PanelContainer = ui.find_child("IntroductionCard", true, false)
-	var intro_layer_rect: Rect2 = ui.intro_layer.get_global_rect()
-	var intro_card_rect: Rect2 = intro_card.get_global_rect()
-	_expect(intro_card_rect.position.x >= intro_layer_rect.position.x + 32.0 and intro_card_rect.end.x <= intro_layer_rect.end.x - 32.0, "Introduction 2 should preserve both horizontal shell gutters at the compact breakpoint")
-	for intro_control in [ui.intro_progress_label, ui.intro_title_label, ui.intro_body_label, ui.intro_back_button, ui.intro_next_button, ui.intro_skip_button]:
-		_expect(intro_card_rect.encloses(intro_control.get_global_rect()), "IntroductionCard should contain required control %s at 1280x720" % intro_control.name)
+	var intro_body_scroll: ScrollContainer = ui.find_child("IntroductionBodyScroll", true, false)
+	var intro_note: Label = ui.find_child("IntroductionNote", true, false)
+	for page_index in range(ui.INTRO_PAGES.size()):
+		ui.intro_page = page_index
+		ui._refresh_intro_page()
+		await process_frame
+		await process_frame
+		var intro_layer_rect: Rect2 = ui.intro_layer.get_global_rect()
+		var intro_card_rect: Rect2 = intro_card.get_global_rect()
+		_expect(ui.intro_columns.uses_compact_layout(), "Introduction %d should report the compact layout actually chosen at 1280x720" % (page_index + 1))
+		_expect(intro_card_rect.position.x >= intro_layer_rect.position.x + 32.0 and intro_card_rect.end.x <= intro_layer_rect.end.x - 32.0, "Introduction %d should preserve both horizontal shell gutters at the compact breakpoint" % (page_index + 1))
+		for intro_control in [ui.intro_progress_label, ui.intro_title_label, intro_body_scroll, ui.intro_body_label, intro_note, ui.intro_back_button, ui.intro_next_button, ui.intro_skip_button]:
+			_expect(intro_card_rect.encloses(intro_control.get_global_rect()), "Introduction %d card should contain required control %s at 1280x720" % [page_index + 1, intro_control.name])
 	_expect(not ui.intro_body_label.fit_content and ui.intro_body_label.autowrap_mode == TextServer.AUTOWRAP_WORD_SMART and ui.intro_body_label.get_parent() is ScrollContainer and ui.intro_body_label.get_parent().horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED, "Introduction copy should wrap inside a horizontal-scroll-free reading area instead of widening the card")
-	ui._on_intro_back_pressed()
+	ui.intro_page = 0
 	ui._on_intro_back_pressed()
 
 	ui.pending_tutorial_enabled = false

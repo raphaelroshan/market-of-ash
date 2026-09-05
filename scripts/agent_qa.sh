@@ -23,37 +23,47 @@ if [[ ! -f "$ROOT/scripts/verify.sh" ]]; then
   exit 2
 fi
 
+CAPTURE_ARGS=()
+if [[ "${AGENT_QA_CAPTURE:-1}" == "1" ]]; then
+  CAPTURE_DIR="$OUTPUT_DIR/title-capture"
+  mkdir -p "$CAPTURE_DIR"
+  rm -f "$CAPTURE_DIR/capture-manifest.json" "$CAPTURE_DIR/main_menu.png"
+  COMMIT="$(git -C "$ROOT" rev-parse HEAD)"
+  export GODOT_BIN
+  if command -v xvfb-run >/dev/null 2>&1; then
+    xvfb-run -a --server-args='-screen 0 1280x720x24' \
+      "$GODOT_BIN" --path "$ROOT" --rendering-method gl_compatibility --resolution 1280x720 \
+      --script res://tools/agent_qa_capture.gd \
+      -- --output="$CAPTURE_DIR" --state=main_menu --width=1280 --height=720 --frames=8 \
+      --capture-window=1280x720 --commit="$COMMIT" --scenario="$SCENARIO" \
+      > "$OUTPUT_DIR/capture.stdout.log" 2> "$OUTPUT_DIR/capture.stderr.log"
+  else
+    "$GODOT_BIN" --path "$ROOT" --rendering-method gl_compatibility --resolution 1280x720 \
+      --script res://tools/agent_qa_capture.gd \
+      -- --output="$CAPTURE_DIR" --state=main_menu --width=1280 --height=720 --frames=8 \
+      --capture-window=1280x720 --commit="$COMMIT" --scenario="$SCENARIO" \
+      > "$OUTPUT_DIR/capture.stdout.log" 2> "$OUTPUT_DIR/capture.stderr.log"
+  fi
+  CAPTURE_STATUS=$?
+  CAPTURE_MANIFEST="$CAPTURE_DIR/capture-manifest.json"
+  if [[ "$CAPTURE_STATUS" -eq 0 && ( ! -s "$CAPTURE_MANIFEST" || ! -s "$CAPTURE_DIR/main_menu.png" ) ]]; then
+    CAPTURE_STATUS=3
+  fi
+  if [[ "$CAPTURE_STATUS" -ne 0 ]]; then
+    echo "AGENT_QA_CAPTURE_FAILED: see $OUTPUT_DIR/capture.stderr.log" >&2
+  fi
+  CAPTURE_ARGS=(--capture-manifest "$CAPTURE_MANIFEST" --capture-exit-code "$CAPTURE_STATUS")
+fi
+
 set +e
 python3 "$ROOT/tools/agent_qa_runner.py" \
   --game "$GAME" \
   --output "$OUTPUT_DIR" \
   --timeout "$TIMEOUT_SECONDS" \
   ${SCENARIO:+--scenario "$SCENARIO"} \
+  "${CAPTURE_ARGS[@]}" \
   --verify bash scripts/verify.sh
 STATUS=$?
 set -e
-
-if [[ "${AGENT_QA_CAPTURE:-1}" == "1" ]]; then
-  CAPTURE_DIR="$OUTPUT_DIR/title-capture"
-  mkdir -p "$CAPTURE_DIR"
-  export GODOT_BIN
-  if command -v xvfb-run >/dev/null 2>&1; then
-    xvfb-run -a --server-args='-screen 0 1280x720x24' \
-      "$GODOT_BIN" --path "$ROOT" --editor --quit-after 2 \
-      --script res://tools/agent_qa_capture.gd \
-      -- --output="$CAPTURE_DIR" --state=title --width=1280 --height=720 --frames=8 \
-      > "$OUTPUT_DIR/capture.stdout.log" 2> "$OUTPUT_DIR/capture.stderr.log"
-  else
-    "$GODOT_BIN" --path "$ROOT" --editor --quit-after 2 \
-      --script res://tools/agent_qa_capture.gd \
-      -- --output="$CAPTURE_DIR" --state=title --width=1280 --height=720 --frames=8 \
-      > "$OUTPUT_DIR/capture.stdout.log" 2> "$OUTPUT_DIR/capture.stderr.log"
-  fi
-  CAPTURE_STATUS=$?
-  if [[ "$CAPTURE_STATUS" -ne 0 ]]; then
-    echo "AGENT_QA_CAPTURE_FAILED: see $OUTPUT_DIR/capture.stderr.log" >&2
-    STATUS=1
-  fi
-fi
 
 exit "$STATUS"

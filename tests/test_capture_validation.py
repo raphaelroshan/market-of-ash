@@ -27,6 +27,7 @@ from tools.capture_validation import (
     write_rgb_png,
 )
 from tools.extract_native_review_evidence import extract_review_evidence
+from tools.agent_qa_runner import load_capture_manifest, load_scenario
 from tools.validate_native_captures import parse_viewport, require_capture_completion, require_capture_contract, require_release_surface
 
 
@@ -160,6 +161,7 @@ def main() -> int:
                             "file": source_capture.name,
                             "completion": completed_capture["completion"],
                             "ui_state": {"screen": "introduction", "intro_page": 1},
+                            "layout": {"opening_compact": True, "required_controls": {"IntroductionCard": {"visible": True}}},
                         }
                     ],
                 }
@@ -174,7 +176,39 @@ def main() -> int:
         review_manifest = json.loads(review_manifest_path.read_text(encoding="utf-8"))
         assert review_manifest["capture_contract"]["completion_aware"] is True
         assert review_manifest["captures"][0]["state"]["intro_page"] == 1
+        assert review_manifest["captures"][0]["layout"]["opening_compact"] is True
+        assert review_manifest["captures"][0]["layout"]["required_controls"]["IntroductionCard"]["visible"] is True
         assert (root / "review" / "01_introduction_caravan.png").is_file()
+
+        agent_image = root / "main_menu.png"
+        write_solid_rgb_png(agent_image, 4, 3, (80, 60, 40))
+        agent_manifest = root / "agent-capture.json"
+        agent_manifest.write_text(
+            json.dumps({"valid": True, "path": str(agent_image), "width": 4, "height": 3, "readiness": {"ready": True, "stable_frames": 8}}),
+            encoding="utf-8",
+        )
+        assert load_capture_manifest(str(agent_manifest), 0)["status"] == "PASS"
+        assert load_capture_manifest(str(agent_manifest), 2)["status"] == "INVALID_EVIDENCE"
+        agent_image.unlink()
+        assert load_capture_manifest(str(agent_manifest), 0)["status"] == "INVALID_EVIDENCE"
+
+        scenario_path = root / "scenario.json"
+        scenario_path.write_text(json.dumps({
+            "schema_version": 1,
+            "game": "market-of-ash",
+            "scenario_id": "ordinary_trade",
+            "status": "planned",
+            "seed": 4107,
+            "expected_states": ["main_menu", "bazaar"],
+            "semantic_commands": ["start_new_game"],
+            "checkpoints": ["after_bazaar"],
+            "screenshot_states": ["bazaar"],
+            "time_budget_ms": 30000,
+        }), encoding="utf-8")
+        scenario_summary, _ = load_scenario(root, str(scenario_path))
+        assert scenario_summary["seed"] == 4107
+        assert scenario_summary["expected_states"] == ["main_menu", "bazaar"]
+        assert scenario_summary["input_trace"] == ["start_new_game"]
 
     captures = [
         {"screen": screen, "requested_window": {"width": width, "height": height}}

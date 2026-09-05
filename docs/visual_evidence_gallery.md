@@ -195,3 +195,15 @@ The post-RC2 1280×720 clipping finding is repaired. Introduction copy and actio
 ![Terminal receipt at 1600×900](visual_evidence/v0.16.1-ma-i1-i2-revalidation-2026-09-03/1600x900/investment-terminal-receipt-1600x900.png)
 
 The [`revalidation record`](visual_evidence/v0.16.1-ma-i1-i2-revalidation-2026-09-03/README.md) links the selected frames to complete 86-state manifests at both viewports.
+
+## 0.16.1 safe-startup and opening revalidation
+
+Native startup now begins at a 1280×720 surface that cannot be cropped by a 1280×720 host, then promotes to 1600×900 on larger displays. Completion-aware semantic navigation proves each Introduction page before continuing through the ordinary-trade journey.
+
+![Complete caravan introduction at 1280×720](visual_evidence/v0.16.1-ma-gpt56-1c-2026-09-05/02_introduction_caravan.png)
+
+![First ordinary purchase at 1280×720](visual_evidence/v0.16.1-ma-gpt56-1c-2026-09-05/05_trade_receipt.png)
+
+![Terminal receipt at 1280×720](visual_evidence/v0.16.1-ma-gpt56-1c-2026-09-05/12_investment_terminal_receipt.png)
+
+The [`MA-GPT56-1C capture record`](visual_evidence/v0.16.1-ma-gpt56-1c-2026-09-05/README.md) contains the complete 12-state review sequence and manifest.

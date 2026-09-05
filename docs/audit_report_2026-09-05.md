@@ -21,3 +21,7 @@ The title screen presents a coherent Five-Well Basin trade product. Introduction
 ## Next task
 
 Execute **MA-GPT56-1C**: repair the actual responsive container/minimum-size negotiation at 1280×720, add bounds assertions for required Introduction controls, and replace blind Return-key capture with completion-aware navigation. Then prove the ordinary-trade path from first purchase through route comparison, departure, road consequence, arrival sale/recovery, changed return market, and terminal receipt. Do not hide content, globally shrink text, or make black-market activity mandatory.
+
+## Resolution
+
+MA-GPT56-1C is complete for repository-owned scope. Native startup now begins from a safe 1280×720 surface and promotes to 1600×900 only on a display that can contain it; `ResponsiveColumns` reports its actual post-negotiation composition; all required Introduction controls have per-page containment assertions; and the capture journey uses semantic button actions with exact-state waits. Fresh 960×540, 1280×720, and 1600×900 native runs pass. See `docs/ma_gpt56_1c_completion.md`.

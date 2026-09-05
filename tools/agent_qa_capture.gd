@@ -1,10 +1,14 @@
 extends SceneTree
 
+const MainScene = preload("res://scenes/Main.tscn")
+
 var output_dir := ""
-var state_id := "boot"
+var state_id := "main_menu"
 var capture_width := 1280
 var capture_height := 720
 var minimum_frames := 8
+var commit := "unknown"
+var scenario := ""
 
 func _init() -> void:
 	for argument in OS.get_cmdline_user_args():
@@ -18,6 +22,10 @@ func _init() -> void:
 			capture_height = maxi(360, int(argument.trim_prefix("--height=")))
 		elif argument.begins_with("--frames="):
 			minimum_frames = maxi(1, int(argument.trim_prefix("--frames=")))
+		elif argument.begins_with("--commit="):
+			commit = argument.trim_prefix("--commit=")
+		elif argument.begins_with("--scenario="):
+			scenario = argument.trim_prefix("--scenario=")
 	call_deferred("_capture_when_ready")
 
 func _capture_when_ready() -> void:
@@ -31,8 +39,28 @@ func _capture_when_ready() -> void:
 	var root_window := get_root()
 	root_window.size = Vector2i(capture_width, capture_height)
 	DisplayServer.window_set_size(Vector2i(capture_width, capture_height))
-	for _frame in range(minimum_frames):
+	var ui: Control = MainScene.instantiate()
+	var capture_user_prefix := "user://market_of_ash_agent_qa_%d" % OS.get_process_id()
+	ui.save_path = capture_user_prefix + ".save"
+	ui.settings_path = capture_user_prefix + ".cfg"
+	ui.report_path = capture_user_prefix + ".json"
+	ui.autosave_enabled = false
+	ui.settings_persistence_enabled = false
+	root_window.add_child(ui)
+	var stable_frames := 0
+	var frames_waited := 0
+	for frame_index in range(180):
 		await process_frame
+		frames_waited = frame_index + 1
+		var ready: bool = ui._current_ui_state_id() == state_id and ui.start_game_button != null and ui.start_game_button.is_visible_in_tree()
+		stable_frames = stable_frames + 1 if ready else 0
+		if stable_frames >= minimum_frames:
+			break
+	if stable_frames < minimum_frames:
+		_fail("state %s did not remain ready for %d frames; actual state was %s" % [state_id, minimum_frames, ui._current_ui_state_id()])
+		return
+	RenderingServer.force_draw(false)
+	await process_frame
 	var viewport := root_window.get_viewport()
 	var texture := viewport.get_texture()
 	if texture == null:
@@ -55,14 +83,28 @@ func _capture_when_ready() -> void:
 		return
 	var manifest := {
 		"schema_version": 1,
+		"game": "market-of-ash",
+		"commit": commit,
+		"version": ProjectSettings.get_setting("application/config/version", "unknown"),
+		"engine": Engine.get_version_info().get("string", "unknown"),
+		"renderer": ProjectSettings.get_setting("rendering/renderer/rendering_method", "unknown"),
+		"locale": OS.get_locale(),
+		"scenario": scenario,
 		"state_id": state_id,
 		"width": capture_width,
 		"height": capture_height,
-		"frames_waited": minimum_frames,
+		"frames_waited": frames_waited,
 		"path": output_path,
+		"input_trace": ["launch", "wait:%s" % state_id],
+		"readiness": {"ready": true, "stable_frames": stable_frames, "actual_state": ui._current_ui_state_id()},
+		"known_limitations": ["semantic scenario execution remains planned; this capture proves only the release-facing Main Menu readiness state"],
 		"valid": true
 	}
 	_write_manifest(manifest)
+	for suffix in [".save", ".save.bak", ".save.tmp", ".cfg", ".json"]:
+		var generated_path := ProjectSettings.globalize_path(capture_user_prefix + suffix)
+		if FileAccess.file_exists(generated_path):
+			DirAccess.remove_absolute(generated_path)
 	quit(0)
 
 func _is_uniform(image: Image) -> bool:

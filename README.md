@@ -134,6 +134,8 @@ For the investment-evaluation build, follow the dependency-aware tasks in [`docs
 | `docs/visual_evidence/v0.16.1-road-endpoint-identity-2026-09-04/` | Three-region road evidence with settlement-specific horizon silhouettes. |
 | `docs/audit_report_2026-09-05.md` | Current main audit with automated result, 1280×720 visual findings, and MA-GPT56-1C next task. |
 | `docs/visual_evidence/v0.16.1-early-access-rc1-audit-2026-09-05/` | Fresh title, Introduction, follow-up screenshots, and capture manifest. |
+| `docs/ma_gpt56_1c_completion.md` | Safe-startup, actual-layout, and completion-aware opening acceptance record. |
+| `docs/visual_evidence/v0.16.1-ma-gpt56-1c-2026-09-05/` | Validated 1280×720 Introduction and complete ordinary-trade journey evidence. |
 
 
 ## Agent QA system

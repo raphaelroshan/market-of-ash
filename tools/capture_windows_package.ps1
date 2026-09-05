@@ -39,7 +39,7 @@ Add-Type -AssemblyName System.Drawing
 $version = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($executablePath)
 $process = $null
 try {
-    $process = Start-Process -FilePath $executablePath -WorkingDirectory ([System.IO.Path]::GetDirectoryName($executablePath)) -ArgumentList @("--resolution", "960x540", "--position", "0,0") -PassThru
+    $process = Start-Process -FilePath $executablePath -WorkingDirectory ([System.IO.Path]::GetDirectoryName($executablePath)) -ArgumentList @("--resolution", "960x540", "--position", "0,0", "--", "--capture-window=960x540") -PassThru
     $deadline = [DateTime]::UtcNow.AddSeconds(30)
     $handle = [IntPtr]::Zero
     while ([DateTime]::UtcNow -lt $deadline) {

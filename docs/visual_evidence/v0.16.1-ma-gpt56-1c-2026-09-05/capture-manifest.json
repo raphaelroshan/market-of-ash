@@ -1,0 +1,6460 @@
+{
+  "manifest_version": 1,
+  "source_manifest_version": 1,
+  "platform": "macOS",
+  "display_scale": 2.0,
+  "reported_viewport": {
+    "height": 720,
+    "width": 1280
+  },
+  "capture_contract": {
+    "completion_aware": true,
+    "logical_viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "requested_window": {
+      "height": 720,
+      "width": 1280
+    },
+    "screen_size": {
+      "height": 2234,
+      "width": 3456
+    },
+    "usable_rect": {
+      "height": 1984,
+      "width": 3456,
+      "x": 0,
+      "y": 66
+    },
+    "window_mode": 0,
+    "window_size": {
+      "height": 720,
+      "width": 1280
+    }
+  },
+  "screens": [
+    "introduction_basin",
+    "introduction_caravan",
+    "introduction_road",
+    "settlement_shop",
+    "trade_receipt",
+    "departure_desk",
+    "investment_road",
+    "investment_event",
+    "investment_arrival",
+    "market_change_receipt",
+    "investment_changed_return",
+    "investment_terminal_receipt"
+  ],
+  "captures": [
+    {
+      "screen": "introduction_basin",
+      "file": "01_introduction_basin.png",
+      "bytes": 72785,
+      "completion": {
+        "actual": {
+          "intro_page": 0,
+          "screen": "introduction"
+        },
+        "expected": {
+          "intro_page": 0,
+          "screen": "introduction"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "introduction",
+        "intro_page": 0,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 0.0,
+          "width": 340.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "focused": {
+          "height": 52.0,
+          "width": 571.0,
+          "x": 645.0,
+          "y": 566.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 1593.00061035156,
+          "width": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "opening_compact": true,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 171.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 115.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 472.0,
+              "width": 690.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 152.0,
+              "width": 620.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 287.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 0.0,
+              "width": 340.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 203.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": true
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 116.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 406.0
+            },
+            "visible": true
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 116.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 406.0
+            },
+            "visible": true
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": true
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 16.75,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 535.0
+            },
+            "visible": true
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": true
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 47.6666679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": true
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": true
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 39.0833320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 352.0
+            },
+            "visible": true
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 2433.0,
+              "width": 700.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 170.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 660.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 242.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 3133.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 75.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 660.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    },
+    {
+      "screen": "introduction_caravan",
+      "file": "02_introduction_caravan.png",
+      "bytes": 71524,
+      "completion": {
+        "actual": {
+          "intro_page": 1,
+          "screen": "introduction"
+        },
+        "expected": {
+          "intro_page": 1,
+          "screen": "introduction"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "introduction",
+        "intro_page": 1,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 0.0,
+          "width": 340.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "focused": {
+          "height": 52.0,
+          "width": 571.0,
+          "x": 645.0,
+          "y": 566.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 1593.00061035156,
+          "width": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "opening_compact": true,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 171.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 115.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 472.0,
+              "width": 690.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 152.0,
+              "width": 620.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 287.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 0.0,
+              "width": 340.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 203.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": true
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 116.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 406.0
+            },
+            "visible": true
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 116.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 406.0
+            },
+            "visible": true
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": true
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 16.75,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 535.0
+            },
+            "visible": true
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": true
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 47.6666679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": true
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": true
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 39.0833320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 352.0
+            },
+            "visible": true
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 2433.0,
+              "width": 700.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 170.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 660.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 242.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 3133.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 75.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 660.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    },
+    {
+      "screen": "introduction_road",
+      "file": "03_introduction_road.png",
+      "bytes": 77594,
+      "completion": {
+        "actual": {
+          "intro_page": 2,
+          "screen": "introduction"
+        },
+        "expected": {
+          "intro_page": 2,
+          "screen": "introduction"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "introduction",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 0.0,
+          "width": 340.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "focused": {
+          "height": 52.0,
+          "width": 571.0,
+          "x": 645.0,
+          "y": 566.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 1593.00061035156,
+          "width": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "opening_compact": true,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 171.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 115.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 472.0,
+              "width": 690.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 152.0,
+              "width": 620.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 287.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 0.0,
+              "width": 340.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 203.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": true
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 116.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 406.0
+            },
+            "visible": true
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 116.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 406.0
+            },
+            "visible": true
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": true
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 16.75,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 535.0
+            },
+            "visible": true
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": true
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 47.6666679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": true
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": true
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 39.0833320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 352.0
+            },
+            "visible": true
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 2433.0,
+              "width": 700.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 170.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 660.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 242.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 3133.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 75.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 660.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    },
+    {
+      "screen": "settlement_shop",
+      "file": "04_settlement_shop.png",
+      "bytes": 220242,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 0.0,
+          "width": 340.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "focused": {
+          "height": 56.0,
+          "width": 363.0,
+          "x": 50.0,
+          "y": 600.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 3057.75146484375,
+          "width": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 143.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": true
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": true
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": true
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 229.604156494141,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": true
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": true
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 587.0
+            },
+            "visible": true
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 600.0
+            },
+            "visible": true
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 5251.0,
+              "width": 187.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 0.0,
+              "width": 340.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 3208.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 7992.0,
+              "width": 700.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 170.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 660.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 242.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 600.0
+            },
+            "visible": true
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 75.0,
+              "x": 50.0,
+              "y": 38.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 660.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    },
+    {
+      "screen": "trade_receipt",
+      "file": "05_trade_receipt.png",
+      "bytes": 231571,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "trade_receipt_title": "PURCHASE SEALED"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "trade_receipt_title": "PURCHASE SEALED"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "PURCHASE SEALED",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 0.0,
+          "width": 340.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "focused": {
+          "height": 56.0,
+          "width": 409.0,
+          "x": 821.0,
+          "y": 626.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 3057.75146484375,
+          "width": 1.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 143.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": true
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": true
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": true
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 229.604156494141,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": true
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": true
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 587.0
+            },
+            "visible": true
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 532.0
+            },
+            "visible": true
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 5251.0,
+              "width": 187.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 0.0,
+              "width": 340.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 3208.0,
+              "width": 360.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 8.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 7992.0,
+              "width": 700.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 170.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 660.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 242.0,
+              "x": 0.0,
+              "y": 0.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 532.0
+            },
+            "visible": true
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": true
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 660.0,
+          "x": 0.0,
+          "y": 0.0
+        }
+      }
+    },
+    {
+      "screen": "departure_desk",
+      "file": "06_departure_desk.png",
+      "bytes": 206054,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "DEPARTURE DESK",
+          "screen": "departure_desk",
+          "settlement_id": "ashgate"
+        },
+        "expected": {
+          "journey_phase_title": "DEPARTURE DESK",
+          "screen": "departure_desk",
+          "settlement_id": "ashgate"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "departure_desk",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 376.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 200.0,
+          "width": 213.0,
+          "x": 806.0,
+          "y": 303.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 254.66667175293
+        },
+        "map_hint": {
+          "height": 47.6666717529297,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 189.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 116.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 229.604156494141,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 587.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 16.0,
+              "width": 16.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 376.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": true
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": true
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 491.0
+            },
+            "visible": true
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 195.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 491.0
+        }
+      }
+    },
+    {
+      "screen": "investment_road",
+      "file": "07_investment_road.png",
+      "bytes": 143445,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ROAD STOP",
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "expected": {
+          "journey_phase_title": "ROAD STOP",
+          "screen": "route_travel",
+          "travel_phase": "road"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_travel",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "road",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 380.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 52.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 644.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 254.66667175293
+        },
+        "map_hint": {
+          "height": 47.6666717529297,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 189.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 116.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 229.604156494141,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 587.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 16.0,
+              "width": 16.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 380.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": true
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 491.0
+            },
+            "visible": true
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 141.0,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 644.0
+            },
+            "visible": true
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 491.0
+        }
+      }
+    },
+    {
+      "screen": "investment_event",
+      "file": "08_investment_event.png",
+      "bytes": 249175,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ROADSIDE DECISION",
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "expected": {
+          "journey_phase_title": "ROADSIDE DECISION",
+          "pending_event_id": "three_riders_no_banner",
+          "screen": "route_event"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "route_event",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "encounter",
+        "pending_event_id": "three_riders_no_banner",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 442.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 123.0,
+          "width": 434.0,
+          "x": 806.0,
+          "y": 417.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 220.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 22.3333339691162,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 189.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 74.0,
+              "width": 59.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 116.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 229.604156494141,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 587.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 16.0,
+              "width": 16.0,
+              "x": 821.0,
+              "y": 688.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 442.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583330154419,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 48.0,
+              "width": 59.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": true
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 466.0
+            },
+            "visible": true
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 733.0,
+              "width": 434.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 644.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 466.0
+        }
+      }
+    },
+    {
+      "screen": "investment_arrival",
+      "file": "09_investment_arrival.png",
+      "bytes": 205600,
+      "completion": {
+        "actual": {
+          "journey_phase_title": "ARRIVED AT REEDWATCH",
+          "screen": "arrival_handoff",
+          "settlement_id": "reedwatch"
+        },
+        "expected": {
+          "journey_phase_title": "ARRIVED AT REEDWATCH",
+          "screen": "arrival_handoff",
+          "settlement_id": "reedwatch"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "arrival_handoff",
+        "intro_page": 2,
+        "settlement_id": "reedwatch",
+        "trade_receipt_title": "",
+        "travel_phase": "arrived",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 384.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 48.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 648.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 194.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 22.3333339691162,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 163.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 213.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 648.0
+            },
+            "visible": true
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": false
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": false
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 229.604156494141,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": false
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 587.0
+            },
+            "visible": false
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 384.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583358764648,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 294.0
+            },
+            "visible": true
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 259.0
+            },
+            "visible": true
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 60.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": true
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 274.0
+            },
+            "visible": true
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": true
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": true
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 440.0
+            },
+            "visible": true
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 733.0,
+              "width": 434.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 644.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 600.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": false
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 440.0
+        }
+      }
+    },
+    {
+      "screen": "market_change_receipt",
+      "file": "10_market_change_receipt.png",
+      "bytes": 225998,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "settlement_id": "reedwatch",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "settlement_id": "reedwatch",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "reedwatch",
+        "trade_receipt_title": "SALE RECORDED",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 384.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 56.0,
+          "width": 409.0,
+          "x": 821.0,
+          "y": 626.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 194.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 22.3333339691162,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 163.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 213.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 648.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": true
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": true
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": true
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 250.749984741211,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": true
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": true
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 756.0
+            },
+            "visible": true
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 532.0
+            },
+            "visible": true
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 384.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583358764648,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 294.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 259.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 60.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 274.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 440.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 733.0,
+              "width": 434.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 644.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 532.0
+            },
+            "visible": true
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": true
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 440.0
+        }
+      }
+    },
+    {
+      "screen": "investment_changed_return",
+      "file": "11_investment_changed_return.png",
+      "bytes": 227085,
+      "completion": {
+        "actual": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "expected": {
+          "screen": "settlement_shop",
+          "settlement_id": "ashgate",
+          "trade_receipt_title": "SALE RECORDED"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "SALE RECORDED",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 0,
+        "ending_id": ""
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 384.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 56.0,
+          "width": 409.0,
+          "x": 821.0,
+          "y": 626.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 194.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 47.6666679382324,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 163.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 213.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 648.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 271.0
+            },
+            "visible": true
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": true
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 73.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": true
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 250.749984741211,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": true
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": true
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 756.0
+            },
+            "visible": true
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 532.0
+            },
+            "visible": true
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 268.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 857.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 857.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 857.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 5251.0,
+              "width": 187.0,
+              "x": 821.0,
+              "y": 857.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 384.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 77.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 130.0,
+              "x": 821.0,
+              "y": 38.0
+            },
+            "visible": false
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583358764648,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 294.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 259.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 60.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 274.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 440.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 733.0,
+              "width": 434.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 644.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 532.0
+            },
+            "visible": true
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": true
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 440.0
+        }
+      }
+    },
+    {
+      "screen": "investment_terminal_receipt",
+      "file": "12_investment_terminal_receipt.png",
+      "bytes": 233872,
+      "completion": {
+        "actual": {
+          "ending_id": "ending_warden_reserve",
+          "screen": "settlement_shop"
+        },
+        "expected": {
+          "ending_id": "ending_warden_reserve",
+          "screen": "settlement_shop"
+        },
+        "frames_waited": 2,
+        "ready": true,
+        "stable_frames": 2
+      },
+      "state": {
+        "screen": "settlement_shop",
+        "intro_page": 2,
+        "settlement_id": "ashgate",
+        "trade_receipt_title": "",
+        "travel_phase": "rest",
+        "pending_event_id": "",
+        "arms_escalation": 1,
+        "ending_id": "ending_warden_reserve"
+      },
+      "layout": {
+        "active_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "departure_scroll": {
+          "height": 384.0,
+          "width": 442.0,
+          "x": 806.0,
+          "y": 254.0
+        },
+        "focused": {
+          "height": 52.0,
+          "width": 197.0,
+          "x": 821.0,
+          "y": 416.0
+        },
+        "game_layer": {
+          "height": 720.0,
+          "width": 1280.0,
+          "x": 0.0,
+          "y": 0.0
+        },
+        "map_board": {
+          "height": 194.0,
+          "width": 748.0,
+          "x": 34.0,
+          "y": 230.0
+        },
+        "map_hint": {
+          "height": 47.6666679382324,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 163.0
+        },
+        "opening_compact": false,
+        "release_surface": {
+          "developer_panel_hidden": true,
+          "diagnostics_hidden": true,
+          "report_action_hidden": true
+        },
+        "required_controls": {
+          "ArrivalDebriefPanel": {
+            "rect": {
+              "height": 213.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "ArrivalPrimaryAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 648.0
+            },
+            "visible": false
+          },
+          "BazaarCargoStatus": {
+            "rect": {
+              "height": 22.3333339691162,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 347.0
+            },
+            "visible": true
+          },
+          "BazaarDecisionSummary": {
+            "rect": {
+              "height": 212.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": false
+          },
+          "BazaarMarketPanel": {
+            "rect": {
+              "height": 648.0,
+              "width": 743.0,
+              "x": 48.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "BazaarMarketStatus": {
+            "rect": {
+              "height": 149.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 189.0
+            },
+            "visible": true
+          },
+          "BazaarPricePreview": {
+            "rect": {
+              "height": 250.75,
+              "width": 731.0,
+              "x": 50.0,
+              "y": 589.0
+            },
+            "visible": false
+          },
+          "BazaarPrimaryAction": {
+            "rect": {
+              "height": 56.0,
+              "width": 409.0,
+              "x": 821.0,
+              "y": 626.0
+            },
+            "visible": true
+          },
+          "BazaarSectionTitle": {
+            "rect": {
+              "height": 25.125,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 886.0
+            },
+            "visible": true
+          },
+          "BuyCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 363.0,
+              "x": 50.0,
+              "y": 532.0
+            },
+            "visible": false
+          },
+          "CampaignDebriefPanel": {
+            "rect": {
+              "height": 312.0,
+              "width": 401.0,
+              "x": 821.0,
+              "y": 216.0
+            },
+            "visible": true
+          },
+          "CrewAction0": {
+            "rect": {
+              "height": 42.0,
+              "width": 8.0,
+              "x": 821.0,
+              "y": 987.0
+            },
+            "visible": false
+          },
+          "CrewIdentity0": {
+            "rect": {
+              "height": 13.9583339691162,
+              "width": 93.0,
+              "x": 821.0,
+              "y": 987.0
+            },
+            "visible": false
+          },
+          "CrewPortrait0": {
+            "rect": {
+              "height": 84.0,
+              "width": 68.0,
+              "x": 821.0,
+              "y": 987.0
+            },
+            "visible": false
+          },
+          "CrewRosterCard0": {
+            "rect": {
+              "height": 5251.0,
+              "width": 187.0,
+              "x": 821.0,
+              "y": 987.0
+            },
+            "visible": false
+          },
+          "DepartureControlsScroll": {
+            "rect": {
+              "height": 384.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "DeparturePanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "DeparturePrimaryAction": {
+            "rect": {
+              "height": 77.0,
+              "width": 216.0,
+              "x": 1032.0,
+              "y": 640.0
+            },
+            "visible": false
+          },
+          "EndingContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 197.0,
+              "x": 821.0,
+              "y": 416.0
+            },
+            "visible": true
+          },
+          "EndingFeedbackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 196.0,
+              "x": 1026.0,
+              "y": 476.0
+            },
+            "visible": true
+          },
+          "EndingReplayAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 196.0,
+              "x": 1026.0,
+              "y": 416.0
+            },
+            "visible": true
+          },
+          "EndingTitleAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 197.0,
+              "x": 821.0,
+              "y": 476.0
+            },
+            "visible": true
+          },
+          "IntroductionBackAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 64.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionBody": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionBodyScroll": {
+            "rect": {
+              "height": 92.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 426.0
+            },
+            "visible": false
+          },
+          "IntroductionCard": {
+            "rect": {
+              "height": 390.0,
+              "width": 1184.0,
+              "x": 48.0,
+              "y": 290.0
+            },
+            "visible": false
+          },
+          "IntroductionNote": {
+            "rect": {
+              "height": 20.9375,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 531.0
+            },
+            "visible": false
+          },
+          "IntroductionPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 571.0,
+              "x": 645.0,
+              "y": 566.0
+            },
+            "visible": false
+          },
+          "IntroductionProgress": {
+            "rect": {
+              "height": 58.8333320617676,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 291.0
+            },
+            "visible": false
+          },
+          "IntroductionSkipAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 632.0
+            },
+            "visible": false
+          },
+          "IntroductionTitle": {
+            "rect": {
+              "height": 48.8541679382324,
+              "width": 1152.0,
+              "x": 64.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceDetail": {
+            "rect": {
+              "height": 13.9583358764648,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 294.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceKicker": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 259.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceReceipt": {
+            "rect": {
+              "height": 60.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "JourneyConsequenceTitle": {
+            "rect": {
+              "height": 20.9375,
+              "width": 368.0,
+              "x": 872.0,
+              "y": 274.0
+            },
+            "visible": false
+          },
+          "JourneyMapPanel": {
+            "rect": {
+              "height": 672.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 24.0
+            },
+            "visible": false
+          },
+          "JourneyPhaseTitle": {
+            "rect": {
+              "height": 27.9166660308838,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 23.0
+            },
+            "visible": false
+          },
+          "JourneyResultScroll": {
+            "rect": {
+              "height": 76.0,
+              "width": 750.0,
+              "x": 32.0,
+              "y": 440.0
+            },
+            "visible": false
+          },
+          "MainMenuCard": {
+            "rect": {
+              "height": 476.0,
+              "width": 1208.0,
+              "x": 36.0,
+              "y": 212.0
+            },
+            "visible": false
+          },
+          "MainMenuContinueAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 363.0
+            },
+            "visible": false
+          },
+          "MainMenuCreditsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 487.0
+            },
+            "visible": false
+          },
+          "MainMenuHeading": {
+            "rect": {
+              "height": 33.5,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 213.0
+            },
+            "visible": false
+          },
+          "MainMenuPrimaryAction": {
+            "rect": {
+              "height": 58.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 293.0
+            },
+            "visible": false
+          },
+          "MainMenuQuitAction": {
+            "rect": {
+              "height": 44.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 574.0
+            },
+            "visible": false
+          },
+          "MainMenuSaveStatus": {
+            "rect": {
+              "height": 15.3541669845581,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 546.0
+            },
+            "visible": false
+          },
+          "MainMenuSettingsAction": {
+            "rect": {
+              "height": 48.0,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 427.0
+            },
+            "visible": false
+          },
+          "MainMenuWelcome": {
+            "rect": {
+              "height": 22.3333358764648,
+              "width": 1172.0,
+              "x": 54.0,
+              "y": 258.0
+            },
+            "visible": false
+          },
+          "RoadEventPanel": {
+            "rect": {
+              "height": 733.0,
+              "width": 434.0,
+              "x": 806.0,
+              "y": 254.0
+            },
+            "visible": false
+          },
+          "RoadPrimaryAction": {
+            "rect": {
+              "height": 52.0,
+              "width": 442.0,
+              "x": 806.0,
+              "y": 644.0
+            },
+            "visible": false
+          },
+          "SellCargoButton": {
+            "rect": {
+              "height": 56.0,
+              "width": 364.0,
+              "x": 425.0,
+              "y": 532.0
+            },
+            "visible": false
+          },
+          "ShopActionCard": {
+            "rect": {
+              "height": 648.0,
+              "width": 413.0,
+              "x": 819.0,
+              "y": 36.0
+            },
+            "visible": true
+          },
+          "TradeReceiptPanel": {
+            "rect": {
+              "height": 58.0,
+              "width": 739.0,
+              "x": 50.0,
+              "y": 598.0
+            },
+            "visible": false
+          }
+        },
+        "result": {
+          "height": 76.0,
+          "width": 750.0,
+          "x": 32.0,
+          "y": 440.0
+        }
+      }
+    }
+  ]
+}
