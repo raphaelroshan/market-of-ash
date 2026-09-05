@@ -179,6 +179,8 @@ var shop_decision_next_label: Label
 var shop_title_label: Label
 var bazaar_navigation_buttons: Array[Button] = []
 var bazaar_section_label: Label
+var bazaar_panel_title_label: Label
+var bazaar_departure_hint_label: Label
 var bazaar_scene
 var shop_market_scroll: ScrollContainer
 var shop_action_scroll: ScrollContainer
@@ -230,9 +232,8 @@ var event_basis_label: Label
 var event_decision_label: Label
 var event_rules_label: Label
 var event_readiness_label: Label
-var event_choice_list: VBoxContainer
+var event_choice_list: GridContainer
 var event_choice_buttons: Array[Button] = []
-var event_choice_reason_labels: Array[Label] = []
 var conflict_outcome_panel: PanelContainer
 var conflict_outcome_receipt: PanelContainer
 var conflict_outcome_receipt_glyph
@@ -1451,11 +1452,11 @@ func _build_shop() -> void:
 	actions.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	actions.add_theme_constant_override("separation", 14)
 	shop_action_scroll.add_child(actions)
-	var caravan_title := Label.new()
-	caravan_title.text = "BAZAAR STALLS"
-	caravan_title.add_theme_font_size_override("font_size", 20)
-	caravan_title.add_theme_color_override("font_color", Color("#e6c58d"))
-	actions.add_child(caravan_title)
+	bazaar_panel_title_label = Label.new()
+	bazaar_panel_title_label.text = "MARKET STALL"
+	bazaar_panel_title_label.add_theme_font_size_override("font_size", 20)
+	bazaar_panel_title_label.add_theme_color_override("font_color", Color("#e6c58d"))
+	actions.add_child(bazaar_panel_title_label)
 	bazaar_section_label = Label.new()
 	bazaar_section_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	bazaar_section_label.add_theme_color_override("font_color", Color("#d08b62"))
@@ -1638,11 +1639,11 @@ func _build_shop() -> void:
 	opportunity_list = VBoxContainer.new()
 	opportunity_list.add_theme_constant_override("separation", 8)
 	actions.add_child(opportunity_list)
-	var next_step := Label.new()
-	next_step.text = "When the load makes sense, take it to the Departure Desk. Planning a trip does not spend resources."
-	next_step.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	next_step.add_theme_color_override("font_color", Color("#c7b49a"))
-	action_shell.add_child(next_step)
+	bazaar_departure_hint_label = Label.new()
+	bazaar_departure_hint_label.text = "DEPARTURE DESK — Compare roads before committing."
+	bazaar_departure_hint_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bazaar_departure_hint_label.add_theme_color_override("font_color", Color("#c7b49a"))
+	action_shell.add_child(bazaar_departure_hint_label)
 	plan_departure_button = Button.new()
 	plan_departure_button.name = "BazaarPrimaryAction"
 	plan_departure_button.text = "Plan departure"
@@ -1948,8 +1949,11 @@ func _build_ui() -> void:
 	event_readiness_label.add_theme_font_size_override("font_size", 12)
 	event_readiness_label.add_theme_color_override("font_color", Color("#f0d2a0"))
 	event_content.add_child(event_readiness_label)
-	event_choice_list = VBoxContainer.new()
-	event_choice_list.add_theme_constant_override("separation", 10)
+	event_choice_list = GridContainer.new()
+	event_choice_list.name = "RoadEventChoiceGrid"
+	event_choice_list.columns = 2
+	event_choice_list.add_theme_constant_override("h_separation", 8)
+	event_choice_list.add_theme_constant_override("v_separation", 8)
 	event_content.add_child(event_choice_list)
 	conflict_outcome_panel = PanelContainer.new()
 	conflict_outcome_panel.name = "ArrivalDebriefPanel"
@@ -2205,12 +2209,19 @@ func _apply_bazaar_section() -> void:
 	if opportunity_list == null:
 		return
 	var trade_active := active_bazaar_section == "trade"
+	var section_headings := {
+		"trade": "MARKET STALL",
+		"assignments": "JOB BOARD",
+		"information": "GUIDE / INTEL",
+		"crew": "CREW YARD",
+		"outlook": "TOWN OUTLOOK",
+	}
 	var section_names := {
-		"trade": "MARKET STALL — Buy and sell the selected cargo on the left.",
-		"assignments": "JOB BOARD — Review local delivery work and accepted terms.",
-		"information": "GUIDE / INTEL — Buy supplies, repairs, and route knowledge.",
-		"crew": "CREW YARD — Hire or assign people for the next road.",
-		"outlook": "TOWN OUTLOOK — Review the wider campaign when you need it.",
+		"trade": "Choose a cargo. The ledger shows one honest route comparison.",
+		"assignments": "Review local delivery work and accepted terms.",
+		"information": "Buy supplies, repairs, and route knowledge.",
+		"crew": "Hire or assign people for the next road.",
+		"outlook": "Review the wider campaign when you need it.",
 	}
 	var section_titles := {
 		"trade": "LOCAL STALLS & OPPORTUNITIES",
@@ -2221,6 +2232,9 @@ func _apply_bazaar_section() -> void:
 	}
 	if opportunity_title_label:
 		opportunity_title_label.text = String(section_titles.get(active_bazaar_section, "LOCAL STALLS & OPPORTUNITIES"))
+		opportunity_title_label.visible = not trade_active
+	if bazaar_panel_title_label:
+		bazaar_panel_title_label.text = String(section_headings.get(active_bazaar_section, "BAZAAR"))
 	bazaar_section_label.text = String(section_names.get(active_bazaar_section, "BAZAAR — Choose a stall."))
 	var settlement_identity: Dictionary = world.settlement(world.current_settlement).get("identity", {})
 	var market_read := String(settlement_identity.get("market_read", ""))
@@ -2234,6 +2248,8 @@ func _apply_bazaar_section() -> void:
 		shop_market_scroll.visible = trade_active
 	if shop_decision_summary_panel:
 		shop_decision_summary_panel.visible = trade_active
+	if bazaar_departure_hint_label:
+		bazaar_departure_hint_label.visible = not trade_active
 	if shop_purchase_row:
 		shop_purchase_row.visible = trade_active
 	if bazaar_scene:
@@ -4468,11 +4484,12 @@ func _refresh_event_card() -> void:
 		event_choice_list.remove_child(child)
 		child.queue_free()
 	event_choice_buttons.clear()
-	event_choice_reason_labels.clear()
 	var enabled_choice_buttons: Array = []
 	var pending := world.pending_event
 	var event_revealed: bool = not pending.is_empty() and map_panel != null and map_panel.travel_phase == "encounter"
 	event_card.visible = event_revealed
+	if event_scroll:
+		event_scroll.custom_minimum_size.y = 150.0 if event_revealed else 76.0
 	if conflict_outcome_panel and conflict_outcome_label:
 		conflict_outcome_panel.visible = pending.is_empty() and arrival_pending and not last_conflict_outcome_text.is_empty()
 		conflict_outcome_label.text = last_conflict_outcome_text
@@ -4490,37 +4507,45 @@ func _refresh_event_card() -> void:
 	event_stakes_label.text = String(view.get("stakes", ""))
 	event_threat_label.text = String(view.get("threat_label", ""))
 	event_exposed_label.text = String(view.get("exposed_label", ""))
+	event_exposed_label.visible = false
+	if not event_exposed_label.text.is_empty():
+		event_threat_label.text += " · " + event_exposed_label.text.trim_prefix("EXPOSED · ")
 	event_route_label.text = String(view.get("road_label", ""))
 	event_basis_label.text = String(view.get("basis_label", ""))
 	event_basis_label.visible = not event_basis_label.text.is_empty()
 	event_decision_label.text = String(view.get("decision_label", ""))
 	event_rules_label.text = String(view.get("rules_label", ""))
+	event_rules_label.visible = false
 	for choice_view in view.get("choices", []):
-		var button := _wrapped_action_button(92.0)
+		var button := _wrapped_action_button(68.0)
 		button.name = "RoadEventChoice%d" % event_choice_buttons.size()
-		button.text = String(choice_view.get("text", ""))
+		button.text = String(choice_view.get("summary_text", choice_view.get("text", "")))
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.add_theme_font_size_override("font_size", 12)
 		button.disabled = bool(choice_view.get("disabled", false))
-		button.tooltip_text = String(choice_view.get("tooltip", ""))
+		button.tooltip_text = String(choice_view.get("detail_text", choice_view.get("tooltip", "")))
 		button.pressed.connect(_on_event_choice_pressed.bind(String(pending.get("id", "")), String(choice_view.get("id", ""))))
+		button.focus_entered.connect(_on_event_choice_focused.bind(choice_view))
+		button.mouse_entered.connect(_on_event_choice_focused.bind(choice_view))
 		event_choice_list.add_child(button)
 		event_choice_buttons.append(button)
 		if not button.disabled:
 			enabled_choice_buttons.append(button)
-		if button.disabled:
-			var reason_label := Label.new()
-			reason_label.text = "Unavailable: %s" % String(choice_view.get("blocked_reason", ""))
-			reason_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			reason_label.add_theme_font_size_override("font_size", 11)
-			reason_label.add_theme_color_override("font_color", Color("#b5a18b"))
-			event_choice_list.add_child(reason_label)
-			event_choice_reason_labels.append(reason_label)
 	if not enabled_choice_buttons.is_empty():
 		_link_focus_cycle(enabled_choice_buttons)
 	if event_readiness_label:
-		event_readiness_label.text = "READINESS · %d/%d RESPONSES AVAILABLE%s" % [enabled_choice_buttons.size(), event_choice_buttons.size(), " · Blocked responses name their requirement." if enabled_choice_buttons.size() < event_choice_buttons.size() else ""]
+		event_readiness_label.text = "%d/%d RESPONSES READY%s" % [enabled_choice_buttons.size(), event_choice_buttons.size(), " · Locked cards name requirements." if enabled_choice_buttons.size() < event_choice_buttons.size() else ""]
 	if pause_layer == null or not pause_layer.visible:
 		if _grab_first_enabled(event_choice_buttons) and not get_tree().process_frame.is_connected(_ensure_focused_control_visible):
 			get_tree().process_frame.connect(_ensure_focused_control_visible, CONNECT_ONE_SHOT)
+
+func _on_event_choice_focused(choice_view: Dictionary) -> void:
+	if event_label == null or world.pending_event.is_empty():
+		return
+	event_label.text = String(choice_view.get("detail_text", choice_view.get("text", "")))
+	if event_scroll:
+		event_scroll.scroll_vertical = 0
+	_queue_web_ui_state_after_layout()
 func _conflict_outcome_comparison(result: Dictionary) -> String:
 	var state_delta: Dictionary = result.get("state_delta", {})
 	var event_record: Dictionary = Dictionary(state_delta.get("event", {})).duplicate(true)

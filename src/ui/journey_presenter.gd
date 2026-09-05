@@ -83,6 +83,12 @@ static func _event_choice_view(world, pending: Dictionary, choice: Dictionary, c
 	var certainty_label := "CERTAIN" if cargo_risk == 0 else "RISK ROLL %d%% cargo risk" % cargo_risk
 	var road_result := "cargo stays intact" if cargo_risk == 0 else "%s at risk" % cargo_context
 	var action_label := String(choice.get("action_label", choice.get("label", "Choose")))
+	var compact_value_parts: Array[String] = ["NO COST" if cost_parts.is_empty() else "COST %s" % " + ".join(cost_parts).to_upper()]
+	if money_reward > 0:
+		compact_value_parts.append("GET %d ASHMARKS" % money_reward)
+	var compact_risk := "CARGO SAFE" if cargo_risk == 0 else "%d%% CARGO RISK" % cargo_risk
+	var compact_destination := "RETURN" if String(choice.get("arrival_target", "destination")) == "origin" else "CONTINUE"
+	var summary_text := "%s — %s\n%s\n%s · %s" % [tactic_label, action_label, " · ".join(compact_value_parts), compact_risk, compact_destination]
 	var text_lines: Array[String] = ["%s / %s — %s" % [tactic_label, certainty_label, action_label]]
 	if not cost_parts.is_empty():
 		text_lines.append("COST — %s" % " · ".join(cost_parts))
@@ -110,9 +116,23 @@ static func _event_choice_view(world, pending: Dictionary, choice: Dictionary, c
 		blocked_reason = "Needs an active water relief commitment for this destination."
 	elif not String(choice.get("requires_assigned_crew_id", "")).is_empty() and world.assigned_crew != String(choice.get("requires_assigned_crew_id", "")):
 		blocked_reason = "Requires %s to be assigned." % String(MarketContent.crew_member(String(choice.get("requires_assigned_crew_id", ""))).get("name", "the required crew member"))
+	if not blocked_reason.is_empty():
+		summary_text = "%s — %s\nLOCKED · %s" % [tactic_label, action_label, blocked_reason]
+	var detail_terms: Array[String] = []
+	if cost_parts.is_empty():
+		detail_terms.append("no cost")
+	else:
+		detail_terms.append_array(cost_parts)
+	if money_reward > 0:
+		detail_terms.append("receive %d ashmarks" % money_reward)
+	var detail_text := "FOCUSED RESPONSE — %s\nTERMS — %s · %s\nROAD — %s · %s\nRESULT — %s" % [action_label, " · ".join(detail_terms), certainty_label, arrival_text, road_result, String(choice.get("outcome", "The road opens."))]
+	if not blocked_reason.is_empty():
+		detail_text += "\nUNAVAILABLE — %s" % blocked_reason
 	return {
 		"id": String(choice.get("id", "")),
 		"text": text,
+		"summary_text": summary_text,
+		"detail_text": detail_text,
 		"disabled": not blocked_reason.is_empty(),
 		"blocked_reason": blocked_reason,
 		"tooltip": blocked_reason if not blocked_reason.is_empty() else String(choice.get("outcome", "")),

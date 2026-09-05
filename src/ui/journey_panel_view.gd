@@ -20,10 +20,15 @@ static func snapshot(world, travel_phase: String, waypoint_label: String, arriva
 	elif road_waiting:
 		state = "road"
 		panel_title = "ROAD STOP"
-		map_hint = "%s — Read the signs, then continue toward the next encounter or arrival." % waypoint_label
-		event_text = "MID-ROUTE — The caravan has stopped where the road can be read.\nNEXT — Check the route ahead, then continue."
-		departure_status = "ROAD VIEW — %s. Read the corridor, then continue." % waypoint_label
-		caravan_context = "%s\nNEXT — Read the road, then continue." % waypoint_label
+		var road_signal := String(world.pending_event.get("setup", "")).strip_edges()
+		var approaching_title := String(world.pending_event.get("title", "the next crossing"))
+		map_hint = "%s — The caravan has stopped long enough to read what waits ahead." % waypoint_label
+		if road_signal.is_empty():
+			event_text = "ROAD SIGN — No obstruction is visible yet.\nNEXT — Continue toward the destination."
+		else:
+			event_text = "ROAD SIGN — %s\nNEXT — Continue to meet the situation on your terms." % road_signal
+		departure_status = "ROAD VIEW — %s. The next situation is visible before commitment resumes." % waypoint_label
+		caravan_context = "AHEAD — %s\nNEXT — Read the sign, then continue." % approaching_title
 	elif not world.pending_event.is_empty():
 		state = "event"
 		panel_title = "ROADSIDE DECISION"
