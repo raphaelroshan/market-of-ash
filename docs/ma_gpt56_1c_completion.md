@@ -29,6 +29,8 @@ Godot 4.4.1 native capture and pixel/layout validation pass independently at 960
 
 The 12-state review sequence continues from all three Introduction pages through the first ordinary purchase, route comparison, road stop, Three Riders consequence, arrival sale, changed return market, and terminal receipt. Every critical state records two stable frames before capture.
 
+The QA workflow introduced by PRs #82 and #83 is incorporated as an additional evidence layer. `bash scripts/agent_qa.sh` returns `PASS`, wraps the full verifier, records the default ordinary-trade scenario contract, and preserves a real 1280×720 Main Menu frame after eight stable semantic frames. The scenario remains honestly classified `PLANNED`; the completion-aware native journey above is still the executable ordinary-trade proof.
+
 ## Remaining external gates
 
 Physical Windows high-DPI behavior, physical-controller coverage, assistive-technology testing, and moderated first-time-player comprehension remain external tests.

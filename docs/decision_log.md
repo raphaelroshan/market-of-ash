@@ -809,3 +809,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** A repeated Xvfb audit captured the 1600×900 override before the runtime clamp settled, producing a 1280×720 screenshot of a cropped larger surface. The prior manifest-aware capture was correct, but a blind desktop capture could still record the unsafe first frame and advance Introduction pages before navigation settled.
 
 **Trade-off:** Large displays may see the window promote once during startup instead of being created at final size. This keeps the preferred 1600×900 desktop presentation while ensuring a 1280×720 host never begins with a surface it cannot contain.
+
+## ADR-102: Agent QA success requires valid game evidence
+
+**Decision:** Run the repository-owned agent QA capture against an isolated release Main scene, wait for the named `main_menu` readiness state, and require both its screenshot and manifest before classifying the wrapper as `PASS`. Keep the scenario manifest explicitly `PLANNED` until semantic commands are executable; the established deterministic and completion-aware journey suites remain authoritative meanwhile.
+
+**Reason:** The first wrapper launched the editor with an early quit bound. On macOS that rewrote `project.godot`, produced no title artifact, and still returned a successful process code, leaving `qa-result.json` incorrectly marked `PASS`.
+
+**Trade-off:** Agent QA adds a few seconds for a real renderer launch before the full verifier. It still proves only Main Menu readiness plus the wrapped verifier until the ordinary-trade semantic adapter is implemented.

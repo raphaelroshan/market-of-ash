@@ -31,6 +31,8 @@ AGENT_QA_CAPTURE=0 bash scripts/agent_qa.sh
 
 The first implementation of `agent_qa.sh` runs the existing verifier and captures a readiness-validated title frame. Game-specific semantic journeys should be added to `qa/scenarios/` and wired to existing Godot fixtures rather than simulated with sleeps or coordinate clicks.
 
+For Market of Ash, the title evidence instantiates the release Main scene directly, waits for the semantic `main_menu` state and visible New Game action for eight stable frames, and rejects a missing screenshot or manifest as `INVALID_EVIDENCE`. The ordinary-trade scenario is the default contract, but remains `PLANNED`; use the completion-aware native journey as the executable end-to-end proof until its semantic command adapter is wired.
+
 ## PR report format
 
 Agents must report changed files, baseline and final result tables, exact commands, durations, screenshot paths, state traces, deterministic hashes where available, remaining limitations, and one next task. Visual changes require an intentional-baseline note describing what changed and what contract remains unchanged.

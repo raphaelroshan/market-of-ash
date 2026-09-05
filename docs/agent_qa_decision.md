@@ -14,6 +14,8 @@ The first implementation captures a validated title frame and defines semantic s
 
 The capture script rejects empty, wrong-size, and visually uniform frames. This can expose renderer or startup problems earlier, but it may require per-game readiness signals for scenes whose first frame is intentionally sparse. Such exceptions must be explicit in the manifest rather than weakening the global check.
 
+Market of Ash runs the capture against its release Main scene rather than the editor. A wrapper result may be `PASS` only when the verifier passes and the required Main Menu screenshot plus readiness manifest exist; an editor frame, missing artifact, or successful process with invalid evidence is classified `INVALID_EVIDENCE`.
+
 Third-party frameworks remain optional. If a framework is adopted, pin a Godot 4.4.1-compatible version and pilot it in one repository. The custom verifier remains authoritative for simulation, content, release, save, and campaign acceptance.
 
 ## Status vocabulary
