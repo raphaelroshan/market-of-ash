@@ -82,3 +82,10 @@ The next agent task is **MA-GPT56-1A**: reconcile the capture-window contract wi
 The repeated-review conflict is resolved. Startup window fitting now handles an oversized window that the host reports as maximized and repeats its check while initial display metrics settle. The native capture contract rejects evidence unless requested pixel size and actual native-window size agree, retains the 1280×720 logical canvas explicitly, and waits for two stable frames of expected UI state before each critical capture.
 
 Fresh Godot 4.4.1 runs pass at 960×540, 1280×720, and 1600×900. The curated 1280×720 sequence proves Introduction 2 with complete copy and safe gutters, then the Bazaar purchase, Departure, road stop, encounter, arrival, changed market, return trade, optional black-market pressure, and terminal regional receipt. See `docs/ma_gpt56_1a_completion.md` and `docs/visual_evidence/v0.16.1-ma-gpt56-1a-2026-09-04/`.
+
+
+## 2026-09-05 audit checkpoint — MA-GPT56-1C remains open
+
+The current `0.16.1-early-access-rc1` main build passes the full automated suite and remains inside the deterministic performance budget. The fresh 1280×720 audit still shows Introduction 1 with the Next action pressed against the right edge and Introduction 2 with explanatory copy truncated at the right boundary. The repeat audit therefore keeps the responsive visual gate open even though the automated completion records are green.
+
+The next agent must execute **MA-GPT56-1C**: reconcile the capture-window contract with the actual `ResponsiveColumns` and minimum-size negotiation, add bounds assertions for required Introduction controls, and replace blind keypress capture with completion-aware navigation. Then prove the first Bazaar decision and complete ordinary-trade journey. Do not hide content, globally shrink text, or make black-market activity mandatory. Evidence is recorded in `docs/audit_report_2026-09-05.md` and `docs/visual_evidence/v0.16.1-early-access-rc1-audit-2026-09-05/`.

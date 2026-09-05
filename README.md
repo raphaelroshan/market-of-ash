@@ -132,3 +132,5 @@ For the investment-evaluation build, follow the dependency-aware tasks in [`docs
 | `docs/visual_evidence/v0.16.1-journey-phase-identity-2026-09-04/` | Completion-aware Departure, road, encounter, and arrival heading sequence. |
 | `docs/visual_evidence/v0.16.1-encounter-copy-2026-09-04/` | Writer-reviewed encounter cards with action-first labels and non-repeating terms. |
 | `docs/visual_evidence/v0.16.1-road-endpoint-identity-2026-09-04/` | Three-region road evidence with settlement-specific horizon silhouettes. |
+| `docs/audit_report_2026-09-05.md` | Current main audit with automated result, 1280×720 visual findings, and MA-GPT56-1C next task. |
+| `docs/visual_evidence/v0.16.1-early-access-rc1-audit-2026-09-05/` | Fresh title, Introduction, follow-up screenshots, and capture manifest. |
