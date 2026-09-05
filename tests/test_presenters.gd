@@ -84,8 +84,12 @@ func _test_event_presenter() -> void:
 	_expect(choices.size() == 2 and bool(choices[0].get("disabled", false)) and String(choices[0].get("blocked_reason", "")).contains("999 ashmarks"), "event presenter should keep unaffordable choices visible with the exact blocker")
 	var paid_text := String(choices[0].get("text", ""))
 	_expect(paid_text.contains("PAY / CERTAIN — Pay the keeper") and paid_text.contains("COST — pay 999 ashmarks") and paid_text.count("999 ashmarks") == 1, "event presenter should separate the authored action from its exact cost")
+	var paid_summary := String(choices[0].get("summary_text", ""))
+	_expect(paid_summary.contains("PAY — Pay the keeper") and paid_summary.contains("LOCKED") and paid_summary.contains("999 ashmarks"), "event presenter should replace unusable terms with the exact blocker in its compact summary")
+	_expect(String(choices[0].get("detail_text", "")).contains("FOCUSED RESPONSE — Pay the keeper") and String(choices[0].get("detail_text", "")).contains("RESULT — The road opens"), "event presenter should preserve the complete authored consequence for focus detail")
 	var free_text := String(choices[1].get("text", ""))
 	_expect(not bool(choices[1].get("disabled", true)) and free_text.contains("MANEUVER / RISK ROLL 40%") and not free_text.contains("COST —"), "event presenter should label available risky tactics without a zero-cost row")
+	_expect(String(choices[1].get("summary_text", "")).contains("NO COST") and String(choices[1].get("summary_text", "")).contains("40% CARGO RISK"), "a free risky response should state both zero cost and risk in its compact summary")
 
 
 func _test_arrival_presenter() -> void:
@@ -115,8 +119,10 @@ func _test_journey_panel_view() -> void:
 	var departure := JourneyPanelView.snapshot(world, "moving_out", "LEAVING ASHGATE", false, "", "")
 	_expect(departure.state == "departure" and departure.panel_title == "ON THE ROAD" and String(departure.map_hint).contains("Passage is paid") and String(departure.departure_status).contains("committed until the next stop"), "departure view should communicate committed travel in caravan language")
 	var road := JourneyPanelView.snapshot(world, "road", "ROAD STOP — THE BROKEN MILEPOSTS", false, "", "")
-	_expect(road.state == "road" and road.panel_title == "ROAD STOP" and String(road.event_text).contains("MID-ROUTE") and String(road.caravan_context).begins_with("ROAD STOP — THE BROKEN MILEPOSTS"), "road view should provide an explicit player-controlled pause without repeating a generic journey label")
-	world.pending_event = {"title": "Three Riders, No Banner"}
+	_expect(road.state == "road" and road.panel_title == "ROAD STOP" and String(road.event_text).contains("No obstruction is visible yet") and String(road.caravan_context).contains("AHEAD — the next crossing"), "road view should provide an explicit player-controlled observation before an unobstructed continuation")
+	world.pending_event = {"title": "Three Riders, No Banner", "setup": "Three unmarked riders match the caravan's pace."}
+	road = JourneyPanelView.snapshot(world, "road", "ROAD STOP — THE BROKEN MILEPOSTS", false, "", "")
+	_expect(String(road.event_text).contains("ROAD SIGN — Three unmarked riders") and String(road.caravan_context).contains("AHEAD — Three Riders, No Banner"), "a road stop should preview the approaching authored situation before the encounter")
 	var event := JourneyPanelView.snapshot(world, "encounter", "ENCOUNTER", false, "", "")
 	_expect(event.state == "event" and event.panel_title == "ROADSIDE DECISION" and String(event.caravan_context).contains("Three Riders, No Banner"), "event view should name the authored contact under a distinct roadside heading")
 	world.pending_event.clear()
