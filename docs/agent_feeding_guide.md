@@ -161,3 +161,8 @@ Issue the feeds in order: **MA-I1** repair the 1280×720 opening shell and deter
 ## GPT-5.6 investment execution feed
 
 For the current investment-evaluation phase, read [`gpt56_investment_execution_packets.md`](gpt56_investment_execution_packets.md) and issue the packets in order. Start with **MA-GPT56-1**, which must demonstrate first purchase, route comparison, departure, road consequence, arrival sale/recovery, changed return Bazaar, optional black-market pressure, and terminal receipt in one clean-save path. Then issue MA-GPT56-2 for authored presentation/map identity, MA-GPT56-3 for distinct region breadth and non-railroaded play, and MA-GPT56-4 for the private-alpha package. Use automated deterministic trials, complete-flow fixtures, screenshots, and performance budgets; do not wait for human testing.
+
+
+## Shared agent-QA operating order
+
+Before issuing any implementation feed, direct the agent to read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, and `AGENTS.md`. The first command is `bash scripts/agent_qa.sh`; the agent must preserve `artifacts/agent-qa/` and classify the result as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. New journey work must use `qa/scenarios/market_ordinary_trade_round_trip.json` as the semantic contract and must not claim completion until the named states, deterministic checkpoints, and screenshots are produced.

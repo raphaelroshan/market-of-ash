@@ -68,6 +68,25 @@ jobs:
         run: godot --version
       - name: Run deterministic tests
         run: bash scripts/verify.sh
+      - name: Run agent QA evidence wrapper
+        if: matrix.os == 'ubuntu-latest'
+        continue-on-error: true
+        env:
+          AGENT_QA_GAME: market-of-ash
+          AGENT_QA_SCENARIO: qa/scenarios/market_ordinary_trade_round_trip.json
+          AGENT_QA_OUTPUT_DIR: artifacts/agent-qa
+          AGENT_QA_TIMEOUT_SECONDS: 900
+          AGENT_QA_CAPTURE: '1'
+          GODOT_BIN: godot
+        run: bash scripts/agent_qa.sh
+      - name: Upload agent QA evidence
+        if: always() && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v7
+        with:
+          name: agent-qa-market-of-ash-${{ github.run_number }}
+          path: artifacts/agent-qa/
+          if-no-files-found: error
+          retention-days: 30
 
   native-render-windows:
     name: Windows minimum native render
