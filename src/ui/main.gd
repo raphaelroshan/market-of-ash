@@ -92,6 +92,7 @@ const AUDIO_CUE_PATHS := {
 	"trade": "res://assets/temporary/selected-audio/trade-complete.oggstr",
 }
 const COMPACT_OPENING_WINDOW_WIDTH := 1280
+const PREFERRED_DESKTOP_WINDOW_SIZE := Vector2i(1600, 900)
 const ROUTE_CARD_HEIGHT := 200.0
 const ROUTE_CARD_LARGE_TEXT_HEIGHT := 260.0
 const CONTROLLER_BUTTON_LABELS := {
@@ -338,7 +339,8 @@ func _fit_initial_window_to_display() -> void:
 	var screen_size := DisplayServer.screen_get_size(screen)
 	var current_size := DisplayServer.window_get_size()
 	var available_size := _effective_display_size(usable_rect.size, screen_size)
-	var target_size := _clamped_window_size(current_size, available_size)
+	var explicit_resolution := _has_explicit_resolution_argument(OS.get_cmdline_args()) or _has_explicit_resolution_argument(OS.get_cmdline_user_args())
+	var target_size := _startup_window_target(current_size, available_size, explicit_resolution)
 	if target_size == current_size:
 		return
 	if window_mode == DisplayServer.WINDOW_MODE_MAXIMIZED:
@@ -346,6 +348,16 @@ func _fit_initial_window_to_display() -> void:
 	DisplayServer.window_set_size(target_size)
 	var placement_size := usable_rect.size if usable_rect.size.x > 0 and usable_rect.size.y > 0 else available_size
 	DisplayServer.window_set_position(usable_rect.position + (placement_size - target_size) / 2)
+
+func _startup_window_target(current_size: Vector2i, available_size: Vector2i, explicit_resolution: bool) -> Vector2i:
+	var requested_size := current_size if explicit_resolution else PREFERRED_DESKTOP_WINDOW_SIZE
+	return _clamped_window_size(requested_size, available_size)
+
+func _has_explicit_resolution_argument(arguments: PackedStringArray) -> bool:
+	for argument in arguments:
+		if argument == "--resolution" or argument.begins_with("--resolution=") or argument == "--capture-window" or argument.begins_with("--capture-window="):
+			return true
+	return false
 
 func _startup_window_mode_allows_fit(window_mode: int) -> bool:
 	return window_mode in [DisplayServer.WINDOW_MODE_WINDOWED, DisplayServer.WINDOW_MODE_MAXIMIZED]
@@ -4729,6 +4741,7 @@ func _refresh_caravan_status() -> void:
 
 class ResponsiveColumns extends Container:
 	var compact := false
+	var effective_compact := false
 	var separation := 24.0
 	var first_ratio := 1.5
 	var compact_visual_height := 220.0
@@ -4743,6 +4756,9 @@ class ResponsiveColumns extends Container:
 	func _get_minimum_size() -> Vector2:
 		return Vector2.ZERO
 
+	func uses_compact_layout() -> bool:
+		return effective_compact
+
 	func _notification(what: int) -> void:
 		if what != NOTIFICATION_SORT_CHILDREN:
 			return
@@ -4751,14 +4767,17 @@ class ResponsiveColumns extends Container:
 			if child is Control and child.visible:
 				controls.append(child)
 		if controls.is_empty():
+			effective_compact = false
 			return
 		if controls.size() == 1:
+			effective_compact = false
 			fit_child_in_rect(controls[0], Rect2(Vector2.ZERO, size))
 			return
 		var first := controls[0]
 		var second := controls[1]
 		var required_split_width := first.get_combined_minimum_size().x + separation + second.get_combined_minimum_size().x
 		var use_compact := compact or size.x + 0.5 < required_split_width
+		effective_compact = use_compact
 		if use_compact:
 			var first_height := minf(compact_visual_height, maxf(140.0, size.y * 0.42))
 			var second_height := maxf(0.0, size.y - first_height - separation)

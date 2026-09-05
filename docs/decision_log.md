@@ -801,3 +801,11 @@ The objective is presentation state derived from serialized successful buy/sell 
 **Reason:** Route environments were distinct, but every endpoint used the same block-and-flag silhouette. The road therefore communicated corridor identity while relying almost entirely on text to distinguish the places being left and approached.
 
 **Trade-off:** These remain economical code-drawn marks rather than final environment paintings. Reusing the registry keeps them deterministic and replaceable, but final commercial art direction still requires authored asset work.
+
+## ADR-101: Desktop startup begins from a safe render size
+
+**Decision:** Bootstrap the native window at 1280×720, then promote it during startup to the preferred 1600×900 only when the physical and usable display bounds can contain that size. Preserve explicit resolution requests, record the compact layout actually selected after child minimum-size negotiation, and drive opening evidence through semantic actions that wait for exact UI state.
+
+**Reason:** A repeated Xvfb audit captured the 1600×900 override before the runtime clamp settled, producing a 1280×720 screenshot of a cropped larger surface. The prior manifest-aware capture was correct, but a blind desktop capture could still record the unsafe first frame and advance Introduction pages before navigation settled.
+
+**Trade-off:** Large displays may see the window promote once during startup instead of being created at final size. This keeps the preferred 1600×900 desktop presentation while ensuring a 1280×720 host never begins with a surface it cannot contain.

@@ -57,6 +57,7 @@ def extract_review_evidence(manifest_path: Path, output_dir: Path, screens: list
                 "bytes": (output_dir / destination_name).stat().st_size,
                 "completion": capture.get("completion", {}),
                 "state": state_summary,
+                "layout": capture.get("layout", {}),
             }
         )
 

@@ -94,6 +94,7 @@ const CAPTURE_COMPLETION_EXPECTATIONS := {
 	"introduction_basin": {"screen": "introduction", "intro_page": 0},
 	"introduction_caravan": {"screen": "introduction", "intro_page": 1},
 	"introduction_road": {"screen": "introduction", "intro_page": 2},
+	"introduction_road_large_text": {"screen": "introduction", "intro_page": 2, "large_text": true},
 	"settlement_shop": {"screen": "settlement_shop", "settlement_id": "ashgate"},
 	"trade_receipt": {"screen": "settlement_shop", "trade_receipt_title": "PURCHASE SEALED"},
 	"departure_desk": {"screen": "departure_desk", "settlement_id": "ashgate", "journey_phase_title": "DEPARTURE DESK"},
@@ -151,17 +152,15 @@ func _run() -> void:
 	ui._refresh_continue_availability()
 	ui._show_main_menu()
 	await _capture(ui, "main_menu", "main-menu")
-	ui._on_new_game_pressed()
+	if not await _activate_capture_action(ui, ui.start_game_button, "introduction_basin"):
+		quit(1)
+		return
 	await _capture(ui, "introduction_basin", "introduction-basin")
-	ui._on_intro_next_pressed()
-	if ui.intro_page != 1:
-		push_error("Native capture could not advance to Introduction 2.")
+	if not await _activate_capture_action(ui, ui.intro_next_button, "introduction_caravan"):
 		quit(1)
 		return
 	await _capture(ui, "introduction_caravan", "introduction-caravan")
-	ui._on_intro_next_pressed()
-	if ui.intro_page != 2:
-		push_error("Native capture could not advance to Introduction 3.")
+	if not await _activate_capture_action(ui, ui.intro_next_button, "introduction_road"):
 		quit(1)
 		return
 	await _capture(ui, "introduction_road", "introduction-road")
@@ -170,7 +169,9 @@ func _run() -> void:
 	await _capture(ui, "introduction_road_large_text", "introduction-road-large-text")
 	ui.large_text_checkbox.set_pressed_no_signal(false)
 	ui._on_large_text_toggled(false)
-	ui._on_intro_next_pressed()
+	if not await _activate_capture_action(ui, ui.intro_next_button, "settlement_shop"):
+		quit(1)
+		return
 	await _capture(ui, "settlement_shop", "settlement-shop")
 	ui._on_bazaar_navigation_pressed("assignments")
 	await _capture(ui, "bazaar_jobs", "bazaar-jobs")
@@ -774,6 +775,14 @@ func _focus_bazaar_action(ui: Control, accessibility_id: String) -> bool:
 	push_error("Native capture could not focus Bazaar action %s." % accessibility_id)
 	return false
 
+func _activate_capture_action(ui: Control, button: BaseButton, expected_screen: String) -> bool:
+	button.pressed.emit()
+	var completion := await _wait_for_capture_completion(ui, expected_screen)
+	if bool(completion.get("ready", false)):
+		return true
+	push_error("Native capture action did not reach %s; expected %s, actual %s." % [expected_screen, completion.get("expected", {}), completion.get("actual", {})])
+	return false
+
 func _capture(ui: Control, screen: String, file_stem: String) -> void:
 	var completion := await _wait_for_capture_completion(ui, screen)
 	if not bool(completion.get("ready", false)):
@@ -944,7 +953,7 @@ func _layout_evidence(ui: Control) -> Dictionary:
 		"departure_scroll": _rect_data(departure_scroll.get_global_rect()) if departure_scroll != null else {},
 		"active_layer": _rect_data(active_layer.get_global_rect()),
 		"required_controls": required_controls,
-		"opening_compact": (ui.menu_columns != null and ui.menu_columns.compact) or (ui.intro_columns != null and ui.intro_columns.compact),
+		"opening_compact": (ui.menu_columns != null and ui.menu_columns.is_visible_in_tree() and ui.menu_columns.uses_compact_layout()) or (ui.intro_columns != null and ui.intro_columns.is_visible_in_tree() and ui.intro_columns.uses_compact_layout()),
 		"release_surface": {
 			"developer_panel_hidden": ui.developer_panel == null or not ui.developer_panel.visible,
 			"diagnostics_hidden": ui.diagnostics_label == null or not ui.diagnostics_label.visible,

@@ -160,6 +160,7 @@ def main() -> int:
                             "file": source_capture.name,
                             "completion": completed_capture["completion"],
                             "ui_state": {"screen": "introduction", "intro_page": 1},
+                            "layout": {"opening_compact": True, "required_controls": {"IntroductionCard": {"visible": True}}},
                         }
                     ],
                 }
@@ -174,6 +175,8 @@ def main() -> int:
         review_manifest = json.loads(review_manifest_path.read_text(encoding="utf-8"))
         assert review_manifest["capture_contract"]["completion_aware"] is True
         assert review_manifest["captures"][0]["state"]["intro_page"] == 1
+        assert review_manifest["captures"][0]["layout"]["opening_compact"] is True
+        assert review_manifest["captures"][0]["layout"]["required_controls"]["IntroductionCard"]["visible"] is True
         assert (root / "review" / "01_introduction_caravan.png").is_file()
 
     captures = [
