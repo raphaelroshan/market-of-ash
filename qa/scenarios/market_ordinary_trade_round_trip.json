@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "game": "market-of-ash",
+  "scenario_id": "market_ordinary_trade_round_trip",
+  "purpose": "Prove the ordinary merchant path remains complete without requiring an authored contract.",
+  "status": "planned",
+  "seed": 4107,
+  "initial_save": "fresh",
+  "expected_states": [
+    "main_menu",
+    "introduction_complete",
+    "bazaar",
+    "departure",
+    "road_event",
+    "arrival",
+    "arrival_receipt",
+    "returned_bazaar"
+  ],
+  "semantic_commands": [
+    "start_new_game",
+    "complete_introduction",
+    "open_bazaar",
+    "buy:water:2",
+    "open_departure",
+    "choose_route:ashgate_to_brine_cross",
+    "depart",
+    "resolve_road_event:continue",
+    "arrive",
+    "sell:water:2",
+    "capture:arrival_receipt",
+    "return_to_bazaar"
+  ],
+  "checkpoints": ["after_bazaar", "after_departure", "after_arrival", "after_return_bazaar"],
+  "screenshot_states": ["bazaar", "departure", "road_event", "arrival_receipt", "returned_bazaar"],
+  "time_budget_ms": 30000,
+  "implementation_note": "Wire semantic commands to the existing public UI command boundary; do not use sleeps or coordinate clicks as the authoritative path."
+}

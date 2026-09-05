@@ -55,3 +55,11 @@ A system is not finished because it functions in code. It is finished when a new
 Use a 2D illustrated style with strong silhouettes, deliberate palettes, and readable information hierarchy. Temporary art must preserve composition and scale and must be replaceable through stable references. Do not use visual noise to disguise missing design.
 
 Write short, specific text. Settlement descriptions should tell the player what is different and why it matters. Events should make choices and consequences concrete. Avoid lore that does not change a decision.
+
+## Agent QA contract
+
+Before changing code, also read `docs/qa_playbook.md`, `docs/agent_qa_decision.md`, the active roadmap, and the latest audit report. Run `bash scripts/agent_qa.sh` and record the exact version, commit, Godot version, viewport, and result classification.
+
+Use semantic commands and named readiness states for new journeys; never treat sleeps, coordinate clicks, or a screenshot taken before readiness as proof. Preserve `artifacts/agent-qa/` on success and failure.
+
+A result must be classified as `PASS`, `FAIL`, `BLOCKED_ENVIRONMENT`, `TIMEOUT_PARTIAL`, or `INVALID_EVIDENCE`. A timeout or missing tool is not a pass. Report changed files, commands, durations, state sequence, screenshot paths, known limitations, and one next task. Human testing is optional unless the active roadmap explicitly assigns an owner approval gate; agents should continue improving automated evidence without waiting.
